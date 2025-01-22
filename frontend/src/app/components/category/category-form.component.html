@@ -1,0 +1,46 @@
+<div class="form-container">
+  <h2>Ajouter une nouvelle catégorie</h2>
+  <form (ngSubmit)="onSubmit()">
+    <!-- Champ pour la description -->
+    <div class="form-group">
+      <label for="description">Libellé</label>
+      <input
+        id="label"
+        type="text"
+        [(ngModel)]="label"
+        name="description"
+        placeholder="Entrez la description"
+        required
+      />
+      <div
+        *ngIf="formSubmitted && !label.trim()"
+        class="error-message"
+      >
+        La description est obligatoire.
+      </div>
+    </div>
+
+    <!-- Champ pour le type -->
+    <div class="form-group">
+      <label for="type">Flux financier</label>
+      <select
+        id="financialFlowId"
+        [(ngModel)]="financialFlowId"
+        name="type"
+        required
+      >
+        <option *ngFor="let financialFlow of financialFlowList" [value]="financialFlow.id">
+          {{ financialFlow.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Boutons -->
+    <div class="button-group">
+      <button type="submit" class="btn-submit">Ajouter</button>
+      <button type="reset" class="btn-reset" (click)="resetForm()">Réinitialiser</button>
+    </div>
+  </form>
+</div>
+
+<app-category-list></app-category-list>

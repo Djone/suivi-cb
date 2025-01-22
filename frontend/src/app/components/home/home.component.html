@@ -1,0 +1,29 @@
+<div class="dashboard">
+    <div class="card balance">
+      <h3>Solde du Compte</h3>
+      <p>{{ accountBalance | currency:'EUR' }}</p>
+    </div>
+  
+    <div class="card forecast">
+      <h3>Prévisionnel Fin de Mois</h3>
+      <p>{{ forecastEndOfMonth | currency:'EUR' }}</p>
+    </div>
+  
+    <div class="card transactions">
+      <h3>10 Dernières Transactions</h3>
+      <ul>
+        <li *ngFor="let transaction of lastTransactions">
+          <span>{{ transaction.date | date }}</span> - 
+          <span>{{ transaction.label }}</span> : 
+          <span [class.negative]="transaction.amount < 0">
+            {{ transaction.amount | currency:'EUR' }}
+          </span>
+        </li>
+      </ul>
+    </div>
+  
+    <div class="card chart">
+      
+    </div>
+  </div>
+  

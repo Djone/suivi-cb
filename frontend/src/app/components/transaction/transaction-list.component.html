@@ -1,0 +1,76 @@
+<div class="table-container mat-elevation-z8">
+  <table mat-table [dataSource]="dataSource" class="mat-table">
+    <!-- Date Column -->
+    <ng-container matColumnDef="date">
+      <th mat-header-cell *matHeaderCellDef> Date </th>
+      <td mat-cell *matCellDef="let transaction">
+        <ng-container *ngIf="editedTransaction?.id === transaction.id; else viewMode">
+          <input matInput [(ngModel)]="transaction.date" type="date" />
+        </ng-container>
+        <ng-template #viewMode>
+          {{ transaction.date  | date }}
+        </ng-template>
+      </td>
+    </ng-container>
+
+    <!-- Amount Column -->
+    <ng-container matColumnDef="amount">
+      <th mat-header-cell *matHeaderCellDef> Montant </th>
+      <td mat-cell *matCellDef="let transaction">
+        <ng-container *ngIf="editedTransaction?.id === transaction.id; else viewMode">
+          <input matInput [(ngModel)]="transaction.amount" type="amount" />
+        </ng-container>
+        <ng-template #viewMode>
+          {{ transaction.amount  | currency:'EUR' }}
+        </ng-template>
+      </td>
+    </ng-container>
+
+    <!-- Description Column -->
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef> Description </th>
+      <td mat-cell *matCellDef="let transaction">
+        <ng-container *ngIf="editedTransaction?.id === transaction.id; else viewMode">
+          <input matInput [(ngModel)]="transaction.description" type="description" />
+        </ng-container>
+        <ng-template #viewMode>
+          {{ transaction.description }}
+        </ng-template>
+      </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Actions </th>
+      <td mat-cell *matCellDef="let transaction">
+        <ng-container *ngIf="editedTransaction?.id === transaction.id; else viewMode">
+          <button mat-icon-button color="primary" (click)="saveTransaction()">
+            <mat-icon>check</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="cancelEdit()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </ng-container>
+        <ng-template #viewMode>
+          <button mat-icon-button color="primary" (click)="editTransaction(transaction)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteTransaction(transaction)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </ng-template>
+      </td>
+    </ng-container>
+
+    <!-- Table Header and Rows -->
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <!-- Pagination -->
+  <mat-paginator 
+    [pageSize]="20"
+    [pageSizeOptions]="[10, 25, 50]" 
+    showFirstLastButtons>
+  </mat-paginator>
+</div>

@@ -1,0 +1,22 @@
+<div class="category-list">
+  <h1>Liste des sous-catégories par catégorie</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Libellé</th>
+        <th>Catégorie</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let subCategory of subCategories">
+        <td>{{ subCategory.label }}</td>
+        <td>{{ subCategory.categoryLabel }}</td>
+        <td>
+          <button (click)="editSubCategory(subCategory)">Éditer</button>
+          <button (click)="deleteSubCategory(subCategory.id!)">X</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,20 @@
+/* You can add global styles to this file, and also import other style files */
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.success-snackbar {
+    background-color: #4caf50; /* Vert pour succès */
+    color: white;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.mat-snack-bar-container {
+    background-color: #323232; /* Couleur de fond du snack-bar */
+    color: #ffffff; /* Couleur du texte */
+    font-size: 16px; /* Taille de la police */
+    text-align: center;
+    border-radius: 8px; /* Coins arrondis */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  }
+

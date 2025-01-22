@@ -1,0 +1,102 @@
+/* Conteneur principal */
+.app-container {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* En-tête */
+.app-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  color: #333;
+}
+
+/* Barre de navigation */
+.app-nav ul {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 0 0 20px;
+}
+
+.app-nav li {
+  position: relative; /* Pour permettre un positionnement absolu des sous-menus */
+}
+
+.app-nav a {
+  text-decoration: none;
+  color: #007BFF;
+  font-weight: bold;
+  padding: 10px 15px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.app-nav a:hover {
+  background-color: #007BFF;
+  color: #fff;
+}
+
+.app-nav .active {
+  background-color: #0056b3;
+  color: #fff;
+  border-color: #0056b3;
+}
+
+/* Sous-menu */
+.app-nav .dropdown-menu {
+  display: none; /* Caché par défaut */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  list-style-type: none;
+  padding: 10px 0;
+  margin: 0;
+  min-width: 200px;
+  z-index: 1000;
+}
+
+.app-nav .dropdown-menu li {
+  margin: 0;
+}
+
+.app-nav .dropdown-menu a {
+  display: block;
+  padding: 10px 15px;
+  color: #007BFF;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.app-nav .dropdown-menu a:hover {
+  background-color: #f1f1f1;
+  color: #0056b3;
+}
+
+/* Afficher le sous-menu au survol */
+.app-nav li:hover .dropdown-menu {
+  display: block;
+}
+
+/* Contenu principal */
+.app-content {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

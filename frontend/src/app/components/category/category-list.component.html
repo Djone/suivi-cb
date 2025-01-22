@@ -1,0 +1,51 @@
+<div class="category-list">
+  <h1>Liste des catégories par transaction</h1>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Flux financier</th>
+        <th>Catégorie</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let category of categories">
+        <td>
+          <!-- Afficher le type de transaction ou une liste déroulante en mode édition -->
+          <ng-container *ngIf="editedCategory?.id === category.id; else transactionLabel">
+            <select [(ngModel)]="editableCategory.financialFlowId">
+              <option *ngFor="let financialFlow of financialFlowList " [value]="financialFlow.id">
+                {{ financialFlow.name }}
+              </option>
+            </select>
+          </ng-container>
+          <ng-template #transactionLabel>
+            {{ financialFlowNameById(category.financialFlowId) }}
+            <!-- {{ category.financialFlowId }} -->
+          </ng-template>
+        </td>
+        <td>
+          <!-- Afficher le libellé ou une zone de texte en mode édition -->
+          <ng-container *ngIf="editedCategory?.id === category.id; else descriptionLabel">
+            <input [(ngModel)]="editableCategory.label" type="text" />
+          </ng-container>
+          <ng-template #descriptionLabel>
+            {{ category.label }}
+          </ng-template>
+        </td>
+        <td>
+          <!-- Boutons pour éditer, enregistrer ou annuler -->
+          <ng-container *ngIf="editedCategory?.id === category.id; else editDeleteButtons">
+            <button (click)="saveCategory()">Enregistrer</button>
+            <button (click)="cancelEdit()">Annuler</button>
+          </ng-container>
+          <ng-template #editDeleteButtons>
+            <button (click)="editCategory(category)">Éditer</button>
+            <button (click)="deleteCategory(category.id!)">X</button>
+          </ng-template>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

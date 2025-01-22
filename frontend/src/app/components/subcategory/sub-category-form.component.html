@@ -1,0 +1,48 @@
+<div class="form-container">
+    <h2>Ajouter une nouvelle sous-catégorie</h2>
+    <form (ngSubmit)="onSubmit()">
+      <!-- Nom de la sous-catégorie -->
+      <div class="form-group">
+        <label for="name">Nom de la sous-catégorie</label>
+        <input
+          id="label"
+          type="text"
+          [(ngModel)]="label"
+          name="label"
+          placeholder="Entrez le nom"
+          required
+        />
+        <div *ngIf="formSubmitted && !label.trim()" class="error-message">
+          Le nom est obligatoire.
+        </div>
+      </div>
+  
+      <!-- Sélection de la catégorie -->
+      <div class="form-group">
+        <label for="category">Catégorie</label>
+        <select
+          id="category"
+          [(ngModel)]="categoryId"
+          name="categoryId"
+          required
+        >
+          <option value="" disabled selected>Sélectionnez une catégorie</option>
+          <option *ngFor="let category of categories" [value]="category.id">
+            {{ category.label }}
+          </option>
+        </select>
+        <div *ngIf="formSubmitted && !categoryId" class="error-message">
+          Une catégorie doit être sélectionnée.
+        </div>
+      </div>
+  
+      <!-- Boutons -->
+      <div class="button-group">
+        <button type="submit" class="btn-submit">Ajouter</button>
+        <button type="button" class="btn-reset" (click)="resetForm()">Réinitialiser</button>
+      </div>
+    </form>
+  </div>
+
+  <app-subcategory-list></app-subcategory-list>
+  

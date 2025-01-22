@@ -1,0 +1,21 @@
+<h1 mat-dialog-title>Éditer la sous-catégorie</h1>
+<mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Libellé</mat-label>
+    <input matInput [(ngModel)]="data.subCategory.label" />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Catégorie</mat-label>
+    <mat-select [(ngModel)]="data.subCategory.categoryId">
+      <mat-option *ngFor="let category of data.categories" [value]="category.id">
+        {{ category.label }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</mat-dialog-content>
+
+<div class="dialog-actions">
+  <button mat-raised-button color="primary" (click)="save()">Enregistrer</button>
+  <button mat-raised-button color="warn" (click)="cancel()">Annuler</button>
+</div>

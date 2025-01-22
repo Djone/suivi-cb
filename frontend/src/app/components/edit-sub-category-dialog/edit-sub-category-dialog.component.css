@@ -1,0 +1,32 @@
+/* Boîte de dialogue */
+.mat-dialog-container {
+    padding: 16px; /* Un peu de marge pour ne pas toucher les bords */
+    overflow-y: auto; /* Permet le défilement si nécessaire, mais évite la barre de défilement quand ce n'est pas nécessaire */
+    max-height: 80vh; /* Limite la hauteur de la boîte de dialogue à 80% de la hauteur de l'écran */
+}
+
+.mat-dialog-content {
+    padding: 0; /* Enlever les marges internes si nécessaire */
+    max-height: 70vh; /* Limite la hauteur du contenu de la boîte de dialogue */
+    overflow-y: auto; /* Permet le défilement uniquement si nécessaire */
+}
+
+.mat-form-field {
+    width: 100%; /* Utiliser toute la largeur disponible */
+}
+
+.mat-select,
+input {
+    width: 100%; /* S'assurer que les éléments de formulaire sont bien dimensionnés */
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: center; /* Centrer les boutons */
+    gap: 10px; /* Espacement entre les boutons */
+}
+
+button {
+    min-width: 120px; /* Largeur minimale pour les boutons */
+}
+  
