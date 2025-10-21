@@ -1,0 +1,570 @@
+date;amount;description;sub_category_id;account_id;financial_flow_id
+02/01/2025;3 110,00;Conserto - Décembre 2024;Salaire;1;1
+02/01/2025;42,00;Netflix;Remboursement;1;1
+06/01/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+07/01/2025;378,45;Coinbase ;Abondement;1;1
+03/02/2025;3 130,00;Conserto - Janvier;Salaire;1;1
+05/02/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+19/02/2025;82,40;Bricomarché ;Abondement;1;1
+25/02/2025;81,34;Peugeot - Assurance Auto;Remboursement;1;1
+25/02/2025;180,00;Avance clôture;Abondement;1;1
+25/02/2025;96,00;Mastock - Poteaux pour clôture;Abondement;1;1
+03/03/2025;3 090,00;Conserto - Février;Salaire;1;1
+05/03/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+05/03/2025;800,00;Vente appareil photo;Remboursement;1;1
+12/03/2025;26,30;iGraal;Remboursement;1;1
+31/03/2025;390,00;Plum;Abondement;1;1
+01/04/2025;30,00;Logement Elly - fête avril;Remboursement;1;1
+02/04/2025;3 040,00;Conserto - Mars;Salaire;1;1
+02/04/2025;55,00;Vente dossard semi-marathon;Remboursement;1;1
+07/04/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+25/04/2025;550,00;Epargne Assurance Vie;Abondement;1;1
+04/05/2025;98,59;EVG Poney - Benjamin;Remboursement;1;1
+04/05/2025;102,64;EVG Poney - GroAlain ;Remboursement;1;1
+05/05/2025;3 190,00;Conserto - Avril;Salaire;1;1
+05/05/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+21/05/2025;2,10;Part sociales;Intérêts;1;1
+03/06/2025;3 200,00;Conserto - Mai;Salaire;1;1
+05/06/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+03/07/2025;3 650,00;Conserto - Juin;Salaire;1;1
+07/07/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+25/07/2025;905,42;Impôts 2025;Crédit d'impôts;1;1
+04/08/2025;3 250,00;Conserto - Juillet;Salaire;1;1
+05/08/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+18/08/2025;38,64;Helios;Remboursement;1;1
+02/09/2025;3 250,00;Conserto - Août;Salaire;1;1
+05/09/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+22/09/2025;407,16;Plum - WE La Baule;Abondement;1;1
+25/09/2025;256,33;Plum - révision + CT Polo;Abondement;1;1
+02/10/2025;3 140,00;Conserto - Septembre;Salaire;1;1
+03/10/2025;150,00;Lucile - assurance-vie Elly;Remboursement;1;1
+06/10/2025;18,23;Lucile - Charges mensuelles;Remboursement;1;1
+06/10/2025;80,00;Maman - Sac Salomon;Remboursement;1;1
+06/10/2025;505,64;La Nef - clôture du compte;Remboursement;1;1
+11/10/2025;55,40;Plum - CD Blues - Maman;Remboursement;1;1
+11/10/2025;299,82;Plum - Polo - 2 pneus arrière;Remboursement;1;1
+02/01/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+02/01/2025;51,73;Crédit Agricole;Assurance Voiture;1;2
+02/01/2025;57,49;Free;Internet;1;2
+02/01/2025;9,99;Free Mobile;Téléphone;1;2
+02/01/2025;24,99;Free - Location S24;Téléphone;1;2
+02/01/2025;8,67;Plum;Epargne;1;2
+02/01/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+05/01/2025;70,60;Etagères Leroy Merlin;Avance;1;2
+06/01/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+06/01/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+06/01/2025;305,61;MAM;Compte joint;1;2
+06/01/2025;300,00;Abondement;Compte joint;1;2
+06/01/2025;9,00;SAUR;Eau;1;2
+06/01/2025;77,36;EDF;Électricité;1;2
+06/01/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+06/01/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+06/01/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+06/01/2025;100,80;TER / TAN - Mensuel;Transports en commun;1;2
+06/01/2025;200,00;Helios;Epargne;1;2
+06/01/2025;150,00;Goodvest;Assurance vie;1;2
+06/01/2025;275,00;Goodvest;Epargne retraite;1;2
+06/01/2025;125,48;Dons réguliers;Dons;1;2
+06/01/2025;7,00;Canal +;Services en ligne;1;2
+06/01/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+07/01/2025;174,75;Ampli Marantz Melody - Son et Video;Matériel;1;2
+08/01/2025;58,05;Plum;Epargne;1;2
+08/01/2025;25,48;Vinted - Circuit Pat Patrouille - Marceau;Anniversaire;1;2
+09/01/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+10/01/2025;30,46;Crédit Agricole;Assurance Voiture;1;2
+10/01/2025;30,20;Café du Passage ;Restaurants/Brasserie;1;2
+14/01/2025;8,98;Bricomarché ;Bricolage;1;2
+14/01/2025;38,60;Liquides ;Cigarette électronique;1;2
+15/01/2025;62,67;Plum;Epargne;1;2
+15/01/2025;18,25;Crédit Agricole;Assurance Accident de la Vie;1;2
+16/01/2025;15,30;Boulangerie ;Alimentation;1;2
+16/01/2025;39,00;Rêve en tête ;Coiffure/soins esthétiques;1;2
+16/01/2025;44,30;Dockies;Bistrot;1;2
+17/01/2025;18,44;Bricomarché ;Bricolage;1;2
+17/01/2025;20,50;Chocolat Clisson - Cycy et Manue;Cadeau;1;2
+17/01/2025;28,90;Amphore - Cycy et Manue;Cadeau;1;2
+17/01/2025;5,49;Pile;Courses;1;2
+20/01/2025;80,00;Anniv Natacha;Anniversaire;1;2
+21/01/2025;5,99;Leroy Merlin;Bricolage;1;2
+22/01/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+22/01/2025;54,67;Plum;Epargne;1;2
+22/01/2025;48,85;Materiel.net;Matériel informatique;1;2
+24/01/2025;1,15;Boulangerie ;Alimentation;1;2
+24/01/2025;56,13;Bricomarché ;Bricolage;1;2
+24/01/2025;18,45;Hyper U - Vallet;Alimentation;1;2
+25/01/2025;31,80;Librairie Vallet;Anniversaire;1;2
+25/01/2025;29,95;Librairie Vallet;BD;1;2
+25/01/2025;11,90;Cave Vallet;Cadeau;1;2
+25/01/2025;13,00;Bière sans alcool;Bières;1;2
+29/01/2025;38,68;Plum;Epargne;1;2
+01/02/2025;34,87;Leroy Merlin;Bricolage;1;2
+01/02/2025;64,00;L'Odyssée - Lucile;Anniversaire;1;2
+01/02/2025;15,00;Chocolat Vallet - Lucile;Anniversaire;1;2
+03/02/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+03/02/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+03/02/2025;51,73;Crédit Agricole;Assurance Voiture;1;2
+03/02/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+03/02/2025;57,49;Free;Internet;1;2
+03/02/2025;9,99;Free Mobile;Téléphone;1;2
+03/02/2025;24,99;Free - Location S24;Téléphone;1;2
+03/02/2025;24,90;Burger King;Restaurants/Brasserie;1;2
+05/02/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+05/02/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+05/02/2025;170,41;MAM;Compte joint;1;2
+05/02/2025;300,00;Abondement;Compte joint;1;2
+05/02/2025;9,00;SAUR;Eau;1;2
+05/02/2025;77,36;EDF;Électricité;1;2
+05/02/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+05/02/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+05/02/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+05/02/2025;100,80;TER / TAN - Mensuel;Transports en commun;1;2
+05/02/2025;200,00;Helios;Epargne;1;2
+05/02/2025;150,00;Goodvest;Assurance vie;1;2
+05/02/2025;275,00;Goodvest;Epargne retraite;1;2
+05/02/2025;14,02;Plum;Epargne;1;2
+05/02/2025;125,48;Dons réguliers;Dons;1;2
+05/02/2025;7,00;Canal +;Services en ligne;1;2
+05/02/2025;90,00;Cours de guitare - Janvier;Musique;1;2
+06/02/2025;43,60;Liquides ;Cigarette électronique;1;2
+06/02/2025;12,30;Bricomarché ;Bricolage;1;2
+06/02/2025;174,75;Ampli Marantz Melody - Son et Video;Matériel;1;2
+06/02/2025;10,20;Boulangerie ;Alimentation;1;2
+10/02/2025;18,25;Crédit Agricole;Assurance Accident de la Vie;1;2
+10/02/2025;30,46;Crédit Agricole;Assurance Voiture;1;2
+11/02/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+11/02/2025;59,10;Gateaux Mt St Michel;Alimentation;1;2
+12/02/2025;50,31;Plum;Epargne;1;2
+14/02/2025;29,30;Polo;Carburant;1;2
+14/02/2025;28,98;Jardiland - St Valentin;Cadeau;1;2
+14/02/2025;18,20;Win & Wok;Restaurants/Brasserie;1;2
+18/02/2025;82,40;Bricomarché - Potager;Avance;1;2
+19/02/2025;30,68;Plum;Epargne;1;2
+19/02/2025;80,20;LM - Gravier cour sud;Avance;1;2
+21/02/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+22/02/2025;40,98;vinyle + CD;Anniversaire;1;2
+25/02/2025;180,00;Clôtures;Avance;1;2
+26/02/2025;21,60;Plum;Epargne;1;2
+26/02/2025;99,99;Netgear;Abonnements;1;2
+28/02/2025;0,20;Relais du BAC;Restaurants/Brasserie;1;2
+28/02/2025;79,46;Bricomarché;Bricolage;1;2
+01/03/2025;9,90;Maison de la Presse;Fournitures personnelles;1;2
+03/03/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+03/03/2025;51,73;Crédit Agricole;Assurance Voiture;1;2
+03/03/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+03/03/2025;57,49;Free;Internet;1;2
+03/03/2025;9,99;Free Mobile;Téléphone;1;2
+03/03/2025;24,99;Free - Location S24;Téléphone;1;2
+04/03/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+04/03/2025;80,92;Cours de guitare - février;Musique;1;2
+04/03/2025;12,90;Leclerc - Souris;Cadeau;1;2
+05/03/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+05/03/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+05/03/2025;374,46;MAM;Compte joint;1;2
+05/03/2025;300,00;Abondement;Compte joint;1;2
+05/03/2025;9,00;SAUR;Eau;1;2
+05/03/2025;68,00;EDF;Électricité;1;2
+05/03/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+05/03/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+05/03/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+05/03/2025;100,80;TER / TAN - Mensuel;Transports en commun;1;2
+05/03/2025;150,00;Goodvest;Assurance vie;1;2
+05/03/2025;275,00;Goodvest;Epargne retraite;1;2
+05/03/2025;12,03;Plum;Epargne;1;2
+05/03/2025;125,48;Dons réguliers;Dons;1;2
+05/03/2025;7,00;Canal +;Services en ligne;1;2
+05/03/2025;600,00;Helios;Epargne;1;2
+06/03/2025;27,57;Polo;Carburant;1;2
+06/03/2025;43,00;Bricomarché - Sac gravats + accessoires semi;Avance;1;2
+06/03/2025;38,60;Liquides ;Cigarette électronique;1;2
+06/03/2025;150,00;Logement - WE Clémi;WE - Hôtels/Camping;1;2
+07/03/2025;18,90;Boulangerie;Alimentation;1;2
+07/03/2025;44,20;Boucherie;Alimentation;1;2
+07/03/2025;12,00;Berlin;Restaurants/Brasserie;1;2
+10/03/2025;18,25;Crédit Agricole;Assurance Accident de la Vie;1;2
+10/03/2025;30,46;Crédit Agricole;Assurance Voiture;1;2
+10/03/2025;174,75;Ampli Marantz Melody - Son et Video;Matériel;1;2
+10/03/2025;39,08;OVH;Abonnements;1;2
+11/03/2025;15,05;Leroy Merlin;Avance;1;2
+11/03/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+12/03/2025;63,42;Plum;Epargne;1;2
+13/03/2025;14,90;Bricomarché - Clôture;Bricolage;1;2
+13/03/2025;22,80;Bricomarché - Clôture;Bricolage;1;2
+13/03/2025;34,81;Bricomarché - Clôture;Bricolage;1;2
+14/03/2025;15,78;Mano Mano - Crochets cadran solaire;Aménagements;1;2
+14/03/2025;17,70;Win&Wok;Restaurants/Brasserie;1;2
+19/03/2025;28,83;Plum;Epargne;1;2
+21/03/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+21/03/2025;20,38;Relais du BAC;Restaurants/Brasserie;1;2
+25/03/2025;6,90;Boulangerie;Alimentation;1;2
+26/03/2025;18,79;Plum;Epargne;1;2
+27/03/2025;28,00;Lieu unique;Bistrot;1;2
+27/03/2025;8,00;Cité des congès;Bistrot;1;2
+27/03/2025;9,60;John McByrne;Bistrot;1;2
+27/03/2025;3,90;Parking BACO;Parking;1;2
+28/03/2025;46,00;Levrette Café;Bistrot;1;2
+28/03/2025;26,90;Café du Passage ;Restaurants/Brasserie;1;2
+29/03/2025;31,90;Librairie Les invisibles - Ju;Anniversaire;1;2
+29/03/2025;20,90;Echope Légende - Ewan;Anniversaire;1;2
+30/03/2025;28,57;Polo;Carburant;1;2
+31/03/2025;71,85;Cours Guitare - Janvier;Musique;1;2
+01/04/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+01/04/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+01/04/2025;57,49;Free;Internet;1;2
+01/04/2025;9,99;Free Mobile;Téléphone;1;2
+01/04/2025;24,99;Free - Location S24;Téléphone;1;2
+01/04/2025;80,92;Cours de guitare - mars;Musique;1;2
+02/04/2025;16,13;Plum;Epargne;1;2
+02/04/2025;200,00;Mélusine;Bières;1;2
+03/04/2025;8,90;Liquides ;Cigarette électronique;1;2
+04/04/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+04/04/2025;174,75;Ampli Marantz Melody - Son et Video;Matériel;1;2
+05/04/2025;4,71;Leclerc;Alimentation;1;2
+05/04/2025;39,80;Liquides ;Cigarette électronique;1;2
+07/04/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+07/04/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+07/04/2025;469,75;MAM;Compte joint;1;2
+07/04/2025;300,00;Abondement;Compte joint;1;2
+07/04/2025;9,00;SAUR;Eau;1;2
+07/04/2025;68,00;EDF;Électricité;1;2
+07/04/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+07/04/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+07/04/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+07/04/2025;100,80;TER / TAN - Mensuel;Transports en commun;1;2
+07/04/2025;150,00;Goodvest;Assurance vie;1;2
+07/04/2025;275,00;Goodvest;Epargne retraite;1;2
+07/04/2025;125,48;Dons réguliers;Dons;1;2
+07/04/2025;7,00;Canal +;Services en ligne;1;2
+08/04/2025;103,30;Mastock - Lames pour potager + terreau;Avance;1;2
+09/04/2025;18,25;Crédit Agricole;Assurance Accident de la Vie;1;2
+09/04/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+09/04/2025;58,46;Plum;Epargne;1;2
+10/04/2025;17,98;Gaz;Sodastream;1;2
+10/04/2025;45,30;Bricomarché;Pelouse/jardin;1;2
+10/04/2025;30,46;Crédit Agricole;Assurance Voiture;1;2
+10/04/2025;100,00;Caisse d'épargne;Retrait;1;2
+12/04/2025;0,56;La Ferme de Chez Nous;Alimentation;1;2
+16/04/2025;37,24;Plum;Epargne;1;2
+16/04/2025;27,40;Bricomarché;Pelouse/jardin;1;2
+18/04/2025;8,90;Liquides;Cigarette électronique;1;2
+19/04/2025;7,80;Liquides;Cigarette électronique;1;2
+21/04/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+23/04/2025;19,05;Plum;Epargne;1;2
+23/04/2025;35,20;Bricomarché;Pelouse/jardin;1;2
+24/04/2025;23,87;Peugeot 2008;Carburant;1;2
+25/04/2025;26,77;Polo;Carburant;1;2
+25/04/2025;82,50;BIB muscadet / Gin - EVG Vince;Mariage;1;2
+26/04/2025;15,99;Super U Brétignolles - EVG Vince;Courses;1;2
+26/04/2025;29,00;Bar des Artistes - EVG Vince;Bistrot;1;2
+26/04/2025;80,00;Guinguette - EVG Vince;Bistrot;1;2
+27/04/2025;56,87;Halles La Roche Sur Yon -  EVG Vince;Bistrot;1;2
+27/04/2025;23,00;U20 - France / Irlande;Bistrot;1;2
+30/04/2025;44,07;Plum;Epargne;1;2
+30/04/2025;80,92;Cours de guitare - avril;Musique;1;2
+02/05/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+02/05/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+02/05/2025;57,49;Free;Internet;1;2
+02/05/2025;9,99;Free Mobile;Téléphone;1;2
+02/05/2025;24,99;Free - Location S24;Téléphone;1;2
+04/05/2025;18,00;Lu - Carte Linogravure;Cadeau;1;2
+05/05/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+06/05/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+06/05/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+06/05/2025;299,37;MAM;Compte joint;1;2
+06/05/2025;300,00;Abondement;Compte joint;1;2
+06/05/2025;9,00;SAUR;Eau;1;2
+06/05/2025;68,00;EDF;Électricité;1;2
+06/05/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+06/05/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+06/05/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+06/05/2025;100,80;TER / TAN - Mensuel;Transports en commun;1;2
+06/05/2025;150,00;Goodvest;Assurance vie;1;2
+06/05/2025;275,00;Goodvest;Epargne retraite;1;2
+06/05/2025;125,48;Dons réguliers;Dons;1;2
+06/05/2025;7,00;Canal +;Services en ligne;1;2
+06/05/2025;8,90;Liquides;Cigarette électronique;1;2
+07/05/2025;83,20;Terreau + plantes;Pelouse/jardin;1;2
+07/05/2025;18,91;Plum;Epargne;1;2
+10/05/2025;42,30;Le Jaws - Saint Gilles Croix de Vie;Bistrot;1;2
+10/05/2025;28,50;Au vins d'Olivier;Mariage;1;2
+10/05/2025;30,00;CBCV;Bistrot;1;2
+10/05/2025;43,60;Liquides;Cigarette électronique;1;2
+11/05/2025;52,85;Super U Brétignolles - Mariage Vince & Natacha;Mariage;1;2
+12/05/2025;18,25;Crédit Agricole;Assurance Accident de la Vie;1;2
+12/05/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+12/05/2025;30,46;Crédit Agricole;Assurance Voiture;1;2
+14/05/2025;56,66;Plum;Epargne;1;2
+15/05/2025;31,60;Paille;Pelouse/jardin;1;2
+15/05/2025;22,53;Peugeot 2008;Carburant;1;2
+17/05/2025;91,07;Leclerc;Courses;1;2
+18/05/2025;33,19;Boucherie;Alimentation;1;2
+19/05/2025;38,96;IKEA - Accessoires cuisine + cadre;Avance;1;2
+21/05/2025;51,77;Plum;Epargne;1;2
+21/05/2025;48,08;Gamm Vert;Pelouse/jardin;1;2
+21/05/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+21/05/2025;1,52;CA -Parts sociales;Epargne;1;2
+22/05/2025;47,55;Bricomarché;Pelouse/jardin;1;2
+23/05/2025;29,80;Paillage;Pelouse/jardin;1;2
+23/05/2025;28,25;Polo;Carburant;1;2
+23/05/2025;55,00;Psy;Médecin;1;2
+24/05/2025;49,66;Gamm Vert;Pelouse/jardin;1;2
+28/05/2025;38,96;Plum;Epargne;1;2
+28/05/2025;2,50;Boulangerie;Alimentation;1;2
+28/05/2025;12,80;Bricomarché;Pelouse/jardin;1;2
+28/05/2025;17,80;Bricomarché;Pelouse/jardin;1;2
+29/05/2025;20,00;DAB;Retrait;1;2
+29/05/2025;152,49;Jardiland - Tuyau enrouleur;Pelouse/jardin;1;2
+31/05/2025;44,70;Bricomarche;Cadeau;1;2
+02/06/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+02/06/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+02/06/2025;57,49;Free;Internet;1;2
+02/06/2025;9,99;Free Mobile;Téléphone;1;2
+02/06/2025;24,99;Free - Location S24;Téléphone;1;2
+02/06/2025;37,80;Boulanger - Chargeur téléphone;Matériel informatique;1;2
+02/06/2025;15,82;Peugeot 2008;Carburant;1;2
+03/06/2025;65,00;Souris Logitech;Matériel informatique;1;2
+03/06/2025;300,00;Abondement;Compte joint;1;2
+03/06/2025;71,45;Terreau + billes d'argile;Pelouse/jardin;1;2
+04/06/2025;80,94;Cours de guitare - mai;Musique;1;2
+04/06/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+04/06/2025;20,47;Plum;Epargne;1;2
+05/06/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+05/06/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+05/06/2025;375,77;MAM;Compte joint;1;2
+05/06/2025;9,00;SAUR;Eau;1;2
+05/06/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+05/06/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+05/06/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+05/06/2025;100,80;TER / TAN - Mensuel;Transports en commun;1;2
+05/06/2025;150,00;Goodvest;Assurance vie;1;2
+05/06/2025;275,00;Goodvest;Epargne retraite;1;2
+05/06/2025;125,48;Dons réguliers;Dons;1;2
+05/06/2025;7,00;Canal +;Services en ligne;1;2
+05/06/2025;8,90;Liquides;Cigarette électronique;1;2
+07/06/2025;39,80;Liquides;Cigarette électronique;1;2
+10/06/2025;19,01;Crédit Agricole;Assurance Accident de la Vie;1;2
+10/06/2025;32,21;Crédit Agricole;Assurance Voiture;1;2
+10/06/2025;26,06;Peugeot 2008;Carburant;1;2
+10/06/2025;41,70;Paillage;Pelouse/jardin;1;2
+11/06/2025;45,80;Plum;Epargne;1;2
+11/06/2025;130,00;Aerofab;Bières;1;2
+11/06/2025;50,00;Banque populaire;Retrait;1;2
+11/06/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+14/06/2025;81,50;Tournoi de palets;Loisirs;1;2
+15/06/2025;17,50;Guinguette - Jérémy Huchet;Bistrot;1;2
+18/06/2025;34,25;Plum;Epargne;1;2
+18/06/2025;18,30;Le Berlin;Bistrot;1;2
+21/06/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+21/06/2025;50,00;Hellfest;Concerts/spectacles;1;2
+22/06/2025;27,39;Polo;Carburant;1;2
+25/06/2025;24,09;Plum;Epargne;1;2
+27/06/2025;5,70;Relai du bac;Restaurants/Brasserie;1;2
+27/06/2025;35,80;Bricomarché;Pelouse/jardin;1;2
+27/06/2025;9,17;Courses drive + abondement fortuneo;Avance;1;2
+28/06/2025;27,48;Peugeot 2008;Carburant;1;2
+30/06/2025;80,94;Cours de guitare - juin;Musique;1;2
+30/06/2025;55,00;Psy;Médecin;1;2
+01/07/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+01/07/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+01/07/2025;69,00;Free;Internet;1;2
+01/07/2025;9,99;Free Mobile;Téléphone;1;2
+01/07/2025;24,99;Free - Location S24;Téléphone;1;2
+02/07/2025;17,80;Liquides + magazine;Courses;1;2
+02/07/2025;13,31;Plum;Epargne;1;2
+03/07/2025;400,00;Abondement;Compte joint;1;2
+03/07/2025;44,00;Reve en tête;Coiffure/soins esthétiques;1;2
+04/07/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+04/07/2025;65,85;EDF;Électricité;1;2
+05/07/2025;126,05;La nuit de l'Erdre;Concerts/spectacles;1;2
+05/07/2025;39,80;Liquides ;Cigarette électronique;1;2
+05/07/2025;53,00;Distillerie Loroux Bottereau;Vins;1;2
+05/07/2025;15,63;U Express Clisson;Courses;1;2
+07/07/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+07/07/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+07/07/2025;387,20;MAM;Compte joint;1;2
+07/07/2025;9,00;SAUR;Eau;1;2
+07/07/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+07/07/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+07/07/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+07/07/2025;109,10;TER / TAN - Mensuel;Transports en commun;1;2
+07/07/2025;150,00;Goodvest;Assurance vie;1;2
+07/07/2025;275,00;Goodvest;Epargne retraite;1;2
+07/07/2025;125,48;Dons réguliers;Dons;1;2
+07/07/2025;7,00;Canal +;Services en ligne;1;2
+07/07/2025;80,00;Mariage Vince & Natacha;Mariage;1;2
+08/07/2025;111,00;CI + passeport;Courses;1;2
+09/07/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+09/07/2025;58,94;Plum;Epargne;1;2
+10/07/2025;19,00;Crédit Agricole;Assurance Accident de la Vie;1;2
+10/07/2025;32,27;Crédit Agricole;Assurance Voiture;1;2
+10/07/2025;3,40;BD;BD;1;2
+11/07/2025;43,06;Bricomarché;Avance;1;2
+14/07/2025;26,80;Peugeot 2008;Carburant;1;2
+14/07/2025;72,63;Touran;Carburant;1;2
+16/07/2025;55,03;Plum;Epargne;1;2
+18/07/2025;50,00;HellCity;Bistrot;1;2
+21/07/2025;23,62;Peugeot 2008;Carburant;1;2
+21/07/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+22/07/2025;28,50;bières sans alcool;Bières;1;2
+23/07/2025;36,14;Plum;Epargne;1;2
+23/07/2025;77,91;Peugeot 2008;Carburant;1;2
+25/07/2025;0,02;Auto dépannage Nortais;Auto - Réparations;1;2
+25/07/2025;800,00;Plum;Epargne;1;2
+30/07/2025;65,34;Plum;Epargne;1;2
+01/08/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+01/08/2025;6,00;Helios;Cotisation Compte bancaires;1;2
+01/08/2025;69,00;Free;Internet;1;2
+01/08/2025;9,99;Free Mobile;Téléphone;1;2
+01/08/2025;24,99;Free - Location S24;Téléphone;1;2
+01/08/2025;5,60;Gamm Vert;Pelouse/jardin;1;2
+01/08/2025;38,60;Liquides;Cigarette électronique;1;2
+03/08/2025;31,50;HellCity;Bistrot;1;2
+04/08/2025;65,85;EDF;Électricité;1;2
+04/08/2025;4,80;Boulangerie;Alimentation;1;2
+04/08/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+04/08/2025;10,40;Berlin;Bistrot;1;2
+04/08/2025;3,40;Bellacita;Restaurants/Brasserie;1;2
+05/08/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+05/08/2025;9,00;SAUR;Eau;1;2
+05/08/2025;7,00;Canal +;Services en ligne;1;2
+05/08/2025;300,00;Abondement;Compte joint;1;2
+05/08/2025;95,00;Dons réguliers;Dons;1;2
+05/08/2025;15,36;Backseat;Abonnements;1;2
+05/08/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+05/08/2025;150,00;Goodvest;Assurance vie;1;2
+05/08/2025;275,00;Goodvest;Epargne retraite;1;2
+06/08/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+06/08/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+06/08/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+06/08/2025;11,90;Politis;Abonnements;1;2
+06/08/2025;9,71;Plum;Epargne;1;2
+07/08/2025;29,00;Dépannage Peugeot 2008;Auto - Réparations;1;2
+07/08/2025;170,48;Camping - Huttopia Noirmoutier;Voyage - Hôtels/Camping;1;2
+07/08/2025;11,66;Hyper U;Courses;1;2
+07/08/2025;15,03;Bricomarché;Bricolage;1;2
+07/08/2025;18,90;Bricomarché;Pelouse/jardin;1;2
+11/08/2025;19,00;Crédit Agricole;Assurance Accident de la Vie;1;2
+11/08/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+11/08/2025;32,27;Crédit Agricole;Assurance Voiture;1;2
+13/08/2025;51,85;Plum;Epargne;1;2
+13/08/2025;59,99;Tongues REEF;Habillement;1;2
+13/08/2025;18,00;Casquette;Habillement;1;2
+13/08/2025;50,00;FDJ;Jeux en ligne;1;2
+16/08/2025;5,00;La Villa;Voyage - Alimentation;1;2
+16/08/2025;119,20;Mon jardin Bio;Pelouse/jardin;1;2
+17/08/2025;12,50;Guinguette ;Voyage - Restaurants/Brasserie;1;2
+17/08/2025;58,90;Sapiens;Coiffure/soins esthétiques;1;2
+18/08/2025;8,49;Graines Biocoop;Pelouse/jardin;1;2
+19/08/2025;2,91;Plum;Epargne;1;2
+20/08/2025;30,33;Plum;Epargne;1;2
+21/08/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+21/08/2025;10,00;Cagnotte Richard;Cadeau;1;2
+21/08/2025;21,40;Guinguette Larmor;Bistrot;1;2
+22/08/2025;37,97;Bulbes à fleurs;Pelouse/jardin;1;2
+22/08/2025;57,97;Norauto - siège auto + pare soleil;Auto - Matériel;1;2
+23/08/2025;30,40;Engrais vert automne;Pelouse/jardin;1;2
+25/08/2025;17,00;Huttopia;Bistrot;1;2
+26/08/2025;419,84;MAM;Compte joint;1;2
+26/08/2025;18,00;Huttopia;Bistrot;1;2
+27/08/2025;29,08;Plum;Epargne;1;2
+27/08/2025;50,00;Abondement CJ;Avance;1;2
+28/08/2025;40,00;CA;Retrait;1;2
+28/08/2025;20,00;Huttopia - Poulet;Restaurants/Brasserie;1;2
+28/08/2025;7,00;Noirmoutier - Manège;Voyage - Divertissements;1;2
+29/08/2025;4,80;Huttopia - boulangerie;Voyage - Alimentation;1;2
+29/08/2025;25,00;Huttopia - location vélos;Voyage - Divertissements;1;2
+29/08/2025;48,70;CBCV;Bistrot;1;2
+30/08/2025;26,66;Peugeot 2008;Carburant;1;2
+30/08/2025;84,70;Liquides + accu + MOD;Cigarette électronique;1;2
+01/09/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+01/09/2025;69,00;Free;Internet;1;2
+01/09/2025;9,99;Free Mobile;Téléphone;1;2
+01/09/2025;24,99;Free - Location S24;Téléphone;1;2
+01/09/2025;15,36;Backseat;Abonnements;1;2
+02/09/2025;250,00;Abondement;Compte joint;1;2
+02/09/2025;138,79;Crédit Agricole - PTZ (9 993€);Prêt travaux;1;2
+02/09/2025;107,99;Deezer;Abonnements;1;2
+02/09/2025;5,44;Assurance PTZ (9 993€);Assurance Prêt Travaux;1;2
+03/09/2025;19,71;Plum;Epargne;1;2
+03/09/2025;18,45;Huttopia - Remboursement CJ;Voyage - Restaurants/Brasserie;1;2
+03/09/2025;160,00;Plum;Epargne;1;2
+04/09/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+04/09/2025;18,61;Peugeot 2008;Carburant;1;2
+05/09/2025;9,00;SAUR;Eau;1;2
+05/09/2025;90,00;Dons réguliers;Dons;1;2
+05/09/2025;7,00;Canal +;Services en ligne;1;2
+05/09/2025;5,00;Politis;Abonnements;1;2
+05/09/2025;65,85;EDF;Électricité;1;2
+05/09/2025;14,79;Steam - Hollow Knight;Jeux vidéos;1;2
+06/09/2025;15,76;Peugeot 2008;Carburant;1;2
+07/09/2025;16,75;McDo;Alimentation;1;2
+08/09/2025;450,00;Crédit Agricole (221 647€);Prêt habitation;1;2
+08/09/2025;19,99;Dexter New Blood;Cinéma/théâtre/VOD;1;2
+08/09/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+08/09/2025;62,00;Taxe foncière;Impôts fonciers;1;2
+09/09/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+09/09/2025;23,57;Amazon;Courses;1;2
+09/09/2025;24,69;900 Care;Habitation - Entretien;1;2
+10/09/2025;19,00;Crédit Agricole;Assurance Accident de la Vie;1;2
+10/09/2025;43,44;Plum;Epargne;1;2
+10/09/2025;32,27;Crédit Agricole;Assurance Voiture;1;2
+10/09/2025;16,10;Liquides + résistances;Cigarette électronique;1;2
+11/09/2025;9,99;HBO MAX;Abonnements;1;2
+12/09/2025;71,94;Eponge barbe + rasoir;Coiffure/soins esthétiques;1;2
+12/09/2025;15,36;Backseat;Abonnements;1;2
+12/09/2025;44,60;Bricomarché;Pelouse/jardin;1;2
+14/09/2025;21,70;Vertolonne;Sport;1;2
+16/09/2025;25,13;Peugeot 2008;Carburant;1;2
+16/09/2025;39,97;Jardiland;Pelouse/jardin;1;2
+17/09/2025;36,54;Plum;Epargne;1;2
+17/09/2025;150,00;Goodvest;Assurance vie;1;2
+20/09/2025;6,30;Sirop contre la toux;Pharmacie;1;2
+20/09/2025;20,99;Peugeot 2008 - Essuie-glace;Auto - Matériel;1;2
+21/09/2025;16,50;Crédit Agricole - CB Gold Premium;Cotisation Compte bancaires;1;2
+22/09/2025;27,31;Jéjé - Triathlon La Baule;Sport;1;2
+22/09/2025;379,84;Lucas - Triathlon La Baule;Sport;1;2
+24/09/2025;300,00;Goodvest - Elly;Assurance vie;1;2
+24/09/2025;32,79;Plum;Epargne;1;2
+25/09/2025;300,00;Goodvest;Epargne retraite;1;2
+25/09/2025;256,33;révision + CT Polo;Auto - Entretien;1;2
+26/09/2025;43,58;Promesses de fleurs;Pelouse/jardin;1;2
+27/09/2025;54,63;Crédit Agricole - Peugeot 2008;Assurance Voiture;1;2
+30/09/2025;28,70;Polo;Carburant;1;2
+30/09/2025;39,60;Paillage;Pelouse/jardin;1;2
+01/10/2025;54,63;Crédit Agricole - Peugeot 2008;Assurance Voiture;1;2
+01/10/2025;79,00;Free;Internet;1;2
+01/10/2025;9,99;Free Mobile;Téléphone;1;2
+01/10/2025;24,99;Free - Location S24;Téléphone;1;2
+01/10/2025;15,36;Backseat;Abonnements;1;2
+01/10/2025;9,80;Crédit Agricole;Assurance Protection Juridique;1;2
+01/10/2025;19,93;Plum;Epargne;1;2
+02/10/2025;48,42;UTWIN;Assurance Prêt Habitation;1;2
+02/10/2025;300,00;Abondement;Compte joint;1;2
+02/10/2025;432,37;Crédit Agricole (221 647€);Prêt habitation;1;2
+02/10/2025;131,70;EDF;Électricité;1;2
+02/10/2025;14,00;SAUR;Eau;1;2
+02/10/2025;25,00;Taxe foncière;Impôts fonciers;1;2
+02/10/2025;90,00;Dons réguliers;Dons;1;2
+02/10/2025;7,00;Canal +;Services en ligne;1;2
+02/10/2025;5,00;Politis;Abonnements;1;2
+02/10/2025;9,99;HBO MAX;Abonnements;1;2
+04/10/2025;20,40;Anniv Jo - Boulangerie;Anniversaire;1;2
+04/10/2025;79,10;Anniv Jo - Boucherie;Anniversaire;1;2
+04/10/2025;98,83;Anniv Jo - Courses;Anniversaire;1;2
+06/10/2025;42,28;Crédit Agricole;Assurance Habitation;1;2
+06/10/2025;61,10;Anniv Jo - Boulangerie;Anniversaire;1;2
+07/10/2025;741,93;Goodvest - Livret A;Epargne;1;2
+07/10/2025;484,66;Serre de jardin;Pelouse/jardin;1;2
+08/10/2025;31,19;Plum;Epargne;1;2
+08/10/2025;55,40;CD Blues - Maman;Noël;1;2
+08/10/2025;26,63;Peugeot 2008;Carburant;1;2
+09/10/2025;299,82;Polo - 2 pneus arrière;Auto - Entretien;1;2
+09/10/2025;8,47;Crédit Agricole;Assurance de personnes;1;2
+10/10/2025;19,00;Crédit Agricole;Assurance Accident de la Vie;1;2
+10/10/2025;32,27;Crédit Agricole - Polo;Assurance Voiture;1;2
+10/10/2025;275,00;Goodvest;Epargne retraite;1;2
+10/10/2025;16,85;Le Berlin;Restaurants/Brasserie;1;2
+11/10/2025;249,71;Jardiland;Pelouse/jardin;1;2
+15/10/2025;17,37;Plum;Epargne;1;2
+15/10/2025;59,43;Jardiland;Pelouse/jardin;1;2
+16/10/2025;8,90;Liquides;Cigarette électronique;1;2
+16/10/2025;21,40;Ramen Ya ;Restaurants/Brasserie;1;2

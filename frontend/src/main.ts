@@ -7,6 +7,10 @@ import { AppComponent } from './app/app.component';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 
+// Chart.js - Enregistrer les composants nécessaires
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
+
 // Enregistrer les données de locale
 registerLocaleData(localeFr);
 

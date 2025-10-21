@@ -1,0 +1,161 @@
+.recurring-list-container {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 30px;
+}
+
+.recurring-list-container h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.recurring-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.recurring-table thead {
+  background: #f5f5f5;
+}
+
+.recurring-table th {
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #ddd;
+}
+
+.recurring-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.recurring-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.inactive-row {
+  opacity: 0.6;
+  background-color: #f5f5f5 !important;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.inactive {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.type-badge.revenue {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.type-badge.expense {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.account-badge {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.frequency-cell {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.day-cell {
+  text-align: center;
+  font-weight: 500;
+  color: #666;
+}
+
+.amount-cell {
+  font-weight: 600;
+  text-align: right;
+  font-size: 1rem;
+}
+
+.revenue-amount {
+  color: #2e7d32;
+}
+
+.expense-amount {
+  color: #c62828;
+}
+
+.actions-cell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  margin: 0 2px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: #6c757d;
+}
+
+.action-btn mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.action-btn.edit-btn:hover {
+  background-color: #cfe2ff;
+  color: #0d6efd;
+}
+
+.action-btn.deactivate-btn:hover {
+  background-color: #fff3cd;
+  color: #f57c00;
+}
+
+.action-btn.activate-btn:hover {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}

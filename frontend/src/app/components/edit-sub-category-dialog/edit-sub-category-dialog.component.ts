@@ -32,7 +32,15 @@ export class EditSubCategoryDialogComponent {
   ) {}
 
   save(): void {
-    this.dialogRef.close(this.data.subCategory);
+    // Créez un nouvel objet avec uniquement les champs nécessaires en camelCase
+    // La conversion en snake_case sera faite par le service
+    const updatedSubCategory = {
+      id: this.data.subCategory.id,
+      label: this.data.subCategory.label,
+      categoryId: this.data.subCategory.categoryId,
+    };
+
+    this.dialogRef.close(updatedSubCategory);
   }
 
   cancel(): void {

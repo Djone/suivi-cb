@@ -1,48 +1,41 @@
 <div class="form-container">
-    <h2>Ajouter une nouvelle sous-catégorie</h2>
-    <form (ngSubmit)="onSubmit()">
-      <!-- Nom de la sous-catégorie -->
-      <div class="form-group">
-        <label for="name">Nom de la sous-catégorie</label>
-        <input
-          id="label"
-          type="text"
-          [(ngModel)]="label"
-          name="label"
-          placeholder="Entrez le nom"
-          required
-        />
-        <div *ngIf="formSubmitted && !label.trim()" class="error-message">
-          Le nom est obligatoire.
-        </div>
-      </div>
-  
-      <!-- Sélection de la catégorie -->
-      <div class="form-group">
-        <label for="category">Catégorie</label>
-        <select
-          id="category"
-          [(ngModel)]="categoryId"
-          name="categoryId"
-          required
-        >
-          <option value="" disabled selected>Sélectionnez une catégorie</option>
-          <option *ngFor="let category of categories" [value]="category.id">
-            {{ category.label }}
-          </option>
-        </select>
-        <div *ngIf="formSubmitted && !categoryId" class="error-message">
-          Une catégorie doit être sélectionnée.
-        </div>
-      </div>
-  
-      <!-- Boutons -->
-      <div class="button-group">
-        <button type="submit" class="btn-submit">Ajouter</button>
-        <button type="button" class="btn-reset" (click)="resetForm()">Réinitialiser</button>
-      </div>
-    </form>
-  </div>
+  <h2 class="form-header">Ajouter une nouvelle sous-catégorie</h2>
+  <form [formGroup]="subCategoryForm" (ngSubmit)="onSubmit()">
+    <!-- Libellé -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Libellé</mat-label>
+      <mat-icon matPrefix>label</mat-icon>
+      <input matInput formControlName="label" placeholder="Entrez le libellé" />
+      <mat-error *ngIf="subCategoryForm.get('label')?.hasError('required')">
+        Le libellé est requis.
+      </mat-error>
+    </mat-form-field>
 
-  <app-subcategory-list></app-subcategory-list>
+    <!-- Catégorie -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Catégorie</mat-label>
+      <mat-icon matPrefix>category</mat-icon>
+      <mat-select formControlName="categoryId">
+        <mat-option *ngFor="let category of categories" [value]="category.id">
+          {{ category.label }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="subCategoryForm.get('categoryId')?.hasError('required')">
+        Une catégorie doit être sélectionnée.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Boutons -->
+    <div class="button-group">
+      <button mat-raised-button color="primary" type="submit" [disabled]="!subCategoryForm.valid">
+        Ajouter
+      </button>
+      <button mat-raised-button type="button" (click)="resetForm()">
+        Réinitialiser
+      </button>
+    </div>
+  </form>
+</div>
+
+<app-subcategory-list></app-subcategory-list>
   

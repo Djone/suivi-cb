@@ -1,44 +1,460 @@
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    padding: 20px;
+.dashboard-container {
+  padding: 0;
+  max-width: 100%;
+}
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .accounts-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
-  
-  .card {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    text-align: center;
+}
+
+/* Card Styles */
+.account-card-wrapper {
+  height: 100%;
+}
+
+::ng-deep .account-card {
+  height: 100%;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+::ng-deep .account-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+::ng-deep .account-card .p-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem;
+  border-radius: 12px 12px 0 0;
+}
+
+::ng-deep .account-card .p-card-body {
+  padding: 1.5rem;
+}
+
+::ng-deep .account-card .p-card-footer {
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Header */
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.account-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.account-icon {
+  font-size: 2rem;
+  color: white;
+}
+
+.account-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Balances Section */
+.balances-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 576px) {
+  .balances-section {
+    grid-template-columns: 1fr;
   }
-  
-  .card h3 {
-    margin-bottom: 10px;
-    font-size: 1.2rem;
-    color: #343a40;
-  }
-  
-  .card p, .card ul {
-    margin: 0;
-    font-size: 1rem;
-  }
-  
-  .card ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .card ul li {
-    margin: 5px 0;
-  }
-  
-  .negative {
-    color: red;
-  }
-  
-  .chart canvas {
-    width: 100%;
-    height: 200px;
-  }
-  
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.balance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.balance-card.current {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+}
+
+.balance-card.forecast {
+  background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+}
+
+.balance-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.balance-label i {
+  font-size: 1.25rem;
+  color: #667eea;
+}
+
+.balance-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.balance-value.positive {
+  color: #059669;
+}
+
+.balance-value.negative {
+  color: #dc2626;
+}
+
+/* Sections */
+.schedules-section,
+.category-section {
+  margin-bottom: 2rem;
+}
+
+/* Custom Accordion Styles */
+.custom-accordion {
+  width: 100%;
+}
+
+.custom-accordion-header {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-accordion-header:hover {
+  background: #f1f5f9;
+}
+
+.custom-accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.custom-accordion-content.expanded {
+  max-height: 2000px;
+  transition: max-height 0.5s ease-in;
+}
+
+.accordion-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.header-left i {
+  font-size: 1.5rem;
+  color: #667eea;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-right i {
+  font-size: 1rem;
+  color: #667eea;
+  transition: transform 0.3s ease;
+}
+
+.header-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Schedules List */
+.schedules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.schedule-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.875rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.schedule-item:hover {
+  background-color: #e9ecef;
+  transform: translateX(4px);
+}
+
+.schedule-date {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #667eea;
+  background: #eef2ff;
+  padding: 0.375rem 0.625rem;
+  border-radius: 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.schedule-label {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.schedule-amount {
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* No schedules */
+.no-schedules {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.section-header-simple {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.section-header-simple i {
+  font-size: 1.5rem;
+  color: #667eea;
+}
+
+.section-header-simple h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  flex: 1;
+}
+
+.total-upcoming.neutral {
+  color: #64748b;
+  background-color: #f1f5f9;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.section-header i {
+  font-size: 1.5rem;
+  color: #667eea;
+}
+
+.section-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  flex: 1;
+}
+
+.total-upcoming,
+.total-expenses,
+.total-incomes {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+}
+
+.total-upcoming.positive,
+.total-incomes.positive {
+  color: #059669;
+  background-color: #d1fae5;
+}
+
+.total-upcoming.negative,
+.total-expenses.negative {
+  color: #dc2626;
+  background-color: #fee2e2;
+}
+
+.schedule-amount.positive {
+  color: #059669;
+}
+
+.schedule-amount.negative {
+  color: #dc2626;
+}
+
+/* Category List */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.category-item:hover {
+  background-color: #e9ecef;
+  transform: translateX(4px);
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.category-info i {
+  font-size: 1.5rem;
+}
+
+.category-name {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.category-total {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.category-total.income {
+  color: #059669;
+}
+
+/* No Data */
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.no-data i {
+  font-size: 2rem;
+  color: #cbd5e1;
+}
+
+.no-accounts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.no-accounts i {
+  font-size: 4rem;
+  color: #cbd5e1;
+}
+
+.no-accounts h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.no-accounts p {
+  color: #64748b;
+  margin: 0;
+}
+
+/* Footer */
+.card-footer {
+  display: flex;
+  justify-content: center;
+}
+
+::ng-deep .p-button-text {
+  color: #667eea !important;
+}
+
+::ng-deep .p-button-text:hover {
+  background-color: #eef2ff !important;
+}
+
+/* Tags */
+::ng-deep .p-tag {
+  font-weight: 600;
+}

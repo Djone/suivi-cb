@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { SubCategory } from '../models/sub-category.model';
-import humps from 'humps'; // Importer humps
+import * as humps from 'humps'; // Importer humps
 
 //Ajoutez un BehaviorSubject dans votre service pour suivre l'état des sous-catégories.
 
@@ -94,16 +94,40 @@ export class SubCategoryService {
   }
 
   updateSubCategory(id: number, data: Partial<SubCategory>): Observable<void> {
-    //const { id: void _, ...fieldsToUpdate } = data; // Exclure l'ID du corps
     const url = `${this.apiUrl}/${id}`;
-    const snakeCaseSubCategory = humps.decamelizeKeys(data); // Convertit en snake_case
-    
+
+    // Exclure l'ID du corps de la requête (il est déjà dans l'URL)
+    const { id: _, ...fieldsToUpdate } = data;
+    const snakeCaseSubCategory = humps.decamelizeKeys(fieldsToUpdate); // Convertit en snake_case
+
     console.log(`SUB CATEGORY SERVICE : Requête PUT envoyée à : ${url} avec les données :`, snakeCaseSubCategory);
-    return this.http.put<void>(url, snakeCaseSubCategory);
+
+    return this.http.put<void>(url, snakeCaseSubCategory).pipe(
+      tap(() => {
+        console.log('SUB CATEGORY SERVICE : Sous-catégorie mise à jour avec succès');
+      }),
+      catchError((err) => {
+        console.error('SUB CATEGORY SERVICE : Erreur lors de la mise à jour de la sous-catégorie:', err);
+        throw err;
+      })
+    );
   }
 
   // Supprimer une sous-catégorie
   deleteSubCategory(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    const url = `${this.apiUrl}/${id}`;
+
+    console.log(`SUB CATEGORY SERVICE : Requête DELETE envoyée à : ${url}`);
+
+    return this.http.delete<void>(url).pipe(
+      tap(() => {
+        console.log('SUB CATEGORY SERVICE : Sous-catégorie supprimée avec succès');
+        this.getSubCategories().subscribe(); // Met à jour les données après suppression
+      }),
+      catchError((err) => {
+        console.error('SUB CATEGORY SERVICE : Erreur lors de la suppression de la sous-catégorie:', err);
+        throw err;
+      })
+    );
   }
 }

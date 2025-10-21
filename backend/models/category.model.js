@@ -7,14 +7,29 @@ const logger = require('../utils/logger');
 
 const Category = {
   
-  //Liste toutes les categories
+  //Liste toutes les categories (actives et inactives)
   getAll: () => {
     return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM categories', [], (err, rows) => {
+      // Récupérer toutes les catégories pour affichage dans le tableau
+      db.all('SELECT * FROM categories ORDER BY is_active DESC, label ASC', [], (err, rows) => {
         if (err) {
           reject(err); // Rejetez la promesse en cas d'erreur
         } else {
           resolve(rows); // Résolvez la promesse avec les données
+        }
+      });
+    });
+  },
+
+  //Liste uniquement les categories actives (pour les formulaires)
+  getAllActive: () => {
+    return new Promise((resolve, reject) => {
+      // Ne récupérer que les catégories actives pour les formulaires de création
+      db.all('SELECT * FROM categories WHERE is_active = 1 ORDER BY label ASC', [], (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
         }
       });
     });
@@ -74,29 +89,54 @@ const Category = {
               return reject(new Error('Aucune catégorie trouvée avec cet ID.'));
           }
 
-          console.log('Catégorie mise à jour avec succès, ID :', id);
           logger.info('Catégorie mise à jour avec succès');
           resolve({ id, changes: this.changes });
       });
     });
   },
 
-  // Suppression d'une catégorie par ID
+  // Suppression douce (soft delete) d'une catégorie par ID
+  // La catégorie n'est pas supprimée physiquement, mais marquée comme inactive
   deleteById: (id) => {
     return new Promise((resolve, reject) => {
         if (!id) {
             return reject(new Error('ID manquant pour la suppression de la catégorie.'));
         }
 
-        const query = 'DELETE FROM categories WHERE ID = ?';
+        // Au lieu de DELETE, on fait un UPDATE pour marquer is_active = 0
+        const query = 'UPDATE categories SET is_active = 0 WHERE id = ?';
         db.run(query, [id], function (err) {
             if (err) {
+                logger.error('Erreur lors de la désactivation de la catégorie');
                 return reject(err); // Rejette la promesse si une erreur survient
             }
             if (this.changes === 0) {
                 return reject(new Error('Aucune catégorie trouvée avec cet ID.'));
             }
-            resolve(); // Résout la promesse si la suppression est réussie
+            logger.info('Catégorie désactivée avec succès (soft delete)');
+            resolve(); // Résout la promesse si la désactivation est réussie
+        });
+    });
+  },
+
+  // Réactiver une catégorie précédemment désactivée
+  reactivate: (id) => {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            return reject(new Error('ID manquant pour la réactivation de la catégorie.'));
+        }
+
+        const query = 'UPDATE categories SET is_active = 1 WHERE id = ?';
+        db.run(query, [id], function (err) {
+            if (err) {
+                logger.error('Erreur lors de la réactivation de la catégorie');
+                return reject(err);
+            }
+            if (this.changes === 0) {
+                return reject(new Error('Aucune catégorie trouvée avec cet ID.'));
+            }
+            logger.info('Catégorie réactivée avec succès');
+            resolve();
         });
     });
   } 

@@ -1,0 +1,20 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px !important;
+  overflow: visible;
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px !important;
+  gap: 10px;
+}
+
+mat-dialog-actions button {
+  min-width: 120px;
+}

@@ -1,32 +1,27 @@
-h2 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-  }
-
-p {
-  font-size: 1rem;
-  color: #ff0000;
-}
-
-mat-dialog-content {
-  padding: 16px 24px;
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-mat-dialog-actions {
-  padding: 16px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-}
-
 mat-dialog-title {
   margin-bottom: 8px;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 1.5rem;
+  color: #3f51b5;
 }
 
-button {
-  min-width: 80px;
+mat-dialog-content {
+  padding: 20px 24px !important;
+  font-size: 1rem;
+  line-height: 1.5;
+  min-width: 400px;
+}
+
+mat-dialog-content p {
+  margin: 0;
+  color: #333;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px !important;
+  gap: 10px;
+}
+
+mat-dialog-actions button {
+  min-width: 100px;
 }

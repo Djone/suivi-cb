@@ -1,0 +1,494 @@
+date;montant;description;sub_category_id;financial_flow_id
+06/01/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+06/01/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+06/01/2025;77,36 €;Jo - EDF;Electricité;2
+06/01/2025;9,00 €;Jo - SAUR;Eau;2
+06/01/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+06/01/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+06/01/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+06/01/2025;77,36 €;Lu - EDF;Electricité;2
+06/01/2025;9,00 €;Lu - SAUR;Eau;2
+06/01/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+06/01/2025;300,00 €;Jo - Capital CJ;Capital;2
+06/01/2025;305,61 €;Jo - Part MAM;MAM;2
+06/01/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+06/01/2025;193,30 €;CAF;CAF - Allocations familiales;2
+06/01/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+07/01/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+13/01/2025;300,00 €;Lu - Capital CJ;Capital;2
+13/01/2025;1,70 €;SAUR;Remboursement;2
+25/01/2025;56,00 €;Lucile;Remboursement;2
+25/01/2025;20,00 €;Lucile;Remboursement;2
+25/01/2025;13,00 €;Lucile;Remboursement;2
+30/01/2025;122,24 €;Lu - Part MAM;MAM;2
+05/02/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+05/02/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/02/2025;77,36 €;Jo - EDF;Electricité;2
+05/02/2025;9,00 €;Jo - SAUR;Eau;2
+05/02/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+05/02/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+05/02/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/02/2025;77,36 €;Lu - EDF;Electricité;2
+05/02/2025;9,00 €;Lu - SAUR;Eau;2
+05/02/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+05/02/2025;300,00 €;Jo - Capital CJ;Capital;2
+05/02/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+05/02/2025;96,66 €;CAF;CAF - Allocations familiales;2
+05/02/2025;170,41 €;Jo - Part MAM;MAM;2
+05/02/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+07/02/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+12/02/2025;300,00 €;Lu - Capital CJ;Capital;2
+18/02/2025;51,76 €;Leroy Merlin;Remboursement;2
+27/02/2025;68,17 €;Lu - Part MAM;MAM;2
+05/03/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+05/03/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/03/2025;68,00 €;Jo - EDF;Electricité;2
+05/03/2025;9,00 €;Jo - SAUR;Eau;2
+05/03/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+05/03/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+05/03/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/03/2025;68,00 €;Lu - EDF;Electricité;2
+05/03/2025;9,00 €;Lu - SAUR;Eau;2
+05/03/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+05/03/2025;300,00 €;Jo - Capital CJ;Capital;2
+05/03/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+05/03/2025;96,66 €;CAF;CAF - Allocations familiales;2
+05/03/2025;374,46 €;Jo - Part MAM;MAM;2
+05/03/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+07/03/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+12/03/2025;300,00 €;Lu - Capital CJ;Capital;2
+31/03/2025;149,79 €;Lu - Part MAM;MAM;2
+04/04/2025;96,66 €;CAF;CAF - Allocations familiales;2
+07/04/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+07/04/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+07/04/2025;68,00 €;Jo - EDF;Electricité;2
+07/04/2025;9,00 €;Jo - SAUR;Eau;2
+07/04/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+07/04/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+07/04/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêthabitation - Assurance;2
+07/04/2025;68,00 €;Lu - EDF;Electricité;2
+07/04/2025;9,00 €;Lu - SAUR;Eau;2
+07/04/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+07/04/2025;300,00 €;Jo - Capital CJ;Capital;2
+07/04/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+07/04/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+07/04/2025;469,75 €;Jo - Part MAM;MAM;2
+07/04/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+07/04/2025;15,00 €;Jouet Elly;Remboursement;2
+14/04/2025;300,00 €;Lu - Capital CJ;Capital;2
+29/04/2025;187,90 €;Lu - Part MAM;MAM;2
+05/05/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+05/05/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/05/2025;68,00 €;Jo - EDF;Electricité;2
+05/05/2025;9,00 €;Jo - SAUR;Eau;2
+05/05/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+05/05/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+05/05/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/05/2025;68,00 €;Lu - EDF;Electricité;2
+05/05/2025;9,00 €;Lu - SAUR;Eau;2
+05/05/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+05/05/2025;300,00 €;Jo - Capital CJ;Capital;2
+05/05/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+05/05/2025;98,30 €;CAF;CAF - Allocations familiales;2
+05/05/2025;299,37 €;Jo - Part MAM;MAM;2
+05/05/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+06/05/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+12/05/2025;300,00 €;Lu - Capital CJ;Capital;2
+27/05/2025;119,75 €;Lu - Part MAM;MAM;2
+03/06/2025;300,00 €;Jo - Capital CJ;Capital;2
+05/06/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+05/06/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/06/2025;9,00 €;Jo - SAUR;Eau;2
+05/06/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+05/06/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+05/06/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/06/2025;9,00 €;Lu - SAUR;Eau;2
+05/06/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+05/06/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+05/06/2025;98,30 €;CAF;CAF - Allocations familiales;2
+05/06/2025;375,77 €;Jo - Part MAM;MAM;2
+05/06/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+10/06/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+12/06/2025;300,00 €;Lu - Capital CJ;Capital;2
+18/06/2025;21,53 €;EDF;Remboursement;2
+30/06/2025;150,31 €;Lu - Part MAM;MAM;2
+01/07/2025;400,00 €;Lu - Capital CJ;Capital;2
+03/07/2025;400,00 €;Jo - Capital CJ;Capital;2
+04/07/2025;65,85 €;Jo - EDF;Electricité;2
+04/07/2025;98,30 €;CAF;CAF - Allocations familiales;2
+07/07/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+07/07/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+07/07/2025;9,00 €;Jo - SAUR;Eau;2
+07/07/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+07/07/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+07/07/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+07/07/2025;65,85 €;Lu - EDF;Electricité;2
+07/07/2025;9,00 €;Lu - SAUR;Eau;2
+07/07/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+07/07/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+07/07/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+07/07/2025;387,20 €;Jo - Part MAM;MAM;2
+07/07/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+11/07/2025;15,00 €;Le bon coin - Applique;Capital;2
+25/07/2025;154,88 €;Lu - Part MAM;MAM;2
+05/08/2025;65,85 €;Jo - EDF;Electricité;2
+05/08/2025;9,00 €;Jo - SAUR;Eau;2
+05/08/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+05/08/2025;300,00 €;Jo - Capital CJ;Capital;2
+05/08/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+05/08/2025;98,30 €;CAF;CAF - Allocations familiales;2
+05/08/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+05/08/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/08/2025;65,85 €;Lu - EDF;Electricité;2
+05/08/2025;9,00 €;Lu - SAUR;Eau;2
+05/08/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+05/08/2025;300,00 €;Lu - Capital CJ;Capital;2
+06/08/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+06/08/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+06/08/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+07/08/2025;5,44 €;Lu - PTZ - Assurance;PTZ - Assurance;2
+26/08/2025;419,84 €;Jo - Part MAM;MAM;2
+27/08/2025;250,00 €;Jo - Capital CJ;Capital;2
+28/08/2025;167,95 €;Lu - Part MAM;MAM;2
+02/09/2025;65,85 €;Lu - EDF;Electricité;2
+02/09/2025;138,79 €;Jo - PTZ (9 993€);PTZ;2
+02/09/2025;50,00 €;Jo - Capital CJ;Capital;2
+02/09/2025;5,44 €;Jo - PTZ - Assurance;PTZ - Assurance;2
+03/09/2025;18,45 €;Huttopia - Remboursement CJ;Remboursement;2
+05/09/2025;9,00 €;Jo - SAUR;Eau;2
+05/09/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+05/09/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+05/09/2025;9,00 €;Lu - SAUR;Eau;2
+05/09/2025;138,79 €;Lu - PTZ (9 993€);PTZ;2
+05/09/2025;300,00 €;Lu - Capital CJ;Capital;2
+05/09/2025;98,30 €;CAF;CAF - Allocations familiales;2
+05/09/2025;65,85 €;Jo - EDF;Electricité;2
+08/09/2025;450,00 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+08/09/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+08/09/2025;62,00 €;Jo - Taxe habitation;Taxe foncière;2
+12/09/2025;3,79 €;La Fourche;Remboursement;2
+27/09/2025;54,63 €;Peugeot 2008;Assurance voiture;2
+01/10/2025;54,63 €;Jo - Peugeot 2008;Assurance voiture;2
+02/10/2025;432,37 €;Jo - Prêt Habitat (221 647€);Prêt habitation;2
+02/10/2025;48,42 €;Jo - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+02/10/2025;131,70 €;Jo - EDF;Electricité;2
+02/10/2025;14,00 €;Jo - SAUR;Eau;2
+02/10/2025;300,00 €;Jo - Capital CJ;Capital;2
+02/10/2025;25,00 €;Jo - Taxe habitation;Taxe foncière;2
+06/10/2025;432,37 €;Lu - Prêt Habitat (221 647€);Prêt habitation;2
+06/10/2025;16,00 €;Lu - Prêt Habitat - Assurance (221 647€);Prêt habitation - Assurance;2
+06/10/2025;300,00 €;Lu - Capital CJ;Capital;2
+06/10/2025;98,30 €;CAF;CAF - Allocations familiales;2
+01/01/2025;29,57 €;Peugeot 2008;Carburant;2
+03/01/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+03/01/2025;11,00 €;McDo;Restaurant/brasserie;2
+04/01/2025;21,60 €;Boulangerie;Alimentation;2
+04/01/2025;69,09 €;Biocoop;Alimentation;2
+04/01/2025;31,97 €;Leclerc Drive;Alimentation;2
+05/01/2025;13,60 €;Boulangerie;Alimentation;2
+06/01/2025;64,42 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+07/01/2025;6,98 €;Elly - Top Assmat;MAM;2
+09/01/2025;40,04 €;Biocoop;Alimentation;2
+09/01/2025;14,00 €;Lavage Polo;Auto;2
+10/01/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/01/2025;277,58 €;PTZ (9 993€);PTZ;2
+11/01/2025;180,06 €;Leroy Merlin;Bricolage;2
+11/01/2025;11,80 €;Boulangerie ;Alimentation;2
+12/01/2025;102,64 €;Luminaires Cousin Paul;Aménagement;2
+12/01/2025;31,46 €;Peugeot 2008;Carburant;2
+13/01/2025;97,49 €;Leclerc;Alimentation;2
+15/01/2025;4,70 €;Boulangerie ;Alimentation;2
+16/01/2025;62,00 €;L'Augerie;Taxe foncière;2
+16/01/2025;58,00 €;Leroy Merlin;Bricolage;2
+16/01/2025;150,00 €;Clôture potager;Aménagement;2
+17/01/2025;27,50 €;Restaurant - MAD;Restaurant/brasserie;2
+17/01/2025;50,56 €;Biocoop;Alimentation;2
+18/01/2025;30,06 €;Polo;Carburant;2
+20/01/2025;3,59 €;Elly - Bonnet;Courses;2
+22/01/2025;15,91 €;Leroy Merlin;Bricolage;2
+22/01/2025;20,27 €;Pharmacie;Courses;2
+24/01/2025;25,27 €;Peugeot 2008;Carburant;2
+24/01/2025;56,52 €;Olio & Burro;Restaurant/brasserie;2
+24/01/2025;1,07 €;Leroy Merlin;Bricolage;2
+25/01/2025;13,00 €;Cadeau Calou;Courses;2
+27/01/2025;154,72 €;EDF;Électricité;2
+28/01/2025;25,47 €;Polo;Carburant;2
+28/01/2025;18,50 €;Carte bancaire;Frais bancaires;2
+29/01/2025;29,66 €;Biocoop ;Alimentation;2
+29/01/2025;29,92 €;Peugeot 2008;Carburant;2
+30/01/2025;2,30 €;Boulangerie;Alimentation;2
+30/01/2025;2,10 €;Boulangerie;Alimentation;2
+31/01/2025;427,85 €;Elly - MAM;MAM;2
+04/02/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+04/02/2025;1,35 €;Boulangerie;Alimentation;2
+05/02/2025;64,42 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+05/02/2025;4,65 €;Beurre;Alimentation;2
+06/02/2025;18,80 €;Lait Elly;Alimentation;2
+07/02/2025;6,98 €;Elly - Top Assmat;MAM;2
+08/02/2025;24,72 €;Peugeot 2008;Carburant;2
+10/02/2025;14,00 €;Atlantic'Eau ;Eau;2
+10/02/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/02/2025;277,58 €;PTZ (9 993€);PTZ;2
+10/02/2025;45,94 €;Deuxième versement - Amidal;Alimentation;2
+12/02/2025;54,57 €;Graines potager;Courses;2
+14/02/2025;88,26 €;Redevance ordures ménagères;Taxe ordures ménagères;2
+14/02/2025;69,54 €;La Fourche;Alimentation;2
+14/02/2025;104,87 €;Leclerc;Alimentation;2
+15/02/2025;26,53 €;Peugeot 2008;Carburant;2
+17/02/2025;22,54 €;Biocoop;Alimentation;2
+18/02/2025;62,00 €;L'Augerie;Taxe foncière;2
+19/02/2025;7,90 €;Elly - Gintuss;Courses;2
+19/02/2025;17,00 €;La revue dessinnés;Courses;2
+20/02/2025;36,12 €;Peugeot 2008;Assurance voiture;2
+21/02/2025;35,85 €;Jardins de la Sangueze;Alimentation;2
+21/02/2025;21,82 €;Biocoop;Alimentation;2
+24/02/2025;27,24 €;Peugeot 2008;Carburant;2
+24/02/2025;59,13 €;Biocoop;Alimentation;2
+27/02/2025;154,72 €;EDF;Électricité;2
+27/02/2025;51,80 €;Bohome Living - fil élec suspension;Courses;2
+28/02/2025;238,58 €;Elly - MAM;MAM;2
+01/03/2025;6,30 €;Boulangerie;Alimentation;2
+01/03/2025;50,90 €;Biocoop;Alimentation;2
+01/03/2025;18,00 €;Emmaüs - Draps + livres;Courses;2
+01/03/2025;9,52 €;La Ferme de Chez Nous;Alimentation;2
+01/03/2025;25,00 €;Elly - Activité lundis;Courses;2
+03/03/2025;51,80 €;Peugeot 2008;Assurance voiture;2
+04/03/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+05/03/2025;64,42 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+07/03/2025;6,98 €;Elly - Top Assmat;MAM;2
+09/03/2025;27,77 €;Polo;Carburant;2
+10/03/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/03/2025;277,58 €;PTZ (9 993€);PTZ;2
+10/03/2025;27,77 €;Hyper U;Alimentation;2
+10/03/2025;198,94 €;Peugeot 2008 - Norauto / Batterie;Auto;2
+11/03/2025;24,07 €;Peugeot;Carburant;2
+14/03/2025;21,95 €;Jardins de la Sanguèze;Alimentation;2
+14/03/2025;14,03 €;Jardin de la Sanguèze;Alimentation;2
+14/03/2025;67,57 €;Leclerc;Alimentation;2
+14/03/2025;14,00 €;Atlantic'Eau ;Eau;2
+14/03/2025;77,14 €;La Fourche;Alimentation;2
+18/03/2025;62,00 €;Taxe habitation;Taxe foncière;2
+22/03/2025;7,65 €;Boulangerie;Alimentation;2
+26/03/2025;27,28 €;Peugeot 2008;Carburant;2
+26/03/2025;27,05 €;Chlorophyle;Alimentation;2
+27/03/2025;136,00 €;EDF;Électricité;2
+28/03/2025;8,65 €;Peugeot 2008;Carburant;2
+31/03/2025;511,08 €;Elly - MAM;MAM;2
+31/03/2025;69,65 €;La Fourche;Alimentation;2
+01/04/2025;51,80 €;Peugeot 2008;Assurance voiture;2
+02/04/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+04/04/2025;12,91 €;Elly - Vêtements;Courses;2
+05/04/2025;17,58 €;Pillages - BD papa;Courses;2
+07/04/2025;64,42 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+07/04/2025;6,98 €;Elly - Top Assmat;MAM;2
+07/04/2025;5,68 €;Elly - Vêtements;Courses;2
+10/04/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/04/2025;277,58 €;PTZ (9 993€);PTZ;2
+10/04/2025;42,32 €;Biocoop;Alimentation;2
+11/04/2025;14,00 €;Atlantic'Eau ;Eau;2
+11/04/2025;8,96 €;Biocoop;Alimentation;2
+12/04/2025;0,67 €;Reliquat Révision + CT - Peugeot 2008;Courses;2
+13/04/2025;19,00 €;Poulet rôti;Alimentation;2
+15/04/2025;52,83 €;Vietnamien;Restaurant/brasserie;2
+16/04/2025;62,00 €;Taxe habitation;Taxe foncière;2
+16/04/2025;14,07 €;Peugeot 2008;Carburant;2
+16/04/2025;45,06 €;Hyper U;Courses;2
+17/04/2025;27,42 €;Peugeot 2008;Carburant;2
+17/04/2025;42,86 €;Elly - MAM Novembre;MAM;2
+23/04/2025;12,99 €;Câble USB pour 2008;Courses;2
+24/04/2025;80,00 €;Clémi & Thibaut;Courses;2
+26/04/2025;16,00 €;Métronome;Courses;2
+26/04/2025;10,00 €;Les p'tits papiers;Courses;2
+28/04/2025;136,00 €;EDF;Électricité;2
+29/04/2025;18,00 €;Jardins de la Sanguèze;Alimentation;2
+29/04/2025;51,00 €;Histoire de parents;Courses;2
+29/04/2025;26,20 €;Polo;Carburant;2
+29/04/2025;96,00 €;Mastock - Poteaux pour clôture;Bricolage;2
+29/04/2025;23,70 €;Bricomarché - Potager - terreau;Courses;2
+30/04/2025;75,20 €;Drive Leclerc;Courses;2
+30/04/2025;657,65 €;Elly - MAM;MAM;2
+30/04/2025;3,60 €;Boulangerie;Alimentation;2
+30/04/2025;61,29 €;La Ferme de Chez Nous;Alimentation;2
+02/05/2025;51,80 €;Peugeot 2008;Assurance voiture;2
+05/05/2025;64,42 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+05/05/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+06/05/2025;17,00 €;La revue dessinnés;Courses;2
+06/05/2025;2,40 €;Boulangerie;Alimentation;2
+07/05/2025;6,98 €;Elly - Top Assmat;MAM;2
+07/05/2025;36,56 €;Chlorophyle;Alimentation;2
+09/05/2025;98,95 €;MAM - Eloise - Avril;MAM;2
+09/05/2025;19,38 €;Polo;Carburant;2
+09/05/2025;5,00 €;L'Odyssée - Carte de voeux;Courses;2
+09/05/2025;28,89 €;Peugeot 2008;Carburant;2
+09/05/2025;37,90 €;Bières - Mariage Vince et Natacha;Courses;2
+10/05/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/05/2025;277,58 €;PTZ (9 993€);PTZ;2
+12/05/2025;14,00 €;Atlantic'Eau ;Eau;2
+13/05/2025;25,39 €;Peugeot 2008;Carburant;2
+15/05/2025;103,91 €;Super U;Alimentation;2
+16/05/2025;20,05 €;Jardins de la Sanguèze;Alimentation;2
+16/05/2025;62,00 €;Taxe habitation;Taxe foncière;2
+18/05/2025;18,10 €;Boulangerie;Alimentation;2
+23/05/2025;7,00 €;McDo;Restaurant/brasserie;2
+24/05/2025;18,93 €;Leclerc;Alimentation;2
+24/05/2025;53,45 €;Hyper U;Alimentation;2
+25/05/2025;28,89 €;Peugeot 2008;Carburant;2
+27/05/2025;136,00 €;EDF;Électricité;2
+27/05/2025;39,20 €;Burgers;Restaurant/brasserie;2
+27/05/2025;22,90 €;Pharmacie;Courses;2
+28/05/2025;419,12 €;Elly - MAM;MAM;2
+01/06/2025;51,80 €;Peugeot 2008;Assurance voiture;2
+03/06/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+03/06/2025;27,59 €;Pharmacie;Courses;2
+03/06/2025;22,51 €;Peugeot 2008;Carburant;2
+05/06/2025;64,42 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+05/06/2025;16,14 €;Jardins de la Sangèze;Courses;2
+06/06/2025;97,24 €;Peinture extérieure;Courses;2
+07/06/2025;1,00 €;Elly - Top Assmat;MAM;2
+07/06/2025;25,48 €;Filtres aspirateur;Courses;2
+08/06/2025;25,56 €;Peugeot 2008;Carburant;2
+09/06/2025;10,00 €;Crêpes;Courses;2
+09/06/2025;10,50 €;Villa Margareth;Courses;2
+10/06/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/06/2025;14,00 €;Atlantic'Eau ;Eau;2
+10/06/2025;277,58 €;PTZ (9 993€);PTZ;2
+11/06/2025;11,15 €;Carrefour Clisson;Courses;2
+11/06/2025;51,53 €;Biocoop;Courses;2
+11/06/2025;24,57 €;Polo;Carburant;2
+17/06/2025;62,00 €;Taxe habitation;Taxe foncière;2
+17/06/2025;60,75 €;Hyper U Vallet;Courses;2
+18/06/2025;22,51 €;Peugeot 2008;Carburant;2
+23/06/2025;27,14 €;Peugeot 2008;Carburant;2
+25/06/2025;51,45 €;Olio & Burro;Courses;2
+27/06/2025;526,08 €;Elly - MAM;MAM;2
+27/06/2025;62,83 €;Drive Leclerc;Courses;2
+27/06/2025;2,30 €;Boulangerie;Courses;2
+28/06/2025;3,71 €;Pharmacie;Courses;2
+28/06/2025;22,86 €;Poulet rôti - Clisson;Courses;2
+28/06/2025;10,38 €;Chlorophyle;Courses;2
+28/06/2025;12,00 €;Olio et Buro;Courses;2
+29/06/2025;31,65 €;La Foire Fouille;Courses;2
+29/06/2025;33,00 €;Sandales Elly;Courses;2
+01/07/2025;51,80 €;Peugeot 2008;Assurance voiture;2
+01/07/2025;10,30 €; Terre Ferme;Courses;2
+01/07/2025;96,00 €;Fruits été - Terre Ferme;Courses;2
+01/07/2025;35,00 €;Cadeau Manon;Courses;2
+01/07/2025;16,00 €;Billets tombola Colin et Cassisa;Courses;2
+01/07/2025;35,00 €;La Ferme de Chez Nous;Courses;2
+01/07/2025;45,40 €;Super U;Courses;2
+01/07/2025;150,00 €;Table de jardin - Jardiland;Courses;2
+02/07/2025;27,95 €;Gemo;Courses;2
+02/07/2025;27,17 €;Peugeot 20028;Carburant;2
+02/07/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+03/07/2025;13,50 €;Epices Clisson;Courses;2
+03/07/2025;21,50 €;Peugeot 2008;Carburant;2
+06/07/2025;39,00 €;Marché Plessé;Courses;2
+07/07/2025;64,42 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+07/07/2025;6,98 €;Elly - Top Assmat;MAM;2
+10/07/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/07/2025;277,58 €;PTZ (9 993€);PTZ;2
+11/07/2025;14,00 €;Atlantic'Eau ;Eau;2
+11/07/2025;72,55 €;Hyper U;Courses;2
+12/07/2025;31,13 €;Peugeot 2008;Carburant;2
+13/07/2025;2,90 €;Market Larmor Plage;Courses;2
+13/07/2025;10,00 €;LarmorPlage - Manège;Courses;2
+16/07/2025;62,00 €;Taxe habitation;Taxe foncière;2
+16/07/2025;27,50 €;Crepes Mouzillon;Courses;2
+16/07/2025;27,00 €;La Ferme de Chez Nous;Courses;2
+18/07/2025;4,20 €;Recyclerie;Courses;2
+18/07/2025;53,43 €;Hyper U;Courses;2
+18/07/2025;18,30 €;Gamm Vert;Courses;2
+25/07/2025;26,61 €;Polo;Carburant;2
+25/07/2025;72,20 €;Quebreizh;Courses;2
+28/07/2025;131,69 €;EDF;Électricité;2
+28/07/2025;13,04 €;IKEA;Courses;2
+29/07/2025;542,08 €;Elly - MAM;MAM;2
+29/07/2025;13,15 €;Boulangerie;Courses;2
+29/07/2025;28,75 €;La Ferme de Chez Nous;Courses;2
+01/08/2025;51,80 €;Peugeot 2008;Assurance voiture;2
+04/08/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+05/08/2025;50,00 €;Anniversaire Pauline;Courses;2
+05/08/2025;50,00 €;Réparation Peugeot 2008;Courses;2
+05/08/2025;41,82 €;Biocoop;Courses;2
+05/08/2025;19,70 €;Cadeau MAM;Courses;2
+05/08/2025;11,50 €;Radio Poulette - Tomates / fraises;Courses;2
+05/08/2025;63,71 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+06/08/2025;17,00 €;La revue dessinnés;Courses;2
+06/08/2025;13,70 €;Win&Wok;Courses;2
+06/08/2025;8,00 €;La Ferme de Chez Nous;Courses;2
+07/08/2025;6,98 €;Elly - Top Assmat;MAM;2
+09/08/2025;23,48 €;Leclerc;Carburant;2
+10/08/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/08/2025;277,58 €;PTZ (9 993€);PTZ;2
+11/08/2025;14,00 €;Atlantic'Eau ;Eau;2
+11/08/2025;41,00 €;leclerc;Courses;2
+11/08/2025;40,00 €;credit mutuel;Courses;2
+12/08/2025;3,60 €;Villa Margareth;Courses;2
+14/08/2025;74,58 €;Redevance ordures ménagères;Taxe ordures ménagères;2
+15/08/2025;30,00 €;La Villa;Courses;2
+16/08/2025;10,40 €;La Villa;Courses;2
+16/08/2025;48,42 €;Biocoop;Courses;2
+17/08/2025;25,00 €;Bateau électrique;Courses;2
+18/08/2025;27,00 €;Villa;Courses;2
+18/08/2025;15,40 €;Villa;Courses;2
+19/08/2025;62,00 €;Taxe habitation;Taxe foncière;2
+19/08/2025;18,65 €;Biocoop;Courses;2
+19/08/2025;24,15 €;Peugeot 2008;Carburant;2
+20/08/2025;52,08 €;La tête dans les raisins;Courses;2
+20/08/2025;10,00 €;Manège;Courses;2
+22/08/2025;2,90 €;La ferme de Chez Nous;Courses;2
+22/08/2025;2,00 €;Boulangerie;Courses;2
+26/08/2025;61,33 €;Super U;Courses;2
+27/08/2025;131,69 €;EDF;Électricité;2
+27/08/2025;1,25 €;Boulangerie;Courses;2
+28/08/2025;17,20 €;Huttopia;Courses;2
+29/08/2025;587,84 €;Elly - MAM;MAM;2
+31/08/2025;16,49 €;Fizzer;Courses;2
+01/09/2025;54,63 €;Peugeot 2008;Assurance voiture;2
+01/09/2025;27,20 €;A-Qui-S (étiquettes);Courses;2
+01/09/2025;79,44 €;GIFI;Courses;2
+01/09/2025;10,08 €;Picard;Courses;2
+02/09/2025;10,88 €;PTZ - Assurance (9 993€) ;PTZ - Assurance;2
+03/09/2025;80,57 €;La Fourche;Courses;2
+04/09/2025;14,73 €;La ferme de Chez Nous;Courses;2
+04/09/2025;4,70 €;Boulangerie;Courses;2
+05/09/2025;63,71 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+05/09/2025;52,37 €;Biocoop;Courses;2
+07/09/2025;10,25 €;Boulangerie;Courses;2
+09/09/2025;67,24 €;Hyper U;Courses;2
+10/09/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/09/2025;277,70 €;PTZ (9 993€);PTZ;2
+12/09/2025;14,00 €;Atlantic'Eau ;Eau;2
+13/09/2025;9,00 €;Boucherie;Courses;2
+13/09/2025;25,51 €;Peugeot 2008;Carburant;2
+13/09/2025;14,80 €;Boulangerie;Courses;2
+15/09/2025;18,60 €;Peugeot 2008;Carburant;2
+15/09/2025;44,17 €;Hyper U;Courses;2
+16/09/2025;62,00 €;Taxe habitation;Taxe foncière;2
+17/09/2025;18,80 €;Bricomarché - tringles à rideau;Courses;2
+19/09/2025;5,90 €;Intermarché;Courses;2
+23/09/2025;35,76 €;Chlorophyle;Courses;2
+23/09/2025;6,00 €;Boulangerie;Courses;2
+26/09/2025;1,93 €;La Ferme de Chez Nous;Courses;2
+26/09/2025;2,40 €;Boulangerie;Courses;2
+26/09/2025;70,95 €;Moustiquaires;Courses;2
+26/09/2025;19,35 €;Peugeot 2008;Carburant;2
+29/09/2025;131,69 €;EDF;Électricité;2
+30/09/2025;20,92 €;Peugeot 2008;Carburant;2
+01/10/2025;17,83 €;Hyper U;Courses;2
+01/10/2025;54,60 €;Peugeot 2008;Assurance voiture;2
+01/10/2025;76,01 €;Cuisine à 12 mains;Courses;2
+01/10/2025;23,21 €;Peugeot 2008;Carburant;2
+01/10/2025;9,00 €;Glaces;Courses;2
+01/10/2025;36,93 €;Elly - Manteaux;Courses;2
+01/10/2025;13,80 €;Crêpes;Courses;2
+07/10/2025;63,71 €;Prêt Habitat - Assurance (221 647€);Prêt Habitation - Assurance;2
+07/10/2025;15,90 €;Biocoop;Courses;2
+10/10/2025;864,74 €;Prêt Habitat (221 647€);Prêt habitation;2
+10/10/2025;14,00 €;Atlantic'Eau ;Eau;2
+12/10/2025;7,20 €;Boulangerie;Courses;2
+16/10/2025;25,00 €;Taxe habitation;Taxe foncière;2
+16/10/2025;24,06 €;Peugeot 2008;Carburant;2
+16/10/2025;46,68 €;Leclerc;Courses;2
+18/10/2025;162,50 €;Pickles;Courses;2
+18/10/2025;3,70 €;Parking;Courses;2

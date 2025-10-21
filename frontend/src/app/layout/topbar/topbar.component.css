@@ -1,0 +1,126 @@
+.layout-topbar {
+  position: fixed;
+  height: 70px;
+  z-index: 997;
+  left: 0;
+  top: 0;
+  width: 100%;
+  padding: 0 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.menu-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.menu-button:active {
+  transform: scale(0.95);
+}
+
+.menu-button i {
+  font-size: 1.75rem;
+}
+
+.layout-topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.layout-topbar-logo i {
+  font-size: 2rem;
+  color: white;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.layout-topbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.user-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.user-button i {
+  font-size: 1.25rem;
+}
+
+/* Desktop: cacher le bouton menu */
+@media screen and (min-width: 961px) {
+  .menu-button {
+    display: none;
+  }
+
+  .layout-topbar-logo {
+    justify-content: flex-start;
+  }
+}
+
+/* Mobile: adapter la taille */
+@media screen and (max-width: 960px) {
+  .layout-topbar {
+    padding: 0 1rem;
+  }
+
+  .app-title {
+    font-size: 1.2rem;
+  }
+
+  .layout-topbar-logo {
+    justify-content: center;
+  }
+
+  .menu-button {
+    margin-right: auto;
+  }
+}

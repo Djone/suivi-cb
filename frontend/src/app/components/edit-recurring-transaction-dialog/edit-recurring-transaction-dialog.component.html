@@ -1,0 +1,99 @@
+<h2 mat-dialog-title>
+  <mat-icon>edit</mat-icon>
+  Modifier l'échéance récurrente
+</h2>
+
+<mat-dialog-content>
+  <div class="dialog-form">
+    <!-- Type de flux financier -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Type</mat-label>
+      <mat-icon matPrefix>swap_vert</mat-icon>
+      <mat-select [(ngModel)]="financialFlowId" (ngModelChange)="onFinancialFlowChange()">
+        <mat-option *ngFor="let flow of financialFlows" [value]="flow.id">
+          {{ flow.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Compte bancaire -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Compte bancaire</mat-label>
+      <mat-icon matPrefix>account_balance</mat-icon>
+      <mat-select [(ngModel)]="accountId">
+        <mat-option *ngFor="let account of accounts" [value]="account.id">
+          {{ account.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Libellé -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Libellé</mat-label>
+      <mat-icon matPrefix>label</mat-icon>
+      <input matInput [(ngModel)]="label" placeholder="Ex: Loyer, Salaire, Électricité...">
+    </mat-form-field>
+
+    <!-- Montant -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Montant</mat-label>
+      <mat-icon matPrefix>euro</mat-icon>
+      <input matInput type="number" [(ngModel)]="amount" step="0.01">
+    </mat-form-field>
+
+    <!-- Périodicité -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Périodicité</mat-label>
+      <mat-icon matPrefix>repeat</mat-icon>
+      <mat-select [(ngModel)]="frequency">
+        <mat-option *ngFor="let freq of frequencies" [value]="freq.value">
+          {{ freq.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Jour du mois (pour périodicités mensuelles et plus) -->
+    <mat-form-field *ngIf="!isWeeklyFrequency()" appearance="fill" class="full-width">
+      <mat-label>Jour du mois</mat-label>
+      <mat-icon matPrefix>event</mat-icon>
+      <mat-select [(ngModel)]="dayOfMonth">
+        <mat-option *ngFor="let day of daysOfMonth" [value]="day">
+          {{ day }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Jour de la semaine (pour périodicité hebdomadaire) -->
+    <mat-form-field *ngIf="isWeeklyFrequency()" appearance="fill" class="full-width">
+      <mat-label>Jour de la semaine</mat-label>
+      <mat-icon matPrefix>calendar_today</mat-icon>
+      <mat-select [(ngModel)]="dayOfMonth">
+        <mat-option *ngFor="let day of daysOfWeek" [value]="day.value">
+          {{ day.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Sous-catégorie -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Sous-catégorie</mat-label>
+      <mat-icon matPrefix>category</mat-icon>
+      <mat-select [(ngModel)]="subCategoryId">
+        <mat-option *ngFor="let subcategory of subcategories" [value]="subcategory.id">
+          {{ subcategory.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">
+    <mat-icon>close</mat-icon>
+    Annuler
+  </button>
+  <button mat-raised-button color="primary" (click)="onSave()">
+    <mat-icon>save</mat-icon>
+    Enregistrer
+  </button>
+</mat-dialog-actions>

@@ -35,9 +35,6 @@ const SubCategory = {
   //Liste toutes les categories par type de flux financier (débit, crédit)
   getAllByFinancialFlowId: (financial_flow_id) => {
     return new Promise((resolve, reject) => {
-      
-      console.log('SubCategory model getAllByFinancialFlowId (filters) : ', financial_flow_id);
-
       db.all('SELECT sc.id, sc.label FROM subcategories sc, categories c where sc.category_id = c.id AND c.financial_flow_id = ?', [financial_flow_id], (err, rows) => {
         if (err) {
           reject(err); // Rejetez la promesse en cas d'erreur
@@ -102,7 +99,6 @@ const SubCategory = {
               return reject(new Error('Aucune sous-catégorie trouvée avec cet ID.'));
           }
 
-          console.log('Sous-catégorie mise à jour avec succès, ID :', id);
           logger.info('Sous-catégorie mise à jour avec succès');
           resolve({ id, changes: this.changes });
       });

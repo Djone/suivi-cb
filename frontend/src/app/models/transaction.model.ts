@@ -7,5 +7,6 @@ export interface Transaction {
     subCategoryId: number | null;
     accountId: number | null;
     financialFlowId: number | null;
+    recurringTransactionId?: number | null; // Lien vers une échéance récurrente
     [key: string]: any; // Index signature permettant d'utiliser des clés dynamiques
   }

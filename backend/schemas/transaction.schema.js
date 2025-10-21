@@ -42,6 +42,13 @@ const transactionSchema = Joi.object({
       .positive()
       .required()
       .description('L\'ID du type de transaction (nombre entier positif).'),
+
+    recurring_transaction_id: Joi.number()
+      .integer()
+      .positive()
+      .allow(null)
+      .optional()
+      .description('L\'ID de l\'échéance récurrente liée (optionnel).'),
   });
 
 module.exports = { 

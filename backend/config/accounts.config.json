@@ -1,0 +1,16 @@
+{
+  "accounts": [
+    {
+      "accountId": 1,
+      "initialBalance": 404.66,
+      "accountName": "Compte courant",
+      "currency": "EUR"
+    },
+    {
+      "accountId": 2,
+      "initialBalance": 355.08,
+      "accountName": "Compte joint",
+      "currency": "EUR"
+    }
+  ]
+}

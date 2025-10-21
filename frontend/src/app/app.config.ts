@@ -12,15 +12,25 @@ import localeFr from '@angular/common/locales/fr';
 registerLocaleData(localeFr);
 
 import { LOCALE_ID } from '@angular/core';
+import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }), 
-    provideRouter(routes), 
-    provideClientHydration(withEventReplay()), 
-    provideAnimationsAsync(), 
-    provideHttpClient(withFetch()), 
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+    provideClientHydration(withEventReplay()),
     provideAnimationsAsync(),
-    { provide: LOCALE_ID, useValue: 'fr' }
+    provideHttpClient(withFetch()),
+    provideAnimationsAsync(),
+    { provide: LOCALE_ID, useValue: 'fr' },
+    providePrimeNG({
+      theme: {
+        preset: Aura,
+        options: {
+          darkModeSelector: false
+        }
+      }
+    })
   ]
 };

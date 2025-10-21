@@ -1,51 +1,60 @@
-import { Component, ChangeDetectorRef  } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FINANCIAL_FLOW, FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 import { CategoryService } from '../../services/category.service';
 import { CategoryListComponent } from './category-list.component';
-import { Category } from '../../models/category.model';  // Importer le modèle
+import { Category } from '../../models/category.model';
+
+// PrimeNG Imports
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { CardModule } from 'primeng/card';
 
 @Component({
   selector: 'app-category-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, CategoryListComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    CardModule,
+    CategoryListComponent
+  ],
   templateUrl: './category-form.component.html',
   styleUrl: './category-form.component.css'
 })
 export class CategoryFormComponent {
-  label: string = '';
-  financialFlowId: number = FINANCIAL_FLOW.DEBIT.id; // Type par défaut : Dépense
-  financialFlowList = FINANCIAL_FLOW_LIST; // Liste des flux financier (Revenu, dépense)
-  formSubmitted: boolean = false; // Indique si le formulaire a été soumis
+  categoryForm: FormGroup;
+  financialFlowList = FINANCIAL_FLOW_LIST;
 
   constructor(
-    private categoryService: CategoryService,
-    private cdRef: ChangeDetectorRef // Injecter ChangeDetectorRef
-  ) {}
+    private fb: FormBuilder,
+    private categoryService: CategoryService
+  ) {
+    this.categoryForm = this.fb.group({
+      label: ['', Validators.required],
+      financialFlowId: [FINANCIAL_FLOW.DEBIT.id, Validators.required]
+    });
+  }
 
   onSubmit(): void {
-    this.formSubmitted = true; // Marquer le formulaire comme soumis
-    
-    // Vérification des champs requis
-    if (!this.label.trim()) {
-      return; // Arrête si la description est vide
+    if (!this.categoryForm.valid) {
+      return;
     }
 
-    // Création d'une nouvelle catégorie avec les données saisies
-    const newCategory: Category = {
-      label: this.label,
-      financialFlowId: this.financialFlowId,
-    };
+    const newCategory: Category = this.categoryForm.value;
 
-    console.log('CATEGORY FORM COMPONENT : Catégories envoyées au backend:', newCategory);
+    console.log('CATEGORY FORM COMPONENT : Catégorie envoyée au backend:', newCategory);
 
-    // Appel au service pour ajouter une nouvelle catégorie
     this.categoryService.addCategory(newCategory).subscribe({
       next: () => {
         console.log('CATEGORY FORM COMPONENT : Catégorie ajoutée avec succès');
-        this.resetForm(); // Réinitialiser le formulaire
-        this.categoryService.getCategories(); // Récupérer les catégories mises à jour
+        this.resetForm();
+        this.categoryService.getCategories();
       },
       error: (err) => {
         console.error('CATEGORY FORM COMPONENT : Erreur lors de l\'ajout de la catégorie :', err);
@@ -53,13 +62,12 @@ export class CategoryFormComponent {
     });
   }
 
-  /**
-   * Méthode pour réinitialiser les champs du formulaire.
-   */
   resetForm(): void {
-    this.label = '';
-    this.financialFlowId = FINANCIAL_FLOW.DEBIT.id; // Réinitialiser le type à "Dépense"
-    this.formSubmitted = false; // Réinitialiser l'état du formulaire
-    this.cdRef.detectChanges(); // Déclencher manuellement un re-rendu
+    this.categoryForm.reset({
+      label: '',
+      financialFlowId: FINANCIAL_FLOW.DEBIT.id
+    });
+    this.categoryForm.markAsPristine();
+    this.categoryForm.markAsUntouched();
   }
 }

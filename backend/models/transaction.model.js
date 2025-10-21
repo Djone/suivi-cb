@@ -15,24 +15,31 @@ const Transaction = {
     return new Promise((resolve, reject) => {
       let query = 'SELECT * FROM transactions WHERE 1 = 1'; // Clause de base
       const params = []; // Tableau pour stocker les paramètres de la requête
-      const columnMap = { account_id: 'account_id', financial_flow_id: 'financial_flow_id' };
 
-      console.log('Transaction model getAll (filters) : ', filters);
+      // Liste blanche des colonnes autorisées pour éviter les injections SQL
+      const allowedColumns = {
+        account_id: 'account_id',
+        financial_flow_id: 'financial_flow_id',
+        sub_category_id: 'sub_category_id',
+        date: 'date'
+      };
 
       // Si des filtres sont fournis, ajoutez-les à la requête
       Object.keys(filters).forEach((key) => {
         if (filters[key] !== undefined && filters[key] !== null) {
-          const column = columnMap[key] || key; // Utilise le mapping ou la clé telle quelle
-          query += ` AND ${column} = ?`; // Ajoute la condition dynamique
-          params.push(filters[key]);   // Ajoute la valeur du filtre
+          // Vérifier que la colonne est dans la liste blanche
+          const column = allowedColumns[key];
+          if (column) {
+            query += ` AND ${column} = ?`; // Ajoute la condition dynamique
+            params.push(filters[key]);   // Ajoute la valeur du filtre
+          } else {
+            logger.warn(`Tentative de filtrage sur une colonne non autorisée : ${key}`);
+          }
         }
       });
 
       // Ajoutez l'ordre de tri par date (descendant) à la fin
       query += ' ORDER BY date DESC';
-
-      console.log('Transaction model getAll params : ', params);
-      console.log('Transaction model getAll : ', query);
 
       // Exécutez la requête avec les paramètres dynamiques
       db.all(query, params, (err, rows) => {
@@ -51,15 +58,12 @@ const Transaction = {
  * @returns {Promise<Object>} - Retourne l'ID de la transaction créée
  */
   add: (transaction) => {
-    const columns = ['date', 'amount', 'description', 'sub_category_id', 'account_id', 'financial_flow_id']; // contient toutes les colonnes nécessaires pour l'insertion. Si vous devez ajouter ou modifier une colonne, il suffit de mettre à jour ce tableau.
-    const values = columns.map((col) => transaction[col]); // Récupérer les valeurs correspondantes
+    const columns = ['date', 'amount', 'description', 'sub_category_id', 'account_id', 'financial_flow_id', 'recurring_transaction_id']; // contient toutes les colonnes nécessaires pour l'insertion. Si vous devez ajouter ou modifier une colonne, il suffit de mettre à jour ce tableau.
+    const values = columns.map((col) => transaction[col] !== undefined ? transaction[col] : null); // Récupérer les valeurs correspondantes
     const placeholders = columns.map(() => '?').join(', '); // Génère "?, ?"
 
     return new Promise((resolve, reject) => {
       const query = `INSERT INTO transactions (${columns.join(', ')}) VALUES (${placeholders})`;
-
-      console.log('Transaction model add : ', query);
-      console.log('Transaction model add (data): ', values);
 
       db.run(query, values, function (err) {
         if (err) {
@@ -102,7 +106,6 @@ const Transaction = {
               return reject(new Error('Aucune transaction trouvée avec cet ID.'));
           }
 
-          console.log('Transaction mise à jour avec succès, ID :', id);
           logger.info('Transaction mise à jour avec succès');
           resolve({ id, changes: this.changes });
       });

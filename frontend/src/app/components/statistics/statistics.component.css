@@ -1,0 +1,213 @@
+.statistics-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Espacement entre les sections */
+.section-wrapper {
+  margin-bottom: 1rem;
+}
+
+.page-header {
+  margin-bottom: 3rem !important;
+}
+
+.page-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.page-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+/* Filtres */
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  align-items: end;
+}
+
+.filter-item label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+/* Graphiques par catégorie */
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+::ng-deep .chart-card {
+  height: 100%;
+}
+
+.chart-container {
+  max-width: 400px;
+  margin: 0 auto 2rem auto;
+  padding: 1rem;
+}
+
+.chart-container-wide {
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.category-table {
+  margin-top: 2rem;
+}
+
+.category-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+/* Évolution */
+
+.evolution-table {
+  margin-top: 2rem;
+}
+
+/* Moyennes */
+.averages-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 2rem !important;
+}
+
+::ng-deep .average-card {
+  height: 100%;
+}
+
+.average-table {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Tableaux */
+.text-right {
+  text-align: right !important;
+}
+
+.amount-cell {
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.amount-cell.positive {
+  color: #059669;
+}
+
+.amount-cell.negative {
+  color: #dc2626;
+}
+
+::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background-color: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #f8fafc;
+}
+
+::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  padding: 1rem;
+  border-top: 2px solid #cbd5e1;
+}
+
+/* Cartes */
+::ng-deep .p-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  border: none;
+}
+
+::ng-deep .p-card .p-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1.25rem;
+  padding: 1.5rem;
+  border-radius: 12px 12px 0 0;
+}
+
+::ng-deep .p-card .p-card-body {
+  padding: 1.5rem;
+}
+
+::ng-deep .p-card .p-card-content {
+  padding: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .charts-row,
+  .averages-row {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .statistics-container {
+    padding: 1rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+  }
+
+  .chart-container {
+    max-width: 100%;
+  }
+}
+
+/* Message vide */
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.no-data mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+}

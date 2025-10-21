@@ -1,20 +1,109 @@
 /* You can add global styles to this file, and also import other style files */
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+/* PrimeNG Base Styling */
+:root {
+  --primary-color: #667eea;
+  --primary-color-text: #ffffff;
+  --surface-0: #ffffff;
+  --surface-50: #fafafa;
+  --surface-100: #f5f5f5;
+  --surface-200: #eeeeee;
+  --surface-300: #e0e0e0;
+  --surface-400: #bdbdbd;
+  --surface-500: #9e9e9e;
+  --surface-600: #757575;
+  --surface-700: #616161;
+  --surface-800: #424242;
+  --surface-900: #212121;
+  --gray-50: #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #eeeeee;
+  --gray-300: #e0e0e0;
+  --gray-400: #bdbdbd;
+  --gray-500: #9e9e9e;
+  --gray-600: #757575;
+  --gray-700: #616161;
+  --gray-800: #424242;
+  --gray-900: #212121;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #f8f9fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* PrimeNG Theme Overrides */
+.p-component {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Material Snackbar */
 .success-snackbar {
-    background-color: #4caf50; /* Vert pour succès */
-    color: white;
-    font-size: 1rem;
-    text-align: center;
+  background-color: #4caf50;
+  color: white;
+  font-size: 1rem;
+  text-align: center;
 }
 
 .mat-snack-bar-container {
-    background-color: #323232; /* Couleur de fond du snack-bar */
-    color: #ffffff; /* Couleur du texte */
-    font-size: 16px; /* Taille de la police */
-    text-align: center;
-    border-radius: 8px; /* Coins arrondis */
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-  }
+  background-color: #323232;
+  color: #ffffff;
+  font-size: 16px;
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Cards */
+.card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+/* Global PrimeNG Accordion - Remove all borders */
+.p-accordion,
+.p-accordion .p-accordion-tab,
+.p-accordion .p-accordion-header,
+.p-accordion .p-accordion-header-link,
+.p-accordion .p-accordion-content,
+.p-accordion .p-toggleable-content {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.p-accordion .p-accordion-tab {
+  border: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.p-accordion .p-accordion-header {
+  border: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.p-accordion .p-accordion-content {
+  border: 0 !important;
+  border-top: 0 !important;
+}
 

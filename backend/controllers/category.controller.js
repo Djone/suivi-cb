@@ -13,10 +13,21 @@ const Category = require('../models/category.model');
 exports.getAllCategories = async (req, res) => {
     try {
         const categories = await Category.getAll();
-        console.log('Catégories récupérées :', categories);
+        console.log('Catégories récupérées (toutes) :', categories);
         res.status(200).json(categories);
     } catch (err) {
         console.error('Erreur lors de la récupération des catégories :', err);
+        res.status(500).json({ error: 'Erreur interne du serveur' });
+    }
+};
+
+exports.getActiveCategories = async (req, res) => {
+    try {
+        const categories = await Category.getAllActive();
+        console.log('Catégories actives récupérées :', categories);
+        res.status(200).json(categories);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des catégories actives :', err);
         res.status(500).json({ error: 'Erreur interne du serveur' });
     }
 };
@@ -84,17 +95,36 @@ exports.deleteCategoryById = async (req, res) => {
     const id = parseInt(req.params.id, 10); // Conversion en entier pour garantir un traitement correct
 
     if (!id) {
-        return res.status(400).json({ error: 'ID invalide pour la suppression.' });
+        return res.status(400).json({ error: 'ID invalide pour la désactivation.' });
     }
 
     try {
         await Category.deleteById(id);
-        res.status(200).json({ message: 'Catégorie supprimée avec succès.' });
+        res.status(200).json({ message: 'Catégorie désactivée avec succès.' });
     } catch (err) {
-        console.error('Erreur lors de la suppression de la catégorie :', err.message);
+        console.error('Erreur lors de la désactivation de la catégorie :', err.message);
         if (err.message === 'Aucune catégorie trouvée avec cet ID.') {
             return res.status(404).json({ error: err.message });
         }
-        res.status(500).json({ error: 'Erreur lors de la suppression de la catégorie.' });
+        res.status(500).json({ error: 'Erreur lors de la désactivation de la catégorie.' });
+    }
+};
+
+exports.reactivateCategory = async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+
+    if (!id) {
+        return res.status(400).json({ error: 'ID invalide pour la réactivation.' });
+    }
+
+    try {
+        await Category.reactivate(id);
+        res.status(200).json({ message: 'Catégorie réactivée avec succès.' });
+    } catch (err) {
+        console.error('Erreur lors de la réactivation de la catégorie :', err.message);
+        if (err.message === 'Aucune catégorie trouvée avec cet ID.') {
+            return res.status(404).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Erreur lors de la réactivation de la catégorie.' });
     }
 };

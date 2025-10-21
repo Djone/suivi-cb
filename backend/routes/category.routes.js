@@ -11,8 +11,11 @@ const { categorySchema } = require('../schemas/category.schema'); // Schéma de 
 const { categoryUpdateSchema } = require('../schemas/category.schema'); // Schéma de validation spécifique pour la mise à jour
 const categoryController = require('../controllers/category.controller'); // Contrôleur regroupant les fonctions responsables des opérations CRUD sur les catégories.
 
-// Route pour obtenir toutes les catégories (GET)
+// Route pour obtenir toutes les catégories (actives et inactives) (GET)
 router.get('/', categoryController.getAllCategories);  // Correspond à /api/categories
+
+// Route pour obtenir uniquement les catégories actives (pour les formulaires) (GET)
+router.get('/active', categoryController.getActiveCategories);  // Correspond à /api/categories/active
 
 // Route pour ajouter une catégorie (POST)
 router.post('/', validate(categorySchema), categoryController.addCategory);  // Correspond à /api/categories
@@ -20,7 +23,10 @@ router.post('/', validate(categorySchema), categoryController.addCategory);  // 
 // Route pour mettre à jour une catégorie (PUT)
 router.put('/:id', validate(categoryUpdateSchema), categoryController.updateCategory);  // Correspond à /api/categories/:id
 
-// Route pour supprimer une catégorie par ID (DELETE)
+// Route pour supprimer une catégorie par ID (DELETE - soft delete)
 router.delete('/:id', categoryController.deleteCategoryById);
+
+// Route pour réactiver une catégorie (PUT)
+router.put('/:id/reactivate', categoryController.reactivateCategory);
 
 module.exports = router;
