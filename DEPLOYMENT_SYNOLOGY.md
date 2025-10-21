@@ -70,22 +70,27 @@ Pour accéder à votre application via votre domaine HTTPS existant:
   - Nom d'hôte: `localhost`
   - Port: `4200` (port du container)
 
-**Règles personnalisées (onglet "Règles personnalisées"):**
+**En-têtes personnalisés (onglet "En-têtes personnalisés"):**
 
-Ajoutez ces en-têtes HTTP:
+Ajoutez ces en-têtes de sécurité un par un:
 
-```
-# WebSocket support (si nécessaire)
-map $http_upgrade $connection_upgrade {
-    default upgrade;
-    '' close;
-}
+Cliquez sur **Créer** pour chaque en-tête et remplissez:
 
-# Headers de sécurité
-add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header X-XSS-Protection "1; mode=block" always;
-```
+| Nom de l'en-tête | Valeur |
+|------------------|---------|
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Strict-Transport-Security` | `max-age=31536000` |
+
+**Note importante:**
+- L'interface DSM ne permet que des en-têtes HTTP simples (nom/valeur)
+- Les directives nginx complexes comme `map` ne sont pas supportées via l'interface
+- Le support WebSocket n'est pas nécessaire pour cette application
+
+**Si WebSocket est nécessaire plus tard** (actuellement non), ajoutez:
+- Nom: `Upgrade`, Valeur: `$http_upgrade`
+- Nom: `Connection`, Valeur: `upgrade`
 
 4. Cliquez sur **Enregistrer**
 
