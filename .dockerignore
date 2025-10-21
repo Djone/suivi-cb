@@ -1,0 +1,60 @@
+# Node modules
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Fichiers de développement
+.git/
+.gitignore
+.vscode/
+.idea/
+*.log
+
+# Fichiers de test
+**/*.spec.ts
+**/*.spec.js
+**/test/
+**/tests/
+coverage/
+*.test.js
+
+# Fichiers de configuration locale
+.env.local
+.env.development
+*.local
+
+# Build artifacts
+frontend/dist/
+frontend/.angular/
+backend/dist/
+
+# Base de données locale
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+
+# Scripts de développement
+scripts/
+migrations/*.js
+!migrations/initializeDatabase.js
+!migrations/addIsActiveToCategories.js
+!migrations/createRecurringTransactionsTable.js
+
+# Fichiers temporaires
+tmp/
+temp/
+*.tmp
+*.swp

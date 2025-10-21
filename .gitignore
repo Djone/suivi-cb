@@ -49,3 +49,13 @@ coverage/
 
 # Build files
 *.tsbuildinfo
+
+# Docker & Production
+data/
+backups/
+*.tar.gz
+*.zip
+
+# Local scripts that might contain sensitive info
+deploy-local.sh
+.env.production.local

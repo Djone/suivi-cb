@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(ng generate component components/recurring-transaction/recurring-transaction-form --standalone --skip-tests)",
+      "Bash(ng generate component components/recurring-transaction/recurring-transaction-list --standalone --skip-tests)",
+      "Bash(npm run build)",
+      "Bash(node checkMissingSubcategories.js)",
+      "Bash(node addMissingSubcategories.js)",
+      "Bash(node importTransactionsFromCSV.js)",
+      "Bash(node addRemainingSubcategory.js)",
+      "Bash(node migrations/createAccountsTable.js)",
+      "Bash(ng generate component components/transaction/transaction-list --standalone --skip-tests)",
+      "Bash(cat \"c:\\Users\\jonat\\OneDrive\\Documents\\Suivi comptes\\suivi-cb\\frontend\\src\\app\\layout\\sidebar\\sidebar.component.css\")",
+      "Bash(dir primeng)",
+      "Bash(npm start)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

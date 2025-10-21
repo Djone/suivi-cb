@@ -1,0 +1,28 @@
+# Dockerfile pour le backend Node.js
+FROM node:20-alpine
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers package.json et package-lock.json
+COPY backend/package*.json ./
+
+# Installer les dépendances de production uniquement
+RUN npm ci --only=production
+
+# Copier le reste des fichiers du backend
+COPY backend/ ./
+
+# Créer le répertoire pour la base de données
+RUN mkdir -p /app/data
+
+# Exposer le port du backend
+EXPOSE 3001
+
+# Variables d'environnement par défaut
+ENV NODE_ENV=production
+ENV PORT_BACK=3001
+ENV DB_PATH=/app/data/database.db
+
+# Démarrer le serveur
+CMD ["node", "server.js"]
