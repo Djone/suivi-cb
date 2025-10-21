@@ -40,9 +40,9 @@ REM Étape 2: Vérification des dépendances backend
 echo [INFO] Etape 2/6: Verification des dependances backend...
 if not exist "backend\node_modules" (
     echo [WARNING] node_modules du backend non trouve. Installation...
-    cd backend
+    pushd backend
     call npm ci
-    cd ..
+    popd
 )
 echo [INFO] Dependances backend OK
 echo.
@@ -51,23 +51,23 @@ REM Étape 3: Vérification des dépendances frontend
 echo [INFO] Etape 3/6: Verification des dependances frontend...
 if not exist "frontend\node_modules" (
     echo [WARNING] node_modules du frontend non trouve. Installation...
-    cd frontend
+    pushd frontend
     call npm ci
-    cd ..
+    popd
 )
 echo [INFO] Dependances frontend OK
 echo.
 
 REM Étape 4: Build du frontend Angular
 echo [INFO] Etape 4/6: Build du frontend Angular en mode production...
-cd frontend
+pushd frontend
 call npm run build -- --configuration production
 if errorlevel 1 (
     echo [ERREUR] Erreur lors du build du frontend
-    cd ..
+    popd
     exit /b 1
 )
-cd ..
+popd
 echo [INFO] Build frontend termine
 echo.
 
