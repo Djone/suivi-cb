@@ -19,7 +19,7 @@ Avant de commencer, assurez-vous d'avoir:
 Depuis votre ordinateur:
 
 ```bash
-ssh votre_utilisateur@IP_NAS
+ssh votre_utilisateur@IP_NAS -p {port SSH}
 # Ou avec le nom de domaine
 ssh votre_utilisateur@nas.votredomaine.com
 ```
