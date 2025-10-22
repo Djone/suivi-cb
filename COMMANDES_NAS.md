@@ -14,8 +14,6 @@ ssh -p 2222 admin@192.168.1.100
 # Connexion avec clé SSH
 ssh -i ~/.ssh/nas_key admin@192.168.1.100
 
-# Connexion et exécution directe d'une commande
-ssh admin@192.168.1.100 "cd /volume1/docker/suivi-cb && sudo docker-compose ps"
 ```
 
 ## Navigation
