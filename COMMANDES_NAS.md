@@ -6,14 +6,13 @@ Ce document regroupe toutes les commandes utiles pour gérer l'application sur l
 
 ```bash
 # Connexion SSH standard
-ssh admin@192.168.1.100
+ssh admin@192.168.1.100 -p 22
 
-# Connexion avec port personnalisé
-ssh -p 2222 admin@192.168.1.100
+Saisir le mot de passa
 
-# Connexion avec clé SSH
-ssh -i ~/.ssh/nas_key admin@192.168.1.100
+sudo -i
 
+Saisir le mot de passa
 ```
 
 ## Navigation
