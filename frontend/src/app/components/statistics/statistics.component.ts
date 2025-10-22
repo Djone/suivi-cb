@@ -472,7 +472,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
         labels: this.monthlyEvolution.map(m => m.month),
         datasets: [
           {
-            data: this.monthlyEvolution.map(m => -m.expenses),
+            data: this.monthlyEvolution.map(m => m.expenses),
             label: 'Dépenses',
             borderColor: '#ef4444',
             backgroundColor: 'rgba(239, 68, 68, 0.1)',

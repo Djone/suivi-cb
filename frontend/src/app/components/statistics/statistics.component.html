@@ -162,7 +162,7 @@
           <tr>
             <td><strong>{{ month.month }}</strong></td>
             <td class="text-right amount-cell negative">
-              {{ -month.expenses | currency:'EUR':'symbol':'1.2-2':'fr' }}
+              {{ month.expenses | currency:'EUR':'symbol':'1.2-2':'fr' }}
             </td>
             <td class="text-right amount-cell positive">
               {{ month.income | currency:'EUR':'symbol':'1.2-2':'fr' }}
