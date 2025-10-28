@@ -4,13 +4,14 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Transaction } from '../models/transaction.model';
 import { FilterManagerService } from './filter-manager.service';
+import { environment } from '../../environments/environment';
 import * as humps from 'humps'; // Importer humps
 
 @Injectable({
   providedIn: 'root'
 })
 export class TransactionService {
-  private apiUrl = 'http://localhost:3000/api/transactions';
+  private apiUrl = `${environment.apiUrl}/api/transactions`;
   // Gestion du BehaviorSubject
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   transactions$ = this.transactionsSubject.asObservable();

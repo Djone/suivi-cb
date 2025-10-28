@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs'; // Une meilleure approche co
 import { tap, catchError } from 'rxjs/operators';
 import { Category } from '../models/category.model';
 import * as humps from 'humps'; // Importer humps
+import { environment } from '../../environments/environment';
 
 //Ajoutez un BehaviorSubject dans votre service pour suivre l'état des catégories.
 
@@ -11,7 +12,7 @@ import * as humps from 'humps'; // Importer humps
   providedIn: 'root'
 })
 export class CategoryService {
-  private apiUrl = 'http://localhost:3000/api/categories';
+  private apiUrl = `${environment.apiUrl}/api/categories`;
   // Gestion du BehaviorSubject
   private categoriesSubject = new BehaviorSubject<Category[]>([]);
   categories$ = this.categoriesSubject.asObservable();

@@ -89,7 +89,8 @@ describe('TransactionService', () => {
         date: new Date('2024-01-01'),
         accountId: 1,
         financialFlowId: 1,
-        subCategoryId: 1
+        subCategoryId: 1,
+        id: null
       };
 
       service.addTransaction(newTransaction).subscribe(() => {

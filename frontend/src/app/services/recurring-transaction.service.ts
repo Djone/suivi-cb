@@ -5,12 +5,13 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { RecurringTransaction } from '../models/recurring-transaction.model';
 import * as humps from 'humps';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RecurringTransactionService {
-  private apiUrl = 'http://localhost:3000/api/recurring-transactions';
+  private apiUrl = `${environment.apiUrl}/api/recurring-transactions`;
 
   private recurringTransactionsSubject = new BehaviorSubject<RecurringTransaction[]>([]);
   recurringTransactions$ = this.recurringTransactionsSubject.asObservable();

@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { SubCategory } from '../models/sub-category.model';
 import * as humps from 'humps'; // Importer humps
+import { environment } from '../../environments/environment';
 
 //Ajoutez un BehaviorSubject dans votre service pour suivre l'état des sous-catégories.
 
@@ -11,7 +12,7 @@ import * as humps from 'humps'; // Importer humps
   providedIn: 'root',
 })
 export class SubCategoryService {
-  private apiUrl = 'http://localhost:3000/api/sub-categories'; // Changez l'URL selon votre backend
+  private apiUrl = `${environment.apiUrl}/api/sub-categories`; // URL dynamique
   // Gestion du BehaviorSubject
   private subCategoriesSubject = new BehaviorSubject<SubCategory[]>([]);
   subCategories$ = this.subCategoriesSubject.asObservable();
