@@ -72,9 +72,9 @@ const Transaction = {
       transaction.date,
       transaction.amount,
       transaction.description,
-      transaction.subCategoryId,
-      transaction.accountId,
-      transaction.financialFlowId,
+      transaction.sub_category_id,
+      transaction.account_id,
+      transaction.financial_flow_id,
       id
     ];
     console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}" (Transaction)`);

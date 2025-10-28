@@ -73,14 +73,11 @@ exports.updateTransaction = async (req, res) => {
             return res.status(400).json({ error: 'ID de la transaction manquant.' });
         }
 
-        // Ajouter l'ID aux champs pour la mise à jour
-        const updateData = { id, ...fieldsToUpdate };
-
         // Appel au modèle pour mettre à jour
-        const result = await Transaction.update(updateData);
+        const result = await Transaction.update(id, fieldsToUpdate);
 
         res.status(200).json({
-            message: 'Transaction mise à jour avec succès.', updateData,
+            message: 'Transaction mise à jour avec succès.',
             changes: result.changes,
         });
     } catch (err) {
