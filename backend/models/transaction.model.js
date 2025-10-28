@@ -106,6 +106,8 @@ const Transaction = {
               return reject(new Error('Aucune transaction trouvée avec cet ID.'));
           }
 
+          console.log(`[DB_WRITE_DEBUG_TRANSACTIONS] Add transaction on DB: ${db.filename}`);
+          console.log('TRANSACTION MODEL : Transaction ajoutée avec succès, ID:', this.lastID);
           logger.info('Transaction mise à jour avec succès');
           resolve({ id, changes: this.changes });
       });
