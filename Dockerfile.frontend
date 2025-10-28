@@ -25,7 +25,7 @@ FROM nginx:1.25-alpine
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copier notre configuration Nginx personnalisée qui sait gérer une SPA
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copier les fichiers de l'application Angular depuis l'étape "builder".
 # Le chemin de sortie est /app/dist/frontend/browser car le nom du projet dans package.json est "frontend".
