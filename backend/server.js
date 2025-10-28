@@ -16,18 +16,29 @@ const PORT_BACK = process.env.PORT_BACK || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Initialisation de la base de données et migrations
-initializeDatabase();
+// Fonction de démarrage asynchrone
+const startServer = async () => {
+  try {
+    // 1. Attendre que la base de données soit prête
+    await initializeDatabase();
 
-// Routes API
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/sub-categories', subcategoryRoutes);
-app.use('/api/config', configRoutes);
-app.use('/api/recurring-transactions', recurringTransactionRoutes);
-app.use('/api/accounts', accountRoutes);
+    // 2. Enregistrer les routes API une fois la DB prête
+    app.use('/api/transactions', transactionRoutes);
+    app.use('/api/categories', categoryRoutes);
+    app.use('/api/sub-categories', subcategoryRoutes);
+    app.use('/api/config', configRoutes);
+    app.use('/api/recurring-transactions', recurringTransactionRoutes);
+    app.use('/api/accounts', accountRoutes);
 
-// Démarrer le serveur
-app.listen(PORT_BACK, () => {
-  console.log(`Serveur backend sur http://localhost:${PORT_BACK}`);
-});
+    // 3. Démarrer le serveur Express
+    app.listen(PORT_BACK, () => {
+      console.log(`✅ Serveur backend démarré et prêt sur http://localhost:${PORT_BACK}`);
+    });
+  } catch (error) {
+    console.error('❌ Échec du démarrage du serveur:', error);
+    process.exit(1);
+  }
+};
+
+// Lancer le processus de démarrage
+startServer();
