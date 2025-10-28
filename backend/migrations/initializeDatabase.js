@@ -95,7 +95,7 @@ function initializeDatabase() {
         console.error('Erreur lors de la création de la table accounts:', err.message);
         db.close();
       } else {
-        console.log('Table accounts créée avec succès.');
+        console.log('✓ Table accounts créée avec succès.');
 
         // Insérer les comptes par défaut s'ils n'existent pas
         db.get('SELECT COUNT(*) as count FROM accounts', (err, row) => {
@@ -111,7 +111,7 @@ function initializeDatabase() {
                 if (err) {
                   console.error('Erreur lors de l\'insertion du compte courant:', err.message);
                 } else {
-                  console.log('Compte courant créé avec succès.');
+                  console.log('✓ Compte courant créé avec succès.');
                 }
               }
             );
@@ -124,7 +124,7 @@ function initializeDatabase() {
                 if (err) {
                   console.error('Erreur lors de l\'insertion du compte joint:', err.message);
                 } else {
-                  console.log('Compte joint créé avec succès.');
+                  console.log('✓ Compte joint créé avec succès.');
                 }
 
                 // Fermer la base après la dernière insertion
@@ -132,7 +132,7 @@ function initializeDatabase() {
                   if (err) {
                     console.error('Erreur lors de la fermeture de la base de données:', err.message);
                   } else {
-                    console.log('Migration terminée.');
+                    console.log('✓ Migration terminée.');
                   }
                 });
               }
@@ -143,7 +143,7 @@ function initializeDatabase() {
               if (err) {
                 console.error('Erreur lors de la fermeture de la base de données:', err.message);
               } else {
-                console.log('Migration terminée.');
+                console.log('✓ Migration terminée.');
               }
             });
           }

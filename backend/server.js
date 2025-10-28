@@ -21,27 +21,6 @@ app.use(bodyParser.json());
 // Initialisation de la base de données et migrations
 initializeDatabase();
 
-// Exécuter la migration pour ajouter is_active aux catégories
-addIsActiveToCategories()
-  .then(() => console.log('Migration is_active terminée avec succès'))
-  .catch(err => console.error('Erreur lors de la migration is_active:', err));
-
-// Exécuter la migration pour créer la table recurring_transactions
-createRecurringTransactionsTable()
-  .then(() => console.log('Migration recurring_transactions terminée avec succès'))
-  .catch(err => console.error('Erreur lors de la migration recurring_transactions:', err));
-
-/*
-// Vérification du bon fonctionnement des requêtes envoyées par le frontend
-app.use((req, next) => {
-  console.log(`Requête reçue : ${req.method} ${req.url}`);
-  console.log('Corps de la requête :', req.body); // Afficher le JSON envoyé
-  console.log('Paramètres de la requête :', req.params); // Afficher les paramètres
-  console.log('Query string :', req.query); // Afficher les query strings
-  next();
-});
-*/
-
 // Routes API
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/categories', categoryRoutes);
