@@ -166,7 +166,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   loadTransactions(): void {
-    this.transactionService.getTransactions().subscribe();
+    this.transactionService.loadTransactions();
   }
 
   // Appliquer les filtres et le tri
@@ -500,11 +500,15 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         ? parseInt(rt.dayOfMonth)
         : (rt.dayOfMonth || 0);
 
-      // Seulement les échéances APRÈS aujourd'hui
-      if (dayOfMonth > currentDay) {
+      // Vérifier si l'échéance a déjà été réalisée ce mois-ci
+      const isRealized = this.isRecurringRealized(rt.id!);
+
+      // Condition : le jour n'est pas encore passé ET l'échéance n'a pas déjà été réalisée
+      if (dayOfMonth > currentDay && !isRealized) {
         const amount = typeof rt.amount === 'string' ? parseFloat(rt.amount) : (rt.amount || 0);
         const financialFlowId = typeof rt.financialFlowId === 'string' ? parseInt(rt.financialFlowId) : rt.financialFlowId;
         const signedAmount = financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+
         console.log('TRANSACTION LIST : Échéance à venir (jour', dayOfMonth, '):', rt['label'], signedAmount);
         return sum + signedAmount;
       }
@@ -524,53 +528,23 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   // Vérifier si une échéance a été réalisée ce mois
   isRecurringRealized(recurringId: number): boolean {
-    const today = new Date();
-    const currentDay = today.getDate();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-    // Trouver l'échéance récurrente
-    const recurring = this.recurringTransactions.find(rt => rt.id === recurringId);
-    if (!recurring) return false;
-
-    const dayOfMonth = typeof recurring.dayOfMonth === 'string'
-      ? parseInt(recurring.dayOfMonth)
-      : (recurring.dayOfMonth || 0);
-
-    // 1. Chercher une transaction avec cet ID d'échéance ce mois-ci
-    const matchingTransactions = this.transactions.filter(t => {
-      const tRecurringId = typeof t.recurringTransactionId === 'string'
-        ? parseInt(t.recurringTransactionId)
-        : t.recurringTransactionId;
-
-      // Vérifier que l'ID correspond
-      if (!tRecurringId || tRecurringId !== recurringId) {
-        return false;
-      }
-
-      // Vérifier le mois et l'année
+    // La seule source de vérité est l'existence d'une transaction liée pour le mois en cours.
+    const isRealized = this.transactions.some(t => {
       const transDate = new Date(t.date || '');
-      const transMonth = transDate.getMonth();
-      const transYear = transDate.getFullYear();
-
-      return transMonth === currentMonth && transYear === currentYear;
+      return t.recurringTransactionId === recurringId &&
+             transDate.getMonth() === currentMonth &&
+             transDate.getFullYear() === currentYear;
     });
 
-    if (matchingTransactions.length > 0) {
-      console.log(`TRANSACTION LIST : Échéance ${recurringId} (jour ${dayOfMonth}) réalisée - Transaction trouvée avec recurringTransactionId`);
-      return true;
+    if (isRealized) {
+      console.log(`TRANSACTION LIST : Échéance ${recurringId} réalisée - Transaction trouvée.`);
     }
 
-    // 2. Si le jour est déjà passé ce mois, on considère qu'elle est réalisée
-    // (car l'utilisateur peut avoir créé la transaction sans lier l'ID)
-    if (dayOfMonth <= currentDay) {
-      console.log(`TRANSACTION LIST : Échéance ${recurringId} (jour ${dayOfMonth}) considérée comme réalisée (jour passé)`);
-      return true;
-    }
-
-    // 3. Sinon, elle est à venir
-    console.log(`TRANSACTION LIST : Échéance ${recurringId} (jour ${dayOfMonth}) à venir`);
-    return false;
+    return isRealized;
   }
 
   // Obtenir le libellé du jour pour une échéance

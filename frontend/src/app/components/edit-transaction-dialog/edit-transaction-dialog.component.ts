@@ -14,8 +14,10 @@ import { DropdownModule } from 'primeng/dropdown';
 import { Transaction } from '../../models/transaction.model';
 import { SubCategory } from '../../models/sub-category.model';
 import { Account } from '../../models/account.model';
+import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
+import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 
 interface DialogData {
@@ -53,12 +55,15 @@ export class EditTransactionDialogComponent implements OnInit {
   // Listes pour les dropdowns
   accounts: Account[] = [];
   financialFlowList = FINANCIAL_FLOW_LIST;
+  allRecurringTransactions: RecurringTransaction[] = [];
+  filteredRecurringTransactions: RecurringTransaction[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<EditTransactionDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private subCategoryService: SubCategoryService,
-    private accountService: AccountService
+    private accountService: AccountService,
+    private recurringTransactionService: RecurringTransactionService // Injecter le service
   ) {
     this.isNew = data.isNew || false;
     this.dialogTitle = this.isNew ? 'Nouvelle transaction' : 'Éditer la transaction';
@@ -86,6 +91,15 @@ export class EditTransactionDialogComponent implements OnInit {
       },
       error: (err) => console.error('Erreur lors du chargement des comptes:', err)
     });
+
+    // Charger les transactions récurrentes si c'est une nouvelle transaction
+    if (this.isNew) {
+      this.recurringTransactionService.recurringTransactions$.subscribe({
+        next: (recurring) => {
+          this.allRecurringTransactions = recurring.filter(rt => rt.isActive === 1);
+        }
+      });
+    }
 
     // Convertir la date string en objet Date (CORRECTION DU PROBLEME DE DECALAGE)
     if (this.data.transaction.date) {
@@ -116,6 +130,41 @@ export class EditTransactionDialogComponent implements OnInit {
     // Charger les sous-catégories en fonction du flux financier de la transaction
     this.loadSubcategories(financialFlowId!);
   }
+
+  // --- NOUVELLE LOGIQUE POUR LES ÉCHÉANCES ---
+
+  filterRecurring(event: any): void {
+    const query = event.query.toLowerCase();
+    // Filtrer les échéances pour le compte sélectionné
+    this.filteredRecurringTransactions = this.allRecurringTransactions.filter(rt =>
+      rt.label.toLowerCase().includes(query) && rt.accountId === this.data.transaction.accountId
+    );
+  }
+
+  onRecurringTransactionSelected(event: any): void {
+    const selectedRecurring: RecurringTransaction = event.value;
+
+    // Pré-remplir le formulaire
+    this.data.transaction.description = selectedRecurring.label;
+    this.data.transaction.amount = parseFloat(selectedRecurring.amount as any);
+    this.data.transaction.financialFlowId = selectedRecurring.financialFlowId;
+    this.data.transaction.subCategoryId = selectedRecurring.subCategoryId;
+    this.data.transaction.recurringTransactionId = selectedRecurring.id; // Lier la transaction
+
+    // Mettre à jour le champ de sous-catégorie
+    const selectedSubCat = this.subcategories.find(sc => sc.id === selectedRecurring.subCategoryId);
+    if (selectedSubCat) {
+      this.subCategoryControl.setValue(selectedSubCat);
+    }
+
+    // Recharger les sous-catégories si le flux financier a changé
+    this.loadSubcategories(selectedRecurring.financialFlowId);
+
+    // Forcer la détection des changements
+    this.onFieldChange();
+  }
+
+  // --- FIN DE LA NOUVELLE LOGIQUE ---
 
   // Charger les sous-catégories en fonction du flux financier
   loadSubcategories(financialFlowId: number): void {
@@ -235,6 +284,7 @@ export class EditTransactionDialogComponent implements OnInit {
       accountId: this.data.transaction.accountId || this.data.transaction['account_id'],
       financialFlowId: this.data.transaction.financialFlowId || this.data.transaction['financial_flow_id'],
       subCategoryId: this.selectedSubCategoryId,
+      recurringTransactionId: this.data.transaction.recurringTransactionId, // Ajouter l'ID de l'échéance
     };
 
     console.log('Transaction à envoyer:', updatedTransaction);

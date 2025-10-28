@@ -172,6 +172,19 @@ export class HomeComponent implements OnInit, OnDestroy {
     return initialBalance + totalTransactions;
   }
 
+  isRecurringRealizedThisMonth(recurringId: number): boolean {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return this.transactions.some(t => {
+      const transactionDate = new Date(t.date!);
+      return t.recurringTransactionId === recurringId &&
+             transactionDate.getMonth() === currentMonth &&
+             transactionDate.getFullYear() === currentYear;
+    });
+  }
+
   getUpcomingSchedules(accountId: number): UpcomingSchedule[] {
     const today = new Date();
     const currentDay = today.getDate();
@@ -190,7 +203,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         ? parseInt(recurring.dayOfMonth)
         : (recurring.dayOfMonth || 0);
 
-      if (dayOfMonth > currentDay) {
+      // Condition : le jour n'est pas encore passé ET l'échéance n'a pas déjà été réalisée ce mois-ci
+      const isRealized = this.isRecurringRealizedThisMonth(recurring.id!);
+
+      if (dayOfMonth > currentDay && !isRealized) {
         const dueDate = new Date(currentYear, currentMonth, dayOfMonth);
         const amount = typeof recurring.amount === 'string'
           ? parseFloat(recurring.amount)

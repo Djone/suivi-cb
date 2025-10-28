@@ -17,6 +17,22 @@
       </p-dropdown>
     </div>
 
+    <!-- Lier à une échéance (seulement en création) -->
+    <div *ngIf="isNew" class="p-field mb-3">
+      <label for="recurring" class="block mb-2">Lier à une échéance (optionnel)</label>
+      <p-autoComplete
+        id="recurring"
+        [suggestions]="filteredRecurringTransactions"
+        (completeMethod)="filterRecurring($event)"
+        field="label"
+        placeholder="Rechercher une échéance..."
+        (onSelect)="onRecurringTransactionSelected($event)"
+        [dropdown]="true"
+        [forceSelection]="true"
+        [style]="{'width': '100%'}">
+      </p-autoComplete>
+    </div>
+
     <!-- Type de transaction (Flux financier) -->
     <div class="p-field mb-3">
       <label for="financialFlow" class="block mb-2">Type de transaction *</label>

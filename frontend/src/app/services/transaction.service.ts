@@ -88,7 +88,8 @@ export class TransactionService {
     return this.http.post<void>(this.apiUrl, snakeCaseTransaction).pipe(
       tap(() => {
         console.log('TRANSACTION SERVICE : transaction ajoutée avec succès');
-        this.getTransactions().subscribe(); // Met à jour les données après ajout
+        this.filterManager.clearFilters(); // Effacer les filtres pour un rechargement complet
+        this.loadTransactions(); // Met à jour les données après ajout
       }),
       catchError((err) => {
         console.error('TRANSACTION SERVICE : Erreur lors de l\'ajout de la transaction:', err);
@@ -109,6 +110,8 @@ export class TransactionService {
     return this.http.put<void>(url, snakeCaseTransaction).pipe(
       tap(() => {
         console.log('TRANSACTION SERVICE : Transaction mise à jour avec succès');
+        this.filterManager.clearFilters();
+        this.loadTransactions();
       }),
       catchError((err) => {
         console.error('TRANSACTION SERVICE : Erreur lors de la mise à jour de la transaction:', err);
@@ -125,6 +128,8 @@ export class TransactionService {
     return this.http.delete<void>(url).pipe(
       tap(() => {
         console.log('TRANSACTION SERVICE : Transaction supprimée avec succès');
+        this.filterManager.clearFilters();
+        this.loadTransactions();
       }),
       catchError((err) => {
         console.error('TRANSACTION SERVICE : Erreur lors de la suppression de la transaction:', err);
