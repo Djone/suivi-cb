@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const db = require('./config/db'); // Import the db instance
 const initializeDatabase = require('./migrations/initializeDatabase');
 const transactionRoutes = require('./routes/transaction.routes');
 const categoryRoutes = require('./routes/category.routes');
