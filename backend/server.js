@@ -12,7 +12,7 @@ const recurringTransactionRoutes = require('./routes/recurring-transaction.route
 const accountRoutes = require('./routes/account.routes');
 
 const app = express();
-const PORT_BACK = 3000;
+const PORT_BACK = process.env.PORT_BACK || 3000;
 
 // Middleware
 app.use(cors());
