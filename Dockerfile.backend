@@ -7,11 +7,15 @@ WORKDIR /app
 # Copier les fichiers package.json et package-lock.json
 COPY backend/package*.json ./
 
+# Copier tous les fichiers du dossier backend dans le répertoire de travail /app
+# Cette étape est placée avant l'installation des dépendances pour s'assurer que tous les fichiers sont présents
+COPY backend/ /app/
+
 # Installer les dépendances de production uniquement
 RUN npm ci --only=production
 
-# Copier le reste des fichiers du backend
-COPY backend/ ./
+# Vérifier le contenu du répertoire /app après la copie (pour le débogage)
+RUN ls -lR /app
 
 # Créer le répertoire pour la base de données
 RUN mkdir -p /app/data

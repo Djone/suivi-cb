@@ -1,146 +1,91 @@
 const humps = require('humps');
 const db = require('../config/db');
 
+// Fonctions utilitaires pour "promisifier" les méthodes de la base de données
+const dbAll = (query, params = []) => new Promise((resolve, reject) => {
+  db.all(query, params, (err, rows) => (err ? reject(err) : resolve(rows)));
+});
+
+const dbGet = (query, params = []) => new Promise((resolve, reject) => {
+  db.get(query, params, (err, row) => (err ? reject(err) : resolve(row)));
+});
+
+const dbRun = (query, params = []) => new Promise((resolve, reject) => {
+  db.run(query, params, function (err) { // Utiliser une fonction normale pour `this`
+    if (err) return reject(err);
+    resolve({ lastID: this.lastID, changes: this.changes });
+  });
+});
+
 const Account = {
   // Récupérer tous les comptes
-  getAll: () => {
-    return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM accounts WHERE is_active = 1 ORDER BY id ASC', [], (err, rows) => {
-        if (err) {
-          console.error('ACCOUNT MODEL : Erreur lors de la récupération des comptes', err.message);
-          reject(err);
-        } else {
-          const camelCasedRows = rows.map(row => humps.camelizeKeys(row));
-          console.log('ACCOUNT MODEL : Comptes récupérés avec succès', camelCasedRows);
-          resolve(camelCasedRows);
-        }
-      });
-    });
+  getAll: async () => {
+    const rows = await dbAll('SELECT * FROM accounts WHERE is_active = 1 ORDER BY id ASC');
+    return rows.map(row => humps.camelizeKeys(row));
   },
 
   // Récupérer tous les comptes y compris les inactifs
-  getAllIncludingInactive: () => {
-    return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM accounts ORDER BY is_active DESC, id ASC', [], (err, rows) => {
-        if (err) {
-          console.error('ACCOUNT MODEL : Erreur lors de la récupération de tous les comptes', err.message);
-          reject(err);
-        } else {
-          const camelCasedRows = rows.map(row => humps.camelizeKeys(row));
-          console.log('ACCOUNT MODEL : Tous les comptes récupérés avec succès', camelCasedRows);
-          resolve(camelCasedRows);
-        }
-      });
-    });
+  getAllIncludingInactive: async () => {
+    const rows = await dbAll('SELECT * FROM accounts ORDER BY is_active DESC, id ASC');
+    return rows.map(row => humps.camelizeKeys(row));
   },
 
   // Récupérer un compte par son ID
-  getById: (id) => {
-    return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM accounts WHERE id = ?', [id], (err, row) => {
-        if (err) {
-          console.error('ACCOUNT MODEL : Erreur lors de la récupération du compte', err.message);
-          reject(err);
-        } else if (!row) {
-          console.error('ACCOUNT MODEL : Compte non trouvé');
-          reject(new Error('Compte non trouvé'));
-        } else {
-          const camelCasedRow = humps.camelizeKeys(row);
-          console.log('ACCOUNT MODEL : Compte récupéré avec succès', camelCasedRow);
-          resolve(camelCasedRow);
-        }
-      });
-    });
+  getById: async (id) => {
+    const row = await dbGet('SELECT * FROM accounts WHERE id = ?', [id]);
+    if (!row) {
+      throw new Error('Compte non trouvé');
+    }
+    return humps.camelizeKeys(row);
   },
 
   // Ajouter un nouveau compte
-  add: (account) => {
-    return new Promise((resolve, reject) => {
-      const query = `
-        INSERT INTO accounts (name, description, color, is_active)
-        VALUES (?, ?, ?, ?)
-      `;
-      const params = [
-        account.name,
-        account.description || null,
-        account.color || '#1976d2',
-        account.isActive !== undefined ? account.isActive : 1
-      ];
-
-      db.run(query, params, function (err) {
-        if (err) {
-          console.error('ACCOUNT MODEL : Erreur lors de l\'ajout du compte', err.message);
-          reject(err);
-        } else {
-          console.log(`[DB_WRITE_DEBUG] Add operation on DB: ${db.filename}`);
-          console.log('ACCOUNT MODEL : Compte ajouté avec succès, ID:', this.lastID);
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+  add: async (account) => {
+    const query = `
+      INSERT INTO accounts (name, description, color, is_active)
+      VALUES (?, ?, ?, ?)
+    `;
+    const params = [
+      account.name,
+      account.description || null,
+      account.color || '#1976d2',
+      account.isActive !== undefined ? account.isActive : 1
+    ];
+    console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}"`);
+    const result = await dbRun(query, params);
+    return { id: result.lastID };
   },
 
   // Mettre à jour un compte
-  update: (id, account) => {
-    return new Promise((resolve, reject) => {
-      const query = `
-        UPDATE accounts
-        SET name = ?, description = ?, color = ?, is_active = ?
-        WHERE id = ?
-      `;
-      const params = [
-        account.name,
-        account.description || null,
-        account.color || '#1976d2',
-        account.isActive !== undefined ? account.isActive : 1,
-        id
-      ];
-
-      db.run(query, params, function (err) {
-        if (err) {
-          console.error('ACCOUNT MODEL : Erreur lors de la mise à jour du compte', err.message);
-          reject(err);
-        } else {
-          console.log(`[DB_WRITE_DEBUG] Update operation on DB: ${db.filename}`);
-          console.log('ACCOUNT MODEL : Compte mis à jour avec succès');
-          resolve({ changes: this.changes });
-        }
-      });
-    });
+  update: async (id, account) => {
+    const query = `
+      UPDATE accounts
+      SET name = ?, description = ?, color = ?, is_active = ?
+      WHERE id = ?
+    `;
+    const params = [
+      account.name,
+      account.description || null,
+      account.color || '#1976d2',
+      account.isActive !== undefined ? account.isActive : 1,
+      id
+    ];
+    console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}"`);
+    return await dbRun(query, params);
   },
 
   // Désactiver un compte (soft delete)
-  deactivate: (id) => {
-    return new Promise((resolve, reject) => {
-      const query = 'UPDATE accounts SET is_active = 0 WHERE id = ?';
-      db.run(query, [id], function (err) {
-        if (err) {
-          console.error('ACCOUNT MODEL : Erreur lors de la désactivation du compte', err.message);
-          reject(err);
-        } else {
-          console.log(`[DB_WRITE_DEBUG] Deactivate operation on DB: ${db.filename}`);
-          console.log('ACCOUNT MODEL : Compte désactivé avec succès');
-          resolve({ changes: this.changes });
-        }
-      });
-    });
+  deactivate: async (id) => {
+    const query = 'UPDATE accounts SET is_active = 0 WHERE id = ?';
+    console.log(`[DB_WRITE_DEBUG] Deactivate operation on DB: "${db.filename}"`);
+    return await dbRun(query, [id]);
   },
 
   // Réactiver un compte
-  reactivate: (id) => {
-    return new Promise((resolve, reject) => {
-      const query = 'UPDATE accounts SET is_active = 1 WHERE id = ?';
-      db.run(query, [id], function (err) {
-        if (err) {
-          console.error('ACCOUNT MODEL : Erreur lors de la réactivation du compte', err.message);
-          reject(err);
-        } else {
-          console.log(`[DB_WRITE_DEBUG] Reactivate operation on DB: ${db.filename}`);
-          console.log('ACCOUNT MODEL : Compte réactivé avec succès');
-          resolve({ changes: this.changes });
-        }
-      });
-    });
+  reactivate: async (id) => {
+    const query = 'UPDATE accounts SET is_active = 1 WHERE id = ?';
+    console.log(`[DB_WRITE_DEBUG] Reactivate operation on DB: "${db.filename}"`);
+    return await dbRun(query, [id]);
   }
 };
 

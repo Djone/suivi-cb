@@ -1,138 +1,92 @@
-// backend/models/transaction.model.js
-//Code retour
-// 200: Succès.
-// 201: Ressource créée.
-// 400: Mauvaise requête.
-// 404: Ressource introuvable.
-// 500: Erreur serveur
-
+const humps = require('humps');
 const db = require('../config/db');
-const logger = require('../utils/logger');
+
+// Fonctions utilitaires pour "promisifier" les méthodes de la base de données
+const dbAll = (query, params = []) => new Promise((resolve, reject) => {
+  db.all(query, params, (err, rows) => (err ? reject(err) : resolve(rows)));
+});
+
+const dbGet = (query, params = []) => new Promise((resolve, reject) => {
+  db.get(query, params, (err, row) => (err ? reject(err) : resolve(row)));
+});
+
+const dbRun = (query, params = []) => new Promise((resolve, reject) => {
+  db.run(query, params, function (err) { // Utiliser une fonction normale pour `this`
+    if (err) return reject(err);
+    resolve({ lastID: this.lastID, changes: this.changes });
+  });
+});
 
 const Transaction = {
-  
-  getAll: (filters = {}) => {
-    return new Promise((resolve, reject) => {
-      let query = 'SELECT * FROM transactions WHERE 1 = 1'; // Clause de base
-      const params = []; // Tableau pour stocker les paramètres de la requête
-
-      // Liste blanche des colonnes autorisées pour éviter les injections SQL
-      const allowedColumns = {
-        account_id: 'account_id',
-        financial_flow_id: 'financial_flow_id',
-        sub_category_id: 'sub_category_id',
-        date: 'date'
-      };
-
-      // Si des filtres sont fournis, ajoutez-les à la requête
-      Object.keys(filters).forEach((key) => {
-        if (filters[key] !== undefined && filters[key] !== null) {
-          // Vérifier que la colonne est dans la liste blanche
-          const column = allowedColumns[key];
-          if (column) {
-            query += ` AND ${column} = ?`; // Ajoute la condition dynamique
-            params.push(filters[key]);   // Ajoute la valeur du filtre
-          } else {
-            logger.warn(`Tentative de filtrage sur une colonne non autorisée : ${key}`);
-          }
-        }
-      });
-
-      // Ajoutez l'ordre de tri par date (descendant) à la fin
-      query += ' ORDER BY date DESC';
-
-      // Exécutez la requête avec les paramètres dynamiques
-      db.all(query, params, (err, rows) => {
-        if (err) {
-          reject(err); // Rejeter la promesse en cas d'erreur
-        } else {
-          resolve(rows); // Résoudre la promesse avec les données récupérées
-        }
-      });
-    });
+  // Récupérer toutes les transactions (avec jointures pour les détails)
+  getAll: async () => {
+    const query = `
+      SELECT
+        t.id,
+        t.date,
+        t.amount,
+        t.description,
+        t.sub_category_id,
+        sc.label as sub_category_label,
+        c.label as category_label,
+        t.account_id,
+        a.name as account_name,
+        t.financial_flow_id
+      FROM transactions t
+      JOIN subcategories sc ON t.sub_category_id = sc.id
+      JOIN categories c ON sc.category_id = c.id
+      JOIN accounts a ON t.account_id = a.id
+      ORDER BY t.date DESC, t.id DESC
+    `;
+    const rows = await dbAll(query);
+    return rows.map(row => humps.camelizeKeys(row));
   },
 
-  /**
- * Ajoute une transcation à la base de données
- * @param {Object} transaction - Objet contenant les informations de la transaction
- * @returns {Promise<Object>} - Retourne l'ID de la transaction créée
- */
-  add: (transaction) => {
-    const columns = ['date', 'amount', 'description', 'sub_category_id', 'account_id', 'financial_flow_id', 'recurring_transaction_id']; // contient toutes les colonnes nécessaires pour l'insertion. Si vous devez ajouter ou modifier une colonne, il suffit de mettre à jour ce tableau.
-    const values = columns.map((col) => transaction[col] !== undefined ? transaction[col] : null); // Récupérer les valeurs correspondantes
-    const placeholders = columns.map(() => '?').join(', '); // Génère "?, ?"
-
-    return new Promise((resolve, reject) => {
-      const query = `INSERT INTO transactions (${columns.join(', ')}) VALUES (${placeholders})`;
-
-      db.run(query, values, function (err) {
-        if (err) {
-            logger.error('Erreur lors de la création de la transaction');
-            reject(err); // Rejeter la promesse avec l'erreur
-        } else {
-            logger.info('Nouvelle transaction ajoutée');
-            resolve({ id: this.lastID }); // Résoudre la promesse avec l'ID généré
-        }
-      });
-    });
+  // Ajouter une nouvelle transaction
+  add: async (transaction) => {
+    const query = `
+      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const params = [
+      transaction.date,
+      transaction.amount,
+      transaction.description,
+      transaction.subCategoryId,
+      transaction.accountId,
+      transaction.financialFlowId
+    ];
+    console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}" (Transaction)`);
+    const result = await dbRun(query, params);
+    return { id: result.lastID };
   },
 
-  // Modification d'une categorie dans la table
-  update: (transaction) => {
-    const { id, ...fieldsToUpdate } = transaction;
-
-    // Vérifier si des champs sont spécifiés pour la mise à jour
-    const columns = Object.keys(fieldsToUpdate);
-    if (columns.length === 0) {
-        return Promise.reject(new Error('Aucun champ à mettre à jour.'));
-    }
-
-    // Génération dynamique de la requête SQL
-    const setClause = columns.map((col) => `${col} = ?`).join(', ');
-    const query = `UPDATE transactions SET ${setClause} WHERE id = ?`;
-    logger.info(`UPDATE transactions SET ${setClause} WHERE id = ?`);
-
-    // Préparation des valeurs pour la requête
-    const values = [...columns.map((col) => fieldsToUpdate[col]), id];
-
-    return new Promise((resolve, reject) => {
-      db.run(query, values, function (err) {
-          if (err) {
-              logger.error('Erreur lors de la mise à jour de la transaction');
-              return reject(err); // Rejeter la promesse avec une erreur SQL
-          }
-
-          if (this.changes === 0) {
-              return reject(new Error('Aucune transaction trouvée avec cet ID.'));
-          }
-
-          console.log(`[DB_WRITE_DEBUG_TRANSACTIONS] Add transaction on DB: ${db.filename}`);
-          console.log('TRANSACTION MODEL : Transaction ajoutée avec succès, ID:', this.lastID);
-          logger.info('Transaction mise à jour avec succès');
-          resolve({ id, changes: this.changes });
-      });
-    });
+  // Mettre à jour une transaction
+  update: async (id, transaction) => {
+    const query = `
+      UPDATE transactions
+      SET date = ?, amount = ?, description = ?, sub_category_id = ?, account_id = ?, financial_flow_id = ?
+      WHERE id = ?
+    `;
+    const params = [
+      transaction.date,
+      transaction.amount,
+      transaction.description,
+      transaction.subCategoryId,
+      transaction.accountId,
+      transaction.financialFlowId,
+      id
+    ];
+    console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}" (Transaction)`);
+    return await dbRun(query, params);
   },
 
-  // Suppression d'une catégorie par ID
-  deleteById: (id) => {
-    return new Promise((resolve, reject) => {
-        if (!id) {
-            return reject(new Error('ID manquant pour la suppression de la transaction.'));
-        }
-
-        const query = 'DELETE FROM transactions WHERE ID = ?';
-        db.run(query, [id], function (err) {
-            if (err) {
-                return reject(err); // Rejette la promesse si une erreur survient
-            }
-            if (this.changes === 0) {
-                return reject(new Error('Aucune transaction trouvée avec cet ID.'));
-            }
-            resolve(); // Résout la promesse si la suppression est réussie
-        });
-    });
-  } 
-}; 
+  // Supprimer une transaction par son ID
+  deleteById: async (id) => {
+    const query = 'DELETE FROM transactions WHERE id = ?';
+    console.log(`[DB_WRITE_DEBUG] Delete operation on DB: "${db.filename}" (Transaction)`);
+    return await dbRun(query, [id]);
+  }
+};
 
 module.exports = Transaction;
