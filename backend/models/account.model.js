@@ -72,6 +72,7 @@ const Account = {
           console.error('ACCOUNT MODEL : Erreur lors de l\'ajout du compte', err.message);
           reject(err);
         } else {
+          console.log(`[DB_WRITE_DEBUG] Add operation on DB: ${db.filename}`);
           console.log('ACCOUNT MODEL : Compte ajouté avec succès, ID:', this.lastID);
           resolve({ id: this.lastID });
         }
@@ -100,6 +101,7 @@ const Account = {
           console.error('ACCOUNT MODEL : Erreur lors de la mise à jour du compte', err.message);
           reject(err);
         } else {
+          console.log(`[DB_WRITE_DEBUG] Update operation on DB: ${db.filename}`);
           console.log('ACCOUNT MODEL : Compte mis à jour avec succès');
           resolve({ changes: this.changes });
         }
@@ -116,6 +118,7 @@ const Account = {
           console.error('ACCOUNT MODEL : Erreur lors de la désactivation du compte', err.message);
           reject(err);
         } else {
+          console.log(`[DB_WRITE_DEBUG] Deactivate operation on DB: ${db.filename}`);
           console.log('ACCOUNT MODEL : Compte désactivé avec succès');
           resolve({ changes: this.changes });
         }
@@ -132,6 +135,7 @@ const Account = {
           console.error('ACCOUNT MODEL : Erreur lors de la réactivation du compte', err.message);
           reject(err);
         } else {
+          console.log(`[DB_WRITE_DEBUG] Reactivate operation on DB: ${db.filename}`);
           console.log('ACCOUNT MODEL : Compte réactivé avec succès');
           resolve({ changes: this.changes });
         }
