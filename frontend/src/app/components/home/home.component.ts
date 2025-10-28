@@ -15,6 +15,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 
+
 interface UpcomingSchedule {
   recurringTransaction: RecurringTransaction;
   dueDate: Date;
@@ -65,8 +66,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private recurringTransactionService: RecurringTransactionService,
     private accountService: AccountService,
     private subCategoryService: SubCategoryService,
-    private router: Router,
-    private http: HttpClient
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -88,18 +88,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     // Déclencher le chargement des sous-catégories
     this.subCategoryService.getSubCategories().subscribe();
-
-    // Charger les soldes initiaux
-    this.http.get<any>('http://localhost:3000/api/config/accounts').subscribe({
-      next: (config) => {
-        if (config.accounts && Array.isArray(config.accounts)) {
-          config.accounts.forEach((account: any) => {
-            this.initialBalances.set(account.accountId, account.initialBalance || 0);
-          });
-        }
-        this.calculateAllBalances();
-      }
-    });
 
     // Charger les comptes
     this.subscriptions.add(
@@ -152,7 +140,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.accountBalances = this.accounts.map(account => {
       const accountId = account.id!;
-      const initialBalance = this.initialBalances.get(accountId) || 0;
+      const initialBalance = account.initialBalance || 0;
       const currentBalance = this.calculateCurrentBalance(accountId, initialBalance);
       const upcomingSchedules = this.getUpcomingSchedules(accountId);
       const totalUpcoming = upcomingSchedules.reduce((sum, s) => sum + s.amount, 0);
