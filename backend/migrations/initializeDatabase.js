@@ -1,155 +1,114 @@
 const db = require('../config/db');
 
-// Fonction pour créer les tables
-function initializeDatabase() {
-    const createTransactionsTable = `
-    CREATE TABLE IF NOT EXISTS transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      date DATE NOT NULL,
-      amount REAL NOT NULL,
-      description TEXT NOT NULL,
-      sub_category_id INTEGER NOT NULL,
-      account_id INTEGER NOT NULL,
-      financial_flow_id INTEGER NOT NULL,
-      recurring_transaction_id INTEGER NULL REFERENCES recurring_transactions(id) ON DELETE SET NULL
-    );`;
+// Fonctions utilitaires pour transformer les callbacks en Promises
+const runQuery = (query, params = []) => new Promise((resolve, reject) => {
+  db.run(query, params, function (err) {
+    if (err) return reject(err);
+    resolve(this);
+  });
+});
 
-    const createCategoriesTable = `
-    CREATE TABLE IF NOT EXISTS categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      label TEXT NOT NULL, 
-      financial_flow_id INTEGER,
-      is_active INTEGER DEFAULT 1
-    );`;
+const getQuery = (query, params = []) => new Promise((resolve, reject) => {
+  db.get(query, params, (err, row) => {
+    if (err) return reject(err);
+    resolve(row);
+  });
+});
 
-    const createSubCategoriesTable = `
-    CREATE TABLE IF NOT EXISTS subcategories (
+// Fonction principale d'initialisation, maintenant asynchrone
+const initializeDatabase = async () => {
+  try {
+    console.log('🚀 Démarrage des migrations de la base de données...');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        category_id INTEGER NOT NULL,
-        label TEXT NOT NULL
-    );`;
+        date DATE NOT NULL,
+        amount REAL NOT NULL,
+        description TEXT NOT NULL,
+        sub_category_id INTEGER NOT NULL,
+        account_id INTEGER NOT NULL,
+        financial_flow_id INTEGER NOT NULL,
+        recurring_transaction_id INTEGER NULL REFERENCES recurring_transactions(id) ON DELETE SET NULL
+      );
+    `);
+    console.log('✓ Table "transactions" vérifiée/créée.');
 
-    /**
-    * Migration pour créer la table recurring_transactions
-    * Cette table stocke les transactions récurrentes mensuelles pour le prévisionnel
-    */
-    const createRecurringTransactionsTable = `
-    CREATE TABLE IF NOT EXISTS recurring_transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      label TEXT NOT NULL,
-      amount REAL NOT NULL,
-      day_of_month INTEGER NOT NULL,
-      sub_category_id INTEGER NOT NULL,
-      account_id INTEGER NOT NULL,
-      financial_flow_id INTEGER NOT NULL,
-      frequency TEXT NOT NULL DEFAULT 'monthly',
-      is_active INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );`;
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        label TEXT NOT NULL, 
+        financial_flow_id INTEGER,
+        is_active INTEGER DEFAULT 1
+      );
+    `);
+    console.log('✓ Table "categories" vérifiée/créée.');
 
-    const createAccountsTable = `
-    CREATE TABLE IF NOT EXISTS accounts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT,
-      color TEXT DEFAULT '#1976d2',
-      is_active INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );`;
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS subcategories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category_id INTEGER NOT NULL,
+          label TEXT NOT NULL
+      );
+    `);
+    console.log('✓ Table "subcategories" vérifiée/créée.');
 
-    db.run(createTransactionsTable, (err) => {
-        if (err) {
-            console.error('X Erreur lors de la création de la table "transactions":', err.message);
-        } 
-        console.log('✓ Table "transactions" vérifiée/créée avec succès.');
-        resolve();
-    });
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS recurring_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        label TEXT NOT NULL,
+        amount REAL NOT NULL,
+        day_of_month INTEGER NOT NULL,
+        sub_category_id INTEGER NOT NULL,
+        account_id INTEGER NOT NULL,
+        financial_flow_id INTEGER NOT NULL,
+        frequency TEXT NOT NULL DEFAULT 'monthly',
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✓ Table "recurring_transactions" vérifiée/créée.');
 
-    db.run(createCategoriesTable, (err) => {
-        if (err) {
-            console.error('X Erreur lors de la création de la table "categories":', err.message);
-        } 
-        console.log('✓ Table "categories" vérifiée/créée avec succès.');
-        resolve();
-    });
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS accounts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        color TEXT DEFAULT '#1976d2',
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✓ Table "accounts" vérifiée/créée.');
 
-    db.run(createSubCategoriesTable, (err) => {
-        if (err) {
-            console.error('X Erreur lors de la création de la table "sub categories":', err.message);
-        } 
-        console.log('✓ Table "sub categories" vérifiée/créée avec succès.');
-        resolve();
-    });
+    // Insertion des comptes par défaut si la table est vide
+    const row = await getQuery('SELECT COUNT(*) as count FROM accounts');
+    if (row && row.count === 0) {
+      console.log('-> Aucun compte trouvé, création des comptes par défaut...');
+      await runQuery(
+        `INSERT INTO accounts (id, name, description, color, is_active)
+         VALUES (1, 'Compte courant', 'Compte bancaire principal', '#1976d2', 1)`
+      );
+      console.log('✓ Compte courant créé.');
 
-    db.run(createRecurringTransactionsTable, (err) => {
-        if (err) {
-            console.error('X Erreur lors de la création de la table "recurring_transactions":', err.message);
-            return reject(err);
-        }
-        console.log('✓ Table "recurring_transactions" vérifiée/créée avec succès.');
-        resolve();
-    });
+      await runQuery(
+        `INSERT INTO accounts (id, name, description, color, is_active)
+         VALUES (2, 'Compte joint', 'Compte bancaire joint', '#4caf50', 1)`
+      );
+      console.log('✓ Compte joint créé.');
+    } else {
+      console.log('-> Des comptes existent déjà, aucune insertion nécessaire.');
+    }
 
-    db.run(createAccountsTable, (err) => {
-        if (err) {
-        console.error('Erreur lors de la création de la table accounts:', err.message);
-        db.close();
-      } else {
-        console.log('✓ Table accounts créée avec succès.');
+    console.log('✅ Migrations terminées avec succès.');
 
-        // Insérer les comptes par défaut s'ils n'existent pas
-        db.get('SELECT COUNT(*) as count FROM accounts', (err, row) => {
-          if (err) {
-            console.error('Erreur lors de la vérification des comptes:', err.message);
-            db.close();
-          } else if (row.count === 0) {
-            // Insérer le compte courant (ID = 1)
-            db.run(
-              `INSERT INTO accounts (id, name, description, color, is_active)
-               VALUES (1, 'Compte courant', 'Compte bancaire principal', '#1976d2', 1)`,
-              (err) => {
-                if (err) {
-                  console.error('Erreur lors de l\'insertion du compte courant:', err.message);
-                } else {
-                  console.log('✓ Compte courant créé avec succès.');
-                }
-              }
-            );
-
-            // Insérer le compte joint (ID = 2)
-            db.run(
-              `INSERT INTO accounts (id, name, description, color, is_active)
-               VALUES (2, 'Compte joint', 'Compte bancaire joint', '#4caf50', 1)`,
-              (err) => {
-                if (err) {
-                  console.error('Erreur lors de l\'insertion du compte joint:', err.message);
-                } else {
-                  console.log('✓ Compte joint créé avec succès.');
-                }
-
-                // Fermer la base après la dernière insertion
-                db.close((err) => {
-                  if (err) {
-                    console.error('Erreur lors de la fermeture de la base de données:', err.message);
-                  } else {
-                    console.log('✓ Migration terminée.');
-                  }
-                });
-              }
-            );
-          } else {
-            console.log('Des comptes existent déjà, aucune insertion nécessaire.');
-            db.close((err) => {
-              if (err) {
-                console.error('Erreur lors de la fermeture de la base de données:', err.message);
-              } else {
-                console.log('✓ Migration terminée.');
-              }
-            });
-          }
-        });
-      }
-    });
-}
+  } catch (err) {
+    console.error('❌ ERREUR FATALE lors de l\'initialisation de la base de données:', err.message);
+    // Dans un cas réel, on pourrait vouloir arrêter l'application ici
+    process.exit(1);
+  }
+  // Note: La connexion à la base de données n'est plus fermée ici
+  // pour qu'elle reste disponible pour le reste de l'application.
+};
 
 module.exports = initializeDatabase;
