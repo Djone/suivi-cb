@@ -8,7 +8,7 @@ const getDbConnection = () => {
     return dbInstance;
   }
 
-  console.log(`[DB_DEBUG] Initializing DB connection.`);
+  console.log(`[DB_DEBUG] Initializing DB connection (first call).`);
   const nodeEnv = process.env.NODE_ENV;
   const isProduction = nodeEnv === 'production';
   console.log(`[DB_DEBUG]   process.env.NODE_ENV: "${nodeEnv}"`);
@@ -17,7 +17,7 @@ const getDbConnection = () => {
   let dbPath;
   if (process.env.DB_PATH) {
     dbPath = process.env.DB_PATH;
-    console.log(`[DB_DEBUG]   DB_PATH explicitly set in environment: "${dbPath}"`);
+    console.log(`[DB_DEBUG]   DB_PATH explicitly set in environment: "${dbPath}" (priority)`);
   } else {
     const dbFilename = isProduction ? 'database.db' : 'database.dev.db';
     dbPath = path.join(__dirname, '../../data', dbFilename);
@@ -25,13 +25,15 @@ const getDbConnection = () => {
     console.log(`[DB_DEBUG]     Chosen filename: "${dbFilename}"`);
     console.log(`[DB_DEBUG]     Calculated path: "${dbPath}"`);
   }
+  
+  console.log(`[DB_DEBUG] Attempting to connect to: "${dbPath}"`);
 
   dbInstance = new sqlite3.Database(dbPath, (err) => {
     if (err) {
       console.error(`❌ Erreur lors de la connexion à SQLite sur le chemin : ${dbPath}`, err.message);
       process.exit(1); // Arrêter si la connexion échoue
     } else {
-      console.log(`🔗 Successfully connected to SQLite database: "${dbInstance.filename}"`);
+      console.log(`🔗 Successfully connected to SQLite database: "${dbInstance.filename}" (Actual filename)`);
     }
   });
 

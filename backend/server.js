@@ -21,6 +21,7 @@ const startServer = async () => {
   try {
     // 1. Attendre que la base de données soit prête
     await initializeDatabase();
+    console.log(`[SERVER_START_DEBUG] DB connection filename after init: "${db.filename}"`);
 
     // 2. Enregistrer les routes API une fois la DB prête
     app.use('/api/transactions', transactionRoutes);
