@@ -12,6 +12,16 @@
               <h2 class="account-title">{{ accountBalance.account.name }}</h2>
             </div>
           </div>
+
+          <!-- BANDEAU D'ALERTE -->
+          <div *ngIf="accountBalance.nextMonthLowestBalance < 0" class="alert-banner">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span class="alert-text">
+              Risque de solde négatif en début de mois prochain !
+              <strong class="alert-amount">Prévisionnel: {{ accountBalance.nextMonthLowestBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}</strong>
+            </span>
+          </div>
+
         </ng-template>
 
         <!-- Soldes -->

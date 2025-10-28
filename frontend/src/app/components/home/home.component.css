@@ -458,3 +458,32 @@
 ::ng-deep .p-tag {
   font-weight: 600;
 }
+
+/* Styles pour le bandeau d'alerte de solde négatif */
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Espace entre l'icône et le texte */
+  background-color: #fee2e2; /* Fond rouge très clair */
+  color: #b91c1c; /* Texte rouge foncé */
+  padding: 0.75rem 1rem; /* Marge intérieure */
+  border-bottom: 1px solid #fecaca; /* Ligne de séparation rouge clair */
+  font-weight: 500; /* Semi-gras */
+}
+
+.alert-banner .pi-exclamation-triangle {
+  font-size: 1.25rem; /* Taille de l'icône */
+}
+
+.alert-text {
+  display: flex;
+  flex-direction: column; /* Organise le texte sur deux lignes */
+  gap: 0.1rem; /* Petit espace entre les lignes de texte */
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.alert-amount {
+  font-weight: 700; /* Texte en gras */
+  color: #991b1b; /* Texte rouge encore plus foncé pour le montant */
+}

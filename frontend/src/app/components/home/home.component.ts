@@ -39,6 +39,7 @@ interface AccountBalance {
   totalUpcoming: number;
   expensesByCategory: CategoryTotal[];
   incomesByCategory: CategoryTotal[];
+  nextMonthLowestBalance: number; // Remplacer le booléen par un nombre
 }
 
 @Component({
@@ -145,6 +146,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       const upcomingSchedules = this.getUpcomingSchedules(accountId);
       const totalUpcoming = upcomingSchedules.reduce((sum, s) => sum + s.amount, 0);
       const forecastBalance = currentBalance + totalUpcoming;
+      const nextMonthLowestBalance = this.calculateNextMonthLowestBalance(accountId, currentBalance);
 
       return {
         account,
@@ -154,7 +156,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         upcomingSchedules,
         totalUpcoming,
         expensesByCategory: this.getExpensesByCategory(accountId),
-        incomesByCategory: this.getIncomesByCategory(accountId)
+        incomesByCategory: this.getIncomesByCategory(accountId),
+        nextMonthLowestBalance
       };
     });
   }
@@ -185,11 +188,70 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  getUpcomingSchedules(accountId: number): UpcomingSchedule[] {
+  calculateNextMonthLowestBalance(accountId: number, currentBalance: number): number {
     const today = new Date();
-    const currentDay = today.getDate();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const daysUntilEndOfMonth = endOfMonth.getDate() - today.getDate();
+
+    // Ne calculer que si on est à 5 jours ou moins de la fin du mois
+    if (daysUntilEndOfMonth > 5) {
+      return 0;
+    }
+
+    // 1. Calculer le solde à la fin du mois en cours
+    const remainingSchedulesThisMonth = this.getUpcomingSchedules(accountId, false); // false = ne pas anticiper
+    const remainingAmountThisMonth = remainingSchedulesThisMonth.reduce((sum, s) => sum + s.amount, 0);
+    const balanceAtEndOfMonth = currentBalance + remainingAmountThisMonth;
+
+    // 2. Calculer l'impact des 5 premiers jours du mois suivant
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const accountRecurring = this.recurringTransactions.filter(rt => {
+      const rtAccountId = typeof rt.accountId === 'string' ? parseInt(rt.accountId) : rt.accountId;
+      return rtAccountId === accountId && rt.isActive === 1;
+    });
+
+    let lowestBalanceNextMonth = balanceAtEndOfMonth;
+    let projectedBalance = balanceAtEndOfMonth;
+
+    for (let day = 1; day <= 5; day++) {
+      // Récupérer TOUTES les échéances pour le jour 'day' (dépenses ET revenus)
+      const schedulesForDay = accountRecurring.filter(rt => {
+        const dayOfMonth = typeof rt.dayOfMonth === 'string' ? parseInt(rt.dayOfMonth) : (rt.dayOfMonth || 0);
+        return dayOfMonth === day;
+      });
+
+      // Calculer l'impact net de la journée
+      const netChangeForDay = schedulesForDay.reduce((sum, rt) => {
+        const amount = typeof rt.amount === 'string' ? parseFloat(rt.amount) : (rt.amount || 0);
+        const signedAmount = rt.financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+        return sum + signedAmount;
+      }, 0);
+
+      projectedBalance += netChangeForDay;
+
+      if (projectedBalance < lowestBalanceNextMonth) {
+        lowestBalanceNextMonth = projectedBalance;
+      }
+    }
+
+    // L'alerte est déclenchée si le point le plus bas est négatif
+    if (lowestBalanceNextMonth < 0) {
+      console.log(`ALERTE Compte ${accountId}: Solde négatif de ${lowestBalanceNextMonth.toFixed(2)}€ prévu début de mois prochain.`);
+      return lowestBalanceNextMonth;
+    }
+
+    return 0;
+  }
+
+  getUpcomingSchedules(accountId: number, anticipate: boolean = true): UpcomingSchedule[] {
+    const today = new Date();
+    let anticipateNextMonth = false;
+
+    // La logique d'anticipation ne s'applique que si l'argument `anticipate` est vrai
+    if (anticipate) {
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      anticipateNextMonth = (endOfMonth.getDate() - today.getDate()) <= 5;
+    }
 
     const accountRecurring = this.recurringTransactions.filter(rt => {
       const rtAccountId = typeof rt.accountId === 'string' ? parseInt(rt.accountId) : rt.accountId;
@@ -199,31 +261,50 @@ export class HomeComponent implements OnInit, OnDestroy {
     const schedules: UpcomingSchedule[] = [];
 
     accountRecurring.forEach(recurring => {
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      const currentDay = today.getDate();
+
       const dayOfMonth = typeof recurring.dayOfMonth === 'string'
         ? parseInt(recurring.dayOfMonth)
         : (recurring.dayOfMonth || 0);
 
-      // Condition : le jour n'est pas encore passé ET l'échéance n'a pas déjà été réalisée ce mois-ci
-      const isRealized = this.isRecurringRealizedThisMonth(recurring.id!);
-
-      if (dayOfMonth > currentDay && !isRealized) {
+      // Gérer les échéances du mois en cours
+      const isRealizedThisMonth = this.isRecurringRealizedThisMonth(recurring.id!);
+      if (dayOfMonth > currentDay && !isRealizedThisMonth) {
         const dueDate = new Date(currentYear, currentMonth, dayOfMonth);
-        const amount = typeof recurring.amount === 'string'
-          ? parseFloat(recurring.amount)
-          : (recurring.amount || 0);
+        this.addSchedule(schedules, recurring, dueDate);
+      }
 
-        const signedAmount = recurring.financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
-
-        schedules.push({
-          recurringTransaction: recurring,
-          dueDate,
-          amount: signedAmount,
-          subCategoryLabel: this.subCategories.get(recurring.subCategoryId!) || 'N/A'
+      // Si on anticipe, ajouter aussi les échéances du mois suivant
+      if (anticipateNextMonth) {
+        const nextMonth = new Date(currentYear, currentMonth + 1, dayOfMonth);
+        // On vérifie qu'une transaction n'a pas déjà été faite pour le mois prochain
+        const isRealizedNextMonth = this.transactions.some(t => {
+            const transactionDate = new Date(t.date!);
+            return t.recurringTransactionId === recurring.id! &&
+                   transactionDate.getMonth() === nextMonth.getMonth() &&
+                   transactionDate.getFullYear() === nextMonth.getFullYear();
         });
+
+        if (!isRealizedNextMonth) {
+          this.addSchedule(schedules, recurring, nextMonth);
+        }
       }
     });
 
     return schedules.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  }
+
+  private addSchedule(schedules: UpcomingSchedule[], recurring: RecurringTransaction, dueDate: Date): void {
+    const amount = typeof recurring.amount === 'string' ? parseFloat(recurring.amount) : (recurring.amount || 0);
+    const signedAmount = recurring.financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+    schedules.push({
+      recurringTransaction: recurring,
+      dueDate,
+      amount: signedAmount,
+      subCategoryLabel: this.subCategories.get(recurring.subCategoryId!) || 'N/A'
+    });
   }
 
   getExpensesByCategory(accountId: number): CategoryTotal[] {
