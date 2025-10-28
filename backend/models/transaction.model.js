@@ -52,9 +52,9 @@ const Transaction = {
       transaction.date,
       transaction.amount,
       transaction.description,
-      transaction.subCategoryId,
-      transaction.accountId,
-      transaction.financialFlowId
+      transaction.sub_category_id, // Correction: Utiliser snake_case
+      transaction.account_id,      // Correction: Utiliser snake_case
+      transaction.financial_flow_id // Correction: Utiliser snake_case
     ];
     console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, params);
