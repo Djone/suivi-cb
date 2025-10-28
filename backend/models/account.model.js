@@ -51,7 +51,6 @@ const Account = {
       account.color || '#1976d2',
       account.isActive !== undefined ? account.isActive : 1
     ];
-    console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}"`);
     const result = await dbRun(query, params);
     return { id: result.lastID };
   },
@@ -70,21 +69,18 @@ const Account = {
       account.isActive !== undefined ? account.isActive : 1,
       id
     ];
-    console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}"`);
     return await dbRun(query, params);
   },
 
   // Désactiver un compte (soft delete)
   deactivate: async (id) => {
     const query = 'UPDATE accounts SET is_active = 0 WHERE id = ?';
-    console.log(`[DB_WRITE_DEBUG] Deactivate operation on DB: "${db.filename}"`);
     return await dbRun(query, [id]);
   },
 
   // Réactiver un compte
   reactivate: async (id) => {
     const query = 'UPDATE accounts SET is_active = 1 WHERE id = ?';
-    console.log(`[DB_WRITE_DEBUG] Reactivate operation on DB: "${db.filename}"`);
     return await dbRun(query, [id]);
   }
 };

@@ -7,12 +7,12 @@ WORKDIR /app
 # Copier les fichiers package.json et package-lock.json
 COPY backend/package*.json ./
 
-# Copier tous les fichiers du dossier backend dans le répertoire de travail /app
-# Cette étape est placée avant l'installation des dépendances pour s'assurer que tous les fichiers sont présents
-COPY backend/ /app/
-
 # Installer les dépendances de production uniquement
+# Cette étape est placée après la copie de package.json pour bénéficier du cache Docker
 RUN npm ci --only=production
+
+# Copier le reste des fichiers du backend. Cette copie s'assure que toutes les modifications de code sont prises en compte.
+COPY backend/ .
 
 # Vérifier le contenu du répertoire /app après la copie (pour le débogage)
 RUN ls -lR /app
