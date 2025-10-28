@@ -184,6 +184,18 @@
   background: #94a3b8;
 }
 
+/* Style pour le pied de page de la version dans le menu */
+.version-footer {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--text-color-secondary); /* Utilise les couleurs du thème PrimeNG */
+  font-size: 0.8rem;
+  padding: 0 1rem;
+}
+
 /* Desktop: affichage permanent */
 @media screen and (min-width: 961px) {
   .layout-sidebar {
