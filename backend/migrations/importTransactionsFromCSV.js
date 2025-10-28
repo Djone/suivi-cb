@@ -124,15 +124,8 @@ function importTransactions() {
           }
         }
 
-        db.close((err) => {
-          if (err) {
-            console.error('Erreur lors de la fermeture de la base de données:', err);
-            reject(err);
-          } else {
-            console.log('\n✓ Import terminé et base de données fermée.');
-            resolve({ imported, errors });
-          }
-        });
+        console.log('\n✓ Import terminé.');
+        resolve({ imported, errors });
       });
     });
   });

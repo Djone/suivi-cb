@@ -29,7 +29,6 @@ db.get('SELECT COUNT(*) as total FROM transactions', (err, row) => {
         } else {
           console.log(`✓ Total des dépenses: ${row.total_amount ? Math.abs(row.total_amount).toFixed(2) : 0} EUR`);
         }
-        db.close();
       });
     });
   });
