@@ -1,13 +1,10 @@
-const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
+const db = require('../config/db');
 
-const dbPath = path.resolve(__dirname, '../database.db');
 const csvPath = path.resolve(__dirname, 'CompteCourant_2025 - Opérations CC.csv');
 
 function importTransactions() {
-  const db = new sqlite3.Database(dbPath);
-
   return new Promise((resolve, reject) => {
     // Étape 1: Charger toutes les sous-catégories pour créer une map nom -> id
     db.all('SELECT id, label FROM subcategories', (err, subcategories) => {

@@ -1,9 +1,5 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 const humps = require('humps');
-
-const dbPath = path.join(__dirname, '..', 'database.db');
-const db = new sqlite3.Database(dbPath);
+const db = require('../config/db');
 
 const Account = {
   // Récupérer tous les comptes
