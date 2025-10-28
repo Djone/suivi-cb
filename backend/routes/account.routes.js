@@ -3,7 +3,8 @@ const router = express.Router();
 const accountController = require('../controllers/account.controller');
 
 // Routes pour les comptes
-router.get('/', accountController.getAllAccounts);
+router.get('/', accountController.getAllAccounts); // Route principale pour les comptes actifs
+router.get('/active', accountController.getAllAccounts); // Route explicite pour les comptes actifs (utilisée par le healthcheck)
 router.get('/all', accountController.getAllAccountsIncludingInactive);
 router.get('/:id', accountController.getAccountById);
 router.post('/', accountController.addAccount);

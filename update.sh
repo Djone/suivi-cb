@@ -115,7 +115,7 @@ fi
 # 6. Vérification du bon fonctionnement
 echo -e "\n[6/7] 🩺 Vérification de l'état de l'application (attente de 15s)..."
 sleep 15
-if ! curl -fsS http://localhost:3001/api/config/active-accounts > /dev/null; then
+if ! curl -fsS http://localhost:3001/api/accounts/active > /dev/null; then
     rollback "Vérification API"
 fi
 echo "-> L'API répond correctement."
