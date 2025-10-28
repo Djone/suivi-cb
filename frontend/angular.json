@@ -32,8 +32,7 @@
               "node_modules/primeflex/primeflex.css",
               "src/styles.css"
             ],
-            "scripts": [],
-            "outputMode": "server"
+            "scripts": []
           },
           "configurations": {
             "production": {
