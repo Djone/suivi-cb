@@ -148,113 +148,19 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // Calculer le solde prévisionnel d'un compte
   calculateForecastBalance(accountId: number, currentBalance: number): number {
-    const today = new Date();
-    const currentDay = today.getDate();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    // Le calcul du prévisionnel est maintenant beaucoup plus simple.
+    // Il prend le solde actuel et y ajoute le montant total des échéances à venir.
+    // La logique complexe est déjà dans `getUpcomingSchedules`.
 
-    // Filtrer les transactions réalisées ce mois pour ce compte
-    const realizedRecurringThisMonth = this.transactions.filter(t => {
-      if (!t.recurringTransactionId) return false;
+    // Récupérer toutes les échéances à venir (dépenses ET revenus)
+    const upcomingSchedules = this.getUpcomingSchedules(accountId);
 
-      const tAccountId = typeof t.accountId === 'string' ? parseInt(t.accountId) : t.accountId;
-      if (tAccountId !== accountId) return false;
-
-      const transDate = new Date(t.date || '');
-      return transDate.getMonth() === currentMonth &&
-             transDate.getFullYear() === currentYear;
-    });
-
-    // Compteur d'occurrences réalisées par échéance
-    const realizedOccurrences = new Map<number, number>();
-    realizedRecurringThisMonth.forEach(t => {
-      const recurringId = typeof t.recurringTransactionId === 'string'
-        ? parseInt(t.recurringTransactionId)
-        : t.recurringTransactionId;
-      if (recurringId) {
-        realizedOccurrences.set(recurringId, (realizedOccurrences.get(recurringId) || 0) + 1);
-      }
-    });
-
-    // Filtrer les échéances pour ce compte
-    const accountRecurring = this.recurringTransactions.filter(rt => {
-      const rtAccountId = typeof rt.accountId === 'string' ? parseInt(rt.accountId) : rt.accountId;
-      return rtAccountId === accountId && rt.isActive === 1;
-    });
-
-    const monthlyRecurringTotal = accountRecurring.reduce((sum, recurring) => {
-      const frequency = recurring.frequency || 'monthly';
-
-      // Pour les échéances hebdomadaires
-      if (frequency === 'weekly') {
-        const targetDayOfWeek = typeof recurring.dayOfMonth === 'string'
-          ? parseInt(recurring.dayOfMonth)
-          : recurring.dayOfMonth;
-
-        const targetDayJS = targetDayOfWeek === 7 ? 0 : targetDayOfWeek;
-        const lastDayOfMonth = new Date(today.getFullYear(), currentMonth + 1, 0).getDate();
-        let occurrences = 0;
-
-        for (let day = currentDay + 1; day <= lastDayOfMonth; day++) {
-          const testDate = new Date(today.getFullYear(), currentMonth, day);
-          if (testDate.getDay() === targetDayJS) {
-            occurrences++;
-          }
-        }
-
-        const realized = realizedOccurrences.get(recurring.id!) || 0;
-        const remainingOccurrences = Math.max(0, occurrences - realized);
-
-        if (remainingOccurrences === 0) {
-          return sum;
-        }
-
-        const amount = typeof recurring.amount === 'string'
-          ? parseFloat(recurring.amount)
-          : (recurring.amount || 0);
-
-        const totalAmount = amount * remainingOccurrences;
-
-        if (recurring.financialFlowId === 2) {
-          return sum - Math.abs(totalAmount);
-        }
-        return sum + Math.abs(totalAmount);
-      }
-
-      // Pour les autres périodicités
-      const dayOfMonth = typeof recurring.dayOfMonth === 'string'
-        ? parseInt(recurring.dayOfMonth)
-        : (recurring.dayOfMonth || 0);
-
-      if (dayOfMonth <= currentDay) {
-        return sum;
-      }
-
-      if (frequency !== 'monthly') {
-        const shouldApply = this.shouldApplyRecurring(frequency, currentMonth);
-        if (!shouldApply) {
-          return sum;
-        }
-      }
-
-      // Vérifier si déjà réalisée
-      const realized = realizedOccurrences.get(recurring.id!) || 0;
-      if (realized > 0) {
-        return sum;
-      }
-
-      const amount = typeof recurring.amount === 'string'
-        ? parseFloat(recurring.amount)
-        : (recurring.amount || 0);
-
-      if (recurring.financialFlowId === 2) {
-        return sum - Math.abs(amount);
-      }
-
-      return sum + Math.abs(amount);
+    // Calculer le total de ces échéances
+    const totalUpcoming = upcomingSchedules.reduce((sum, schedule) => {
+      return sum + schedule.amount; // schedule.amount est déjà signé (+ pour revenu, - pour dépense)
     }, 0);
 
-    return currentBalance + monthlyRecurringTotal;
+    return currentBalance + totalUpcoming;
   }
 
   // Vérifier si une échéance doit être appliquée selon sa périodicité

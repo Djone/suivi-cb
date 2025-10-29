@@ -38,6 +38,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 1.5rem;
   border-radius: 12px 12px 0 0;
+  margin-bottom: 1.5rem; /* Espace ajouté entre l'en-tête et les tuiles de solde */
 }
 
 ::ng-deep .account-card .p-card-body {
@@ -225,8 +226,8 @@
 
 .schedule-item {
   display: grid;
-  grid-template-columns: 60px 1fr auto;
-  gap: 1rem;
+  grid-template-columns: 60px 1fr auto 40px; /* Ajout d'une colonne pour les actions */
+  gap: 0.75rem; /* Réduction du gap pour plus de compacité */
   align-items: center;
   padding: 0.875rem;
   background-color: #f8f9fa;
@@ -237,6 +238,15 @@
 .schedule-item:hover {
   background-color: #e9ecef;
   transform: translateX(4px);
+}
+
+.schedule-item.overdue {
+  background-color: #fffbeb; /* Fond jaune très clair */
+  border-left: 4px solid #f59e0b; /* Bordure gauche ambrée */
+}
+
+.schedule-item.overdue:hover {
+  background-color: #fef3c7;
 }
 
 .schedule-date {
@@ -261,6 +271,12 @@
   font-size: 1rem;
   text-align: right;
   white-space: nowrap;
+}
+
+.schedule-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* No schedules */
@@ -463,27 +479,27 @@
 .alert-banner {
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* Espace entre l'icône et le texte */
+  gap: 0.75rem;
   background-color: #fee2e2; /* Fond rouge très clair */
   color: #b91c1c; /* Texte rouge foncé */
-  padding: 0.75rem 1rem; /* Marge intérieure */
-  border-bottom: 1px solid #fecaca; /* Ligne de séparation rouge clair */
-  font-weight: 500; /* Semi-gras */
+  padding: 0.75rem 1rem;
+  border-radius: 8px; /* Coins arrondis */
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Ombre portée plus subtile */
+  border: 1px solid #fecaca;
+  margin-bottom: 2rem; /* Espace sous le bandeau, avant les échéances */
 }
 
 .alert-banner .pi-exclamation-triangle {
-  font-size: 1.25rem; /* Taille de l'icône */
+  font-size: 1.25rem;
 }
 
 .alert-text {
-  display: flex;
-  flex-direction: column; /* Organise le texte sur deux lignes */
-  gap: 0.1rem; /* Petit espace entre les lignes de texte */
   font-size: 0.9rem;
-  line-height: 1.4;
 }
 
 .alert-amount {
-  font-weight: 700; /* Texte en gras */
+  font-weight: 700;
   color: #991b1b; /* Texte rouge encore plus foncé pour le montant */
+  margin-left: 0.5rem;
 }

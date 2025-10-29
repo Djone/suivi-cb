@@ -1,28 +1,18 @@
 <div class="dashboard-container">
   <!-- Grille de comptes -->
-  <div class="accounts-grid">
+  <div *ngIf="accountBalances.length > 0" class="accounts-grid">
     <div *ngFor="let accountBalance of accountBalances" class="account-card-wrapper">
 
       <!-- Card Compte -->
-      <p-card class="account-card">
-        <ng-template pTemplate="header">
+      <div class="p-card account-card">
+        <div class="p-card-header">
           <div class="account-header">
             <div class="account-title-section">
               <i class="pi pi-wallet account-icon"></i>
               <h2 class="account-title">{{ accountBalance.account.name }}</h2>
             </div>
           </div>
-
-          <!-- BANDEAU D'ALERTE -->
-          <div *ngIf="accountBalance.nextMonthLowestBalance < 0" class="alert-banner">
-            <i class="pi pi-exclamation-triangle"></i>
-            <span class="alert-text">
-              Risque de solde négatif en début de mois prochain !
-              <strong class="alert-amount">Prévisionnel: {{ accountBalance.nextMonthLowestBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}</strong>
-            </span>
-          </div>
-
-        </ng-template>
+        </div>
 
         <!-- Soldes -->
         <div class="balances-section">
@@ -51,6 +41,15 @@
           </div>
         </div>
 
+        <!-- BANDEAU D'ALERTE (nouvel emplacement) -->
+        <div *ngIf="accountBalance.nextMonthLowestBalance < 0" class="alert-banner">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div class="alert-text">
+            Risque de solde négatif !
+            <span class="alert-amount">Prévisionnel: {{ accountBalance.nextMonthLowestBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}</span>
+          </div>
+        </div>
+
         <!-- Échéances à venir -->
         <div class="schedules-section">
           <div *ngIf="accountBalance.upcomingSchedules.length > 0" class="custom-accordion">
@@ -76,7 +75,9 @@
             <!-- Détail des échéances -->
             <div class="custom-accordion-content" [class.expanded]="isSchedulesExpanded(accountBalance.account.id)">
               <div class="schedules-list">
-                <div *ngFor="let schedule of accountBalance.upcomingSchedules" class="schedule-item">
+                <div *ngFor="let schedule of accountBalance.upcomingSchedules"
+                     class="schedule-item"
+                     [class.overdue]="schedule.isOverdue">
                   <span class="schedule-date">{{ schedule.dueDate | date:'dd/MM' }}</span>
                   <span class="schedule-label">{{ schedule.recurringTransaction.label }}</span>
                   <span class="schedule-amount"
@@ -84,6 +85,15 @@
                         [class.negative]="schedule.amount < 0">
                     {{ schedule.amount | currency:'EUR':'symbol':'1.2-2':'fr' }}
                   </span>
+                  <div class="schedule-actions">
+                    <p-button *ngIf="schedule.isOverdue"
+                              icon="pi pi-exclamation-circle"
+                              styleClass="p-button-rounded p-button-success p-button-text"
+                              pTooltip="Valider et créer la transaction"
+                              tooltipPosition="top"
+                              (click)="markAsPaid(schedule, accountBalance.account.id!)">
+                    </p-button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -103,7 +113,7 @@
         </div>
 
         <!-- Dépenses par catégorie -->
-        <div class="category-section">
+        <div class="category-section" *ngIf="accountBalance.expensesByCategory.length > 0; else noExpenses">
           <div *ngIf="accountBalance.expensesByCategory.length > 0" class="custom-accordion">
             <div class="custom-accordion-header" (click)="toggleExpenses(accountBalance.account.id)">
               <div class="accordion-header-content">
@@ -136,15 +146,16 @@
               </div>
             </div>
           </div>
-
-          <div *ngIf="accountBalance.expensesByCategory.length === 0" class="no-data">
-            <i class="pi pi-info-circle"></i>
-            <span>Aucune dépense pour ce mois</span>
-          </div>
         </div>
+        <ng-template #noExpenses>
+          <div class="no-data-section">
+            <i class="pi pi-shopping-cart"></i>
+            <span>Aucune dépense ce mois-ci</span>
+          </div>
+        </ng-template>
 
         <!-- Revenus par catégorie -->
-        <div class="category-section">
+        <div class="category-section" *ngIf="accountBalance.incomesByCategory.length > 0; else noIncomes">
           <div *ngIf="accountBalance.incomesByCategory.length > 0" class="custom-accordion">
             <div class="custom-accordion-header" (click)="toggleIncomes(accountBalance.account.id)">
               <div class="accordion-header-content">
@@ -177,14 +188,14 @@
               </div>
             </div>
           </div>
-
-          <div *ngIf="accountBalance.incomesByCategory.length === 0" class="no-data">
-            <i class="pi pi-info-circle"></i>
-            <span>Aucun revenu pour ce mois</span>
-          </div>
         </div>
-
-      </p-card>
+        <ng-template #noIncomes>
+          <div class="no-data-section">
+            <i class="pi pi-money-bill"></i>
+            <span>Aucun revenu ce mois-ci</span>
+          </div>
+        </ng-template>
+      </div>
     </div>
   </div>
 
