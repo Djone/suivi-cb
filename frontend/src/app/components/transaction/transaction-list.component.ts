@@ -459,8 +459,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (!aRealized && bRealized) return -1;
 
       // Puis trier par jour du mois
-      const aDay = typeof a.dayOfMonth === 'string' ? parseInt(a.dayOfMonth) : a.dayOfMonth;
-      const bDay = typeof b.dayOfMonth === 'string' ? parseInt(b.dayOfMonth) : b.dayOfMonth;
+      const aDay = typeof a.dayOfMonth === 'string' ? parseInt(a.dayOfMonth) : (a.dayOfMonth || 0);
+      const bDay = typeof b.dayOfMonth === 'string' ? parseInt(b.dayOfMonth) : (b.dayOfMonth || 0);
       return aDay - bDay;
     });
   }
@@ -532,7 +532,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    // La seule source de vérité est l'existence d'une transaction liée pour le mois en cours.
+    // The only source of truth is the existence of a linked transaction for the current month.
     const isRealized = this.transactions.some(t => {
       const transDate = new Date(t.date || '');
       return t.recurringTransactionId === recurringId &&
@@ -549,6 +549,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   // Obtenir le libellé du jour pour une échéance
   getDayLabel(recurring: RecurringTransaction): string {
+    if (recurring.dayOfMonth === null || recurring.dayOfMonth === undefined) {
+      return 'N/A';
+    }
     if (recurring.frequency === 'weekly') {
       const daysOfWeek = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
       const dayIndex = typeof recurring.dayOfMonth === 'string' ? parseInt(recurring.dayOfMonth) : recurring.dayOfMonth;

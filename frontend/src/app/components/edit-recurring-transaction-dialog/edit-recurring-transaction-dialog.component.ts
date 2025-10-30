@@ -1,17 +1,22 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { Subscription } from 'rxjs';
+
+// PrimeNG Imports
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+
+// Modèles et Services
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { SubCategory } from '../../models/sub-category.model';
 import { Account } from '../../models/account.model';
-import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
+import { SubCategoryService } from '../../services/sub-category.service';
+import { FREQUENCY_LIST } from '../../utils/utils';
 
 @Component({
   selector: 'app-edit-recurring-transaction-dialog',
@@ -19,141 +24,113 @@ import { AccountService } from '../../services/account.service';
   imports: [
     CommonModule,
     FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
     MatDialogModule,
-    MatIconModule
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    InputNumberModule
   ],
   templateUrl: './edit-recurring-transaction-dialog.component.html',
   styleUrls: ['./edit-recurring-transaction-dialog.component.css']
 })
-export class EditRecurringTransactionDialogComponent implements OnInit {
-  subcategories: SubCategory[] = [];
+export class EditRecurringTransactionDialogComponent implements OnInit, OnDestroy {
+  activeSubCategories: SubCategory[] = [];
   accounts: Account[] = [];
   financialFlows = [
     { id: 1, name: 'Revenu' },
     { id: 2, name: 'Dépense' }
   ];
-  frequencies = [
-    { value: 'weekly', label: 'Hebdomadaire (chaque semaine)' },
-    { value: 'monthly', label: 'Mensuelle (chaque mois)' },
-    { value: 'bimonthly', label: 'Bimensuelle (tous les 2 mois)' },
-    { value: 'quarterly', label: 'Trimestrielle (tous les 3 mois)' },
-    { value: 'biannual', label: 'Semestrielle (tous les 6 mois)' },
-    { value: 'yearly', label: 'Annuelle (une fois par an)' }
-  ];
-  daysOfMonth: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
-  daysOfWeek = [
-    { value: 1, label: 'Lundi' },
-    { value: 2, label: 'Mardi' },
-    { value: 3, label: 'Mercredi' },
-    { value: 4, label: 'Jeudi' },
-    { value: 5, label: 'Vendredi' },
-    { value: 6, label: 'Samedi' },
-    { value: 7, label: 'Dimanche' }
-  ];
-
-  // Données éditables
-  label: string = '';
-  amount: number = 0;
-  dayOfMonth: number = 1;
-  frequency: string = 'monthly';
-  financialFlowId: number = 1;
-  subCategoryId: number = 0;
-  accountId: number = 1;
+  frequencies = FREQUENCY_LIST;
+  isNew: boolean = false;
+  dialogTitle: string = '';
+  private sub = new Subscription();
 
   constructor(
     public dialogRef: MatDialogRef<EditRecurringTransactionDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { recurringTransaction: RecurringTransaction },
+    @Inject(MAT_DIALOG_DATA) public data: { transaction: RecurringTransaction; isNew?: boolean },
     private subCategoryService: SubCategoryService,
     private accountService: AccountService
-  ) {}
+  ) {
+    this.isNew = data.isNew || false;
+    this.dialogTitle = this.isNew ? 'Nouvelle transaction récurrente' : 'Éditer la transaction récurrente';
+  }
 
   ngOnInit(): void {
-    console.log('Échéance récurrente reçue dans le dialogue:', this.data.recurringTransaction);
+    // Charger les sous-catégories initiales en fonction du flux financier de la transaction
+    if (this.data.transaction.financialFlowId) {
+      this.loadSubCategoriesByFlow(this.data.transaction.financialFlowId);
+    }
+    this.loadAccounts();
+  }
 
-    // Charger tous les comptes
-    this.accountService.accounts$.subscribe({
-      next: (data) => {
-        this.accounts = data;
-      },
-      error: (err) => console.error('Erreur lors du chargement des comptes:', err)
-    });
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
 
+  /**
+   * Charge les sous-catégories actives pour un flux financier donné.
+   * @param financialFlowId L'ID du flux financier (1 pour Revenu, 2 pour Dépense).
+   */
+  loadSubCategoriesByFlow(financialFlowId: number): void {
+    this.sub.add(
+      this.subCategoryService.getAllSubCategoriesByFinancialFlowId(financialFlowId).subscribe(subCategories => {
+        this.activeSubCategories = subCategories;
+      })
+    );
+  }
+
+  loadAccounts(): void {
+    this.sub.add(
+      this.accountService.accounts$.subscribe(accounts => {
+        this.accounts = accounts;
+      })
+    );
     this.accountService.getAccounts().subscribe();
-
-    // Charger toutes les sous-catégories
-    this.subCategoryService.subCategories$.subscribe({
-      next: (data) => {
-        this.subcategories = data;
-      },
-      error: (err) => console.error('Erreur lors du chargement des sous-catégories:', err)
-    });
-
-    this.subCategoryService.getSubCategories().subscribe();
-
-    // Initialiser les valeurs du formulaire avec les données de l'échéance
-    const rt = this.data.recurringTransaction;
-    this.label = rt.label || '';
-    this.amount = typeof rt.amount === 'string' ? parseFloat(rt.amount) : (rt.amount || 0);
-    this.dayOfMonth = typeof rt.dayOfMonth === 'string' ? parseInt(rt.dayOfMonth) : (rt.dayOfMonth || 1);
-    this.frequency = rt.frequency || 'monthly';
-    this.financialFlowId = typeof rt.financialFlowId === 'string' ? parseInt(rt.financialFlowId) : (rt.financialFlowId || 1);
-    this.subCategoryId = typeof rt.subCategoryId === 'string' ? parseInt(rt.subCategoryId) : (rt.subCategoryId || 0);
-    this.accountId = typeof rt.accountId === 'string' ? parseInt(rt.accountId) : (rt.accountId || 1);
-
-    // Charger les sous-catégories filtrées par flux financier
-    this.filterSubcategoriesByFinancialFlow(this.financialFlowId);
   }
 
+  /**
+   * Appelé lorsque l'utilisateur change le flux financier.
+   * Recharge les sous-catégories et réinitialise la sélection.
+   */
   onFinancialFlowChange(): void {
-    this.filterSubcategoriesByFinancialFlow(this.financialFlowId);
+    this.data.transaction.subCategoryId = 0; // Réinitialiser la sélection
+    this.activeSubCategories = []; // Vider la liste
+    this.loadSubCategoriesByFlow(this.data.transaction.financialFlowId);
   }
 
-  filterSubcategoriesByFinancialFlow(financialFlowId: number): void {
-    if (!financialFlowId) {
-      return;
+  save(): void {
+    // Assurer que le montant est bien un nombre
+    this.data.transaction.amount = Number(this.data.transaction.amount);
+
+    const transactionData: any = {
+      label: this.data.transaction.label,
+      amount: this.data.transaction.amount,
+      dayOfMonth: this.data.transaction.dayOfMonth,
+      frequency: this.data.transaction.frequency,
+      subCategoryId: this.data.transaction.subCategoryId,
+      accountId: this.data.transaction.accountId,
+      financialFlowId: this.data.transaction.financialFlowId
+    };
+
+    if (!this.isNew && this.data.transaction.id) {
+      transactionData.id = this.data.transaction.id;
     }
 
-    this.subCategoryService.getAllSubCategoriesByFinancialFlowId(financialFlowId).subscribe({
-      next: (data) => {
-        this.subcategories = data;
-      },
-      error: (err) => console.error('Erreur lors du chargement des sous-catégories filtrées:', err)
-    });
+    this.dialogRef.close(transactionData);
   }
 
-  onCancel(): void {
+  cancel(): void {
     this.dialogRef.close();
   }
 
-  isWeeklyFrequency(): boolean {
-    return this.frequency === 'weekly';
-  }
-
-  getDayLabel(): string {
-    if (this.frequency === 'weekly') {
-      const dayObj = this.daysOfWeek.find(d => d.value === this.dayOfMonth);
-      return dayObj ? dayObj.label : '';
-    }
-    return this.dayOfMonth.toString();
-  }
-
-  onSave(): void {
-    const updatedRecurringTransaction: Partial<RecurringTransaction> = {
-      id: this.data.recurringTransaction.id,
-      label: this.label,
-      amount: this.amount,
-      dayOfMonth: this.dayOfMonth,
-      frequency: this.frequency as 'weekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'biannual' | 'yearly',
-      financialFlowId: this.financialFlowId,
-      subCategoryId: this.subCategoryId,
-      accountId: this.accountId
-    };
-
-    console.log('Échéance mise à jour:', updatedRecurringTransaction);
-    this.dialogRef.close(updatedRecurringTransaction);
+  isFormValid(): boolean {
+    return !!(
+      this.data.transaction.label && this.data.transaction.label.trim() !== '' &&
+      this.data.transaction.amount && this.data.transaction.amount > 0 &&
+      this.data.transaction.dayOfMonth && this.data.transaction.dayOfMonth >= 1 && this.data.transaction.dayOfMonth <= 31 &&
+      this.data.transaction.frequency &&
+      this.data.transaction.subCategoryId &&
+      this.data.transaction.accountId
+    );
   }
 }

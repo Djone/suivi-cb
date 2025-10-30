@@ -1,21 +1,50 @@
-<h1 mat-dialog-title>Éditer la sous-catégorie</h1>
-<mat-dialog-content>
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Libellé</mat-label>
-    <input matInput [(ngModel)]="data.subCategory.label" />
-  </mat-form-field>
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
 
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Catégorie</mat-label>
-    <mat-select [(ngModel)]="data.subCategory.categoryId">
-      <mat-option *ngFor="let category of data.categories" [value]="category.id">
-        {{ category.label }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
+<mat-dialog-content>
+  <div class="p-fluid">
+    <div class="field mb-3">
+      <label for="label" class="block mb-2">Libellé *</label>
+      <input
+        pInputText
+        id="label"
+        type="text"
+        [(ngModel)]="data.subCategory.label"
+        placeholder="Entrez le libellé"
+        class="w-full"
+        autofocus />
+    </div>
+
+    <div class="field mb-3">
+      <label for="categoryId" class="block mb-2">Catégorie parente *</label>
+      <p-dropdown
+        id="categoryId"
+        [options]="data.categories"
+        [(ngModel)]="data.subCategory.categoryId"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Sélectionnez une catégorie"
+        [filter]="true"
+        filterBy="label"
+        [showClear]="true"
+        styleClass="w-full"
+        [appendTo]="'body'">
+      </p-dropdown>
+    </div>
+  </div>
 </mat-dialog-content>
 
-<mat-dialog-actions align="center">
-  <button mat-raised-button color="primary" (click)="save()">Enregistrer</button>
-  <button mat-raised-button (click)="cancel()">Annuler</button>
+<mat-dialog-actions align="end">
+  <p-button
+    label="Annuler"
+    icon="pi pi-times"
+    (onClick)="cancel()"
+    styleClass="p-button-text p-button-secondary">
+  </p-button>
+  <p-button
+    [label]="isNew ? 'Créer' : 'Enregistrer'"
+    icon="pi pi-check"
+    (onClick)="save()"
+    [disabled]="!isFormValid()"
+    styleClass="p-button-success">
+  </p-button>
 </mat-dialog-actions>

@@ -1,0 +1,1764 @@
+swagger: '2.0'
+info:
+  version: v1
+  title: PSD2
+  description: The OPTIM.net PSD2 API Swagger Documentation.
+basePath: /psd2
+paths:
+  /Accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Retrieval of the PSU accounts (AISP)
+      description: "<h3>Description</h3>\r\n              This call returns all payment accounts that are relevant the PSU on behalf of whom the AISP is connected.\r\n              Thanks to HYPERMEDIA, each account is returned with the links aiming to ease access to the relevant transactions and balances.\r\n              The result may be subject to pagination (i.e.retrieving a partial result in case of having too many results) through a set of pages by the ASPSP.Thereafter, the AISP may ask for the first, next, previous or last page of results.\r\n            <h3>Prerequisites</h3><ul><li>The TPP has been registered by the Registration Authority for the AISP role.</li><li>The TPP and the PSU have a contract that has been enrolled by the ASPSP</li><ul><li>At this step, the ASPSP has delivered an OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token to the TPP (cf.§ 3.4.2).</li></ul><li>The TPP and the ASPSP have successfully processed a mutual check and authentication</li><li>The TPP has presented its OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token which allows the ASPSP to identify the relevant PSU and retrieve the linked PSU context(cf.§ 3.4.2) if any.</li><li>The ASPSP takes into account the access token that establishes the link between the PSU and the AISP.</li></ul><h3>Business Flow</h3>\r\n              The TPP sends a request to the ASPSP for retrieving the list of the PSU payment accounts.\r\n              The ASPSP computes the relevant PSU accounts and builds the answer as an accounts list.\r\n              The result may be subject to pagination in order to avoid an excessive result set.\r\n              Each payment account will be provided with its characteristics."
+      operationId: ApiV1AccountsGet
+      consumes: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
+      parameters:
+        - name: page
+          in: query
+          required: false
+          type: integer
+          format: int32
+          default: 1
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/AccountResponse'
+          examples:
+            application/json:
+              connectedPsu: GTBDFR07 DEMO USER
+              accounts:
+                - bicFi: BSUIFRPPXXX
+                  accountId:
+                    iban: FR7242460855623343710692964
+                  name: COMPANY A
+                  details: Current Account
+                  usage: PRIV
+                  cashAccountType: CACC
+                  product: CREDIT AGRICOLE PARIS BRANCH
+                  currency: EUR
+                  resourceId: BGP1
+              _links:
+                self:
+                  href: v1/accounts
+                beneficiaries:
+                  href: v1/trusted-beneficiaries
+                first:
+                  href: v1/accounts?page=1
+                last:
+                  href: v1/accounts?page=0
+                next:
+                  href: v1/accounts?page=0
+                prev:
+                  href: v1/accounts?page=0
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ProblemDetails'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: aisp
+  '/Accounts/{accountResourceId}/balances':
+    get:
+      tags:
+        - Accounts
+      summary: Retrieval of an account balances report (AISP)
+      description: "<h3>Description</h3>\r\n            This call returns a set of balances for a given PSU account that is specified by the AISP through an account resource Identification<br /><h3>Prerequisites</h3><ul><li>The TPP has been registered by the Registration Authority for the AISP role</li><li>The TPP and the PSU have a contract that has been enrolled by the ASPSP\r\n                <ul style=\"list-style-type: circle;\"><li>At this step, the ASPSP has delivered an OAUTH2 ԁuthorization CodeԠor Ԓesource Owner PasswordԠaccess token to the TPP (cf. Ǡ3.4.2).</li></ul></li><li>The TPP and the ASPSP have successfully processed a mutual check and authentication</li><li>The TPP has presented its OAUTH2 ԁuthorization CodeԠor Ԓesource Owner PasswordԠaccess token which allows the ASPSP to identify the relevant PSU and retrieve the linked PSU context (cf. Ǡ3.4.2) if any.</li><li>The ASPSP takes into account the access token that establishes the link between the PSU and the AISP.</li><li>The TPP has previously retrieved the list of available accounts for the PSU</li></ul><h3>Business flow</h3>\r\n              The AISP requests the ASPSP on one of the PSUӳ accounts.<br />\r\n              The ASPSP answers by providing a list of balances on this account.\r\n              <ul><li>The ASPSP must provide at least the accounting balance on the account.</li><li>The ASPSP can provide other balance restitutions, e.g.instant balance, as well, if possible.</li><li>Actually, from the PSD2 perspective, any other balances that are provided through the Web-Banking service of the ASPSP must also be provided by this ASPSP through the API.</li></ul>"
+      operationId: ApiV1AccountsByAccountResourceIdBalancesGet
+      consumes: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
+      parameters:
+        - name: accountResourceId
+          in: path
+          description: Identification of account resource to fetch
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/AccountBalanceResponse'
+          examples:
+            application/json:
+              balances:
+                - name: COMPANY A
+                  balanceAmount:
+                    currency: EUR
+                    amount: 100
+                  balanceType: CLBD
+                  lastChangeDateTime: '0001-01-01'
+                  referenceDate: '0001-01-01'
+              _links:
+                self:
+                  href: v1/accounts/BGP100/balances
+                parent-list:
+                  href: v1/accounts
+                transactions:
+                  href: v1/accounts/BGP100/transactions
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ProblemDetails'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: aisp
+  '/Accounts/{accountResourceId}/transactions':
+    get:
+      tags:
+        - Accounts
+      summary: Retrieval of an account transaction set (AISP)
+      description: "<h3>Description</h3>\r\n              This call returns transactions for an account for a given PSU account that is specified by the AISP through an account resource identification.\r\n              The request may use some filter parameter in order to restrict the query\r\n              <ul><li>on a given imputation date range</li><li>past a given incremental technical identification</li></ul>\r\n              The result may be subject to pagination (i.e.retrieving a partial result in case of having too many results) through a set of pages by the ASPSP.Thereafter, the AISP may ask for the first, next, previous or last page of results.\r\n            <h3>Prerequisites</h3><ul><li>The TPP has been registered by the Registration Authority for the AISP role</li><li>The TPP and the PSU have a contract that has been enrolled by the ASPSP</li><ul><li>At this step, the ASPSP has delivered an OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token to the TPP (cf.§ 3.4.2).</li></ul><li>The TPP and the ASPSP have successfully processed a mutual check and authentication</li><li>The TPP has presented its OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token which allows the ASPSP to identify the relevant PSU and retrieve the linked PSU context(cf.§ 3.4.2) is any.</li><li>The ASPSP takes into account the access token that establishes the link between the PSU and the AISP.</li><li>The TPP has previously retrieved the list of available accounts for the PSU</li></ul><h3>Business flow</h3>\r\n              The AISP requests the ASPSP on one of the PSU’s accounts. It may specify some selection criteria.\r\n              The ASPSP answers by a set of transactions that matches the query. The result may be subject to pagination in order to avoid an excessive result set."
+      operationId: ApiV1AccountsByAccountResourceIdTransactionsGet
+      consumes: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
+      parameters:
+        - name: accountResourceId
+          in: path
+          description: Identification of account resource to fetch
+          required: true
+          type: string
+        - name: DateFrom
+          in: query
+          required: false
+          type: string
+          format: date
+        - name: DateTo
+          in: query
+          required: false
+          type: string
+          format: date
+        - name: AfterEntryReference
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: Page
+          in: query
+          required: false
+          type: integer
+          format: int32
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/AccountTransactionResponse'
+          examples:
+            application/json:
+              transactions:
+                - entryReference: BGP1
+                  transactionAmount:
+                    currency: FRA
+                    amount: 100
+                  creditDebitIndicator: DBIT
+                  status: BOOK
+                  bookingDate: '1900-12-31'
+                  valueDate: '1900-12-31'
+                  transactionDate: '1900-12-31'
+                  remittanceInformation:
+                    - RemittanceInformation01
+                    - RemittanceInformation02
+                  resourceId: BGP1
+              _links:
+                self:
+                  href: v1/accounts/BGP100/transactions
+                parent-list:
+                  href: v1/accounts
+                balances:
+                  href: v1/accounts/BGP100/balances
+                first:
+                  href: v1/accounts/BGP100/transactions?page=1
+                last:
+                  href: v1/accounts/BGP100/transactions?page=0
+                next:
+                  href: v1/accounts/BGP100/transactions?page=0
+                prev:
+                  href: v1/accounts/BGP100/transactions?page=0
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ProblemDetails'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: aisp
+  /trusted-beneficiaries:
+    get:
+      tags:
+        - Beneficiaries
+      summary: Retrieval of the trusted beneficiaries list (AISP)
+      description: "<h3>Description</h3>\r\n              This call returns all trusted beneficiaries that have been set by the PSU.\r\n              Those beneficiaries can benefit from an SCA exemption during payment initiation.\r\n              The result may be subject to pagination (i.e.retrieving a partial result in case of having too many results) through a set of pages by the ASPSP.Thereafter, the AISP may ask for the first, next, previous or last page of results.\r\n            <h3>Prerequisites</h3><ul><li>The TPP has been registered by the Registration Authority for the AISP role.</li><li>The TPP and the PSU have a contract that has been enrolled by the ASPSP</li><ul><li>At this step, the ASPSP has delivered an OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token to the TPP (cf.§ 3.4.2).</li></ul><li>The TPP and the ASPSP have successfully processed a mutual check and authentication</li><li>The TPP has presented its OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token which allows the ASPSP to identify the relevant PSU and retrieve the linked PSU context(cf.§ 3.4.2) if any.</li><li>The ASPSP takes into account the access token that establishes the link between the PSU and the AISP.</li></ul><h3>Business Flow</h3>\r\n              The AISP asks for the trusted beneficiaries list.\r\n              The ASPSP answers with a list of beneficiary details structure."
+      operationId: ApiV1Trusted-beneficiariesGet
+      consumes: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
+      parameters:
+        - name: page
+          in: query
+          required: false
+          type: integer
+          format: int32
+          default: 1
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/BeneficiariesResponse'
+          examples:
+            application/json:
+              beneficiaries:
+                - id: '0'
+                  isTrusted: true
+                  creditorAgent:
+                    bicFi: BSUIFRPPXXX
+                    clearingSystemMemberId: {}
+                    name: CA-CIB PARIS
+                    postalAddres:
+                      addressLine:
+                        - 9 quai Du President Paul doumer
+                        - 92920 Courbevoie La Defense
+                  creditor:
+                    name: COMPANY A
+                    postalAddress:
+                      country: FR
+                      addressLine:
+                        - ' CREDIT AGRICOLE CIB'
+                        - 12 PLACE DES ETATS-UNISCS 70052 MONTROUGE
+                    organisationId: {}
+                    privateId: {}
+                  creditorAccount:
+                    iban: FR7631489000100018432735447
+              _links:
+                self:
+                  href: v1/trusted-beneficiaries
+                parent-list:
+                  href: v1/trusted-beneficiaries
+                first:
+                  href: v1/trusted-beneficiaries?page=1
+                last:
+                  href: v1/trusted-beneficiaries?page=0
+                next:
+                  href: v1/trusted-beneficiaries?page=0
+                prev:
+                  href: v1/trusted-beneficiaries?page=0
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ProblemDetails'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: aisp
+  /Consents:
+    put:
+      tags:
+        - Consents
+      summary: Forwarding the PSU consent (AISP)
+      description: "<h3>Description</h3>\r\n              In the mixed detailed consent on accounts\r\n              <ul><li>the AISP captures the consent of the PSU</li><li>then it forwards this consent to the ASPSP</li></ul>\r\n              This consent replaces any prior consent that was previously sent by the AISP.\r\n            <h3>Prerequisites</h3><ul><li>The TPP has been registered by the Registration Authority for the AISP role.</li><li>The TPP and the PSU have a contract that has been enrolled by the ASPSP</li><ul><li>At this step, the ASPSP has delivered an OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token to the TPP (cf.§ 3.4.2).</li></ul><li>The TPP and the ASPSP have successfully processed a mutual check and authentication</li><li>The TPP has presented its OAUTH2 \"Authorization Code\" or \"Resource Owner Password\" access token which allows the ASPSP to identify the relevant PSU and retrieve the linked PSU context(cf.§ 3.4.2) if any.</li><li>The ASPSP takes into account the access token that establishes the link between the PSU and the AISP.</li></ul><h3>Business Flow</h3>\r\n              The PSU specifies to the AISP which of his/her accounts will be accessible and which functionalities should be available.\r\n              The AISP forwards these settings to the ASPSP.\r\n              The ASPSP answers by HTTP201 return code."
+      operationId: ApiV1ConsentsPut
+      consumes:
+        - application/json-patch+json
+        - application/json
+        - text/json
+        - application/*+json
+        - application/hal+json;charset=utf-8
+      produces:
+        - text/plain
+        - application/json
+        - text/json
+      parameters:
+        - name: consent
+          in: body
+          required: false
+          schema:
+            $ref: '#/definitions/ConsentRequest'
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '201':
+          description: Success
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ProblemDetails'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: aisp
+  /payment-requests:
+    post:
+      tags:
+        - Payment
+      summary: Payment request initiation (PISP)
+      description: "<h3>Description</h3>\r\n            The following use cases can be applied:<p></p><ul><li>payment request on behalf of a merchant</li><li>transfer request on behalf of the account's owner</li><li>standing-order request on behalf of the account's owner</li></ul><h4>Data content</h4>\r\n              A payment request or a transfer request might embed several payment instructions having\r\n              <ul><li>one single execution date or multiple execution dates</li><ul><li>case of one single execution date, this date must be set at the payment level</li><li>case of multiple execution dates, those dates must be set at each payment instruction level</li></ul><li>one single beneficiary or multiple beneficiaries</li><ul><li>case of one single beneficiary, this beneficiary must be set at the payment level</li><li>case of multiple beneficiaries, those beneficiaries must be set at each payment instruction level</li></ul></ul> \r\n              Having at the same time multiple beneficiaries and multiple execution date might not be a relevant business case, although it is technically allowed.<br />\r\n              Each implementation will have to specify which business use cases are actually supported.<br />       \r\n              A standing order request must embed one single payment instruction and must address one single beneficiary.\r\n              <ul><li>The beneficiary must be set at the payment level</li><li>The standing order specific characteristics (start date, periodicity...) must be set at the instruction level</li></ul>                 \r\n              Payment request can rely for execution on different payment instruments:\r\n              - SEPA Credit Transfer (SCT)\r\n              - Domestic Credit Transfer in a non Euro-currency\r\n              - International payment\r\n              The following table indicates how to use the different fields, depending on the payment instrument:\r\n              <table border=\"1\"><thead><tr><td> Structure </td><td> SEPA payments</td><td>Domestic payments in non-euro currency</td><td>International payments</td></tr></thead><tbody><tr><td>PaymentTypeInformation/ InstructionPriority (payment\r\n                      level)</td><td>\"HIGH\" for high-priority SCT<br />\"NORM\" for other SCT<br />Ignored\r\n                      for SCTInst\r\n                    </td><td>\"HIGH\" for high-priority CT<br />\"NORM\" or ignored for\r\n                      other CT<br /></td><td>\"HIGH\" for high-priority payments<br />\"NORM\" or ignored\r\n                      for other payments<br /></td></tr><tr><td>PaymentTypeInformation/ ServiceLevel (payment level)</td><td>\"SEPA\" for SCT and SCTInst</td><td>ignored</td><td>ignored</td></tr><tr><td>PaymentTypeInformation/ CategoryPurpose (payment level)</td><td colspan=\"2\"> \"CASH\" for transfer request<br />\"DVPM\" for\r\n                      payment request on behalf of a merchant\r\n                    </td><td>\"CORT\" for generic international payments<br />\"INTC\" for\r\n                      transfers between two branches within the same company<br />\"TREA\"\r\n                      for treasury transfers\r\n                    </td></tr><tr><td>PaymentTypeInformation/ LocalInstrument (payment level)</td><td>\"INST\" pour les SCTInst<br /> Otherwise ignored\r\n                    </td><td colspan=\"2\"> ignored or valued with ISO20022 external code\r\n                      list values</td></tr><tr><td>RequestedExecutionDate (either at payment or transaction\r\n                      level)</td><td colspan=\"3\"> Mandatory(indicates the date on debit on the\r\n                      ordering party account) </td></tr><tr><td> InstructedAmount(at each transaction level) </td><td colspan=\"3\">Mandatory</td></tr><tr><td>ChargeBearer(at each transaction level)</td><td>\"SLEV\" for SCT and SCTInst</td><td>\"SLEV\" or \"SHAR\"</td><td>\"CRED\", \"DEBT\" or \"SHAR\"</td></tr><tr><td>Purpose(at payment level)</td><td colspan=\"3\"> Optional </td></tr><tr><td> RegulatoryReportingCode(at each transaction level) </td><td colspan=\"2\">Not used</td><td>Mandatory (possibly multiple values)</td></tr><tr><td>RemittanceInformation</td><td colspan=\"3\"> Optional <br /> Unstructured </td></tr><tr><td> Debtor(at payment level) </td><td> Mandatory <br /> 2 address lines only\r\n                           </td><td colspan=\"2\"> Mandatory <br /> 4 address lines only\r\n                            </td></tr><tr><td>DebtorAccount(at payment level)</td><td>Optional</td><td colspan=\"2\"> Optional <br /> Account currency may be\r\n                              specified\r\n                            </td></tr><tr><td>DebtorAgent (at payment level)</td><td colspan=\"3\"> Optional </td></tr><tr><td> Creditor(either at payment or transaction level) </td><td colspan=\"3\">Mandatory<br />2 address lines only\r\n                     </td></tr><tr><td>CreditorAccount(either at payment or transaction level)</td><td>Mandatory</td><td colspan=\"2\"> Mandatory <br /> Account currency may be\r\n                              specified\r\n                            </td></tr><tr><td>CreditorAgent (either at payment or transaction level)</td><td colspan=\"3\"> Optional </td></tr><tr><td> UltimateCreditor(either at payment or transaction level) </td><td colspan=\"3\">Optional</td></tr><tr><td>ClearingSystemId et ClearingSystemMemberId(either at\r\n                      payment or transaction level)</td><td colspan=\"2\"> Not used</td><td>Optional</td></tr></tbody></table><br /><h4>Prerequisites for all use cases</h4><ul><li>The TPP has been registered by the Registration Authority for the PISP role</li><li>The TPP was provided with an OAUTH2 \"Client Credential\" access token by the ASPSP(cf.§ 3.4.3).</li><li>The TPP and the ASPSP have successfully processed a mutual check and authentication</li><li>The TPP has presented its \"OAUTH2 Client Credential\" access token</li></ul><h4>Business flow</h4><h5>Payment Request use case</h5>\r\n                The PISP forwards a payment request on behalf of a merchant.<br />\r\n                The PSU buys some goods or services on an e-commerce website held by a merchant. Among other payment method, the merchant suggests the use of a PISP service.As there is obviously a contract between the merchant and the PISP, there is no need of such a contract between the PSU and this PISP to initiate the process.<br />\r\n                Case of the PSU that chooses to use the PISP service:<br /><ul><li>The merchant forwards the requested payment characteristics to the PISP and redirects the PSU to the PISP portal.</li><li>The PISP requests from the PSU which ASPSP will be used.</li><li>The PISP prepares the Payment Request and sends this request to the ASPSP.</li><li>The Request can embed several payment instructions having different requested execution date.</li><li>The beneficiary, as being the merchant, is set at the payment level.</li></ul><h5>Transfer Request use case</h5>\r\n                The PISP forwards a transfer request on behalf of the owner of the account.\r\n                <ul><li>The PSU provides the PISP with all information needed for the transfer.</li><li>The PISP prepares the Transfer Request and sends this request to the relevant ASPSP that holds the debtor account.</li><li>The Request can embed several payment instructions having different beneficiaries.</li><li>The requested execution date, as being the same for all instructions, is set at the payment level.</li></ul><h5>Standing Order Request use case</h5>\r\n                The PISP forwards a Standing Order request on behalf of the owner of the account.\r\n                <ul><li>The PSU provides the PISP with all information needed for the Standing Order.</li><li>The PISP prepares the Standing Order Request and sends this request to the relevant ASPSP that holds the debtor account.</li><li>The Request embeds one single payment instruction with</li><ul><li>The requested execution date of the first occurrence</li><li>The requested execution frequency of the payment in order to compute further execution dates</li><li>An execution rule to handle cases when the computed execution dates cannot be processed (e.g.bank holydays)</li><li>An optional end date for closing the standing Order</li></ul></ul><h4>Authentication flows for all use cases</h4>\r\n              As the request posted by the PISP to the ASPSP needs a PSU authentication before execution, this request will include:\r\n              <ul><li>One or two call-back URLs to be used by the ASPSP at the finalisation of the authentication and consent process :</li><ul><li>The first call-back URL will be called by the ASPSP if the Payment Request is processed without any error or rejection by the PSU</li><li>The second call-back URL is to be used by the ASPSP in case of processing error or rejection by the PSU.Since this second URL is optional, the PISP might not provide it. In this case, the ASPSP will use the same URL for any processing result.</li><li>Both call-back URLS must be used in a TLS-secured request.</li></ul></ul>\r\n              The ASPSP saves the request and answers to the PISP. The answer embeds:\r\n              <ul><li>A location link of the saved Request that will be further used to retrieve the Request and its status information.</li><li>The specification of the chosen authentication approach taking into account both the PISP and the PSU capabilities.</li><li>The URL to be used by the PISP for redirecting the PSU in order to perform a authentication.</li></ul>\r\n              Case of the PSU neither gives nor denies his/her consent, the Request shall expire and is then rejected to the PISP.The expiration delay is specified by each ASPSP.<br /><h5>Redirect authentication approach</h5>\r\n                When the chosen authentication approach within the ASPSP answers is set to \"REDIRECT\":<br /><ul><li>The PISP redirects the PSU to the ASPSP which authenticates the PSU </li><li>The ASPSP asks the PSU to give (or deny) his/her consent to the Payment Request</li><li>The PSU chooses or confirms which of his/her accounts shall be used by the ASPSP for the future Credit Transfer.</li><li>The ASPSP is then able to initiate the subsequent Credit Transfer</li><li>The ASPSP redirects the PSU to the PISP using one of the call-back URLs provided within the posted Payment Request</li></ul>"
+      operationId: ApiV1Payment-requestsPost
+      consumes:
+        - application/json-patch+json
+        - application/json
+        - text/json
+        - application/*+json
+        - application/hal+json;charset=utf-8
+      produces: []
+      parameters:
+        - name: paymentRequest
+          in: body
+          description: ''
+          required: false
+          schema:
+            $ref: '#/definitions/PaymentCreateRequest'
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '201':
+          description: Success
+          headers:
+            Digest:
+              type: string
+              description: Digest of the body      
+            Signature:
+              type: string
+              description: |
+                http-signature of the response (cf. https://datatracker.ietf.org/doc/draft-cavage-http-signatures/)
+          examples:
+            application/json:
+              appliedAuthenticationApproach: REDIRECT
+              _links:
+                consentApproval:
+                  href: 'https://www.optimnet.ca-cib.com/pva?guid=00000000-0000-0000-0000-000000000000'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: pisp
+  '/payment-requests/{paymentRequestResourceId}':
+    get:
+      tags:
+        - Payment
+      summary: Retrieval of a payment request (PISP)
+      description: "<h3>Description</h3>\r\n            The following use cases can be applied:\r\n            <ul><li>retrieval of a payment request on behalf of a merchant</li><li>retrieval of a transfer request on behalf of the account's owner</li><li>retrieval of a standing-order request on behalf of the account's owner</li></ul>\r\n            The PISP has sent a Request through a POST command. <br />\r\n              The ASPSP has registered the Request, updated if necessary the relevant identifiers in order to avoid duplicates and returned the location of the updated Request.<br />\r\n              The PISP gets the Request that has been updated with the resource identifiers, and eventually the status of the Payment/Transfer Request and the status of the subsequent credit transfer.<br /><h3>Prerequisites</h3><ul><li>The TPP has been registered by the Registration Authority for the PISP role</li><li>The TPP was provided with an OAUTH2 \"Client Credential\" access token by the ASPSP (cf.§ 3.4.3).</li><li>The TPP has previously posted a Request which has been saved by the ASPSP(cf.§ 4.5.3)</li><ul><li>The ASPSP has answered with a location link to the saved Payment/Transfer Request(cf.§ 4.5.4)</li></ul><li>The TPP and the ASPSP have successfully processed a mutual check and authentication</li><li>The TPP has presented its \"OAUTH2 Client Credential\" access token</li></ul><h3>Business flow</h3>\r\n            The PISP asks to retrieve the Payment/Transfer Request that has been saved by the ASPSP.The PISP uses the location link provided by the ASPSP in response of the posting of this request.<br />\r\n            The ASPSP returns the previously posted Payment/Transfer Request which is enriched with:<br /><ul><li>The resource identifiers given by the ASPSP</li><li>The status information of the Payment Request and of the subsequent credit transfer</li></ul>\r\n            The status information must be available during at least 30 calendar days after the posting of the Payment Request.However, the ASPSP may increase this availability duration, based on its own rules.<br />"
+      operationId: ApiV1Payment-requestsByPaymentRequestResourceIdGet
+      consumes: []
+      produces: []
+      parameters:
+        - name: paymentRequestResourceId
+          in: path
+          description: ''
+          required: true
+          type: string
+          format: uuid
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          headers:
+            Digest:
+              type: string
+              description: Digest of the body      
+            Signature:
+              type: string
+              description: |
+                http-signature of the response (cf. https://datatracker.ietf.org/doc/draft-cavage-http-signatures/)
+          examples:
+            application/json:
+              resourceId: 00000000-0000-0000-0000-000000000000
+              paymentInformationId: PaymentInformationId
+              creationDateTime: '2019-02-28T15:24:40.6089375+08:00'
+              numberOfTransactions: 1
+              initiatingParty:
+                name: Initiating Party Name
+                postalAddress:
+                  country: FR
+                  addressLine:
+                    - 18 rue de la DSP2
+                    - '75008'
+                organisationId:
+                  identification: BGP;123
+                  schemeName: BANK
+              paymentTypeInformation:
+                instructionPriority: NORM
+                serviceLevel: SEPA
+                localInstrument: INST
+                categoryPurpose: CASH
+              debtor:
+                name: Debtor Name
+                postalAddress:
+                  country: FR
+                  addressLine:
+                    - 18 rue de la DSP2
+                    - '75008'
+                privateId:
+                  identification: BGP;456
+                  schemeName: BANK
+              debtorAccount:
+                iban: FR29NWBK60161331926877
+              debtorAgent:
+                bicFi: YYTE23532323
+              beneficiary:
+                isTrusted: false
+                creditorAgent:
+                  bicFi: ABC8968144EE
+                creditor:
+                  name: Creditor Name
+                creditorAccount:
+                  iban: FR29NWBK60161331926819
+              ultimateCreditor:
+                name: Ultimate Creditor
+                postalAddress:
+                  country: FR
+                  addressLine:
+                    - 18 rue de la DSP2
+                    - '75008'
+                organisationId:
+                  identification: BGP;123
+                  schemeName: BANK
+              purpose: CASH
+              chargeBearer: SLEV
+              paymentInformationStatus: RJCT
+              statusReasonInformation: AC06
+              requestedExecutionDate: '2019-03-01T15:24:40.6089375+08:00'
+              creditTransferTransaction:
+                - paymentId:
+                    instructionId: InstructionId
+                    endToEndId: EndToEnd
+                  instructedAmount:
+                    currency: EUR
+                    amount: 123
+                  regulatoryReportingCodes:
+                    - RegulatoryReportingCodes
+                  remittanceInformation:
+                    - MyRemittanceInformation
+              supplementaryData:
+                acceptedAuthenticationApproach:
+                  - REDIRECT
+                  - EMBEDDED
+                appliedAuthenticationApproach: REDIRECT
+                successfulReportUrl: 'http://pisp/success'
+                unsuccessfulReportUrl: 'http://pisp/unsuccess'
+              _links:
+                self:
+                  href: 'http://psd2.com/self'
+                confirmation:
+                  href: 'https://www.optimnet.ca-cib.com/pva?guid=00000000-0000-0000-0000-000000000000'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: pisp
+    put:
+      tags:
+        - Payment
+      summary: Modification of a Payment/Transfer Request (PISP)
+      description: "<div class=\"markdown\">\r\n  <h3>Description</h3>\r\n            The PISP sent a Payment/Transfer Request through a POST command.<br />\r\n            The ASPSP registered the Payment/Transfer Request, updated if necessary the relevant identifiers in order to avoid duplicates and returned the location of the updated Request.<br />\r\n            The PISP got the Payment/Transfer Request that has been updated with the resource identifiers, and eventually the status of the Payment/Transfer Request and the status of the subsequent credit transfer.<br />\r\n            The PISP request for the payment cancellation (global cancellation) or for some payment instructions cancellation (partial cancellation)<br />\r\n            No other modification of the Payment/Transfer Request is allowed.<br /><h3>Prerequisites</h3><p></p><ul><li>The TPP was registered by the Registration Authority for the PISP role</li><li>The TPP was provided with an OAUTH2 \"Client Credential\" access token by the ASPSP (cf.§ 3.4.3).</li><li>The TPP previously posted a Payment/Transfer Request which was saved by the ASPSP(cf.§ 4.5.3)</li><ul><li>The ASPSP answered with a location link to the saved Payment/Transfer Request(cf.§ 4.5.4)</li><li>The PISP retrieved the saved Payment/Transfer Request(cf.§ 4.5.4)</li></ul><li>The TPP and the ASPSP successfully processed a mutual check and authentication</li><li>The TPP presented its \"OAUTH2 Client Credential\" access token.</li><li>The TPP presented the payment/transfer request.</li><li>The PSU was successfully authenticated.</li></ul><h3>Business flow</h3>\r\n            the following cases can be applied:\r\n            <ul><li>Case of a payment with multiple instructions or a standing order, the PISP asks to cancel the whole Payment/Transfer or Standing Order Request including all non-executed payment instructions by setting the [paymentInformationStatus] to \"RJCT\" and the relevant[statusReasonInformation] to \"DS02\" at payment level.</li></ul>\r\n            Since the modification request needs a PSU authentication before committing, the modification request includes:\r\n              <ul><li>One or two call-back URLs to be used by the ASPSP at the finalisation of the authentication and consent process :</li><ul><li>The first call-back URL will be called by the ASPSP if the Transfer Request is processed without any error or rejection by the PSU</li><li>The second call-back URL is to be used by the ASPSP in case of processing error or rejection by the PSU.Since this second URL is optional, the PISP might not provide it. In this case, the ASPSP will use the same URL for any processing result.</li><li>Both call-back URLS must be used in a TLS-secured request.</li></ul></ul><li>The ASPSP saves the updated Payment/Transfer Request and answers to the PISP.The answer embeds</li><ul><li>The specification of the chosen authentication approach taking into account both the PISP and the PSU capabilities.</li><li>The URL to be used by the PISP for redirecting the PSU in order to perform an authentication.</li></ul><h3>Authentication flows for both use cases</h3><h4>Redirect authentication approach</h4>\r\n            When the chosen authentication approach within the ASPSP answers is set to \"REDIRECT\":<br /><ul><li>The PISP redirects the PSU to the ASPSP which authenticates the PSU </li><li>The ASPSP asks the PSU to give (or deny) his/her consent to the Payment Request global or partial Cancellation</li><li>The ASPSP is then able to initiate the subsequent cancellation</li><li>The ASPSP redirects the PSU to the PISP using one of the call-back URLs provided within the posted Payment Request cancellation</li></ul>\r\n            If the PSU neither gives nor denies his/her consent, the Cancellation Request shall expire and is then rejected to the PISP.The expiration delay is specified by each ASPSP.<br /></div>"
+      operationId: ApiV1Payment-requestsByPaymentRequestResourceIdPut
+      consumes:
+        - application/json-patch+json
+        - application/json
+        - text/json
+        - application/*+json
+        - application/hal+json;charset=utf-8
+      produces: []
+      parameters:
+        - name: paymentRequestResourceId
+          in: path
+          description: ''
+          required: true
+          type: string
+          format: uuid
+        - name: request
+          in: body
+          description: ''
+          required: false
+          schema:
+            $ref: '#/definitions/PaymentUpdateRequest'
+        - name: Authorization
+          in: header
+          description: Bearer token
+          required: false
+          type: string
+        - name: PSU-IP-Address
+          in: header
+          description: IP Address of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-IP-Port
+          in: header
+          description: IP Port of the PSU terminal when connecting to the TPP
+          required: false
+          type: string
+        - name: PSU-HTTP-Method
+          in: header
+          description: HTTP Method used for the most relevant PSU's terminal request to the TTP
+          required: false
+          type: string
+        - name: PSU-Date
+          in: header
+          description: Timestamp of the most relevant PSU&rsquo;s terminal request to the TTP in UTC format [RFC 1123] (e.g. Fri, 24 May 2019 09:44:55 GMT)
+          required: false
+          type: string
+        - name: PSU-User-Agent
+          in: header
+          description: '"User-Agent" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Referer
+          in: header
+          description: '"Accept" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Charset
+          in: header
+          description: '"Accept-Charset" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Encoding
+          in: header
+          description: '"Accept-Encoding" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-Accept-Language
+          in: header
+          description: '"Accept-Language" header field sent by the PSU terminal when connecting to the TPP'
+          required: false
+          type: string
+        - name: PSU-GEO-Location
+          in: header
+          description: The forwarded Geo Location of the corresponding HTTP request between PSU and TPP if available.
+          required: false
+          type: string
+        - name: PSU-Device-ID
+          in: header
+          description: 'UUID (Universally Unique Identifier) for a device, which is used by the PSU, if available.<br /> UUID identifies either a device or a device dependant application installation.<br /> In case of installation identification this ID need to be unaltered until removal from device.'
+          required: false
+          type: string
+      responses:
+        '201':
+          description: Success
+          headers:
+            Digest:
+              type: string
+              description: Digest of the body      
+            Signature:
+              type: string
+              description: |
+                http-signature of the response (cf. https://datatracker.ietf.org/doc/draft-cavage-http-signatures/)
+          examples:
+            application/json:
+              resourceId: 00000000-0000-0000-0000-000000000000
+              paymentInformationId: PaymentInformationId
+              creationDateTime: '2019-02-28T15:24:40.6245625+08:00'
+              numberOfTransactions: 1
+              initiatingParty:
+                name: Initiating Party Name
+                postalAddress:
+                  country: FR
+                  addressLine:
+                    - 18 rue de la DSP2
+                    - '75008'
+                organisationId:
+                  identification: BGP;123
+                  schemeName: BANK
+              paymentTypeInformation:
+                instructionPriority: NORM
+                serviceLevel: SEPA
+                localInstrument: INST
+                categoryPurpose: CASH
+              debtor:
+                name: Debtor Name
+                postalAddress:
+                  country: FR
+                  addressLine:
+                    - 18 rue de la DSP2
+                    - '75008'
+                privateId:
+                  identification: BGP;456
+                  schemeName: BANK
+              debtorAccount:
+                iban: FR29NWBK60161331926877
+              debtorAgent:
+                bicFi: YYTE23532323
+              beneficiary:
+                isTrusted: false
+                creditorAgent:
+                  bicFi: ABC8968144EE
+                creditor:
+                  name: Creditor Name
+                creditorAccount:
+                  iban: FR29NWBK60161331926819
+              ultimateCreditor:
+                name: Ultimate Creditor
+                postalAddress:
+                  country: FR
+                  addressLine:
+                    - 18 rue de la DSP2
+                    - '75008'
+                organisationId:
+                  identification: BGP;123
+                  schemeName: BANK
+              purpose: CASH
+              chargeBearer: SLEV
+              paymentInformationStatus: RJCT
+              statusReasonInformation: AC06
+              requestedExecutionDate: '2019-03-01T15:24:40.6245625+08:00'
+              creditTransferTransaction:
+                - paymentId:
+                    instructionId: InstructionId
+                    endToEndId: EndToEnd
+                  instructedAmount:
+                    currency: EUR
+                    amount: 123
+                  regulatoryReportingCodes:
+                    - RegulatoryReportingCodes
+                  remittanceInformation:
+                    - MyRemittanceInformation
+              supplementaryData:
+                acceptedAuthenticationApproach:
+                  - REDIRECT
+                  - EMBEDDED
+                appliedAuthenticationApproach: REDIRECT
+                successfulReportUrl: 'http://pisp/success'
+                unsuccessfulReportUrl: 'http://pisp/unsuccess'
+              _links:
+                self:
+                  href: 'http://psd2.com/self'
+                confirmation:
+                  href: 'https://www.optimnet.ca-cib.com/pva?guid=00000000-0000-0000-0000-000000000000'
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-scope: pisp
+definitions:
+  AccountResponse:
+    type: object
+    properties:
+      connectedPsu:
+        type: string
+      accounts:
+        type: object
+  ProblemDetails:
+    type: object
+    properties:
+      type:
+        type: string
+      title:
+        type: string
+      status:
+        format: int32
+        type: integer
+      detail:
+        type: string
+      instance:
+        type: string
+    additionalProperties:
+      type: object
+  AccountBalanceResponse:
+    type: object
+    properties:
+      balances:
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/AccountBalance'
+  AccountBalance:
+    type: object
+    properties:
+      name:
+        type: string
+      balanceAmount:
+        $ref: '#/definitions/CurrencyAndAmount'
+      balanceType:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+        type: integer
+      lastChangeDateTime:
+        type: string
+      referenceDate:
+        type: string
+      lastCommittedTransaction:
+        type: string
+  CurrencyAndAmount:
+    required:
+      - currency
+      - amount
+    type: object
+    properties:
+      currency:
+        type: string
+      amount:
+        format: double
+        type: number
+  AccountTransactionResponse:
+    type: object
+    properties:
+      transactions:
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/AccountTransaction'
+  AccountTransaction:
+    type: object
+    properties:
+      entryReference:
+        type: string
+      transactionAmount:
+        $ref: '#/definitions/CurrencyAndAmount'
+      creditDebitIndicator:
+        format: int32
+        enum:
+          - 0
+          - 1
+        type: integer
+      status:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+        type: integer
+      bookingDate:
+        type: string
+      valueDate:
+        type: string
+      transactionDate:
+        type: string
+      remittanceInformation:
+        uniqueItems: false
+        type: array
+        items:
+          type: string
+      resourceId:
+        type: string
+  BeneficiariesResponse:
+    type: object
+    properties:
+      beneficiaries:
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/Beneficiary'
+  Beneficiary:
+    type: object
+    properties:
+      id:
+        type: string
+      isTrusted:
+        type: boolean
+      creditorAgent:
+        $ref: '#/definitions/PaymentPartyAgent'
+      creditor:
+        $ref: '#/definitions/PaymentParty'
+      creditorAccount:
+        $ref: '#/definitions/PaymentPartyAccount'
+  PaymentPartyAgent:
+    type: object
+    properties:
+      bicFi:
+        type: string
+      clearingSystemMemberId:
+        $ref: '#/definitions/ClearingSystemMember'
+      name:
+        type: string
+      postalAddres:
+        $ref: '#/definitions/PostalAddress'
+  PaymentParty:
+    required:
+      - name
+    type: object
+    properties:
+      name:
+        type: string
+      postalAddress:
+        $ref: '#/definitions/PostalAddress'
+      organisationId:
+        $ref: '#/definitions/GenericAccountIdentification'
+      privateId:
+        $ref: '#/definitions/GenericAccountIdentification'
+  PaymentPartyAccount:
+    type: object
+    properties:
+      iban:
+        type: string
+      other:
+        $ref: '#/definitions/GenericAccountIdentification'
+  ClearingSystemMember:
+    type: object
+    properties:
+      clearingSystemId:
+        type: string
+      memberId:
+        type: string
+  PostalAddress:
+    type: object
+    properties:
+      country:
+        type: string
+      addressLine:
+        uniqueItems: false
+        type: array
+        items:
+          type: string
+  GenericAccountIdentification:
+    required:
+      - identification
+      - schemeName
+    type: object
+    properties:
+      identification:
+        type: string
+      schemeName:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+        type: integer
+      issuer:
+        type: string
+  ConsentRequest:
+    type: object
+    properties:
+      trustedBeneficiaries:
+        type: boolean
+      psuIdentity:
+        type: boolean
+      balances:
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/PaymentPartyAccount'
+      transactions:
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/PaymentPartyAccount'
+    example:
+      trustedBeneficiaries: true
+      psuIdentity: true
+      balances:
+        - iban: FR7242460855623343710692964
+          other:
+            identification: BGP1
+            schemeName: BANK
+            issuer: Issuer
+      transactions:
+        - iban: FR7242460855623343710692964
+          other:
+            identification: BGP1
+            schemeName: BANK
+            issuer: Issuer
+  PaymentCreateRequest:
+    required:
+      - paymentInformationId
+      - creationDateTime
+      - numberOfTransactions
+      - initiatingParty
+      - paymentTypeInformation
+      - supplementaryData
+    type: object
+    properties:
+      paymentInformationId:
+        type: string
+      creationDateTime:
+        format: date-time
+        type: string
+      numberOfTransactions:
+        format: int32
+        type: integer
+      initiatingParty:
+        $ref: '#/definitions/PaymentParty'
+      paymentTypeInformation:
+        $ref: '#/definitions/PaymentTypeInformation'
+      debtor:
+        $ref: '#/definitions/PaymentParty'
+      debtorAccount:
+        $ref: '#/definitions/PaymentPartyAccount'
+      debtorAgent:
+        $ref: '#/definitions/PaymentPartyAgent'
+      beneficiary:
+        $ref: '#/definitions/Beneficiary'
+      ultimateCreditor:
+        $ref: '#/definitions/PaymentParty'
+      purpose:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+        type: integer
+      chargeBearer:
+        format: int32
+        enum:
+          - 0
+        type: integer
+      paymentInformationStatus:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+        type: integer
+      statusReasonInformation:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+        type: integer
+      requestedExecutionDate:
+        format: date-time
+        type: string
+      creditTransferTransaction:
+        minLength: 1
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/CreditTransferTransaction'
+      supplementaryData:
+        $ref: '#/definitions/SupplementaryData'
+    example:
+      paymentInformationId: PaymentInformationId
+      creationDateTime: '2019-02-28T15:24:40.6089375+08:00'
+      numberOfTransactions: 1
+      initiatingParty:
+        name: Initiating Party Name
+        postalAddress:
+          country: FR
+          addressLine:
+            - 18 rue de la DSP2
+            - '75008'
+        organisationId:
+          identification: BGP;123
+          schemeName: BANK
+      paymentTypeInformation:
+        instructionPriority: NORM
+        serviceLevel: SEPA
+        localInstrument: INST
+        categoryPurpose: CASH
+      debtor:
+        name: Debtor Name
+        postalAddress:
+          country: FR
+          addressLine:
+            - 18 rue de la DSP2
+            - '75008'
+        privateId:
+          identification: BGP;456
+          schemeName: BANK
+      debtorAccount:
+        iban: FR29NWBK60161331926877
+      debtorAgent:
+        bicFi: YYTE23532323
+      beneficiary:
+        isTrusted: false
+        creditorAgent:
+          bicFi: ABC8968144EE
+        creditor:
+          name: Creditor Name
+        creditorAccount:
+          iban: FR29NWBK60161331926819
+      ultimateCreditor:
+        name: Ultimate Creditor
+        postalAddress:
+          country: FR
+          addressLine:
+            - 18 rue de la DSP2
+            - '75008'
+        organisationId:
+          identification: BGP;123
+          schemeName: BANK
+      purpose: CASH
+      chargeBearer: SLEV
+      paymentInformationStatus: RJCT
+      statusReasonInformation: AC06
+      requestedExecutionDate: '2019-03-01T15:24:40.6089375+08:00'
+      creditTransferTransaction:
+        - paymentId:
+            instructionId: InstructionId
+            endToEndId: EndToEnd
+          instructedAmount:
+            currency: EUR
+            amount: 123
+          regulatoryReportingCodes:
+            - RegulatoryReportingCodes
+          remittanceInformation:
+            - MyRemittanceInformation
+      supplementaryData:
+        acceptedAuthenticationApproach:
+          - REDIRECT
+          - EMBEDDED
+        appliedAuthenticationApproach: REDIRECT
+        successfulReportUrl: 'http://pisp/success'
+        unsuccessfulReportUrl: 'http://pisp/unsuccess'
+  PaymentTypeInformation:
+    required:
+      - serviceLevel
+    type: object
+    properties:
+      instructionPriority:
+        format: int32
+        enum:
+          - 0
+          - 1
+        type: integer
+      serviceLevel:
+        format: int32
+        enum:
+          - 0
+          - 1
+        type: integer
+      localInstrument:
+        format: int32
+        enum:
+          - 0
+        type: integer
+      categoryPurpose:
+        format: int32
+        enum:
+          - 0
+          - 1
+        type: integer
+  CreditTransferTransaction:
+    required:
+      - paymentId
+      - instructedAmount
+      - remittanceInformation
+    type: object
+    properties:
+      paymentId:
+        $ref: '#/definitions/PaymentId'
+      requestedExecutionDate:
+        format: date-time
+        type: string
+      endDate:
+        format: date-time
+        type: string
+      executionRule:
+        format: int32
+        enum:
+          - 0
+          - 1
+        type: integer
+      frequency:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+        type: integer
+      instructedAmount:
+        $ref: '#/definitions/CurrencyAndAmount'
+      beneficiary:
+        $ref: '#/definitions/Beneficiary'
+      ultimateCreditor:
+        $ref: '#/definitions/PaymentParty'
+      regulatoryReportingCodes:
+        maxLength: 10
+        uniqueItems: false
+        type: array
+        items:
+          type: string
+      remittanceInformation:
+        uniqueItems: false
+        type: array
+        items:
+          type: string
+      transactionStatus:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+        type: integer
+      statusReasonInformation:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+        type: integer
+  SupplementaryData:
+    type: object
+    properties:
+      acceptedAuthenticationApproach:
+        uniqueItems: false
+        type: array
+        items:
+          format: int32
+          enum:
+            - 0
+            - 1
+            - 2
+          type: integer
+      appliedAuthenticationApproach:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+        type: integer
+      scaHint:
+        type: string
+      successfulReportUrl:
+        type: string
+      unsuccessfulReportUrl:
+        type: string
+  PaymentId:
+    required:
+      - instructionId
+      - endToEndId
+    type: object
+    properties:
+      resourceId:
+        type: string
+      instructionId:
+        type: string
+      endToEndId:
+        type: string
+  PaymentUpdateRequest:
+    required:
+      - paymentInformationId
+      - creationDateTime
+      - numberOfTransactions
+      - initiatingParty
+      - paymentTypeInformation
+      - supplementaryData
+    type: object
+    properties:
+      paymentInformationId:
+        type: string
+      creationDateTime:
+        format: date-time
+        type: string
+      numberOfTransactions:
+        format: int32
+        type: integer
+      initiatingParty:
+        $ref: '#/definitions/PaymentParty'
+      paymentTypeInformation:
+        $ref: '#/definitions/PaymentTypeInformation'
+      debtor:
+        $ref: '#/definitions/PaymentParty'
+      debtorAccount:
+        $ref: '#/definitions/PaymentPartyAccount'
+      debtorAgent:
+        $ref: '#/definitions/PaymentPartyAgent'
+      beneficiary:
+        $ref: '#/definitions/Beneficiary'
+      ultimateCreditor:
+        $ref: '#/definitions/PaymentParty'
+      purpose:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+        type: integer
+      chargeBearer:
+        format: int32
+        enum:
+          - 0
+        type: integer
+      paymentInformationStatus:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+        type: integer
+      statusReasonInformation:
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+        type: integer
+      requestedExecutionDate:
+        format: date-time
+        type: string
+      creditTransferTransaction:
+        minLength: 1
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/CreditTransferTransaction'
+      supplementaryData:
+        $ref: '#/definitions/SupplementaryData'
+    example:
+      paymentInformationId: PaymentInformationId
+      creationDateTime: '2019-02-28T15:24:40.6245625+08:00'
+      numberOfTransactions: 1
+      initiatingParty:
+        name: Initiating Party Name
+        postalAddress:
+          country: FR
+          addressLine:
+            - 18 rue de la DSP2
+            - '75008'
+        organisationId:
+          identification: BGP;123
+          schemeName: BANK
+      paymentTypeInformation:
+        instructionPriority: NORM
+        serviceLevel: SEPA
+        localInstrument: INST
+        categoryPurpose: CASH
+      debtor:
+        name: Debtor Name
+        postalAddress:
+          country: FR
+          addressLine:
+            - 18 rue de la DSP2
+            - '75008'
+        privateId:
+          identification: BGP;456
+          schemeName: BANK
+      debtorAccount:
+        iban: FR29NWBK60161331926877
+      debtorAgent:
+        bicFi: YYTE23532323
+      beneficiary:
+        isTrusted: false
+        creditorAgent:
+          bicFi: ABC8968144EE
+        creditor:
+          name: Creditor Name
+        creditorAccount:
+          iban: FR29NWBK60161331926819
+      ultimateCreditor:
+        name: Ultimate Creditor
+        postalAddress:
+          country: FR
+          addressLine:
+            - 18 rue de la DSP2
+            - '75008'
+        organisationId:
+          identification: BGP;123
+          schemeName: BANK
+      purpose: CASH
+      chargeBearer: SLEV
+      paymentInformationStatus: RJCT
+      statusReasonInformation: AC06
+      requestedExecutionDate: '2019-03-01T15:24:40.6245625+08:00'
+      creditTransferTransaction:
+        - paymentId:
+            instructionId: InstructionId
+            endToEndId: EndToEnd
+          instructedAmount:
+            currency: EUR
+            amount: 123
+          regulatoryReportingCodes:
+            - RegulatoryReportingCodes
+          remittanceInformation:
+            - MyRemittanceInformation
+      supplementaryData:
+        acceptedAuthenticationApproach:
+          - REDIRECT
+          - EMBEDDED
+        appliedAuthenticationApproach: REDIRECT
+        successfulReportUrl: 'http://pisp/success'
+        unsuccessfulReportUrl: 'http://pisp/unsuccess'
+x-wso2-security:
+  apim:
+    x-wso2-scopes:
+      - name: pisp
+        description: ''
+        key: pisp
+        roles: pisp
+      - name: aisp
+        description: ''
+        key: aisp
+        roles: aisp

@@ -3,5 +3,6 @@ export interface SubCategory {
     label: string;
     categoryId: number; // Lien avec la catégorie par son ID
     categoryLabel?: string;
+    isActive?: number;
   }
   

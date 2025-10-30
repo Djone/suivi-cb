@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Title } from '@angular/platform-browser';
+import { DynamicDialogModule } from 'primeng/dynamicdialog';
 import { environment } from '../environments/environment'; // Importer l'environnement
-
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, DynamicDialogModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })

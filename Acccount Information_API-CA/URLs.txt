@@ -1,0 +1,32 @@
+PRODUCTION URL
+
+Optim.net URL :
+
+ The valid URL must include name of method user wants to call
+ Example: https://www.optimnet.ca-cib.com/psd2/v1/<method>
+ List of URL available for PSD can be found in the following Swagger page:
+ https://www.optimnet.ca-cib.com/psd2/swagger
+
+Usignon: 
+
+https://usignon.ca-cib.com/IdPOAuth2/authorize/idp1
+https://usignon.ca-cib.com/IdPOAuth2/token/idp1
+https://usignon.ca-cib.com/IdPOAuth2/userinfo/idp1
+https://usignon.ca-cib.com/IdPOAuth2/introspect/idp1
+
+-------------------------------------------------------------
+SANDBOX URL
+
+Optim.net URL :
+
+ The valid URL must include name of method user wants to call
+ Example: https://www.optimnetdemo.ca-cib.com/psd2/v1/<method>
+ List of URL available for PSD can be found in the following Swagger page:
+ https://www.optimnetdemo.ca-cib.com/psd2/swagger
+
+Usignon: 
+
+https://usignon.pre.ca-cib.com/IdPOAuth2/authorize/idp1
+https://usignon.pre.ca-cib.com/IdPOAuth2/token/idp1
+https://usignon.pre.ca-cib.com/IdPOAuth2/userinfo/idp1
+https://usignon.pre.ca-cib.com/IdPOAuth2/introspect/idp1

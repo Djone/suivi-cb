@@ -2,8 +2,8 @@
 export interface RecurringTransaction {
   id?: number;
   label: string;
-  amount: number;
-  dayOfMonth: number; // Jour du mois (1-31) ou jour de la semaine (1-7) pour hebdomadaire
+  amount: number | null;
+  dayOfMonth: number | null; // Jour du mois (1-31) ou jour de la semaine (1-7) pour hebdomadaire
   subCategoryId: number;
   accountId: number;
   financialFlowId: number; // 1=Revenu, 2=Dépense

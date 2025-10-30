@@ -11,6 +11,8 @@ import localeFr from '@angular/common/locales/fr';
 // Enregistrer les données de locale pour le français
 registerLocaleData(localeFr);
 
+import { DialogService } from 'primeng/dynamicdialog';
+
 import { LOCALE_ID } from '@angular/core';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
@@ -31,6 +33,7 @@ export const appConfig: ApplicationConfig = {
           darkModeSelector: false
         }
       }
-    })
+    }),
+    DialogService
   ]
 };

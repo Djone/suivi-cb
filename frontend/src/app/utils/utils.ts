@@ -2,6 +2,18 @@ import { FINANCIAL_FLOW_LIST } from '../config/financial-flow.config';
 import { ACCOUNT_LIST } from '../config/account.config';
 
 /**
+ * Liste des fréquences de récurrence disponibles.
+ */
+export const FREQUENCY_LIST = [
+  { id: 'weekly', name: 'Hebdomadaire' },
+  { id: 'monthly', name: 'Mensuelle' },
+  { id: 'bimonthly', name: 'Bimensuelle' },
+  { id: 'quarterly', name: 'Trimestrielle' },
+  { id: 'biannual', name: 'Semestrielle' },
+  { id: 'yearly', name: 'Annuelle' }
+];
+
+/**
  * Fonction utilitaire pour convertir un paramètre string en number ou null si le paramètre est indéfini.
  * @param param - Le paramètre à convertir.
  * @returns Le paramètre converti en number ou null si indéfini.

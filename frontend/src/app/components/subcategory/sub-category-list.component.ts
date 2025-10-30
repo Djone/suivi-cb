@@ -1,5 +1,4 @@
-// frontend/src/app/components/category/sub-category-list.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { SubCategoryService } from '../../services/sub-category.service';
@@ -9,17 +8,39 @@ import { Category } from '../../models/category.model';
 import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit-sub-category-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+
+// PrimeNG Imports
+import { Table, TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { TagModule } from 'primeng/tag';
+import { CardModule } from 'primeng/card';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-subcategory-list',
   standalone: true,
-  imports: [ CommonModule ],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    TagModule,
+    CardModule,
+    TooltipModule
+  ],
   templateUrl: './sub-category-list.component.html',
-  styleUrls: ['./sub-category-list.component.css']
+  styleUrls: ['./sub-category-list.component.css'],
 })
 export class SubCategoryListComponent implements OnInit, OnDestroy {
   subCategories: SubCategory[] = [];
-  categories: Category[] = [];
+  parentCategories: Category[] = []; // Pour le filtre et l'affichage
+  activeCategories: Category[] = []; // Pour les dialogues
+  @ViewChild('dt') dt: Table | undefined;
   private subscriptions = new Subscription();
 
   constructor(
@@ -29,32 +50,80 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // S'abonner au BehaviorSubject pour les mises à jour automatiques
+    // Charger les catégories parentes pour le filtre et les dialogues
+    this.subscriptions.add(
+      this.categoryService.categories$.subscribe({
+        next: (data) => {
+          this.parentCategories = data;
+          this.activeCategories = data.filter(cat => cat.isActive === 1);
+        }
+      })
+    );
+    this.categoryService.getCategories().subscribe();
+
+    // Charger les sous-catégories
     this.subscriptions.add(
       this.subCategoryService.subCategories$.subscribe({
         next: (data) => {
           this.subCategories = data;
-          console.log('SUB CATEGORY LIST : Tableau mis à jour automatiquement', data);
+          console.log('SUB CATEGORY LIST : Tableau mis à jour', data);
         },
         error: (err) => console.error('Erreur lors de la mise à jour des sous-catégories:', err)
       })
     );
-
-    // Charger les catégories et les sous-catégories initiales
     this.loadSubCategories();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
-
+  
   loadSubCategories(): void {
     this.subCategoryService.getSubCategories().subscribe();
+  }
 
-    // Charger uniquement les catégories actives pour le dialogue d'édition
-    this.categoryService.getActiveCategories().subscribe({
-      next: (data) => this.categories = data,
-      error: (err) => console.error('Erreur lors du chargement des catégories actives:', err)
+  getCategoryName(categoryId: number): string {
+    const category = this.parentCategories.find(cat => cat.id === categoryId);
+    return category ? category.label : 'N/A';
+  }
+
+  getCategoryColor(categoryName: string): string {
+    const colors: { [key: string]: string } = {
+      'Salaires': '#10b981',
+      'Quotidien': '#f59e0b',
+      'Habitation': '#3b82f6',
+      'Transports': '#8b5cf6',
+      'Divertissements': '#ec4899',
+      'Santé': '#ef4444',
+      'Dettes': '#dc2626',
+      'Epargne': '#059669',
+      'Fournisseurs': '#0ea5e9'
+    };
+    // Retourne la couleur correspondante ou un gris par défaut
+    return colors[categoryName] || '#6b7280';
+  }
+
+  createSubCategory(): void {
+    const dialogRef = this.dialog.open(EditSubCategoryDialogComponent, {
+      width: '500px',
+      maxHeight: '90vh',
+      data: {
+        subCategory: { label: '', categoryId: null },
+        categories: this.activeCategories,
+        isNew: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.subCategoryService.addSubCategory(result).subscribe({
+          next: () => {
+            console.log('SUB CATEGORY LIST : Sous-catégorie créée avec succès');
+            this.loadSubCategories();
+          },
+          error: (err) => console.error('SUB CATEGORY LIST : Erreur lors de la création:', err)
+        });
+      }
     });
   }
 
@@ -62,7 +131,11 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(EditSubCategoryDialogComponent, {
       width: '500px',
       maxHeight: '90vh',
-      data: { subCategory, categories: this.categories }
+      data: {
+        subCategory: { ...subCategory },
+        categories: this.activeCategories,
+        isNew: false
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -71,7 +144,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
           next: () => {
             console.log('SUB CATEGORY LIST : Sous-catégorie mise à jour avec succès');
             // Recharger les données pour mettre à jour le BehaviorSubject
-            this.subCategoryService.getSubCategories().subscribe();
+            this.loadSubCategories();
           },
           error: (err) => console.error('SUB CATEGORY LIST : Erreur lors de la mise à jour de la sous-catégorie:', err)
         });
@@ -95,6 +168,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
         this.subCategoryService.deleteSubCategory(subCategory.id!).subscribe({
           next: () => {
             console.log('SUB CATEGORY LIST : Sous-catégorie supprimée avec succès');
+            this.loadSubCategories();
           },
           error: (err) => {
             console.error('SUB CATEGORY LIST : Erreur lors de la suppression de la sous-catégorie:', err);
@@ -103,5 +177,9 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  applyFilterGlobal(event: Event, stringVal: string) {
+    this.dt!.filterGlobal((event.target as HTMLInputElement).value, stringVal);
   }
 }
