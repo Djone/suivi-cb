@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # wait-for.sh
 # Usage: ./wait-for.sh host:port -- command args...
 
