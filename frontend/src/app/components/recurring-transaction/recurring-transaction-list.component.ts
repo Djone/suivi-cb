@@ -28,6 +28,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 @Component({
   selector: 'app-recurring-transaction-list',
   standalone: true,
+  providers: [DialogService],
   imports: [
     CommonModule,
     FormsModule,

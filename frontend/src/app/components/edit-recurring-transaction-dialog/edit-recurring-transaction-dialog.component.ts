@@ -1,7 +1,6 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 
 // PrimeNG Imports
@@ -9,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 
 // Modèles et Services
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
@@ -24,7 +24,6 @@ import { FREQUENCY_LIST } from '../../utils/utils';
   imports: [
     CommonModule,
     FormsModule,
-    MatDialogModule,
     ButtonModule,
     InputTextModule,
     DropdownModule,
@@ -34,6 +33,9 @@ import { FREQUENCY_LIST } from '../../utils/utils';
   styleUrls: ['./edit-recurring-transaction-dialog.component.css']
 })
 export class EditRecurringTransactionDialogComponent implements OnInit, OnDestroy {
+  // ✅ Ajout de la propriété manquante :
+  data!: { transaction: RecurringTransaction; isNew?: boolean };
+
   activeSubCategories: SubCategory[] = [];
   accounts: Account[] = [];
   financialFlows = [
@@ -46,17 +48,21 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
   private sub = new Subscription();
 
   constructor(
-    public dialogRef: MatDialogRef<EditRecurringTransactionDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { transaction: RecurringTransaction; isNew?: boolean },
+    public ref: DynamicDialogRef,
+    public config: DynamicDialogConfig,
     private subCategoryService: SubCategoryService,
     private accountService: AccountService
   ) {
-    this.isNew = data.isNew || false;
-    this.dialogTitle = this.isNew ? 'Nouvelle transaction récurrente' : 'Éditer la transaction récurrente';
+    // Récupération des données passées depuis la liste
+    this.data = this.config.data;
+    this.isNew = this.data.isNew || false;
+    this.dialogTitle = this.isNew
+      ? 'Nouvelle transaction récurrente'
+      : 'Éditer la transaction récurrente';
   }
 
   ngOnInit(): void {
-    // Charger les sous-catégories initiales en fonction du flux financier de la transaction
+    // Charger les sous-catégories selon le flux financier
     if (this.data.transaction.financialFlowId) {
       this.loadSubCategoriesByFlow(this.data.transaction.financialFlowId);
     }
@@ -67,10 +73,6 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
     this.sub.unsubscribe();
   }
 
-  /**
-   * Charge les sous-catégories actives pour un flux financier donné.
-   * @param financialFlowId L'ID du flux financier (1 pour Revenu, 2 pour Dépense).
-   */
   loadSubCategoriesByFlow(financialFlowId: number): void {
     this.sub.add(
       this.subCategoryService.getAllSubCategoriesByFinancialFlowId(financialFlowId).subscribe(subCategories => {
@@ -88,18 +90,13 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
     this.accountService.getAccounts().subscribe();
   }
 
-  /**
-   * Appelé lorsque l'utilisateur change le flux financier.
-   * Recharge les sous-catégories et réinitialise la sélection.
-   */
   onFinancialFlowChange(): void {
-    this.data.transaction.subCategoryId = 0; // Réinitialiser la sélection
-    this.activeSubCategories = []; // Vider la liste
+    this.data.transaction.subCategoryId = 0;
+    this.activeSubCategories = [];
     this.loadSubCategoriesByFlow(this.data.transaction.financialFlowId);
   }
 
   save(): void {
-    // Assurer que le montant est bien un nombre
     this.data.transaction.amount = Number(this.data.transaction.amount);
 
     const transactionData: any = {
@@ -116,18 +113,22 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
       transactionData.id = this.data.transaction.id;
     }
 
-    this.dialogRef.close(transactionData);
+    this.ref.close(transactionData);
   }
 
   cancel(): void {
-    this.dialogRef.close();
+    this.ref.close();
   }
 
   isFormValid(): boolean {
     return !!(
-      this.data.transaction.label && this.data.transaction.label.trim() !== '' &&
-      this.data.transaction.amount && this.data.transaction.amount > 0 &&
-      this.data.transaction.dayOfMonth && this.data.transaction.dayOfMonth >= 1 && this.data.transaction.dayOfMonth <= 31 &&
+      this.data.transaction.label &&
+      this.data.transaction.label.trim() !== '' &&
+      this.data.transaction.amount &&
+      this.data.transaction.amount > 0 &&
+      this.data.transaction.dayOfMonth &&
+      this.data.transaction.dayOfMonth >= 1 &&
+      this.data.transaction.dayOfMonth <= 31 &&
       this.data.transaction.frequency &&
       this.data.transaction.subCategoryId &&
       this.data.transaction.accountId

@@ -1,121 +1,119 @@
-<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<div class="p-fluid grid">
+   <!-- <h2 class="col-12">{{ dialogTitle }}</h2> -->
 
-<mat-dialog-content>
-  <div class="p-fluid grid">
-    <!-- Libellé -->
-    <div class="field col-12">
-      <label for="label" class="block mb-2">Libellé *</label>
-      <input
-        pInputText
-        id="label"
-        type="text"
-        [(ngModel)]="data.transaction.label"
-        placeholder="Ex: Loyer, Salaire..."
-        class="w-full"
-        autofocus />
-    </div>
-
-    <!-- Montant -->
-    <div class="field col-12 md:col-6">
-      <label for="amount" class="block mb-2">Montant *</label>
-      <p-inputNumber
-        inputId="amount"
-        [(ngModel)]="data.transaction.amount"
-        mode="currency"
-        currency="EUR"
-        locale="fr-FR"
-        [minFractionDigits]="2"
-        [maxFractionDigits]="2"
-        placeholder="0,00 €">
-      </p-inputNumber>
-    </div>
-
-    <!-- Jour du mois -->
-    <div class="field col-12 md:col-6">
-      <label for="dayOfMonth" class="block mb-2">Jour du mois *</label>
-      <p-inputNumber
-        inputId="dayOfMonth"
-        [(ngModel)]="data.transaction.dayOfMonth"
-        [min]="1"
-        [max]="31"
-        [showButtons]="true"
-        placeholder="1-31">
-      </p-inputNumber>
-    </div>
-
-    <!-- Fréquence -->
-    <div class="field col-12">
-      <label for="frequency" class="block mb-2">Fréquence *</label>
-      <p-dropdown
-        id="frequency"
-        [options]="frequencies"
-        [(ngModel)]="data.transaction.frequency"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Sélectionnez une fréquence"
-        styleClass="w-full"
-        [appendTo]="'body'">
-      </p-dropdown>
-    </div>
-
-    <!-- Flux Financier -->
-    <div class="field col-12">
-      <label for="financialFlowId" class="block mb-2">Type de transaction *</label>
-      <p-dropdown
-        id="financialFlowId"
-        [options]="financialFlows"
-        [(ngModel)]="data.transaction.financialFlowId"
-        (onChange)="onFinancialFlowChange()"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Sélectionnez un type"
-        styleClass="w-full"
-        [appendTo]="'body'">
-      </p-dropdown>
-    </div>
-
-    <!-- Compte bancaire -->
-    <div class="field col-12">
-      <label for="accountId" class="block mb-2">Compte bancaire *</label>
-      <p-dropdown
-        id="accountId"
-        [options]="accounts"
-        [(ngModel)]="data.transaction.accountId"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Sélectionnez un compte"
-        [filter]="true"
-        filterBy="name"
-        [showClear]="true"
-        styleClass="w-full"
-        [appendTo]="'body'">
-      </p-dropdown>
-    </div>
-
-    <!-- Sous-catégorie -->
-    <div class="field col-12">
-      <label for="subCategoryId" class="block mb-2">Sous-catégorie *</label>
-      <p-dropdown
-        id="subCategoryId"
-        [options]="activeSubCategories"
-        [(ngModel)]="data.transaction.subCategoryId"
-        optionLabel="label"
-        optionValue="id"
-        placeholder="Sélectionnez une sous-catégorie"
-        [filter]="true"
-        filterBy="label"
-        [showClear]="true"
-        styleClass="w-full"
-        [appendTo]="'body'">
-        <ng-template let-subCategory pTemplate="item">
-          <div>{{ subCategory.label }} ({{ subCategory.categoryLabel }})</div>
-        </ng-template>
-      </p-dropdown>
-    </div>
+  <!-- Libellé -->
+  <div class="field col-12">
+    <label for="label" class="block mb-2">Libellé *</label>
+    <input
+      pInputText
+      id="label"
+      type="text"
+      [(ngModel)]="data.transaction.label"
+      placeholder="Ex: Loyer, Salaire..."
+      class="w-full"
+      autofocus />
   </div>
-</mat-dialog-content>
 
-<mat-dialog-actions align="end">
+  <!-- Montant -->
+  <div class="field col-12 md:col-6">
+    <label for="amount" class="block mb-2">Montant *</label>
+    <p-inputNumber
+      inputId="amount"
+      [(ngModel)]="data.transaction.amount"
+      mode="currency"
+      currency="EUR"
+      locale="fr-FR"
+      [minFractionDigits]="2"
+      [maxFractionDigits]="2"
+      placeholder="0,00 €">
+    </p-inputNumber>
+  </div>
+
+  <!-- Jour du mois -->
+  <div class="field col-12 md:col-6">
+    <label for="dayOfMonth" class="block mb-2">Jour du mois *</label>
+    <p-inputNumber
+      inputId="dayOfMonth"
+      [(ngModel)]="data.transaction.dayOfMonth"
+      [min]="1"
+      [max]="31"
+      [showButtons]="true"
+      placeholder="1-31">
+    </p-inputNumber>
+  </div>
+
+  <!-- Fréquence -->
+  <div class="field col-12">
+    <label for="frequency" class="block mb-2">Fréquence *</label>
+    <p-dropdown
+      id="frequency"
+      [options]="frequencies"
+      [(ngModel)]="data.transaction.frequency"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Sélectionnez une fréquence"
+      styleClass="w-full"
+      [appendTo]="'body'">
+    </p-dropdown>
+  </div>
+
+  <!-- Type de transaction -->
+  <div class="field col-12">
+    <label for="financialFlowId" class="block mb-2">Type de transaction *</label>
+    <p-dropdown
+      id="financialFlowId"
+      [options]="financialFlows"
+      [(ngModel)]="data.transaction.financialFlowId"
+      (onChange)="onFinancialFlowChange()"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Sélectionnez un type"
+      styleClass="w-full"
+      [appendTo]="'body'">
+    </p-dropdown>
+  </div>
+
+  <!-- Compte bancaire -->
+  <div class="field col-12">
+    <label for="accountId" class="block mb-2">Compte bancaire *</label>
+    <p-dropdown
+      id="accountId"
+      [options]="accounts"
+      [(ngModel)]="data.transaction.accountId"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Sélectionnez un compte"
+      [filter]="true"
+      filterBy="name"
+      [showClear]="true"
+      styleClass="w-full"
+      [appendTo]="'body'">
+    </p-dropdown>
+  </div>
+
+  <!-- Sous-catégorie -->
+  <div class="field col-12">
+    <label for="subCategoryId" class="block mb-2">Sous-catégorie *</label>
+    <p-dropdown
+      id="subCategoryId"
+      [options]="activeSubCategories"
+      [(ngModel)]="data.transaction.subCategoryId"
+      optionLabel="label"
+      optionValue="id"
+      placeholder="Sélectionnez une sous-catégorie"
+      [filter]="true"
+      filterBy="label"
+      [showClear]="true"
+      styleClass="w-full"
+      [appendTo]="'body'">
+      <ng-template let-subCategory pTemplate="item">
+        <div>{{ subCategory.label }} ({{ subCategory.categoryLabel }})</div>
+      </ng-template>
+    </p-dropdown>
+  </div>
+</div>
+
+<div class="flex justify-end gap-2 mt-4">
   <p-button
     label="Annuler"
     icon="pi pi-times"
@@ -129,4 +127,4 @@
     [disabled]="!isFormValid()"
     styleClass="p-button-success">
   </p-button>
-</mat-dialog-actions>
+</div>
