@@ -17,6 +17,7 @@ import { Account } from '../../models/account.model';
 import { AccountService } from '../../services/account.service';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { FREQUENCY_LIST } from '../../utils/utils';
+import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 
 @Component({
   selector: 'app-edit-recurring-transaction-dialog',
@@ -38,10 +39,8 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
 
   activeSubCategories: SubCategory[] = [];
   accounts: Account[] = [];
-  financialFlows = [
-    { id: 1, name: 'Revenu' },
-    { id: 2, name: 'Dépense' }
-  ];
+  financialFlowList = FINANCIAL_FLOW_LIST;
+  
   frequencies = FREQUENCY_LIST;
   isNew: boolean = false;
   dialogTitle: string = '';

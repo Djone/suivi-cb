@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +15,7 @@ import { EditRecurringTransactionDialogComponent } from '../edit-recurring-trans
 import { FREQUENCY_LIST } from '../../utils/utils';
 
 // PrimeNG Imports
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
@@ -50,6 +50,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
   subCategories: SubCategory[] = [];
   accounts: Account[] = [];
   dialogRef: DynamicDialogRef | undefined;
+  @ViewChild('dt') dt: Table | undefined;
   private subscriptions = new Subscription(); // Renommé pour éviter conflit avec 'sub' dans le dialog
 
   // Options pour les filtres
@@ -72,8 +73,15 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.recurringTransactionService.recurringTransactions$.subscribe({
         next: (data) => {
-          this.recurringTransactions = data;
-          console.log('Transactions récurrentes chargées:', data);
+          // Enrichir les données pour l'affichage et le filtrage global
+          this.recurringTransactions = data.map(transaction => ({
+            ...transaction,
+            subCategoryLabel: this.getSubCategoryName(transaction.subCategoryId),
+            accountLabel: this.getAccountName(transaction.accountId),
+            frequencyLabel: this.getFrequencyLabel(transaction.frequency),
+            statusLabel: this.getStatusLabel(transaction.isActive),
+            isActive: transaction.isActive ?? 0
+          }));
         },
         error: (err) => console.error('Erreur lors du chargement des transactions récurrentes:', err)
       })
@@ -176,12 +184,12 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
     return financialFlowId === 1 ? 'success' : 'danger';
   }
 
-  getStatusLabel(isActive: number): string {
-    return isActive === 1 ? 'Actif' : 'Inactif';
+  getStatusLabel(isActive: number | undefined): string {
+    return (isActive ?? 0) === 1 ? 'Actif' : 'Inactif';
   }
 
-  getSeverity(isActive: number): string {
-    return isActive === 1 ? 'success' : 'danger';
+  getSeverity(isActive: number | undefined): string {
+    return (isActive ?? 0) === 1 ? 'success' : 'danger';
   }
 
   createRecurringTransaction(): void {
@@ -280,5 +288,9 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
     // Formule de luminance YIQ
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     return yiq >= 128;
+  }
+
+    applyFilterGlobal(event: Event, stringVal: string) {
+    this.dt!.filterGlobal((event.target as HTMLInputElement).value, stringVal);
   }
 }

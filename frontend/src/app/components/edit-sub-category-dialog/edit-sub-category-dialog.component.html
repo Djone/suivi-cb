@@ -1,6 +1,5 @@
-<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<p-header>{{ dialogTitle }}</p-header>
 
-<mat-dialog-content>
   <div class="p-fluid">
     <div class="field mb-3">
       <label for="label" class="block mb-2">Libellé *</label>
@@ -31,10 +30,8 @@
       </p-dropdown>
     </div>
   </div>
-</mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <p-button
+ <p-button
     label="Annuler"
     icon="pi pi-times"
     (onClick)="cancel()"
@@ -47,4 +44,3 @@
     [disabled]="!isFormValid()"
     styleClass="p-button-success">
   </p-button>
-</mat-dialog-actions>

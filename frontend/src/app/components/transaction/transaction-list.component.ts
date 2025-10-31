@@ -1,16 +1,19 @@
 // frontend/src/app/components/transaction-list/transaction-list.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MessageService } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-
 // PrimeNG Imports
+import { DialogService } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
+import { CalendarModule } from 'primeng/calendar';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { DropdownModule } from 'primeng/dropdown';
 
 import { TransactionService } from '../../services/transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
@@ -41,12 +44,16 @@ interface GroupedTransactions {
   selector: 'app-transaction-list',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MatIconModule,
-    ButtonModule,
-    TooltipModule,
-    PaginatorModule,
+    CommonModule, 
+    FormsModule, 
+    ButtonModule, 
+    TooltipModule, 
+    PaginatorModule, 
+    CalendarModule, 
+    InputTextModule, 
+    InputGroupModule,
+    InputGroupAddonModule,
+    DropdownModule 
   ],
   templateUrl: './transaction-list.component.html',
   styleUrls: ['./transaction-list.component.css', '../../styles/table-common.css']
@@ -70,28 +77,35 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   // Filtres
   filters = {
-    date: '',
+    dateRange: null as Date[] | null,
     description: '',
     amount: ''
   };
+
 
   // Tri
   sortColumn: string = 'date';
   sortDirection: 'asc' | 'desc' = 'desc';
 
   // Pagination
-  currentPage: number = 1;
+  currentPage = 1;
   pageSize: number = 10;
-  pageSizeOptions: number[] = [10, 20, 50, 100];
-  totalPages: number = 1;
+  pageSizeOptions = [
+    { label: '10', value: 10 },
+    { label: '20', value: 20 },
+    { label: '50', value: 50 },
+    { label: '100', value: 100 }
+  ];
+  totalPages = 1;
+
 
   constructor(
     private transactionService: TransactionService,
     private subCategoryService: SubCategoryService,
     private accountService: AccountService,
     private recurringTransactionService: RecurringTransactionService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
+    private dialogService: DialogService,
+    private messageService: MessageService,
     private route: ActivatedRoute
   ) {}
 
@@ -172,58 +186,52 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   // Appliquer les filtres et le tri
   applyFiltersAndSort(): void {
     this.filteredTransactions = this.transactions.filter(transaction => {
-      const matchDate = !this.filters.date ||
-        (transaction.date && transaction.date.toString().toLowerCase().includes(this.filters.date.toLowerCase()));
+      const range = this.filters.dateRange;
+      let matchDate = true;
+
+      if (range && range.length === 2 && range[0] && range[1]) {
+        const [startDate, endDate] = range;
+        const transactionDate = new Date(transaction.date!);
+        transactionDate.setHours(0, 0, 0, 0);
+
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        matchDate = transactionDate >= start && transactionDate <= end;
+      }
 
       const matchDescription = !this.filters.description ||
-        (transaction.description && transaction.description.toLowerCase().includes(this.filters.description.toLowerCase()));
+        (transaction.description &&
+          transaction.description.toLowerCase().includes(this.filters.description.toLowerCase()));
 
       const matchAmount = !this.filters.amount ||
-        (transaction.amount !== null && transaction.amount !== undefined && transaction.amount.toString().includes(this.filters.amount));
+        (transaction.amount !== null &&
+          transaction.amount !== undefined &&
+          transaction.amount.toString().includes(this.filters.amount));
 
       return matchDate && matchDescription && matchAmount;
     });
 
-    // Recalculer les soldes après filtrage
     this.calculateBalances();
-
-    // Re-trier les échéances récurrentes
-    if (this.recurringTransactions.length > 0) {
-      this.sortRecurringTransactions();
-    }
-
-    this.filteredTransactions.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch(this.sortColumn) {
-        case 'date':
-          aValue = new Date(a.date || '').getTime();
-          bValue = new Date(b.date || '').getTime();
-          break;
-        case 'description':
-          aValue = (a.description || '').toLowerCase();
-          bValue = (b.description || '').toLowerCase();
-          break;
-        case 'amount':
-          aValue = a.amount;
-          bValue = b.amount;
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) {
-        return this.sortDirection === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return this.sortDirection === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-
     this.updatePagination();
   }
+
+  clearDateFilter(): void {
+    this.filters.dateRange = null;
+    this.applyFilter();
+  }
+
+  allowOnlyNumbers(event: KeyboardEvent): void {
+    const allowedKeys = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'];
+    if (!/[0-9.,]/.test(event.key) && !allowedKeys.includes(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+
 
   sortBy(column: string): void {
     if (this.sortColumn === column) {
@@ -565,9 +573,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const defaultAccountId = this.accountId || 1; // Utiliser le compte actuel ou 1 par défaut
     const defaultFinancialFlowId = 2; // Dépense par défaut
 
-    const dialogRef = this.dialog.open(EditTransactionDialogComponent, {
+    const dialogRef = this.dialogService.open(EditTransactionDialogComponent, {
       width: '500px',
-      maxHeight: '90vh',
       data: {
         transaction: {
           description: '',
@@ -581,26 +588,24 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.onClose.subscribe(result => {
       if (result) {
         this.transactionService.addTransaction(result).subscribe({
           next: () => {
             console.log('TRANSACTION LIST : Transaction créée avec succès');
             this.loadTransactions();
-            this.snackBar.open('Transaction créée avec succès.', 'Fermer', {
-              duration: 3000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-              panelClass: ['success-snackbar'],
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Succès',
+              detail: 'Transaction créée avec succès.'
             });
           },
           error: (err) => {
             console.error('TRANSACTION LIST : Erreur lors de la création de la transaction:', err);
-            this.snackBar.open('Erreur lors de la création.', 'Fermer', {
-              duration: 3000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-              panelClass: ['error-snackbar'],
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail: 'Erreur lors de la création de la transaction.'
             });
           }
         });
@@ -609,13 +614,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   editTransaction(transaction: Transaction): void {
-    const dialogRef = this.dialog.open(EditTransactionDialogComponent, {
+    const dialogRef = this.dialogService.open(EditTransactionDialogComponent, {
       width: '500px',
-      maxHeight: '90vh',
       data: { transaction: { ...transaction } }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.onClose.subscribe(result => {
       if (result) {
         // Convertir la date en format ISO
         const formattedDate = new Date(result.date).toISOString().slice(0, 10);
@@ -628,20 +632,18 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           next: () => {
             console.log('TRANSACTION LIST : Transaction mise à jour avec succès');
             this.loadTransactions();
-            this.snackBar.open('Transaction mise à jour avec succès.', 'Fermer', {
-              duration: 3000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-              panelClass: ['success-snackbar'],
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Succès',
+              detail: 'Transaction mise à jour avec succès.'
             });
           },
           error: (err) => {
             console.error('TRANSACTION LIST : Erreur lors de la mise à jour de la transaction:', err);
-            this.snackBar.open('Erreur lors de la mise à jour.', 'Fermer', {
-              duration: 3000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-              panelClass: ['error-snackbar'],
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail: 'Erreur lors de la mise à jour de la transaction.'
             });
           }
         });
@@ -650,7 +652,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   deleteTransaction(transaction: Transaction): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
       width: '450px',
       data: {
         title: 'Confirmer la suppression',
@@ -660,26 +662,24 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.onClose.subscribe(confirmed => {
       if (confirmed) {
         this.transactionService.deleteTransaction(transaction.id!).subscribe({
           next: () => {
             console.log('TRANSACTION LIST : Transaction supprimée avec succès');
             this.loadTransactions();
-            this.snackBar.open('Transaction supprimée avec succès.', 'Fermer', {
-              duration: 3000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-              panelClass: ['success-snackbar'],
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Succès',
+              detail: 'Transaction supprimée avec succès.'
             });
           },
           error: (err) => {
             console.error('TRANSACTION LIST : Erreur lors de la suppression de la transaction:', err);
-            this.snackBar.open('Erreur lors de la suppression.', 'Fermer', {
-              duration: 3000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-              panelClass: ['error-snackbar'],
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail: 'Erreur lors de la suppression de la transaction.'
             });
           }
         });

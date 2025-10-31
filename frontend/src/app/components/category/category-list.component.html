@@ -8,19 +8,30 @@
       [rowsPerPageOptions]="[10, 20, 50, 100]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first} à {last} sur {totalRecords} catégories"
-      [globalFilterFields]="['label', 'financialFlowId', 'isActive']"
+      [globalFilterFields]="['label', 'financialFlowLabel', 'statusLabel']"
       [tableStyle]="{ 'min-width': '50rem' }"
       styleClass="p-datatable-gridlines p-datatable-striped">
 
-      <!-- Bouton pour ajouter une catégorie -->
+      
       <ng-template pTemplate="caption">
-        <div class="flex align-items-center justify-content-between">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+          <!-- Bouton pour ajouter une catégorie -->
           <p-button
             label="Nouvelle catégorie"
             icon="pi pi-plus"
             (onClick)="createCategory()"
             styleClass="p-button-success">
           </p-button>
+
+          <!-- Champ de recherche -->
+          <input
+            pInputText
+            type="text"
+            (input)="applyFilterGlobal($event, 'contains')"
+            placeholder="🔍 Rechercher une catégorie..."
+            class="w-full"
+            style="max-width: 300px;"
+          />
         </div>
       </ng-template>
 
@@ -41,41 +52,6 @@
           </th>
           <th style="width: 20%">Actions</th>
         </tr>
-        <tr>
-          <th>
-            <input
-              pInputText
-              type="text"
-              (input)="dt.filter($any($event.target).value, 'label', 'contains')"
-              placeholder="Filtrer par libellé"
-              class="w-full" />
-          </th>
-          <th>
-            <p-dropdown
-              [options]="financialFlows"
-              (onChange)="dt.filter($event.value, 'financialFlowId', 'equals')"
-              placeholder="Tous"
-              [showClear]="true"
-              styleClass="w-full">
-              <ng-template let-option pTemplate="item">
-                {{ option.label }}
-              </ng-template>
-            </p-dropdown>
-          </th>
-          <th>
-            <p-dropdown
-              [options]="statuses"
-              (onChange)="dt.filter($event.value, 'isActive', 'equals')"
-              placeholder="Tous"
-              [showClear]="true"
-              styleClass="w-full">
-              <ng-template let-option pTemplate="item">
-                {{ option.label }}
-              </ng-template>
-            </p-dropdown>
-          </th>
-          <th></th>
-        </tr>
       </ng-template>
 
       <!-- Corps du tableau -->
@@ -84,13 +60,13 @@
           <td>{{ category.label }}</td>
           <td>
             <p-tag
-              [value]="financialFlowNameById(category.financialFlowId)"
+              [value]="category.financialFlowLabel"
               [severity]="category.financialFlowId === 1 ? 'success' : 'danger'">
             </p-tag>
           </td>
           <td>
             <p-tag
-              [value]="getStatusLabel(category.isActive)"
+              [value]="category.statusLabel"
               [severity]="getSeverity(category.isActive)">
             </p-tag>
           </td>

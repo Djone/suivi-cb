@@ -13,19 +13,25 @@
       styleClass="p-datatable-gridlines p-datatable-striped"
       sortField="label" [sortOrder]="1"
     >
-      <!-- Bouton pour ajouter une nouvelle sous-catégorie -->
       <ng-template pTemplate="caption">
-        <div class="flex align-items-center justify-content-between">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+          <!-- Bouton pour ajouter une sous-catégorie -->
           <p-button
             label="Nouvelle sous-catégorie"
             icon="pi pi-plus"
             (click)="createSubCategory()"
             styleClass="p-button-success">
           </p-button>
-          <span class="p-input-icon-left ml-auto">
-            <i class="pi pi-search"></i>
-            <input pInputText type="text" (input)="applyFilterGlobal($event, 'contains')" placeholder="Recherche globale" />
-          </span>
+
+          <!-- Champ de recherche -->
+          <input
+            pInputText
+            type="text"
+            (input)="applyFilterGlobal($event, 'contains')"
+            placeholder="🔍 Rechercher une catégorie..."
+            class="w-full"
+            style="max-width: 300px;"
+          />
         </div>
       </ng-template>
 
@@ -41,29 +47,6 @@
             <p-sortIcon field="categoryId" />
           </th>
           <th style="width: 15%">Actions</th>
-        </tr>
-        <!-- Ligne de filtres -->
-        <tr>
-          <th>
-            <input
-              pInputText
-              type="text"
-              (input)="dt.filter($any($event.target).value, 'label', 'contains')"
-              placeholder="Filtrer par libellé"
-              class="w-full" />
-          </th>
-          <th>
-            <p-dropdown
-              [options]="parentCategories"
-              (onChange)="dt.filter($event.value, 'categoryId', 'equals')"
-              placeholder="Toutes les catégories"
-              [showClear]="true"
-              optionLabel="label"
-              optionValue="id"
-              styleClass="w-full">
-            </p-dropdown>
-          </th>
-          <th></th>
         </tr>
       </ng-template>
 

@@ -1,11 +1,11 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { SubCategory } from '../../models/sub-category.model';
 import { Category } from '../../models/category.model';
 
 // PrimeNG Imports
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
@@ -16,7 +16,6 @@ import { DropdownModule } from 'primeng/dropdown';
   imports: [
     CommonModule,
     FormsModule,
-    MatDialogModule,
     ButtonModule,
     InputTextModule,
     DropdownModule
@@ -28,6 +27,20 @@ export class EditSubCategoryDialogComponent implements OnInit {
   isNew: boolean = false;
   dialogTitle: string = '';
 
+  constructor(
+      public ref: DynamicDialogRef,
+      public config: DynamicDialogConfig
+    ) {}
+  
+  get data() {
+    return this.config.data;
+  }
+
+  ngOnInit(): void {
+    this.isNew = this.data.isNew || false;
+    this.dialogTitle = this.isNew ? 'Nouvelle sous-catégorie' : 'Éditer la sous-catégorie';
+  }
+
   save(): void {
     // On ne retourne que les champs attendus par le backend pour éviter les erreurs de validation.
     const subCategoryToSave = {
@@ -36,21 +49,11 @@ export class EditSubCategoryDialogComponent implements OnInit {
       categoryId: this.data.subCategory.categoryId
     };
 
-    this.dialogRef.close(subCategoryToSave);
+    this.ref.close(subCategoryToSave);
   }
 
   cancel(): void {
-    this.dialogRef.close();
-  }
-
-  constructor(
-    public dialogRef: MatDialogRef<EditSubCategoryDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { subCategory: SubCategory; categories: Category[]; isNew?: boolean }
-  ) {}
-
-  ngOnInit(): void {
-    this.isNew = this.data.isNew || false;
-    this.dialogTitle = this.isNew ? 'Nouvelle sous-catégorie' : 'Éditer la sous-catégorie';
+    this.ref.close();
   }
 
   /**

@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { DynamicDialogModule } from 'primeng/dynamicdialog';
+import { ToastModule } from 'primeng/toast';
 import { environment } from '../environments/environment'; // Importer l'environnement
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule, DynamicDialogModule],
-  templateUrl: './app.component.html',
+  imports: [RouterModule, ToastModule],
+  template: '<router-outlet></router-outlet><p-toast></p-toast>',
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {

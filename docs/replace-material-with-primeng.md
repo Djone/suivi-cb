@@ -40,30 +40,45 @@ Ce changement apporte :
 
 ## ⚙️ 1. Installation des modules nécessaires
 
-Assure-toi d’avoir les modules PrimeNG suivants installés :
-
 ```bash
 npm install primeng primeicons
 
-Puis, dans le module principal (souvent app.module.ts) :
+🎨 Importer les styles dans angular.json
 
+Ajoute les CSS globaux de PrimeNG et PrimeIcons :
+
+"styles": [
+  "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
+  "node_modules/primeng/resources/primeng.min.css",
+  "node_modules/primeicons/primeicons.css",
+  "src/styles.css"
+]
+
+Étape 3 — Modifier app.config.ts
+
+// Import PrimeNG modules que tu veux utiliser globalement
 import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { CardModule } from 'primeng/card';
 
-@NgModule({
-  imports: [
-    DynamicDialogModule,
-    ButtonModule,
-    InputTextModule,
-    DropdownModule,
-    InputNumberModule
-  ],
-  providers: [DialogService]
-})
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideAnimations(),
+    importProvidersFrom(
+      ButtonModule,
+      TableModule,
+      InputTextModule,
+      CardModule
+    )
+  ]
+};
 export class AppModule {}
+
+
 
 🧩 2. Conversion d’une boîte de dialogue
 🧱 Avant (Angular Material)
@@ -162,18 +177,7 @@ openEditDialog(category: Category) {
   });
 }
 
-🎨 4. Thèmes et apparence
-
-Ajoute (ou vérifie) dans styles.scss :
-
-@import 'primeng/resources/themes/lara-light-blue/theme.css';
-@import 'primeng/resources/primeng.css';
-@import 'primeicons/primeicons.css';
-
-
-PrimeNG applique automatiquement une apparence cohérente aux boutons, entrées et dropdowns.
-
-🧹 5. Nettoyage du code
+🧹 4. Nettoyage du code
 
 Après la migration :
 

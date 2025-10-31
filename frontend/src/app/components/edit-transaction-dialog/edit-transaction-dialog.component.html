@@ -1,114 +1,114 @@
-<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<p-header>{{ dialogTitle }}</p-header>
 
-<mat-dialog-content>
-  <div class="p-fluid">
-    <!-- Compte -->
-    <div class="p-field mb-3">
-      <label for="account" class="block mb-2">Compte *</label>
-      <p-dropdown
-        id="account"
-        [options]="accounts"
-        [(ngModel)]="data.transaction.accountId"
-        (onChange)="onFieldChange()"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Sélectionnez un compte"
-        [style]="{'width': '100%'}">
-      </p-dropdown>
-    </div>
-
-    <!-- Lier à une échéance (seulement en création) -->
-    <div *ngIf="isNew" class="p-field mb-3">
-      <label for="recurring" class="block mb-2">Lier à une échéance (optionnel)</label>
-      <p-autoComplete
-        id="recurring"
-        [suggestions]="filteredRecurringTransactions"
-        (completeMethod)="filterRecurring($event)"
-        field="label"
-        placeholder="Rechercher une échéance..."
-        (onSelect)="onRecurringTransactionSelected($event)"
-        [dropdown]="true"
-        [forceSelection]="true"
-        [style]="{'width': '100%'}">
-      </p-autoComplete>
-    </div>
-
-    <!-- Type de transaction (Flux financier) -->
-    <div class="p-field mb-3">
-      <label for="financialFlow" class="block mb-2">Type de transaction *</label>
-      <p-dropdown
-        id="financialFlow"
-        [options]="financialFlowList"
-        [(ngModel)]="data.transaction.financialFlowId"
-        (onChange)="onFinancialFlowChange($event)"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Sélectionnez un type"
-        [style]="{'width': '100%'}">
-      </p-dropdown>
-    </div>
-
-    <!-- Description -->
-    <div class="p-field mb-3">
-      <label for="description" class="block mb-2">Description *</label>
-      <input
-        pInputText
-        id="description"
-        type="text"
-        [(ngModel)]="data.transaction.description"
-        (ngModelChange)="onFieldChange()"
-        placeholder="Entrez la description"
-        class="w-full" />
-    </div>
-
-    <!-- Date -->
-    <div class="p-field mb-3">
-      <label for="date" class="block mb-2">Date *</label>
-      <p-calendar
-        id="date"
-        [(ngModel)]="transactionDate"
-        (ngModelChange)="onFieldChange()"
-        [showIcon]="true"
-        dateFormat="dd/mm/yy"
-        placeholder="Sélectionnez une date"
-        [style]="{'width': '100%'}">
-      </p-calendar>
-    </div>
-
-    <!-- Montant -->
-    <div class="p-field mb-3">
-      <label for="amount" class="block mb-2">Montant *</label>
-      <p-inputNumber
-        id="amount"
-        [(ngModel)]="data.transaction.amount"
-        (ngModelChange)="onFieldChange()"
-        mode="decimal"
-        [minFractionDigits]="2"
-        [maxFractionDigits]="2"
-        placeholder="0.00"
-        [style]="{'width': '100%'}">
-      </p-inputNumber>
-    </div>
-
-    <!-- Sous-catégorie avec autocomplétion -->
-    <div class="p-field mb-3">
-      <label for="subcategory" class="block mb-2">Sous-catégorie *</label>
-      <p-autoComplete
-        id="subcategory"
-        [formControl]="subCategoryControl"
-        [suggestions]="filteredSubcategories"
-        (completeMethod)="filterSubcategories($event)"
-        field="label"
-        placeholder="Rechercher une sous-catégorie..."
-        (onSelect)="onSubCategorySelected($event)"
-        [dropdown]="true"
-        [style]="{'width': '100%'}">
-      </p-autoComplete>
-    </div>
+<div class="p-fluid">
+  <!-- Compte -->
+  <div class="p-field mb-3">
+    <label for="account" class="block mb-2">Compte *</label>
+    <p-dropdown
+      id="account"
+      [options]="accounts"
+      [(ngModel)]="data.transaction.accountId"
+      (onChange)="onFieldChange()"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Sélectionnez un compte"
+      [style]="{'width': '100%'}">
+    </p-dropdown>
   </div>
-</mat-dialog-content>
 
-<mat-dialog-actions align="end">
+  <!-- Lier à une échéance (seulement en création) -->
+  <div *ngIf="isNew" class="p-field mb-3">
+    <label for="recurring" class="block mb-2">Lier à une échéance (optionnel)</label>
+    <p-autoComplete
+      id="recurring"
+      [suggestions]="filteredRecurringTransactions"
+      (completeMethod)="filterRecurring($event)"
+      field="label"
+      placeholder="Rechercher une échéance..."
+      (onSelect)="onRecurringTransactionSelected($event)"
+      [dropdown]="true"
+      [forceSelection]="true"
+      [style]="{'width': '100%'}">
+    </p-autoComplete>
+  </div>
+
+  <!-- Type de transaction (Flux financier) -->
+  <div class="p-field mb-3">
+    <label for="financialFlow" class="block mb-2">Type de transaction *</label>
+    <p-dropdown
+      id="financialFlow"
+      [options]="financialFlowList"
+      [(ngModel)]="data.transaction.financialFlowId"
+      (onChange)="onFinancialFlowChange($event)"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Sélectionnez un type"
+      [style]="{'width': '100%'}">
+    </p-dropdown>
+  </div>
+
+  <!-- Description -->
+  <div class="p-field mb-3">
+    <label for="description" class="block mb-2">Description *</label>
+    <input
+      pInputText
+      id="description"
+      type="text"
+      [(ngModel)]="data.transaction.description"
+      (ngModelChange)="onFieldChange()"
+      placeholder="Entrez la description"
+      class="w-full" />
+  </div>
+
+  <!-- Date -->
+  <div class="p-field mb-3">
+    <label for="date" class="block mb-2">Date *</label>
+    <p-calendar
+      id="date"
+      [(ngModel)]="transactionDate"
+      (ngModelChange)="onFieldChange()"
+      [showIcon]="true"
+      dateFormat="dd/mm/yy"
+      placeholder="Sélectionnez une date"
+      styleClass="w-full"
+      [appendTo]="'body'">
+    </p-calendar>
+  </div>
+
+  <!-- Montant -->
+  <div class="p-field mb-3">
+    <label for="amount" class="block mb-2">Montant *</label>
+    <p-inputNumber
+      id="amount"
+      [(ngModel)]="data.transaction.amount"
+      (ngModelChange)="onFieldChange()"
+      mode="decimal"
+      [minFractionDigits]="2"
+      [maxFractionDigits]="2"
+      placeholder="0.00"
+      [style]="{'width': '100%'}">
+    </p-inputNumber>
+  </div>
+
+  <!-- Sous-catégorie avec autocomplétion -->
+  <div class="p-field mb-3">
+    <label for="subcategory" class="block mb-2">Sous-catégorie *</label>
+    <p-autoComplete
+      id="subcategory"
+      [formControl]="subCategoryControl"
+      [suggestions]="filteredSubcategories"
+      (completeMethod)="filterSubcategories($event)"
+      field="label"
+      placeholder="Rechercher une sous-catégorie..."
+      (onSelect)="onSubCategorySelected($event)"
+      [dropdown]="true"
+      styleClass="w-full"
+      [appendTo]="'body'">      
+    </p-autoComplete>
+  </div>
+</div>
+
+<div class="flex justify-end gap-2 mt-4">
   <p-button
     label="Annuler"
     icon="pi pi-times"
@@ -122,4 +122,4 @@
     [disabled]="!isFormValid"
     styleClass="p-button-success">
   </p-button>
-</mat-dialog-actions>
+</div>

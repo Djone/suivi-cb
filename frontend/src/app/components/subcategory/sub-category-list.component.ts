@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialog } from '@angular/material/dialog';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { CategoryService } from '../../services/category.service';
 import { SubCategory } from '../../models/sub-category.model';
@@ -11,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
 // PrimeNG Imports
+import { DialogService } from 'primeng/dynamicdialog';
 import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -46,7 +46,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
   constructor(
     private subCategoryService: SubCategoryService,
     private categoryService: CategoryService,
-    private dialog: MatDialog
+    private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -104,9 +104,8 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
   }
 
   createSubCategory(): void {
-    const dialogRef = this.dialog.open(EditSubCategoryDialogComponent, {
+    const dialogRef = this.dialogService.open(EditSubCategoryDialogComponent, {
       width: '500px',
-      maxHeight: '90vh',
       data: {
         subCategory: { label: '', categoryId: null },
         categories: this.activeCategories,
@@ -114,7 +113,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.onClose.subscribe(result => {
       if (result) {
         this.subCategoryService.addSubCategory(result).subscribe({
           next: () => {
@@ -128,9 +127,8 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
   }
 
   editSubCategory(subCategory: SubCategory): void {
-    const dialogRef = this.dialog.open(EditSubCategoryDialogComponent, {
+    const dialogRef = this.dialogService.open(EditSubCategoryDialogComponent, {
       width: '500px',
-      maxHeight: '90vh',
       data: {
         subCategory: { ...subCategory },
         categories: this.activeCategories,
@@ -138,7 +136,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.onClose.subscribe(result => {
       if (result) {
         this.subCategoryService.updateSubCategory(result.id!, result).subscribe({
           next: () => {
@@ -153,8 +151,8 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
   }
 
   deleteSubCategory(subCategory: SubCategory): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '450px',
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
+      width: '500px',
       data: {
         title: 'Confirmer la suppression',
         message: `Voulez-vous vraiment supprimer la sous-catégorie "${subCategory.label}" ?`,
@@ -163,7 +161,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.onClose.subscribe(confirmed => {
       if (confirmed) {
         this.subCategoryService.deleteSubCategory(subCategory.id!).subscribe({
           next: () => {

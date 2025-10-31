@@ -1,9 +1,9 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 
 // PrimeNG Imports
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -20,11 +20,6 @@ import { AccountService } from '../../services/account.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 
-interface DialogData {
-  transaction: Transaction;
-  isNew?: boolean;
-}
-
 @Component({
   selector: 'app-edit-transaction-dialog',
   standalone: true,
@@ -32,7 +27,6 @@ interface DialogData {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatDialogModule,
     InputTextModule,
     CalendarModule,
     InputNumberModule,
@@ -58,14 +52,18 @@ export class EditTransactionDialogComponent implements OnInit {
   allRecurringTransactions: RecurringTransaction[] = [];
   filteredRecurringTransactions: RecurringTransaction[] = [];
 
+  get data() {
+    return this.config.data;
+  }
+
   constructor(
-    public dialogRef: MatDialogRef<EditTransactionDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData,
+    public ref: DynamicDialogRef,
+    public config: DynamicDialogConfig,
     private subCategoryService: SubCategoryService,
     private accountService: AccountService,
     private recurringTransactionService: RecurringTransactionService // Injecter le service
   ) {
-    this.isNew = data.isNew || false;
+    this.isNew = this.data.isNew || false;
     this.dialogTitle = this.isNew ? 'Nouvelle transaction' : 'Éditer la transaction';
 
     // Écouter les changements du FormControl pour synchroniser selectedSubCategoryId
@@ -81,13 +79,11 @@ export class EditTransactionDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('Transaction reçue dans le dialogue:', this.data.transaction);
 
     // Charger les comptes
     this.accountService.accounts$.subscribe({
       next: (accounts) => {
         this.accounts = accounts;
-        console.log('Comptes chargés dans le dialogue:', this.accounts);
       },
       error: (err) => console.error('Erreur lors du chargement des comptes:', err)
     });
@@ -113,7 +109,6 @@ export class EditTransactionDialogComponent implements OnInit {
         const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
         this.transactionDate = new Date(year, month - 1, day);
       }
-      console.log('Date convertie:', this.transactionDate);
     } else {
       // Si pas de date, utiliser aujourd'hui
       this.transactionDate = new Date();
@@ -122,7 +117,6 @@ export class EditTransactionDialogComponent implements OnInit {
     // Récupérer le subCategoryId (en snake_case ou camelCase)
     const rawSubCategoryId = this.data.transaction.subCategoryId || this.data.transaction['sub_category_id'];
     this.selectedSubCategoryId = typeof rawSubCategoryId === 'string' ? parseInt(rawSubCategoryId, 10) : (rawSubCategoryId || 0);
-    console.log('selectedSubCategoryId initial:', this.selectedSubCategoryId, 'type:', typeof this.selectedSubCategoryId);
 
     // Récupérer le financialFlowId (en snake_case ou camelCase)
     const financialFlowId = this.data.transaction.financialFlowId || this.data.transaction['financial_flow_id'];
@@ -172,16 +166,12 @@ export class EditTransactionDialogComponent implements OnInit {
       next: (data) => {
         this.subcategories = data;
         this.filteredSubcategories = [...data];
-        console.log('Sous-catégories chargées:', this.subcategories);
-        console.log('Recherche de la sous-catégorie avec ID:', this.selectedSubCategoryId);
 
         // Initialiser le contrôle d'autocomplétion avec la sous-catégorie actuelle
         const currentSubCategory = this.subcategories.find(sc => sc.id == this.selectedSubCategoryId);
-        console.log('Sous-catégorie trouvée:', currentSubCategory);
 
         if (currentSubCategory) {
           this.subCategoryControl.setValue(currentSubCategory);
-          console.log('Sous-catégorie initiale définie:', currentSubCategory);
         }
       },
       error: (err) => console.error('Erreur lors du chargement des sous-catégories:', err)
@@ -191,7 +181,6 @@ export class EditTransactionDialogComponent implements OnInit {
   // Méthode appelée quand le flux financier change
   onFinancialFlowChange(event: any): void {
     const newFinancialFlowId = event.value;
-    console.log('Flux financier changé:', newFinancialFlowId);
 
     // Réinitialiser la sous-catégorie sélectionnée
     this.selectedSubCategoryId = 0;
@@ -211,7 +200,6 @@ export class EditTransactionDialogComponent implements OnInit {
 
   // Méthode appelée lors de la sélection d'une sous-catégorie
   onSubCategorySelected(event: any): void {
-    console.log('Événement de sélection reçu:', event);
 
     // PrimeNG AutoComplete passe un objet avec une propriété 'value'
     const subCategory = event.value || event;
@@ -237,16 +225,6 @@ export class EditTransactionDialogComponent implements OnInit {
       this.selectedSubCategoryId != null &&
       this.selectedSubCategoryId > 0;
 
-    console.log('Validation du formulaire:', {
-      accountId: this.data.transaction.accountId,
-      financialFlowId: this.data.transaction.financialFlowId,
-      description: this.data.transaction.description,
-      transactionDate: this.transactionDate,
-      amount: this.data.transaction.amount,
-      selectedSubCategoryId: this.selectedSubCategoryId,
-      isValid: isValid
-    });
-
     return isValid;
   }
 
@@ -262,9 +240,6 @@ export class EditTransactionDialogComponent implements OnInit {
       return;
     }
 
-    console.log('Données avant sauvegarde:', this.data.transaction);
-
-    // CORRECTION DU PROBLEME DE DECALAGE DE DATE
     // Formater la date au format YYYY-MM-DD en mode local
     let formattedDate: string | Date | undefined = this.data.transaction.date;
     if (this.transactionDate) {
@@ -273,7 +248,6 @@ export class EditTransactionDialogComponent implements OnInit {
       const month = String(this.transactionDate.getMonth() + 1).padStart(2, '0');
       const day = String(this.transactionDate.getDate()).padStart(2, '0');
       formattedDate = `${year}-${month}-${day}`;
-      console.log('Date formatée (sans décalage):', formattedDate);
     }
 
     const updatedTransaction = {
@@ -287,11 +261,10 @@ export class EditTransactionDialogComponent implements OnInit {
       recurringTransactionId: this.data.transaction.recurringTransactionId, // Ajouter l'ID de l'échéance
     };
 
-    console.log('Transaction à envoyer:', updatedTransaction);
-    this.dialogRef.close(updatedTransaction);
+    this.ref.close(updatedTransaction);
   }
 
   cancel(): void {
-    this.dialogRef.close();
+    this.ref.close();
   }
 }

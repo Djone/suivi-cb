@@ -1,8 +1,25 @@
-<h2 mat-dialog-title>{{ title }}</h2>
-<mat-dialog-content>
-  <p>{{ data.message }}</p>
-</mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">{{ cancelText }}</button>
-  <button mat-raised-button color="warn" (click)="onConfirm()">{{ confirmText }}</button>
-</mat-dialog-actions>
+<div class="confirm-dialog-container">
+  <div class="dialog-header">
+    <span class="p-dialog-title">{{ title }}</span>
+  </div>
+
+  <div class="dialog-content">
+    <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+    <span>{{ message }}</span>
+  </div>
+
+  <div class="dialog-footer">
+    <p-button
+      [label]="cancelText"
+      icon="pi pi-times"
+      (onClick)="onCancel()"
+      styleClass="p-button-text">
+    </p-button>
+    <p-button
+      [label]="confirmText"
+      icon="pi pi-check"
+      (onClick)="onConfirm()"
+      styleClass="p-button-danger">
+    </p-button>
+  </div>
+</div>

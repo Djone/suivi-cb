@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="balance-separator">
-            <mat-icon>arrow_forward</mat-icon>
+            <i class="pi pi-arrow-right"></i>
           </div>
           <div class="balance-item forecast">
             <div class="balance-label">Solde prévisionnel</div>
@@ -47,8 +47,8 @@
     <div class="recurring-list" *ngIf="showRecurring && sortedRecurringTransactions.length > 0">
       <div class="recurring-items">
         <div *ngFor="let recurring of sortedRecurringTransactions" class="recurring-item" [class.realized]="isRecurringRealized(recurring['id']!)">
-          <div class="recurring-info">
-            <mat-icon>{{ recurring['frequency'] === 'monthly' ? 'calendar_month' : 'calendar_today' }}</mat-icon>
+          <div class="recurring-info flex items-center">
+            <i class="pi pi-calendar mr-2"></i>
             <div class="recurring-details">
               <div class="recurring-description">{{ recurring['label'] }}</div>
               <div class="recurring-schedule">{{ getDayLabel(recurring) }} - {{ recurring['frequency'] === 'monthly' ? 'Mensuel' : 'Hebdomadaire' }}</div>
@@ -58,38 +58,99 @@
             {{ (recurring['financialFlowId'] === 2 ? -1 : 1) * (recurring['amount'] || 0) | currency:'EUR':'symbol':'1.2-2':'fr' }}
           </div>
           <div class="recurring-status">
-            <mat-icon *ngIf="isRecurringRealized(recurring['id']!)" class="realized-icon">check_circle</mat-icon>
-            <mat-icon *ngIf="!isRecurringRealized(recurring['id']!)" class="pending-icon">pending</mat-icon>
+            <i *ngIf="isRecurringRealized(recurring['id']!)" class="pi pi-check-circle realized-icon"></i>
+            <i *ngIf="!isRecurringRealized(recurring['id']!)" class="pi pi-clock pending-icon"></i>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Contrôles -->
-    <div class="list-controls">
-      <div class="filters-row">
-        <input type="text" [(ngModel)]="filters.date" (input)="applyFilter()" placeholder="Filtrer par date..." class="filter-input" />
-        <input type="text" [(ngModel)]="filters.description" (input)="applyFilter()" placeholder="Filtrer par description..." class="filter-input" />
-        <input type="text" [(ngModel)]="filters.amount" (input)="applyFilter()" placeholder="Filtrer par montant..." class="filter-input" />
+    <div class="list-controls p-3 surface-card border-round-lg shadow-1">
+      <!-- Ligne de filtres -->
+      <div class="filters-row flex flex-wrap gap-3">
+        <!-- Filtre par date -->
+        <p-inputGroup class="flex-1 min-w-[250px]">
+          <p-inputGroupAddon><i class="pi pi-calendar"></i></p-inputGroupAddon>
+          <p-calendar
+            [(ngModel)]="filters.dateRange"
+            (onSelect)="applyFilter()"
+            (onClearClick)="clearDateFilter()"
+            selectionMode="range"
+            [readonlyInput]="true"
+            placeholder="Filtrer par date"
+            dateFormat="dd/mm/yy"
+            [showClear]="true"
+            styleClass="w-full"
+          ></p-calendar>
+        </p-inputGroup>
+
+        <!-- Filtre par description -->
+        <p-inputGroup class="flex-1 min-w-[250px]">
+          <p-inputGroupAddon><i class="pi pi-align-left"></i></p-inputGroupAddon>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="filters.description"
+            (input)="applyFilter()"
+            placeholder="Filtrer par description"
+            class="w-full"
+          />
+        </p-inputGroup>
+
+        <!-- Filtre par montant -->
+        <p-inputGroup class="flex-1 min-w-[150px]">
+          <p-inputGroupAddon><i class="pi pi-dollar"></i></p-inputGroupAddon>
+          <input
+            pInputText
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="filters.amount"
+            (input)="applyFilter()"
+            (keypress)="allowOnlyNumbers($event)"
+            placeholder="Filtrer par montant"
+            class="w-full"
+          />
+        </p-inputGroup>
       </div>
-      <div class="controls-row">
-        <div class="page-size-selector">
-          <label>Groupes par page :</label>
-          <select [(ngModel)]="pageSize" (change)="changePageSize(pageSize)">
-            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
-          </select>
+
+      <!-- Ligne des contrôles -->
+      <div class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3">
+        <!-- Groupes par page -->
+        <div class="flex align-items-center gap-2">
+          <span class="font-medium">Groupes par page :</span>
+          <p-dropdown
+            [options]="pageSizeOptions"
+            [(ngModel)]="pageSize"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="changePageSize(pageSize)"
+            styleClass="w-8rem"
+          ></p-dropdown>
         </div>
-        <div class="sort-controls">
-          <button class="sort-btn" (click)="sortBy('date')" [class.active]="sortColumn === 'date'">
-            <mat-icon>event</mat-icon>
-            Date {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </button>
+
+        <!-- Tri -->
+        <div>
+          <button
+            pButton
+            type="button"
+            class="p-button-text"
+            (click)="sortBy('date')"
+            [class.active]="sortColumn === 'date'"
+            icon="pi pi-sort-alt"
+            label="Trier par date"
+          ></button>
         </div>
-        <div class="results-info">
+
+        <!-- Info résultats -->
+        <div class="results-info font-semibold text-color-secondary">
           {{ filteredTransactions.length }} transaction(s)
         </div>
       </div>
     </div>
+
+
 
     <!-- Transactions groupées par date -->
     <div class="grouped-transactions">
@@ -97,7 +158,7 @@
         <!-- En-tête de date -->
         <div class="date-header">
           <div class="date-label">
-            <mat-icon>event</mat-icon>
+            <i class="pi pi-calendar"></i>
             <span class="date-text">{{ group.formattedDate }}</span>
             <span class="transaction-count">({{ group.transactions.length }} transaction{{ group.transactions.length > 1 ? 's' : '' }})</span>
           </div>
@@ -111,13 +172,17 @@
           <div *ngFor="let transaction of group.transactions" class="transaction-item">
             <div class="transaction-main">
               <div class="transaction-description">
-                <mat-icon class="transaction-icon">{{ transaction.amountNumber && transaction.amountNumber < 0 ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+                <i
+                  class="transaction-icon"
+                  [ngClass]="{'pi pi-arrow-down text-red-500': (transaction.amountNumber ?? 0) < 0, 'pi pi-arrow-up text-green-500': (transaction.amountNumber ?? 0) > 0}"
+                >
+                </i>
                 <div class="description-content">
                   <div class="description-text">{{ transaction.description }}</div>
                   <div class="subcategory-text">{{ transaction.subCategoryLabel }}</div>
                 </div>
               </div>
-              <div class="transaction-amount" [class.positive]="transaction.amountNumber && transaction.amountNumber > 0" [class.negative]="transaction.amountNumber && transaction.amountNumber < 0">
+              <div class="transaction-amount" [class.positive]="(transaction.amountNumber ?? 0) > 0" [class.negative]="(transaction.amountNumber ?? 0) < 0">
                 {{ transaction.amountNumber | currency:'EUR':'symbol':'1.2-2':'fr' }}
               </div>
             </div>
@@ -144,8 +209,8 @@
 
     <!-- Message si aucune transaction -->
     <div *ngIf="paginatedGroupedTransactions.length === 0" class="no-data">
-      <mat-icon>info</mat-icon>
-      <span>Aucune transaction trouvée.</span>
+      <i class="pi pi-info-circle mr-2"></i>
+      <span>Aucune transaction trouvée pour les filtres actuels.</span>
     </div>
 
     <!-- Pagination -->

@@ -61,7 +61,7 @@
     <label for="financialFlowId" class="block mb-2">Type de transaction *</label>
     <p-dropdown
       id="financialFlowId"
-      [options]="financialFlows"
+      [options]="financialFlowList"
       [(ngModel)]="data.transaction.financialFlowId"
       (onChange)="onFinancialFlowChange()"
       optionLabel="name"

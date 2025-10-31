@@ -8,19 +8,29 @@
       [rowsPerPageOptions]="[10, 20, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first} à {last} sur {totalRecords} récurrences"
-      [globalFilterFields]="['label', 'amount', 'dayOfMonth', 'frequency', 'subCategoryId', 'accountId', 'isActive']"
+      [globalFilterFields]="['label', 'amount', 'dayOfMonth', 'frequencyLabel', 'subCategoryLabel', 'accountLabel', 'statusLabel']"
       [tableStyle]="{ 'min-width': '75rem' }"
       styleClass="p-datatable-gridlines p-datatable-striped">
 
-      <!-- En-tête avec bouton "Nouvelle récurrence" -->
       <ng-template pTemplate="caption">
-        <div class="flex align-items-center justify-content-between">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+          <!-- Bouton pour ajouter une récurrence -->
           <p-button
             label="Nouvelle récurrence"
             icon="pi pi-plus"
             (onClick)="createRecurringTransaction()"
             styleClass="p-button-success">
           </p-button>
+
+          <!-- Champ de recherche -->
+          <input
+            pInputText
+            type="text"
+            (input)="applyFilterGlobal($event, 'contains')"
+            placeholder="🔍 Rechercher une catégorie..."
+            class="w-full"
+            style="max-width: 300px;"
+          />
         </div>
       </ng-template>
 
@@ -35,61 +45,6 @@
           <th pSortableColumn="accountId" style="width:12%">Compte <p-sortIcon field="accountId" /></th>
           <th pSortableColumn="isActive" style="width:10%">Statut <p-sortIcon field="isActive" /></th>
           <th style="width:10%">Actions</th>
-        </tr>
-        <!-- Filtres -->
-        <tr>
-          <th>
-            <input pInputText type="text" (input)="dt.filter($any($event.target).value, 'label', 'contains')" placeholder="Filtrer par libellé" class="w-full p-inputtext-sm">
-          </th>
-          <th>
-            <p-inputNumber
-              (onInput)="dt.filter($event.value, 'amount', 'equals')"
-              mode="currency" currency="EUR" placeholder="Montant"
-              styleClass="w-full" inputStyleClass="w-full p-inputtext-sm"
-              [showButtons]="false">
-            </p-inputNumber>
-          </th>
-          <th>
-            <p-inputNumber
-              (onInput)="dt.filter($event.value, 'dayOfMonth', 'equals')"
-              placeholder="Jour"
-              styleClass="w-full" inputStyleClass="w-full p-inputtext-sm"
-              [showButtons]="false">
-            </p-inputNumber>
-          </th>
-          <th>
-            <p-dropdown
-              [options]="frequencies"
-              (onChange)="dt.filter($any($event.value), 'frequency', 'equals')"
-              placeholder="Toutes" [showClear]="true"
-              styleClass="w-full p-inputtext-sm">
-            </p-dropdown>
-          </th>
-          <th>
-            <p-dropdown
-              [options]="subCategories" optionLabel="label" optionValue="id"
-              (onChange)="dt.filter($any($event.value), 'subCategoryId', 'equals')"
-              placeholder="Toutes" [showClear]="true" [filter]="true" filterBy="label"
-              styleClass="w-full p-inputtext-sm">
-            </p-dropdown>
-          </th>
-          <th>
-            <p-dropdown
-              [options]="accounts" optionLabel="name" optionValue="id"
-              (onChange)="dt.filter($any($event.value), 'accountId', 'equals')"
-              placeholder="Tous" [showClear]="true" [filter]="true" filterBy="name"
-              styleClass="w-full p-inputtext-sm">
-            </p-dropdown>
-          </th>
-          <th>
-            <p-dropdown
-              [options]="statuses"
-              (onChange)="dt.filter($any($event.value), 'isActive', 'equals')"
-              placeholder="Tous" [showClear]="true"
-              styleClass="w-full p-inputtext-sm">
-            </p-dropdown>
-          </th>
-          <th></th>
         </tr>
       </ng-template>
 

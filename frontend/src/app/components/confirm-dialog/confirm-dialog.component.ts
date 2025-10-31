@@ -1,6 +1,7 @@
-import { Component, Inject } from '@angular/core';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { ButtonModule } from 'primeng/button';
 
 export interface ConfirmDialogData {
   title?: string;
@@ -12,29 +13,32 @@ export interface ConfirmDialogData {
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule],
+  imports: [CommonModule, ButtonModule],
   templateUrl: './confirm-dialog.component.html',
   styleUrls: ['./confirm-dialog.component.css'],
 })
 export class ConfirmDialogComponent {
   title: string;
+  message: string;
   confirmText: string;
   cancelText: string;
 
   constructor(
-    public dialogRef: MatDialogRef<ConfirmDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ConfirmDialogData
+    public ref: DynamicDialogRef,
+    public config: DynamicDialogConfig<ConfirmDialogData>
   ) {
-    this.title = data.title || 'Confirmation';
-    this.confirmText = data.confirmText || 'Confirmer';
-    this.cancelText = data.cancelText || 'Annuler';
+    const data = this.config.data;
+    this.title = data?.title || 'Confirmation';
+    this.message = data?.message || 'Êtes-vous sûr ?';
+    this.confirmText = data?.confirmText || 'Confirmer';
+    this.cancelText = data?.cancelText || 'Annuler';
   }
 
   onConfirm(): void {
-    this.dialogRef.close(true); // Retourne "true" si confirmé
+    this.ref.close(true); // Retourne "true" si confirmé
   }
 
   onCancel(): void {
-    this.dialogRef.close(false); // Retourne "false" si annulé
+    this.ref.close(false); // Retourne "false" si annulé
   }
 }

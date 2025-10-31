@@ -1,12 +1,10 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { Category } from '../../models/category.model';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 
 // PrimeNG Imports
-import { DialogModule } from 'primeng/dialog';
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
@@ -17,8 +15,6 @@ import { DropdownModule } from 'primeng/dropdown';
   imports: [
     CommonModule,
     FormsModule,
-    MatDialogModule,
-    DialogModule,
     ButtonModule,
     InputTextModule,
     DropdownModule
@@ -27,16 +23,19 @@ import { DropdownModule } from 'primeng/dropdown';
   styleUrls: ['./edit-category-dialog.component.css']
 })
 export class EditCategoryDialogComponent {
+    
   financialFlowList = FINANCIAL_FLOW_LIST;
   isNew: boolean = false;
   dialogTitle: string = '';
 
+
   constructor(
-    public dialogRef: MatDialogRef<EditCategoryDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { category: Category; isNew?: boolean }
-  ) {
-    this.isNew = data.isNew || false;
-    this.dialogTitle = this.isNew ? 'Nouvelle catégorie' : 'Éditer la catégorie';
+    public ref: DynamicDialogRef,
+    public config: DynamicDialogConfig
+  ) {}
+
+  get data() {
+    return this.config.data;
   }
 
   save(): void {
@@ -51,11 +50,11 @@ export class EditCategoryDialogComponent {
       categoryData.id = this.data.category.id;
     }
 
-    this.dialogRef.close(categoryData);
+    this.ref.close(categoryData);
   }
 
   cancel(): void {
-    this.dialogRef.close();
+    this.ref.close();
   }
 
   isFormValid(): boolean {
