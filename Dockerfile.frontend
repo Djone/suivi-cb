@@ -39,4 +39,4 @@ RUN chmod +x /wait-for.sh
 EXPOSE 80
 
 # 🕒 Attendre le backend avant de démarrer Nginx
-CMD ["/wait-for.sh", "backend:3000", "--", "nginx", "-g", "daemon off;"]
+CMD ["/wait-for.sh", "backend:3001", "--", "nginx", "-g", "daemon off;"]

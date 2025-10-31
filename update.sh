@@ -125,4 +125,4 @@ echo -e "\n[7/7] 🧹 Nettoyage des anciennes images Docker..."
 sudo docker image prune -f
 
 echo -e "\n✅ === Mise à jour terminée avec succès ! ==="
-echo "Version actuelle : $(git rev-parse --short HEAD)"
+echo "Version actuelle : $(git describe --tags --always --dirty)"
