@@ -9,7 +9,12 @@
 # 1. Se connecter au NAS en SSH: ssh votre_utilisateur@IP_NAS
 # 2. Naviguer vers le dossier: cd /volume1/docker/suivi-cb
 # 3. Rendre le script exécutable (une seule fois): chmod +x update.sh
-# 4. Lancer la mise à jour: ./update.sh
+# 4. Lancer la mise à jour: 
+#
+# ./update.sh # Mise à jour complète (git pull + rebuild)
+# ./update.sh backend # Mise à jour ciblée sur le service backend
+# ./update.sh frontend # Mise à jour ciblée sur le service frontend
+# ./update.sh db        # Seulement redémarrage après mise à jour de la BDD
 #
 
 # Arrêter le script en cas d'erreur
@@ -24,6 +29,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/database_before_update_$DATE.db" # Fichier de backup de la base de données
 GIT_BRANCH="master" # Branche Git à utiliser pour la mise à jour
 TARGET_SERVICE="all" # Par défaut, met à jour tous les services (backend et frontend)
+MODE="full" # "full" (par défaut) ou "db"
 
 # --- Vérifications initiales ---
 if [ ! -d "$APP_DIR" ]; then
@@ -48,6 +54,24 @@ if [ "$#" -gt 0 ]; then
     *) echo "⚠️ Paramètre inconnu : $1. Mise à jour complète." ;;
   esac
 fi
+
+# --- Si c’est juste une mise à jour de BDD ---
+if [ "$MODE" = "db" ]; then
+  echo -e "\n💾 Mode DB détecté — pas de rebuild, simple redémarrage des services..."
+  echo "[1/2] Sauvegarde de la base de données..."
+  mkdir -p "$BACKUP_DIR"
+  cp "$APP_DIR/data/database.db" "$BACKUP_FILE"
+  echo "-> Backup créé : $BACKUP_FILE"
+
+  echo "[2/2] Redémarrage de tous les conteneurs..."
+  sudo docker-compose restart
+
+  echo -e "\n✅ === Redémarrage terminé avec succès === ✅"
+  exit 0
+fi
+
+# --- Sinon, on fait le processus complet ---
+echo "Mode de mise à jour complet (git pull + rebuild)..."
 
 # --- Variables pour le rollback ---
 OLD_COMMIT=$(git rev-parse HEAD)
