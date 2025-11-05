@@ -19,7 +19,7 @@ const RecurringTransaction = {
 
   // Ajouter une transaction récurrente
   add: (recurringTransaction) => {
-    const columns = ['label', 'amount', 'day_of_month', 'sub_category_id', 'account_id', 'financial_flow_id', 'frequency'];
+    const columns = ['label', 'amount', 'day_of_month', 'sub_category_id', 'account_id', 'financial_flow_id', 'frequency', 'debit_503020'];
     const values = columns.map((col) => recurringTransaction[col] || (col === 'frequency' ? 'monthly' : undefined));
     const placeholders = columns.map(() => '?').join(', ');
 

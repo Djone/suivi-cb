@@ -35,7 +35,17 @@ const SubCategory = {
   //Liste toutes les categories par type de flux financier (débit, crédit)
   getAllByFinancialFlowId: (financial_flow_id) => {
     return new Promise((resolve, reject) => {
-      db.all('SELECT sc.id, sc.label FROM subcategories sc, categories c where sc.category_id = c.id AND c.financial_flow_id = ?', [financial_flow_id], (err, rows) => {
+      const query = `
+        SELECT 
+          sc.id AS id,
+          sc.label AS label,
+          sc.category_id AS categoryId,
+          c.label AS categoryLabel
+        FROM subcategories sc
+        JOIN categories c ON sc.category_id = c.id
+        WHERE c.financial_flow_id = ?
+      `;
+      db.all(query, [financial_flow_id], (err, rows) => {
         if (err) {
           reject(err); // Rejetez la promesse en cas d'erreur
         } else {

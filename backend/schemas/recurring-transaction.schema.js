@@ -45,6 +45,12 @@ const recurringTransactionSchema = Joi.object({
     .positive()
     .required()
     .description('L\'ID du flux financier (1=Revenu, 2=Dépense)'),
+
+  debit_503020: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .description('L\'ID du type débit de la répartition 50/30/20 (1=Charges fixes, 2=Loisir, 3=Epargne)'),
 });
 
 module.exports = { recurringTransactionSchema };

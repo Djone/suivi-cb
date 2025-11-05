@@ -1,12 +1,21 @@
-<div class="transaction-list">
+<div class="transaction-list" [ngStyle]="getAccentVars()">
   <div class="list-container">
-    <!-- En-tête avec titre et bouton -->
+    <!-- En-tÃªte avec titre et bouton -->
     <div class="list-header">
+       
       <div class="header-content">
         <h2 *ngIf="account">{{ account['name'] }}</h2>
         <h2 *ngIf="!account">Toutes les transactions</h2>
 
-        <!-- Affichage des soldes (seulement si compte spécifique) -->
+        <!-- Affichage du bouton "Nouvelle transaction" -->
+        <p-button
+          label="Nouvelle transaction"
+          icon="pi pi-plus"
+          (onClick)="createTransaction()"
+          styleClass="p-button-success">
+        </p-button>
+
+        <!-- Affichage des soldes (seulement si compte spÃ©cifique) -->
         <div class="balance-display" *ngIf="accountId">
           <div class="balance-item current">
             <div class="balance-label">Solde actuel</div>
@@ -18,32 +27,74 @@
             <i class="pi pi-arrow-right"></i>
           </div>
           <div class="balance-item forecast">
-            <div class="balance-label">Solde prévisionnel</div>
+            <div class="balance-label">Solde prÃ©visionnel</div>
             <div class="balance-amount" [class.positive]="forecastedBalance > 0" [class.negative]="forecastedBalance < 0">
               {{ forecastedBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}
             </div>
           </div>
         </div>
+
+        <!-- Répartition 50/30/20 (basée sur le salaire du mois courant) -->
+        <div class="break503020-container" *ngIf="accountId">
+          <div class="break503020-list">
+            <div class="break-row" *ngFor="let it of get503020Breakdown().items">
+              <div class="break-label">{{ it.name }}</div>
+              <div class="break-value">{{ it.amount | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+              <div class="break-percent">{{ it.percent }}%</div>
+            </div>
+            <div class="break-row remaining">
+              <div class="break-label">Reste à vivre</div>
+              <div class="break-value">{{ get503020Breakdown().remaining | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+              <div class="break-percent">{{ get503020Breakdown().remainingPercent }}%</div>
+            </div>
+          </div>
+          <div class="break503020-mini">
+            <div class="mini-bar">
+              <ng-container *ngFor="let it of get503020Breakdown().items; let i = index">
+                <div class="mini-seg seg-{{i}}" [ngStyle]="{ width: (it.percent || 0) + '%' }"></div>
+              </ng-container>
+            </div>
+            <div class="mini-legend">
+              <span class="legend-item"><span class="dot dot-0"></span> 50</span>
+              <span class="legend-item"><span class="dot dot-1"></span> 30</span>
+              <span class="legend-item"><span class="dot dot-2"></span> 20</span>
+            </div>
+          </div>
+        </div>
+        <div class="recurring-summary" *ngIf="accountId">
+          <div class="summary-item">
+            <div class="summary-label">Revenus prévus</div>
+            <div class="summary-amount positive">+ {{ expectedIncomeTotal | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Dépenses prévues</div>
+            <div class="summary-amount negative">- {{ expectedExpensesTotal | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Dépenses restantes</div>
+            <div class="summary-amount negative">- {{ remainingExpensesThisMonth | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Prévisionnel (Fin du mois)</div>
+            <div class="summary-amount" [class.positive]="forecastedBalance >= 0" [class.negative]="forecastedBalance < 0">
+              {{ forecastedBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}
+            </div>
+          </div>
+        </div>
       </div>
-      <p-button
-        label="Nouvelle transaction"
-        icon="pi pi-plus"
-        (onClick)="createTransaction()"
-        styleClass="p-button-success">
-      </p-button>
     </div>
 
-    <!-- Bouton pour afficher/masquer les échéances (si compte spécifique) -->
+    <!-- Bouton pour afficher/masquer les Ã©chÃ©ances (si compte spÃ©cifique) -->
     <div class="recurring-toggle" *ngIf="accountId && recurringTransactions.length > 0">
       <p-button
-        [label]="showRecurring ? 'Masquer les échéances' : 'Afficher les échéances (' + recurringTransactions.length + ')'"
+        [label]="showRecurring ? 'Masquer les Ã©chÃ©ances' : 'Afficher les Ã©chÃ©ances (' + recurringTransactions.length + ')'"
         icon="pi pi-calendar"
         (onClick)="toggleRecurring()"
         styleClass="p-button-outlined p-button-secondary">
       </p-button>
     </div>
 
-    <!-- Liste des échéances récurrentes -->
+    <!-- Liste des Ã©chÃ©ances rÃ©currentes -->
     <div class="recurring-list" *ngIf="showRecurring && sortedRecurringTransactions.length > 0">
       <div class="recurring-items">
         <div *ngFor="let recurring of sortedRecurringTransactions" class="recurring-item" [class.realized]="isRecurringRealized(recurring['id']!)">
@@ -65,7 +116,7 @@
       </div>
     </div>
 
-    <!-- Contrôles -->
+    <!-- ContrÃ´les -->
     <div class="list-controls p-3 surface-card border-round-lg shadow-1">
       <!-- Ligne de filtres -->
       <div class="filters-row flex flex-wrap gap-3">
@@ -100,7 +151,7 @@
 
         <!-- Filtre par montant -->
         <p-inputGroup class="flex-1 min-w-[150px]">
-          <p-inputGroupAddon><i class="pi pi-dollar"></i></p-inputGroupAddon>
+          <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
           <input
             pInputText
             type="number"
@@ -115,7 +166,7 @@
         </p-inputGroup>
       </div>
 
-      <!-- Ligne des contrôles -->
+      <!-- Ligne des contrÃ´les -->
       <div class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3">
         <!-- Groupes par page -->
         <div class="flex align-items-center gap-2">
@@ -143,7 +194,7 @@
           ></button>
         </div>
 
-        <!-- Info résultats -->
+        <!-- Info rÃ©sultats -->
         <div class="results-info font-semibold text-color-secondary">
           {{ filteredTransactions.length }} transaction(s)
         </div>
@@ -152,10 +203,10 @@
 
 
 
-    <!-- Transactions groupées par date -->
+    <!-- Transactions groupÃ©es par date -->
     <div class="grouped-transactions">
       <div *ngFor="let group of paginatedGroupedTransactions" class="date-group">
-        <!-- En-tête de date -->
+        <!-- En-tÃªte de date -->
         <div class="date-header">
           <div class="date-label">
             <i class="pi pi-calendar"></i>
@@ -191,7 +242,7 @@
                 icon="pi pi-pencil"
                 (onClick)="editTransaction(transaction)"
                 styleClass="p-button-rounded p-button-text p-button-info"
-                pTooltip="Éditer"
+                pTooltip="Ã‰diter"
                 tooltipPosition="top">
               </p-button>
               <p-button
@@ -210,7 +261,7 @@
     <!-- Message si aucune transaction -->
     <div *ngIf="paginatedGroupedTransactions.length === 0" class="no-data">
       <i class="pi pi-info-circle mr-2"></i>
-      <span>Aucune transaction trouvée pour les filtres actuels.</span>
+      <span>Aucune transaction trouvÃ©e pour les filtres actuels.</span>
     </div>
 
     <!-- Pagination -->
@@ -221,7 +272,7 @@
         [first]="(currentPage - 1) * pageSize"
         (onPageChange)="onPageChange($event)"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} à {last} sur {totalRecords} groupes">
+        currentPageReportTemplate="{first} Ã  {last} sur {totalRecords} groupes">
       </p-paginator>
     </div>
   </div>

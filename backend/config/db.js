@@ -37,6 +37,13 @@ const getDbConnection = () => {
     }
   });
 
+  // Activer les clés étrangères pour garantir l'intégrité référentielle
+  try {
+    dbInstance.run('PRAGMA foreign_keys = ON');
+  } catch (e) {
+    console.warn('[DB_DEBUG] Failed to enable foreign_keys PRAGMA:', e?.message || e);
+  }
+
   return dbInstance;
 };
 

@@ -62,6 +62,7 @@ const initializeDatabase = async () => {
         sub_category_id INTEGER NOT NULL,
         account_id INTEGER NOT NULL,
         financial_flow_id INTEGER NOT NULL,
+        debit_503020 INTEGER,
         frequency TEXT NOT NULL DEFAULT 'monthly',
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP

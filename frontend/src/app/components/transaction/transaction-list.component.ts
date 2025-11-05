@@ -1,4 +1,4 @@
-// frontend/src/app/components/transaction-list/transaction-list.component.ts
+﻿// frontend/src/app/components/transaction-list/transaction-list.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MessageService } from 'primeng/api';
@@ -27,6 +27,7 @@ import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { SubCategory } from '../../models/sub-category.model';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { DEBIT_503020_LIST } from '../../config/debit_503020';
 
 interface TransactionWithLabel extends Transaction {
   subCategoryLabel?: string;
@@ -44,19 +45,22 @@ interface GroupedTransactions {
   selector: 'app-transaction-list',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    ButtonModule, 
-    TooltipModule, 
-    PaginatorModule, 
-    CalendarModule, 
-    InputTextModule, 
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    TooltipModule,
+    PaginatorModule,
+    CalendarModule,
+    InputTextModule,
     InputGroupModule,
     InputGroupAddonModule,
-    DropdownModule 
+    DropdownModule,
   ],
   templateUrl: './transaction-list.component.html',
-  styleUrls: ['./transaction-list.component.css', '../../styles/table-common.css']
+  styleUrls: [
+    './transaction-list.component.css',
+    '../../styles/table-common.css',
+  ],
 })
 export class TransactionListComponent implements OnInit, OnDestroy {
   accountId: number | null = null;
@@ -72,16 +76,31 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   sortedRecurringTransactions: RecurringTransaction[] = [];
   currentBalance: number = 0;
   forecastedBalance: number = 0;
+  // Totaux des Ã©chÃ©ances (nouvel affichage)
+  expectedIncomeTotal: number = 0;
+  expectedExpensesTotal: number = 0;
+  realizedExpensesThisMonth: number = 0;
+  remainingExpensesThisMonth: number = 0;
+  // Anciennes mÃ©triques conservÃ©es pour compatibilitÃ© interne
+  recurringTotalThisMonth: number = 0;
+  recurringRealizedThisMonth: number = 0;
+  recurringRemainingThisMonth: number = 0;
   private subscriptions = new Subscription();
   Math = Math;
+
+  // Accent couleur du compte (appliquÃ©e au header et aux dates)
+  accentStart = '#60A5FA';
+  accentEnd = '#3B82F6';
+  accent = '#3B82F6';
+  accentSoft = '#DBEAFE';
+  accentShadow = 'rgba(59, 130, 246, 0.3)';
 
   // Filtres
   filters = {
     dateRange: null as Date[] | null,
     description: '',
-    amount: ''
+    amount: '',
   };
-
 
   // Tri
   sortColumn: string = 'date';
@@ -94,10 +113,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     { label: '10', value: 10 },
     { label: '20', value: 20 },
     { label: '50', value: 50 },
-    { label: '100', value: 100 }
+    { label: '100', value: 100 },
   ];
   totalPages = 1;
-
+  now: Date = new Date();
 
   constructor(
     private transactionService: TransactionService,
@@ -106,15 +125,18 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     private recurringTransactionService: RecurringTransactionService,
     private dialogService: DialogService,
     private messageService: MessageService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    // Récupérer l'accountId depuis les paramètres de route
-    this.route.params.subscribe(params => {
+    // RÃƒÂ©cupÃƒÂ©rer l'accountId depuis les paramÃƒÂ¨tres de route
+    this.route.params.subscribe((params) => {
       if (params['accountId']) {
         this.accountId = parseInt(params['accountId'], 10);
-        console.log('TRANSACTION LIST : accountId depuis la route:', this.accountId);
+        console.log(
+          'TRANSACTION LIST : accountId depuis la route:',
+          this.accountId,
+        );
         this.loadAccountInfo();
       }
     });
@@ -126,8 +148,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           if (this.accountId) {
             this.loadAccountInfo();
           }
-        }
-      })
+        },
+      }),
     );
 
     this.accountService.getAccounts().subscribe();
@@ -136,40 +158,64 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.transactionService.transactions$.subscribe({
         next: (data) => {
-          console.log('TRANSACTION LIST : Données reçues - Total:', data.length);
+          console.log(
+            'TRANSACTION LIST : DonnÃƒÂ©es reÃƒÂ§ues - Total:',
+            data.length,
+          );
           if (data.length > 0) {
             console.log('TRANSACTION LIST : Exemple de transaction:', data[0]);
           }
 
           // Filtrer par compte si accountId est fourni
           if (this.accountId !== null) {
-            console.log('TRANSACTION LIST : Filtrage pour le compte', this.accountId);
-            this.transactions = data.filter(t => {
-              const tAccountId = typeof t.accountId === 'string' ? parseInt(t.accountId) : t.accountId;
+            console.log(
+              'TRANSACTION LIST : Filtrage pour le compte',
+              this.accountId,
+            );
+            this.transactions = data.filter((t) => {
+              const tAccountId =
+                typeof t.accountId === 'string'
+                  ? parseInt(t.accountId)
+                  : t.accountId;
               return tAccountId === this.accountId;
             });
-            console.log('TRANSACTION LIST : Après filtrage:', this.transactions.length, 'transactions');
+            console.log(
+              'TRANSACTION LIST : AprÃƒÂ¨s filtrage:',
+              this.transactions.length,
+              'transactions',
+            );
           } else {
             this.transactions = data;
           }
           this.applyFiltersAndSort();
         },
-        error: (err) => console.error('TRANSACTION LIST : Erreur lors du chargement des transactions:', err)
-      })
+        error: (err) =>
+          console.error(
+            'TRANSACTION LIST : Erreur lors du chargement des transactions:',
+            err,
+          ),
+      }),
     );
 
-    // Charger toutes les sous-catégories pour l'affichage
+    // Charger toutes les sous-catÃƒÂ©gories pour l'affichage
     this.subscriptions.add(
       this.subCategoryService.subCategories$.subscribe({
         next: (data) => {
           this.subCategories = data;
-          console.log('TRANSACTION LIST : Sous-catégories chargées - Total:', data.length);
+          console.log(
+            'TRANSACTION LIST : Sous-catÃƒÂ©gories chargÃƒÂ©es - Total:',
+            data.length,
+          );
           if (this.transactions.length > 0) {
             this.applyFiltersAndSort();
           }
         },
-        error: (err) => console.error('TRANSACTION LIST : Erreur lors du chargement des sous-catégories:', err)
-      })
+        error: (err) =>
+          console.error(
+            'TRANSACTION LIST : Erreur lors du chargement des sous-catÃƒÂ©gories:',
+            err,
+          ),
+      }),
     );
 
     this.subCategoryService.getSubCategories().subscribe();
@@ -185,7 +231,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   // Appliquer les filtres et le tri
   applyFiltersAndSort(): void {
-    this.filteredTransactions = this.transactions.filter(transaction => {
+    this.filteredTransactions = this.transactions.filter((transaction) => {
       const range = this.filters.dateRange;
       let matchDate = true;
 
@@ -203,11 +249,15 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         matchDate = transactionDate >= start && transactionDate <= end;
       }
 
-      const matchDescription = !this.filters.description ||
+      const matchDescription =
+        !this.filters.description ||
         (transaction.description &&
-          transaction.description.toLowerCase().includes(this.filters.description.toLowerCase()));
+          transaction.description
+            .toLowerCase()
+            .includes(this.filters.description.toLowerCase()));
 
-      const matchAmount = !this.filters.amount ||
+      const matchAmount =
+        !this.filters.amount ||
         (transaction.amount !== null &&
           transaction.amount !== undefined &&
           transaction.amount.toString().includes(this.filters.amount));
@@ -216,7 +266,220 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
 
     this.calculateBalances();
+    this.calculateRecurringMonthTotals();
     this.updatePagination();
+  }
+
+  // Calcul des totaux d'Ã©chÃ©ances pour le mois courant
+  calculateRecurringMonthTotals(): void {
+    if (!this.accountId) {
+      this.expectedIncomeTotal = 0;
+      this.expectedExpensesTotal = 0;
+      this.realizedExpensesThisMonth = 0;
+      this.remainingExpensesThisMonth = 0;
+      return;
+    }
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // IDs des Ã©chÃ©ances rÃ©currentes actives de ce compte
+    const recurringIds = new Set(
+      this.recurringTransactions
+        .filter((rt) => {
+          const rtAccountId =
+            typeof rt.accountId === 'string'
+              ? parseInt(rt.accountId)
+              : rt.accountId;
+          return rtAccountId === this.accountId && rt.isActive === 1;
+        })
+        .map((rt) => rt.id!),
+    );
+
+    // Total planifiÃ© du mois (une occurrence par Ã©chÃ©ance)
+    this.recurringTotalThisMonth = this.recurringTransactions.reduce(
+      (sum, rt) => {
+        const rtAccountId =
+          typeof rt.accountId === 'string'
+            ? parseInt(rt.accountId)
+            : rt.accountId;
+        if (rtAccountId !== this.accountId || rt.isActive !== 1) return sum;
+        const amount =
+          typeof rt.amount === 'string'
+            ? parseFloat(rt.amount)
+            : rt.amount || 0;
+        const flowId =
+          typeof rt.financialFlowId === 'string'
+            ? parseInt(rt.financialFlowId)
+            : rt.financialFlowId;
+        const signedAmount =
+          flowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+        return sum + signedAmount;
+      },
+      0,
+    );
+
+    // Total rÃ©alisÃ© dans le mois (transactions liÃ©es)
+    this.recurringRealizedThisMonth = this.transactions.reduce((sum, t) => {
+      if (!t.recurringTransactionId) return sum;
+      if (!recurringIds.has(t.recurringTransactionId)) return sum;
+      const d = new Date(t.date || '');
+      if (d.getMonth() !== currentMonth || d.getFullYear() !== currentYear)
+        return sum;
+      const amount =
+        typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount || 0;
+      const flowId =
+        typeof t.financialFlowId === 'string'
+          ? parseInt(t.financialFlowId)
+          : t.financialFlowId || 0;
+      const signedAmount = flowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+      return sum + signedAmount;
+    }, 0);
+
+    this.recurringRemainingThisMonth =
+      this.recurringTotalThisMonth - this.recurringRealizedThisMonth;
+    this.calculateRecurringBreakdown();
+  }
+
+  // Nouveau dÃ©coupage: revenus prÃ©vus, dÃ©penses prÃ©vues, dÃ©penses restantes, prÃ©visionnel simple
+  private calculateRecurringBreakdown(): void {
+    if (!this.accountId) {
+      this.expectedIncomeTotal = 0;
+      this.expectedExpensesTotal = 0;
+      this.realizedExpensesThisMonth = 0;
+      this.remainingExpensesThisMonth = 0;
+      return;
+    }
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const accountRecurring = this.recurringTransactions.filter((rt) => {
+      const rtAccountId =
+        typeof rt.accountId === 'string'
+          ? parseInt(rt.accountId)
+          : rt.accountId;
+      return rtAccountId === this.accountId && rt.isActive === 1;
+    });
+    const recurringIdSet = new Set(accountRecurring.map((r) => r.id!));
+
+    this.expectedIncomeTotal = accountRecurring.reduce((sum, rt) => {
+      const amount =
+        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
+      return rt.financialFlowId === 1 ? sum + Math.abs(amount) : sum;
+    }, 0);
+
+    this.expectedExpensesTotal = accountRecurring.reduce((sum, rt) => {
+      const amount =
+        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
+      return rt.financialFlowId === 2 ? sum + Math.abs(amount) : sum;
+    }, 0);
+
+    // DÃ©penses rÃ©alisÃ©es ce mois (liÃ©es Ã  une Ã©chÃ©ance)
+    this.realizedExpensesThisMonth = this.transactions.reduce((sum, t) => {
+      if (
+        !t.recurringTransactionId ||
+        !recurringIdSet.has(t.recurringTransactionId)
+      )
+        return sum;
+      const transDate = new Date(t.date || '');
+      if (
+        transDate.getMonth() !== currentMonth ||
+        transDate.getFullYear() !== currentYear
+      )
+        return sum;
+      const amount =
+        typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount || 0;
+      const flowId =
+        typeof t.financialFlowId === 'string'
+          ? parseInt(t.financialFlowId)
+          : t.financialFlowId || 0;
+      return flowId === 2 ? sum + Math.abs(amount) : sum;
+    }, 0);
+
+    this.remainingExpensesThisMonth = Math.max(
+      this.expectedExpensesTotal - this.realizedExpensesThisMonth,
+      0,
+    );
+
+    // PrÃ©visionnel simple demandÃ©: revenus prÃ©vus - dÃ©penses restantes
+    if (this.accountId) {
+      const upcomingSum = this.computeUpcomingForForecast(this.accountId);
+      this.forecastedBalance = this.currentBalance + upcomingSum;
+    } else {
+      this.forecastedBalance = 0;
+    }
+  }
+
+  // RÃ©partition 50/30/20 basÃ©e sur le salaire (revenus prÃ©vus) du mois courant
+  get503020Breakdown() {
+    const salaryBase = this.expectedIncomeTotal || 0;
+    const accountId = this.accountId;
+    const buckets = DEBIT_503020_LIST.map((b) => ({
+      id: b.id,
+      name: b.name,
+      amount: 0,
+      percent: 0,
+    }));
+    if (!accountId)
+      return {
+        total: salaryBase,
+        totalExpenses: 0,
+        items: buckets,
+        remaining: salaryBase,
+        remainingPercent: 100,
+      };
+
+    const expenses = this.recurringTransactions.filter((rt) => {
+      const rtAccountId =
+        typeof rt.accountId === 'string'
+          ? parseInt(rt.accountId)
+          : rt.accountId;
+      return (
+        rtAccountId === accountId &&
+        rt.isActive === 1 &&
+        rt.financialFlowId === 2
+      );
+    });
+
+    expenses.forEach((rt) => {
+      const key = rt['debit503020'] ?? null;
+      if (!key) return;
+      const idx = buckets.findIndex((b) => b.id === key);
+      if (idx >= 0) {
+        const amount =
+          typeof rt.amount === 'string'
+            ? parseFloat(rt.amount)
+            : rt.amount || 0;
+        buckets[idx].amount += Math.abs(amount);
+      }
+    });
+
+    buckets.forEach((b) => {
+      b.percent =
+        salaryBase > 0 ? Math.round((b.amount / salaryBase) * 100) : 0;
+    });
+
+    const totalExpenses = expenses.reduce((sum, rt) => {
+      const amount =
+        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
+      return sum + Math.abs(amount);
+    }, 0);
+    const remaining = Math.max(salaryBase - totalExpenses, 0);
+    const remainingPercent =
+      salaryBase > 0
+        ? Math.max(0, Math.round((remaining / salaryBase) * 100))
+        : 0;
+
+    return {
+      total: salaryBase,
+      totalExpenses,
+      items: buckets,
+      remaining,
+      remainingPercent,
+    };
   }
 
   clearDateFilter(): void {
@@ -225,13 +488,17 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   allowOnlyNumbers(event: KeyboardEvent): void {
-    const allowedKeys = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'];
+    const allowedKeys = [
+      'Backspace',
+      'Tab',
+      'ArrowLeft',
+      'ArrowRight',
+      'Delete',
+    ];
     if (!/[0-9.,]/.test(event.key) && !allowedKeys.includes(event.key)) {
       event.preventDefault();
     }
   }
-
-
 
   sortBy(column: string): void {
     if (this.sortColumn === column) {
@@ -248,85 +515,105 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.applyFiltersAndSort();
   }
 
-  // Obtenir le nom de la sous-catégorie
+  // Obtenir le nom de la sous-catÃƒÂ©gorie
   getSubCategoryName(subCategoryId: number | null): string {
     if (!subCategoryId) return 'N/A';
 
-    const id = typeof subCategoryId === 'string' ? parseInt(subCategoryId) : subCategoryId;
-    const subCategory = this.subCategories.find(sc => sc.id === id);
+    const id =
+      typeof subCategoryId === 'string'
+        ? parseInt(subCategoryId)
+        : subCategoryId;
+    const subCategory = this.subCategories.find((sc) => sc.id === id);
 
     if (!subCategory && this.subCategories.length > 0) {
-      console.log(`TRANSACTION LIST : Sous-catégorie ${id} non trouvée. Sous-catégories disponibles:`,
-        this.subCategories.map(sc => sc.id));
+      console.log(
+        `TRANSACTION LIST : Sous-catÃƒÂ©gorie ${id} non trouvÃƒÂ©e. Sous-catÃƒÂ©gories disponibles:`,
+        this.subCategories.map((sc) => sc.id),
+      );
     }
 
-    return subCategory ? `${subCategory.categoryLabel} - ${subCategory.label}` : 'N/A';
+    return subCategory
+      ? `${subCategory.categoryLabel} - ${subCategory.label}`
+      : 'N/A';
   }
 
   // Obtenir le montant avec signe
   getSignedAmount(transaction: Transaction): number {
-    const amount = typeof transaction.amount === 'string'
-      ? parseFloat(transaction.amount)
-      : (transaction.amount || 0);
+    const amount =
+      typeof transaction.amount === 'string'
+        ? parseFloat(transaction.amount)
+        : transaction.amount || 0;
 
-    const financialFlowId = typeof transaction.financialFlowId === 'string'
-      ? parseInt(transaction.financialFlowId)
-      : (transaction.financialFlowId || 0);
+    const financialFlowId =
+      typeof transaction.financialFlowId === 'string'
+        ? parseInt(transaction.financialFlowId)
+        : transaction.financialFlowId || 0;
 
-    // financialFlowId: 1 = Revenu (positif), 2 = Dépense (négatif)
+    // financialFlowId: 1 = Revenu (positif), 2 = DÃƒÂ©pense (nÃƒÂ©gatif)
     return financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
   }
 
-  // Vérifier si le montant est négatif
+  // VÃƒÂ©rifier si le montant est nÃƒÂ©gatif
   isNegative(transaction: Transaction): boolean {
     return this.getSignedAmount(transaction) < 0;
   }
 
-  // Vérifier si le montant est positif
+  // VÃƒÂ©rifier si le montant est positif
   isPositive(transaction: Transaction): boolean {
     return this.getSignedAmount(transaction) >= 0;
   }
 
   updatePagination(): void {
     // Grouper les transactions par date
-    this.groupedTransactions = this.groupTransactionsByDate(this.filteredTransactions);
+    this.groupedTransactions = this.groupTransactionsByDate(
+      this.filteredTransactions,
+    );
 
     // Calculer la pagination sur les groupes
-    this.totalPages = Math.ceil(this.groupedTransactions.length / this.pageSize);
+    this.totalPages = Math.ceil(
+      this.groupedTransactions.length / this.pageSize,
+    );
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
-    this.paginatedGroupedTransactions = this.groupedTransactions.slice(startIndex, endIndex);
+    this.paginatedGroupedTransactions = this.groupedTransactions.slice(
+      startIndex,
+      endIndex,
+    );
 
-    // Garder aussi la pagination simple pour compatibilité
+    // Garder aussi la pagination simple pour compatibilitÃƒÂ©
     const startIndexTx = (this.currentPage - 1) * this.pageSize;
     const endIndexTx = startIndexTx + this.pageSize;
-    this.paginatedTransactions = this.filteredTransactions.slice(startIndexTx, endIndexTx);
+    this.paginatedTransactions = this.filteredTransactions.slice(
+      startIndexTx,
+      endIndexTx,
+    );
   }
 
   groupTransactionsByDate(transactions: Transaction[]): GroupedTransactions[] {
     const grouped = new Map<string, TransactionWithLabel[]>();
 
     // Grouper par date et enrichir avec les labels
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction) => {
       const dateKey = new Date(transaction.date!).toISOString().split('T')[0];
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
       }
 
-      // Enrichir la transaction avec le label de sous-catégorie et le montant numérique
-      const subCatId = typeof transaction.subCategoryId === 'string'
-        ? parseInt(transaction.subCategoryId)
-        : transaction.subCategoryId;
+      // Enrichir la transaction avec le label de sous-catÃƒÂ©gorie et le montant numÃƒÂ©rique
+      const subCatId =
+        typeof transaction.subCategoryId === 'string'
+          ? parseInt(transaction.subCategoryId)
+          : transaction.subCategoryId;
 
-      const subCategory = this.subCategories.find(sc => sc.id === subCatId);
+      const subCategory = this.subCategories.find((sc) => sc.id === subCatId);
       const subCategoryLabel = subCategory
         ? `${subCategory.categoryLabel} - ${subCategory.label}`
-        : 'Non catégorisé';
+        : 'Non catÃƒÂ©gorisÃƒÂ©';
 
       const enrichedTransaction: TransactionWithLabel = {
         ...transaction,
         subCategoryLabel: subCategoryLabel,
-        amountNumber: this.getSignedAmount(transaction)
+        amountNumber: this.getSignedAmount(transaction),
       };
 
       grouped.get(dateKey)!.push(enrichedTransaction);
@@ -340,11 +627,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         date: dateKey,
         formattedDate: this.formatDate(dateKey),
         transactions: txs,
-        total: total
+        total: total,
       });
     });
 
-    // Trier par date (plus récent en premier par défaut)
+    // Trier par date (plus rÃƒÂ©cent en premier par dÃƒÂ©faut)
     result.sort((a, b) => {
       const dateA = new Date(a.date).getTime();
       const dateB = new Date(b.date).getTime();
@@ -368,14 +655,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     if (date.getTime() === today.getTime()) {
       return "Aujourd'hui";
     } else if (date.getTime() === yesterday.getTime()) {
-      return "Hier";
+      return 'Hier';
     } else {
       // Format: Lundi 20 octobre 2025
       const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
       };
       return date.toLocaleDateString('fr-FR', options);
     }
@@ -423,57 +710,76 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   loadAccountInfo(): void {
     if (!this.accountId) return;
 
-    this.accountService.accounts$.subscribe(accounts => {
-      this.account = accounts.find(a => a.id === this.accountId) || null;
-      console.log('TRANSACTION LIST : Compte chargé:', this.account);
+    this.accountService.accounts$.subscribe((accounts) => {
+      this.account = accounts.find((a) => a.id === this.accountId) || null;
+      console.log('TRANSACTION LIST : Compte chargÃƒÂ©:', this.account);
       this.loadRecurringTransactions();
     });
   }
 
-  // Charger les échéances récurrentes du compte
+  // Charger les ÃƒÂ©chÃƒÂ©ances rÃƒÂ©currentes du compte
   loadRecurringTransactions(): void {
     if (!this.accountId) return;
 
     this.subscriptions.add(
       this.recurringTransactionService.recurringTransactions$.subscribe({
         next: (data) => {
-          this.recurringTransactions = data.filter(rt => {
-            const rtAccountId = typeof rt.accountId === 'string' ? parseInt(rt.accountId) : rt.accountId;
+          this.recurringTransactions = data.filter((rt) => {
+            const rtAccountId =
+              typeof rt.accountId === 'string'
+                ? parseInt(rt.accountId)
+                : rt.accountId;
             return rtAccountId === this.accountId && rt.isActive === 1;
           });
-          console.log('TRANSACTION LIST : Échéances récurrentes pour le compte:', this.recurringTransactions);
+          console.log(
+            'TRANSACTION LIST : Ãƒâ€°chÃƒÂ©ances rÃƒÂ©currentes pour le compte:',
+            this.recurringTransactions,
+          );
 
-          // Trier les échéances : non réalisées en premier, puis par jour du mois
+          // Trier les ÃƒÂ©chÃƒÂ©ances : non rÃƒÂ©alisÃƒÂ©es en premier, puis par jour du mois
           this.sortRecurringTransactions();
 
           // Recalculer les soldes
           this.calculateBalances();
+          this.calculateRecurringMonthTotals();
         },
-        error: (err) => console.error('TRANSACTION LIST : Erreur lors du chargement des échéances:', err)
-      })
+        error: (err) =>
+          console.error(
+            'TRANSACTION LIST : Erreur lors du chargement des ÃƒÂ©chÃƒÂ©ances:',
+            err,
+          ),
+      }),
     );
 
     this.recurringTransactionService.getRecurringTransactions().subscribe();
   }
 
-  // Trier les échéances récurrentes
+  // Trier les ÃƒÂ©chÃƒÂ©ances rÃƒÂ©currentes
   sortRecurringTransactions(): void {
-    this.sortedRecurringTransactions = [...this.recurringTransactions].sort((a, b) => {
-      const aRealized = this.isRecurringRealized(a.id!);
-      const bRealized = this.isRecurringRealized(b.id!);
+    this.sortedRecurringTransactions = [...this.recurringTransactions].sort(
+      (a, b) => {
+        const aRealized = this.isRecurringRealized(a.id!);
+        const bRealized = this.isRecurringRealized(b.id!);
 
-      // Les non réalisées en premier
-      if (aRealized && !bRealized) return 1;
-      if (!aRealized && bRealized) return -1;
+        // Les non rÃƒÂ©alisÃƒÂ©es en premier
+        if (aRealized && !bRealized) return 1;
+        if (!aRealized && bRealized) return -1;
 
-      // Puis trier par jour du mois
-      const aDay = typeof a.dayOfMonth === 'string' ? parseInt(a.dayOfMonth) : (a.dayOfMonth || 0);
-      const bDay = typeof b.dayOfMonth === 'string' ? parseInt(b.dayOfMonth) : (b.dayOfMonth || 0);
-      return aDay - bDay;
-    });
+        // Puis trier par jour du mois
+        const aDay =
+          typeof a.dayOfMonth === 'string'
+            ? parseInt(a.dayOfMonth)
+            : a.dayOfMonth || 0;
+        const bDay =
+          typeof b.dayOfMonth === 'string'
+            ? parseInt(b.dayOfMonth)
+            : b.dayOfMonth || 0;
+        return aDay - bDay;
+      },
+    );
   }
 
-  // Calculer les soldes actuel et prévisionnel
+  // Calculer les soldes actuel et prÃƒÂ©visionnel
   calculateBalances(): void {
     if (!this.accountId || !this.account) {
       this.currentBalance = 0;
@@ -481,97 +787,204 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Récupérer le solde initial du compte
-    const initialBalance = typeof this.account['initialBalance'] === 'string'
-      ? parseFloat(this.account['initialBalance'])
-      : (this.account['initialBalance'] || 0);
+    // RÃƒÂ©cupÃƒÂ©rer le solde initial du compte
+    const initialBalance =
+      typeof this.account['initialBalance'] === 'string'
+        ? parseFloat(this.account['initialBalance'])
+        : this.account['initialBalance'] || 0;
 
-    console.log('TRANSACTION LIST : Solde initial du compte:', initialBalance);
-
-    // Calculer le solde actuel (solde initial + somme de toutes les transactions du compte)
-    const transactionsSum = this.transactions.reduce((sum, t) => {
-      return sum + this.getSignedAmount(t);
+    console.groupCollapsed('TRANSACTION LIST : DEBUG CALCUL SOLDE', {
+      accountId: this.accountId,
+      accountName: this.account?.name || '-',
+    });
+    console.log(' - Solde initial du compte =', initialBalance);
+    const todayNoTime = new Date();
+    todayNoTime.setHours(0, 0, 0, 0);
+    const transactionsSumAll = this.transactions.reduce(
+      (sum, t) => sum + this.getSignedAmount(t),
+      0,
+    );
+    const transactionsSumUntilToday = this.transactions.reduce((sum, t) => {
+      const d = new Date(t.date || '');
+      d.setHours(0, 0, 0, 0);
+      return d.getTime() <= todayNoTime.getTime()
+        ? sum + this.getSignedAmount(t)
+        : sum;
     }, 0);
+    // On garde le comportement actuel (toutes les transactions)
+    const transactionsSum = transactionsSumAll;
 
     this.currentBalance = initialBalance + transactionsSum;
+    console.log(' - Somme des transactions (toutes) =', transactionsSumAll);
+    console.log(
+      " - Somme des transactions (<= aujourd'hui) =",
+      transactionsSumUntilToday,
+    );
+    console.log(' - Solde actuel (initial + toutes) =', this.currentBalance);
 
     console.log('TRANSACTION LIST : Somme des transactions:', transactionsSum);
-    console.log('TRANSACTION LIST : Solde actuel calculé:', this.currentBalance);
+    console.log(
+      'TRANSACTION LIST : Solde actuel calculÃƒÂ©:',
+      this.currentBalance,
+    );
 
-    // Calculer le solde prévisionnel (comme dans le tableau de bord)
-    // On compte seulement les échéances à venir dans le mois (après aujourd'hui)
-    const today = new Date();
-    const currentDay = today.getDate();
-
-    const upcomingAmount = this.recurringTransactions.reduce((sum, rt) => {
-      const dayOfMonth = typeof rt.dayOfMonth === 'string'
-        ? parseInt(rt.dayOfMonth)
-        : (rt.dayOfMonth || 0);
-
-      // Vérifier si l'échéance a déjà été réalisée ce mois-ci
-      const isRealized = this.isRecurringRealized(rt.id!);
-
-      // Condition : le jour n'est pas encore passé ET l'échéance n'a pas déjà été réalisée
-      if (dayOfMonth > currentDay && !isRealized) {
-        const amount = typeof rt.amount === 'string' ? parseFloat(rt.amount) : (rt.amount || 0);
-        const financialFlowId = typeof rt.financialFlowId === 'string' ? parseInt(rt.financialFlowId) : rt.financialFlowId;
-        const signedAmount = financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
-
-        console.log('TRANSACTION LIST : Échéance à venir (jour', dayOfMonth, '):', rt['label'], signedAmount);
-        return sum + signedAmount;
-      }
-      return sum;
-    }, 0);
-
-    this.forecastedBalance = this.currentBalance + upcomingAmount;
-
-    console.log('TRANSACTION LIST : Montant des échéances à venir:', upcomingAmount);
-    console.log('TRANSACTION LIST : Solde prévisionnel:', this.forecastedBalance);
+    // Le calcul du prévisionnel est déplacé dans calculateRecurringBreakdown pour s'assurer que currentBalance est déjà à jour.
   }
 
-  // Basculer l'affichage des échéances
+  private computeUpcomingForForecast(accountId: number): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    const rec = this.recurringTransactions.filter((rt) => {
+      const rtAccountId =
+        typeof rt.accountId === 'string'
+          ? parseInt(rt.accountId)
+          : rt.accountId;
+      return rtAccountId === accountId && rt.isActive === 1;
+    });
+
+    const currentMonthDue = this.buildSchedulesForMonth(
+      rec,
+      currentYear,
+      currentMonth,
+    ).filter((d) => d.date >= today && !this.isRecurringRealized(d.rt.id!));
+
+    const nextStartDue: { rt: RecurringTransaction; date: Date }[] = [];
+    if (today.getDate() >= 25) {
+      const nextMonth = (currentMonth + 1) % 12;
+      const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+      const next = this.buildSchedulesForMonth(rec, nextYear, nextMonth).filter(
+        (d) => d.date.getDate() <= 5 && !this.isRecurringRealized(d.rt.id!),
+      );
+      nextStartDue.push(...next);
+    }
+
+    const sumCurrent = currentMonthDue.reduce(
+      (s, d) => s + this.getSignedAmountFromRecurring(d.rt),
+      0,
+    );
+    const sumNext = nextStartDue.reduce(
+      (s, d) => s + this.getSignedAmountFromRecurring(d.rt),
+      0,
+    );
+
+    return sumCurrent + sumNext;
+  }
+
+  private buildSchedulesForMonth(
+    rec: RecurringTransaction[],
+    year: number,
+    month: number,
+  ) {
+    const list: { rt: RecurringTransaction; date: Date }[] = [];
+    rec.forEach((rt) => {
+      const dayOfMonth =
+        typeof rt.dayOfMonth === 'string'
+          ? parseInt(rt.dayOfMonth)
+          : rt.dayOfMonth || 0;
+      const freq: any = (rt as any).frequency || 'monthly';
+      if (freq === 'weekly') {
+        const first = new Date(year, month, 1);
+        const last = new Date(year, month + 1, 0);
+        const targetDow = dayOfMonth % 7; // 1..7 -> 1..6, 7->0
+        for (let d = first.getDate(); d <= last.getDate(); d++) {
+          const date = new Date(year, month, d);
+          if (date.getDay() === targetDow) list.push({ rt, date });
+        }
+      } else {
+        const date = new Date(year, month, dayOfMonth);
+        list.push({ rt, date });
+      }
+    });
+    return list;
+  }
+
+  private isRecurringRealizedByExactDate(
+    recurring: RecurringTransaction,
+    date: Date,
+  ): boolean {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+    return this.transactions.some((t) => {
+      if (t.recurringTransactionId !== recurring.id || !t.date) return false;
+      const d = new Date(t.date);
+      return d >= start && d <= end;
+    });
+  }
+
+  private getSignedAmountFromRecurring(rt: RecurringTransaction): number {
+    const amount =
+      typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
+    const flowId =
+      typeof rt.financialFlowId === 'string'
+        ? parseInt(rt.financialFlowId)
+        : rt.financialFlowId || 0;
+    return flowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+  }
+
+  // Basculer l'affichage des ÃƒÂ©chÃƒÂ©ances
   toggleRecurring(): void {
     this.showRecurring = !this.showRecurring;
   }
 
-  // Vérifier si une échéance a été réalisée ce mois
+  // VÃƒÂ©rifier si une ÃƒÂ©chÃƒÂ©ance a ÃƒÂ©tÃƒÂ© rÃƒÂ©alisÃƒÂ©e ce mois
   isRecurringRealized(recurringId: number): boolean {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
     // The only source of truth is the existence of a linked transaction for the current month.
-    const isRealized = this.transactions.some(t => {
+    const isRealized = this.transactions.some((t) => {
       const transDate = new Date(t.date || '');
-      return t.recurringTransactionId === recurringId &&
-             transDate.getMonth() === currentMonth &&
-             transDate.getFullYear() === currentYear;
+      return (
+        t.recurringTransactionId === recurringId &&
+        transDate.getMonth() === currentMonth &&
+        transDate.getFullYear() === currentYear
+      );
     });
 
     if (isRealized) {
-      console.log(`TRANSACTION LIST : Échéance ${recurringId} réalisée - Transaction trouvée.`);
+      console.log(
+        `TRANSACTION LIST : Ãƒâ€°chÃƒÂ©ance ${recurringId} rÃƒÂ©alisÃƒÂ©e - Transaction trouvÃƒÂ©e.`,
+      );
     }
 
     return isRealized;
   }
 
-  // Obtenir le libellé du jour pour une échéance
+  // Obtenir le libellÃƒÂ© du jour pour une ÃƒÂ©chÃƒÂ©ance
   getDayLabel(recurring: RecurringTransaction): string {
     if (recurring.dayOfMonth === null || recurring.dayOfMonth === undefined) {
       return 'N/A';
     }
     if (recurring.frequency === 'weekly') {
-      const daysOfWeek = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-      const dayIndex = typeof recurring.dayOfMonth === 'string' ? parseInt(recurring.dayOfMonth) : recurring.dayOfMonth;
+      const daysOfWeek = [
+        '',
+        'Lundi',
+        'Mardi',
+        'Mercredi',
+        'Jeudi',
+        'Vendredi',
+        'Samedi',
+        'Dimanche',
+      ];
+      const dayIndex =
+        typeof recurring.dayOfMonth === 'string'
+          ? parseInt(recurring.dayOfMonth)
+          : recurring.dayOfMonth;
       return daysOfWeek[dayIndex] || recurring.dayOfMonth.toString();
     }
     return 'le ' + recurring.dayOfMonth.toString();
   }
 
   createTransaction(): void {
-    // Déterminer le compte à utiliser par défaut
-    const defaultAccountId = this.accountId || 1; // Utiliser le compte actuel ou 1 par défaut
-    const defaultFinancialFlowId = 2; // Dépense par défaut
+    // DÃƒÂ©terminer le compte ÃƒÂ  utiliser par dÃƒÂ©faut
+    const defaultAccountId = this.accountId || 1; // Utiliser le compte actuel ou 1 par dÃƒÂ©faut
+    const defaultFinancialFlowId = 2; // DÃƒÂ©pense par dÃƒÂ©faut
 
     const dialogRef = this.dialogService.open(EditTransactionDialogComponent, {
       width: '500px',
@@ -582,32 +995,37 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           amount: 0,
           accountId: defaultAccountId,
           financialFlowId: defaultFinancialFlowId,
-          subCategoryId: null
+          subCategoryId: null,
         },
-        isNew: true
-      }
+        isNew: true,
+      },
     });
 
-    dialogRef.onClose.subscribe(result => {
+    dialogRef.onClose.subscribe((result) => {
       if (result) {
         this.transactionService.addTransaction(result).subscribe({
           next: () => {
-            console.log('TRANSACTION LIST : Transaction créée avec succès');
+            console.log(
+              'TRANSACTION LIST : Transaction crÃƒÂ©ÃƒÂ©e avec succÃƒÂ¨s',
+            );
             this.loadTransactions();
             this.messageService.add({
               severity: 'success',
-              summary: 'Succès',
-              detail: 'Transaction créée avec succès.'
+              summary: 'SuccÃƒÂ¨s',
+              detail: 'Transaction crÃƒÂ©ÃƒÂ©e avec succÃƒÂ¨s.',
             });
           },
           error: (err) => {
-            console.error('TRANSACTION LIST : Erreur lors de la création de la transaction:', err);
+            console.error(
+              'TRANSACTION LIST : Erreur lors de la crÃƒÂ©ation de la transaction:',
+              err,
+            );
             this.messageService.add({
               severity: 'error',
               summary: 'Erreur',
-              detail: 'Erreur lors de la création de la transaction.'
+              detail: 'Erreur lors de la crÃƒÂ©ation de la transaction.',
             });
-          }
+          },
         });
       }
     });
@@ -616,37 +1034,44 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   editTransaction(transaction: Transaction): void {
     const dialogRef = this.dialogService.open(EditTransactionDialogComponent, {
       width: '500px',
-      data: { transaction: { ...transaction } }
+      data: { transaction: { ...transaction } },
     });
 
-    dialogRef.onClose.subscribe(result => {
+    dialogRef.onClose.subscribe((result) => {
       if (result) {
         // Convertir la date en format ISO
         const formattedDate = new Date(result.date).toISOString().slice(0, 10);
         const updatedTransaction = {
           ...result,
-          date: new Date(formattedDate)
+          date: new Date(formattedDate),
         };
 
-        this.transactionService.updateTransaction(transaction.id!, updatedTransaction).subscribe({
-          next: () => {
-            console.log('TRANSACTION LIST : Transaction mise à jour avec succès');
-            this.loadTransactions();
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Succès',
-              detail: 'Transaction mise à jour avec succès.'
-            });
-          },
-          error: (err) => {
-            console.error('TRANSACTION LIST : Erreur lors de la mise à jour de la transaction:', err);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: 'Erreur lors de la mise à jour de la transaction.'
-            });
-          }
-        });
+        this.transactionService
+          .updateTransaction(transaction.id!, updatedTransaction)
+          .subscribe({
+            next: () => {
+              console.log(
+                'TRANSACTION LIST : Transaction mise ÃƒÂ  jour avec succÃƒÂ¨s',
+              );
+              this.loadTransactions();
+              this.messageService.add({
+                severity: 'success',
+                summary: 'SuccÃƒÂ¨s',
+                detail: 'Transaction mise ÃƒÂ  jour avec succÃƒÂ¨s.',
+              });
+            },
+            error: (err) => {
+              console.error(
+                'TRANSACTION LIST : Erreur lors de la mise ÃƒÂ  jour de la transaction:',
+                err,
+              );
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Erreur lors de la mise ÃƒÂ  jour de la transaction.',
+              });
+            },
+          });
       }
     });
   }
@@ -658,32 +1083,97 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         title: 'Confirmer la suppression',
         message: `Voulez-vous vraiment supprimer la transaction "${transaction.description}" ?`,
         confirmText: 'Supprimer',
-        cancelText: 'Annuler'
-      }
+        cancelText: 'Annuler',
+      },
     });
 
-    dialogRef.onClose.subscribe(confirmed => {
+    dialogRef.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.transactionService.deleteTransaction(transaction.id!).subscribe({
           next: () => {
-            console.log('TRANSACTION LIST : Transaction supprimée avec succès');
+            console.log(
+              'TRANSACTION LIST : Transaction supprimÃƒÂ©e avec succÃƒÂ¨s',
+            );
             this.loadTransactions();
             this.messageService.add({
               severity: 'info',
-              summary: 'Succès',
-              detail: 'Transaction supprimée avec succès.'
+              summary: 'SuccÃƒÂ¨s',
+              detail: 'Transaction supprimÃƒÂ©e avec succÃƒÂ¨s.',
             });
           },
           error: (err) => {
-            console.error('TRANSACTION LIST : Erreur lors de la suppression de la transaction:', err);
+            console.error(
+              'TRANSACTION LIST : Erreur lors de la suppression de la transaction:',
+              err,
+            );
             this.messageService.add({
               severity: 'error',
               summary: 'Erreur',
-              detail: 'Erreur lors de la suppression de la transaction.'
+              detail: 'Erreur lors de la suppression de la transaction.',
             });
-          }
+          },
         });
       }
     });
+  }
+
+  isSameMonth(date: Date, month: number, year: number): boolean {
+    const target = new Date(date);
+    return target.getMonth() === month && target.getFullYear() === year;
+  }
+
+  private applyAccountAccent(): void {
+    const base = (this.account?.color || '#3B82F6').toString();
+    const normalized = this.normalizeHex(base);
+    this.accent = normalized;
+    this.accentStart = this.shadeColor(normalized, 20);
+    this.accentEnd = this.shadeColor(normalized, -10);
+    this.accentSoft = this.shadeColor(normalized, 70);
+    this.accentShadow = this.hexToRgba(normalized, 0.3);
+  }
+
+  getAccentVars(): { [key: string]: string } {
+    return {
+      '--accent-start': this.accentStart,
+      '--accent-end': this.accentEnd,
+      '--accent': this.accent,
+      '--accent-soft': this.accentSoft,
+      '--accent-shadow': this.accentShadow,
+    } as any;
+  }
+
+  private normalizeHex(hex: string): string {
+    let h = hex.trim();
+    if (!h.startsWith('#')) h = '#' + h;
+    if (h.length === 4) {
+      const r = h[1],
+        g = h[2],
+        b = h[3];
+      h = `#${r}${r}${g}${g}${b}${b}`;
+    }
+    return h.substring(0, 7);
+  }
+
+  private shadeColor(hex: string, percent: number): string {
+    const { r, g, b } = this.hexToRgb(hex);
+    const t = percent < 0 ? 0 : 255;
+    const p = Math.abs(percent) / 100;
+    const R = Math.round((t - r) * p + r);
+    const G = Math.round((t - g) * p + g);
+    const B = Math.round((t - b) * p + b);
+    return '#' + [R, G, B].map((x) => x.toString(16).padStart(2, '0')).join('');
+  }
+
+  private hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    const r = m ? parseInt(m[1], 16) : 59;
+    const g = m ? parseInt(m[2], 16) : 130;
+    const b = m ? parseInt(m[3], 16) : 246;
+    return { r, g, b };
+  }
+
+  private hexToRgba(hex: string, alpha: number): string {
+    const { r, g, b } = this.hexToRgb(hex);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 }

@@ -72,6 +72,21 @@
     </p-dropdown>
   </div>
 
+  <!-- Règle 50/30/20 (uniquement pour les dépenses) -->
+  <div class="field col-12" *ngIf="data.transaction.financialFlowId === 2">
+    <label for="debit503020" class="block mb-2">Répartition 50/30/20</label>
+    <p-dropdown
+      id="debit503020"
+      [options]="debit503020Options"
+      [(ngModel)]="data.transaction['debit503020']"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Sélectionnez une catégorie (50/30/20)"
+      styleClass="w-full"
+      [appendTo]="'body'">
+    </p-dropdown>
+  </div>
+
   <!-- Compte bancaire -->
   <div class="field col-12">
     <label for="accountId" class="block mb-2">Compte bancaire *</label>

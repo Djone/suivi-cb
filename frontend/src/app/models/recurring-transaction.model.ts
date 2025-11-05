@@ -10,5 +10,6 @@ export interface RecurringTransaction {
   frequency: 'weekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'biannual' | 'yearly'; // Périodicité
   isActive?: number;
   createdAt?: Date;
+  debit503020: number | null; // 1=Charges fixes, 2=Loisir, 3=Epargne
   [key: string]: any; // Index signature pour snake_case
 }

@@ -18,13 +18,13 @@ h3 {
   font-weight: 500;
 }
 
-/* En-tête avec bouton */
+/* En-tÃªte avec bouton */
 .list-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-start, #60A5FA) 0%, var(--accent-end, #3B82F6) 100%);
   border-bottom: 1px solid #e9ecef;
   color: white;
 }
@@ -80,7 +80,7 @@ h3 {
   border-radius: 8px;
   text-align: center;
   background: rgba(255, 255, 255, 0.637);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--accent-shadow, rgba(59,130,246,0.3));
 }
 
 .balance-amount.positive {
@@ -107,14 +107,87 @@ h3 {
   height: 28px;
 }
 
-/* Bouton d'affichage des échéances */
+/* Récapitulatif des échéances du mois */
+.recurring-summary {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.summary-label {
+  font-size: 0.8rem;
+  color: white;
+  opacity: 0.9;
+  text-transform: uppercase;
+}
+
+.summary-amount {
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #1f2937;
+}
+
+.summary-amount.positive {
+  background: rgba(188, 240, 223, 0.5);
+  color: #065f46;
+}
+
+.summary-amount.negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+}
+
+/* Répartition 50/30/20 (sous la carte solde) */
+.break503020-container { display:flex; gap:1rem; align-items:flex-start; margin-top:.75rem; }
+.break503020-list { flex: 1; display:flex; flex-direction:column; gap:.35rem; }
+.break-row { display:grid; grid-template-columns: 1fr auto 60px; gap:.5rem; background: rgba(255,255,255,.6); padding:.4rem .6rem; border-radius:8px; align-items:center; }
+.break-label { font-weight:600; color:#1f2937; }
+.break-value { font-weight:700; color:#1f2937; text-align:right; }
+.break-percent { font-weight:700; color:#0ea5e9; text-align:right; }
+.break503020-mini { width:220px; display:flex; flex-direction:column; gap:.5rem; }
+.mini-bar { display:flex; height:16px; background:#e5e7eb; border-radius:8px; overflow:hidden; }
+.mini-seg { height:100%; }
+.seg-0 { background:#3b82f6; }
+.seg-1 { background:#10b981; }
+.seg-2 { background:#f59e0b; }
+.mini-legend { display:flex; gap:.75rem; align-items:center; justify-content:flex-end; color:#475569; font-size:.85rem; }
+.legend-item { display:flex; gap:.35rem; align-items:center; }
+.dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.dot-0 { background:#3b82f6; }
+.dot-1 { background:#10b981; }
+.dot-2 { background:#f59e0b; }
+
+/* Accent dédié pour "Reste à vivre" */
+.break-row.remaining { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); }
+.break-row.remaining .break-label { color:#065f46; }
+.break-row.remaining .break-value, .break-row.remaining .break-percent { color:#047857; font-weight:800; }
+
+@media (max-width: 768px) {
+  .break503020-container { flex-direction:column; }
+  .break503020-mini { width:100%; }
+}
+
+/* Bouton d'affichage des Ã©chÃ©ances */
 .recurring-toggle {
   padding: 1rem 1.5rem;
   background: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
 }
 
-/* Liste des échéances récurrentes */
+/* Liste des Ã©chÃ©ances rÃ©currentes */
 .recurring-list {
   padding: 1.5rem;
   background: #fff9e6;
@@ -222,11 +295,11 @@ h3 {
   color: #ff9800;
 }
 
-/* Contrôles */
+/* ContrÃ´les */
 .list-container {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px var(--accent-shadow, rgba(59,130,246,0.3));
   overflow: hidden;
 }
 
@@ -323,7 +396,7 @@ h3 {
   white-space: nowrap;
 }
 
-/* Transactions groupées */
+/* Transactions groupÃ©es */
 .grouped-transactions {
   padding: 1rem;
 }
@@ -337,11 +410,11 @@ h3 {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-start, #60A5FA) 0%, var(--accent-end, #3B82F6) 100%);
   color: white;
   border-radius: 8px;
   margin-bottom: 0.5rem;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 4px var(--accent-shadow, rgba(59,130,246,0.3));
 }
 
 .date-label {
@@ -373,7 +446,7 @@ h3 {
   font-weight: 700;
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
-  background: rgb(237, 222, 255);
+  background: var(--accent-soft, #DBEAFE);
 }
 
 /* Liste des transactions */
@@ -397,7 +470,7 @@ h3 {
 .transaction-item:hover {
   background: #e9ecef;
   border-left-color: #007bff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px var(--accent-shadow, rgba(59,130,246,0.3));
 }
 
 .transaction-main {
