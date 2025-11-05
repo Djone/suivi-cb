@@ -6,10 +6,9 @@
     "prettier": "3.4.2"
   },
   "name": "suivi-cb",
-  "version": "1.0.0",
+  "version": "1.1.0-dev.0",
   "main": "index.js",
   "dependencies": {
-    
     "ansi-regex": "^5.0.1",
     "ansi-styles": "^4.3.0",
     "chalk": "^4.1.2",
@@ -22,7 +21,6 @@
     "has-flag": "^4.0.0",
     "is-fullwidth-code-point": "^3.0.0",
     "lodash": "^4.17.21",
-    
     "require-directory": "^2.1.1",
     "rxjs": "^7.8.1",
     "shell-quote": "^1.8.2",
