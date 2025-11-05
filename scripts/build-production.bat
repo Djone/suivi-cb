@@ -9,6 +9,8 @@ echo Build de production - Suivi CB
 echo ======================================
 echo.
 
+cd ..
+
 REM Vérifier que nous sommes dans le bon répertoire
 if not exist "docker-compose.yml" (
     echo [ERREUR] docker-compose.yml non trouve. Etes-vous dans le bon repertoire?
