@@ -16,6 +16,7 @@
 # ./update.sh frontend # Mise à jour ciblée sur le service frontend
 # ./update.sh db        # Seulement redémarrage après mise à jour de la BDD
 #
+#
 
 # Arrêter le script en cas d'erreur
 set -e
