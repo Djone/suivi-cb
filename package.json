@@ -47,7 +47,8 @@
     "test:frontend:watch": "cd frontend && npm test",
     "test:coverage": "npm run test:backend:coverage && npm run test:frontend:coverage",
     "test:backend:coverage": "cd backend && npm run test:coverage",
-    "test:frontend:coverage": "cd frontend && npm test -- --code-coverage --watch=false --browsers=ChromeHeadless"
+    "test:frontend:coverage": "cd frontend && npm test -- --code-coverage --watch=false --browsers=ChromeHeadless",
+    "version": "node scripts/gen-version.js && git add frontend/src/app/version.ts"
   },
   "keywords": [],
   "author": "",
