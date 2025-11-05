@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "1.0.0", 
+  "version": "1.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -25,6 +25,7 @@
     "@angular/router": "^19.0.0",
     "@angular/ssr": "^19.0.2",
     "@primeng/themes": "^19.1.4",
+    "@primeuix/themes": "^1.2.5",
     "chart.js": "^4.5.1",
     "express": "^4.18.2",
     "humps": "^2.0.1",
