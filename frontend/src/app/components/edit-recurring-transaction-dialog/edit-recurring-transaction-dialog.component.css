@@ -1,46 +1,31 @@
-h2 {
+.label-with-help {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #333;
-  margin: 0;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e0e0e0;
+  gap: 0.5rem;
 }
 
-h2 mat-icon {
-  color: #1976d2;
+.recurrence-help-button {
+  margin-top: -4px;
 }
 
-mat-dialog-content {
-  padding: 24px;
-  min-width: 500px;
-}
-
-.dialog-form {
+.recurrence-help-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
 }
 
-.full-width {
-  width: 100%;
+.recurrence-help-section h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  color: #1f2937;
 }
 
-mat-dialog-actions {
-  padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
-  gap: 10px;
+.recurrence-help-section p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.4;
 }
 
-mat-dialog-actions button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-mat-dialog-actions button mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
+.opacity-50 {
+  opacity: 0.6;
 }

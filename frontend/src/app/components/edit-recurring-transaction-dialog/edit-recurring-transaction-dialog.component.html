@@ -1,5 +1,4 @@
 <div class="p-fluid grid">
-
   <!-- Libellé -->
   <div class="field col-12">
     <label for="label" class="block mb-2">Libellé *</label>
@@ -10,7 +9,8 @@
       [(ngModel)]="data.transaction.label"
       placeholder="Ex: Loyer, Salaire..."
       class="w-full"
-      autofocus />
+      autofocus
+    />
   </div>
 
   <!-- Montant -->
@@ -24,7 +24,8 @@
       locale="fr-FR"
       [minFractionDigits]="2"
       [maxFractionDigits]="2"
-      placeholder="0,00 €">
+      placeholder="0,00 €"
+    >
     </p-inputNumber>
   </div>
 
@@ -37,7 +38,8 @@
       [min]="1"
       [max]="31"
       [showButtons]="true"
-      placeholder="1-31">
+      placeholder="1-31"
+    >
     </p-inputNumber>
   </div>
 
@@ -48,17 +50,140 @@
       id="frequency"
       [options]="frequencies"
       [(ngModel)]="data.transaction.frequency"
+      (onChange)="onFrequencyChange($event.value)"
       optionLabel="name"
       optionValue="id"
       placeholder="Sélectionnez une fréquence"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
     </p-dropdown>
+  </div>
+
+  <!-- Type de récurrence -->
+  <div class="field col-12">
+    <div class="label-with-help">
+      <label for="recurrenceKind" class="block mb-2 mb-0"
+        >Type de récurrence</label
+      >
+      <button
+        pButton
+        type="button"
+        icon="pi pi-info-circle"
+        class="p-button-rounded p-button-text p-button-secondary recurrence-help-button"
+        (click)="recurrenceHelpVisible = true"
+        aria-label="Afficher l'aide sur les types de récurrence"
+      ></button>
+    </div>
+    <p-dropdown
+      id="recurrenceKind"
+      [options]="[
+        { id: 'permanent', name: 'Permanente' },
+        { id: 'installment', name: 'Crédit (X fois)' },
+        { id: 'seasonal', name: 'Saisonnier (mois actifs)' },
+      ]"
+      [(ngModel)]="data.transaction.recurrenceKind"
+      (onChange)="onRecurrenceKindChange($event.value)"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="(Optionnel) Sélectionnez un type"
+      styleClass="w-full"
+      [appendTo]="'body'"
+    >
+    </p-dropdown>
+  </div>
+
+  <!-- Mois actifs -->
+  <div
+    class="field col-12 md:col-6"
+    *ngIf="shouldDisplayActiveMonths()"
+  >
+    <label for="activeMonths" class="block mb-2">
+      Mois actifs
+      <ng-container *ngIf="getRequiredMonthCount(data.transaction.frequency) as required">
+        ({{ required }} sélection{{ required > 1 ? 's' : '' }} obligatoire{{ required > 1 ? 's' : '' }})
+      </ng-container>
+    </label>
+    <p-multiSelect
+      id="activeMonths"
+      [options]="monthOptions"
+      [(ngModel)]="data.transaction.activeMonths"
+      (onChange)="onActiveMonthsChange($event.value)"
+      optionLabel="label"
+      optionValue="value"
+      [display]="'chip'"
+      defaultLabel="Sélectionnez les mois concernés"
+      [appendTo]="'body'"
+      class="w-full"
+      [selectionLimit]="getMonthSelectionLimit(data.transaction.frequency)"
+    >
+    </p-multiSelect>
+    <small class="p-error" *ngIf="!hasValidActiveMonths()">
+      {{ getActiveMonthsErrorMessage() }}
+    </small>
+  </div>
+
+  <!-- Nombre d'échéances -->
+  <div
+    class="field col-12 md:col-6"
+    [class.opacity-50]="data.transaction.recurrenceKind !== 'installment'"
+  >
+    <label for="occurrences" class="block mb-2">Nombre d'échéances</label>
+    <p-inputNumber
+      inputId="occurrences"
+      [(ngModel)]="data.transaction.occurrences"
+      [min]="1"
+      [showButtons]="true"
+      [disabled]="data.transaction.recurrenceKind !== 'installment'"
+      placeholder="Ex: 5"
+    >
+    </p-inputNumber>
+    <small
+      class="p-error"
+      *ngIf="
+        data.transaction.recurrenceKind === 'installment' &&
+        (!data.transaction.occurrences || data.transaction.occurrences < 1)
+      "
+    >
+      Obligatoire pour le type "Crédit (X fois)".
+    </small>
+  </div>
+
+  <!-- Mois 1ère échéance -->
+  <div
+    class="field col-12 md:col-6"
+    *ngIf="data.transaction.recurrenceKind === 'installment'"
+  >
+    <label for="installmentStartMonth" class="block mb-2"
+      >Mois 1ère échéance</label
+    >
+    <p-dropdown
+      id="installmentStartMonth"
+      [options]="monthOptions"
+      [(ngModel)]="data.transaction.installmentStartMonth" (ngModelChange)="onInstallmentStartMonthChange($event)"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Sélectionnez le mois de la 1ère échéance"
+      styleClass="w-full"
+      [appendTo]="'body'"
+    >
+    </p-dropdown>
+    <small
+      class="p-error"
+      *ngIf="
+        data.transaction.recurrenceKind === 'installment' &&
+        !data.transaction.installmentStartMonth
+      "
+    >
+      Obligatoire pour le type "Crédit (X fois)".
+    </small>
   </div>
 
   <!-- Type de transaction -->
   <div class="field col-12">
-    <label for="financialFlowId" class="block mb-2">Type de transaction *</label>
+    <label for="financialFlowId" class="block mb-2"
+      >Type de transaction *</label
+    >
     <p-dropdown
       id="financialFlowId"
       [options]="financialFlowList"
@@ -68,11 +193,12 @@
       optionValue="id"
       placeholder="Sélectionnez un type"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
     </p-dropdown>
   </div>
 
-  <!-- Règle 50/30/20 (uniquement pour les dépenses) -->
+  <!-- Règle 50/30/20 -->
   <div class="field col-12" *ngIf="data.transaction.financialFlowId === 2">
     <label for="debit503020" class="block mb-2">Répartition 50/30/20</label>
     <p-dropdown
@@ -83,11 +209,12 @@
       optionValue="id"
       placeholder="Sélectionnez une catégorie (50/30/20)"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
     </p-dropdown>
   </div>
 
-  <!-- Compte bancaire -->
+  <!-- Compte -->
   <div class="field col-12">
     <label for="accountId" class="block mb-2">Compte bancaire *</label>
     <p-dropdown
@@ -101,7 +228,8 @@
       filterBy="name"
       [showClear]="true"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
     </p-dropdown>
   </div>
 
@@ -119,7 +247,8 @@
       filterBy="label"
       [showClear]="true"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
       <ng-template let-subCategory pTemplate="item">
         <div>{{ subCategory.label }} ({{ subCategory.categoryLabel }})</div>
       </ng-template>
@@ -132,13 +261,65 @@
     label="Annuler"
     icon="pi pi-times"
     (onClick)="cancel()"
-    styleClass="p-button-text p-button-secondary">
+    styleClass="p-button-text p-button-secondary"
+  >
   </p-button>
   <p-button
     [label]="isNew ? 'Créer' : 'Enregistrer'"
     icon="pi pi-check"
     (onClick)="save()"
     [disabled]="!isFormValid()"
-    styleClass="p-button-success">
+    styleClass="p-button-success"
+  >
   </p-button>
 </div>
+
+<p-dialog
+  header="Comment utiliser les types d'échéances ?"
+  [(visible)]="recurrenceHelpVisible"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [appendTo]="'body'"
+  [baseZIndex]="11000"
+  [dismissableMask]="true"
+  [closeOnEscape]="true"
+  styleClass="recurrence-help-dialog"
+>
+  <div class="recurrence-help-content">
+    <p>
+      Les options ci-dessous permettent d'adapter une échéance aux cas courants.
+      Choisissez le type puis complétez les champs qui deviennent obligatoires.
+    </p>
+    <div class="recurrence-help-section">
+      <h4>Permanente</h4>
+      <p>
+        L'échéance reste active tant que vous ne renseignez pas de date de fin.
+        À utiliser pour les abonnements ou charges illimitées (loyer,
+        salaire...).
+      </p>
+    </div>
+    <div class="recurrence-help-section">
+      <h4>Crédit (X fois)</h4>
+      <p>
+        Indiquez le nombre d'échéances puis choisissez le mois de la 1ère
+        échéance. La date de fin est calculée automatiquement à partir de ces
+        informations.
+      </p>
+    </div>
+    <div class="recurrence-help-section">
+      <h4>Saisonnier (mois actifs)</h4>
+      <p>
+        Sélectionnez les mois concernés dans <em>Mois actifs</em>. Le jour de
+        prélèvement reste celui indiqué plus haut, sans dates de début ou fin.
+      </p>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="J'ai compris"
+      class="p-button-text"
+      (onClick)="recurrenceHelpVisible = false"
+    >
+    </p-button>
+  </ng-template>
+</p-dialog>

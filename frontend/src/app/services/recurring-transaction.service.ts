@@ -22,9 +22,9 @@ export class RecurringTransactionService {
   getRecurringTransactions(): Observable<RecurringTransaction[]> {
     return this.http.get<RecurringTransaction[]>(this.apiUrl).pipe(
       tap((recurringTransactions) => {
-        const camelCaseData = recurringTransactions.map((rt) =>
-          humps.camelizeKeys(rt)
-        ) as RecurringTransaction[];
+        const camelCaseData = recurringTransactions
+          .map((rt) => humps.camelizeKeys(rt))
+          .map((rt) => this.normalizeRecurringTransaction(rt as RecurringTransaction));
 
         console.log('RECURRING TRANSACTION SERVICE : Transactions récurrentes récupérées:', camelCaseData);
         this.recurringTransactionsSubject.next(camelCaseData);
@@ -108,5 +108,82 @@ export class RecurringTransactionService {
         throw err;
       })
     );
+  }
+
+  private normalizeRecurringTransaction(rt: RecurringTransaction): RecurringTransaction {
+    const normalized: RecurringTransaction = { ...rt };
+
+    normalized.activeMonths = this.parseActiveMonths(rt.activeMonths);
+
+    const canonicalStartMonth = this.parseMonthValue(normalized.startMonth);
+    const canonicalInstallmentMonth = this.parseMonthValue(
+      normalized.installmentStartMonth
+    );
+
+    if (canonicalStartMonth !== null) {
+      normalized.startMonth = canonicalStartMonth;
+      normalized.installmentStartMonth = canonicalStartMonth;
+    } else if (canonicalInstallmentMonth !== null) {
+      normalized.startMonth = canonicalInstallmentMonth;
+      normalized.installmentStartMonth = canonicalInstallmentMonth;
+    } else {
+      normalized.startMonth = null;
+      normalized.installmentStartMonth = null;
+    }
+
+    if (typeof normalized.occurrences === 'string') {
+      const parsed = parseInt(normalized.occurrences, 10);
+      normalized.occurrences = Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return normalized;
+  }
+
+  private parseActiveMonths(value: unknown): number[] | null {
+    if (Array.isArray(value)) {
+      const sanitized = value
+        .map((v) => Number(v))
+        .filter((num) => Number.isInteger(num) && num >= 1 && num <= 12);
+      return sanitized.length > 0 ? sanitized : null;
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return null;
+      }
+
+      let arrayCandidate: unknown;
+      try {
+        arrayCandidate = trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed.split(',');
+      } catch {
+        return null;
+      }
+
+      if (!Array.isArray(arrayCandidate)) {
+        return null;
+      }
+
+      const sanitized = arrayCandidate
+        .map((v) => Number(v))
+        .filter((num) => Number.isInteger(num) && num >= 1 && num <= 12);
+
+      return sanitized.length > 0 ? sanitized : null;
+    }
+
+    return null;
+  }
+
+  private parseMonthValue(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isInteger(value)) {
+      return value >= 1 && value <= 12 ? value : null;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 1 && parsed <= 12
+        ? parsed
+        : null;
+    }
+    return null;
   }
 }

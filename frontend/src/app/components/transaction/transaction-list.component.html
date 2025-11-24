@@ -2,9 +2,8 @@
   <div class="list-container">
     <!-- En-tÃªte avec titre et bouton -->
     <div class="list-header">
-       
       <div class="header-content">
-        <h2 *ngIf="account">{{ account['name'] }}</h2>
+        <h2 *ngIf="account">{{ account["name"] }}</h2>
         <h2 *ngIf="!account">Toutes les transactions</h2>
 
         <!-- Affichage du bouton "Nouvelle transaction" -->
@@ -12,24 +11,35 @@
           label="Nouvelle transaction"
           icon="pi pi-plus"
           (onClick)="createTransaction()"
-          styleClass="p-button-success">
+          styleClass="p-button-success"
+        >
         </p-button>
 
-        <!-- Affichage des soldes (seulement si compte spÃ©cifique) -->
+        <!-- Affichage des soldes (seulement si compte spécifique) -->
         <div class="balance-display" *ngIf="accountId">
           <div class="balance-item current">
             <div class="balance-label">Solde actuel</div>
-            <div class="balance-amount" [class.positive]="currentBalance > 0" [class.negative]="currentBalance < 0">
-              {{ currentBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}
+            <div
+              class="balance-amount"
+              [class.positive]="currentBalance > 0"
+              [class.negative]="currentBalance < 0"
+            >
+              {{ currentBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
             </div>
           </div>
           <div class="balance-separator">
             <i class="pi pi-arrow-right"></i>
           </div>
           <div class="balance-item forecast">
-            <div class="balance-label">Solde prÃ©visionnel</div>
-            <div class="balance-amount" [class.positive]="forecastedBalance > 0" [class.negative]="forecastedBalance < 0">
-              {{ forecastedBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}
+            <div class="balance-label">Solde prévisionnel</div>
+            <div
+              class="balance-amount"
+              [class.positive]="forecastedBalance > 0"
+              [class.negative]="forecastedBalance < 0"
+            >
+              {{
+                forecastedBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
             </div>
           </div>
         </div>
@@ -37,86 +47,196 @@
         <!-- Répartition 50/30/20 (basée sur le salaire du mois courant) -->
         <div class="break503020-container" *ngIf="accountId">
           <div class="break503020-list">
-            <div class="break-row" *ngFor="let it of get503020Breakdown().items">
+            <div
+              class="break-row"
+              *ngFor="let it of get503020Breakdown().items"
+            >
               <div class="break-label">{{ it.name }}</div>
-              <div class="break-value">{{ it.amount | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+              <div class="break-value">
+                {{ it.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              </div>
               <div class="break-percent">{{ it.percent }}%</div>
             </div>
             <div class="break-row remaining">
               <div class="break-label">Reste à vivre</div>
-              <div class="break-value">{{ get503020Breakdown().remaining | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
-              <div class="break-percent">{{ get503020Breakdown().remainingPercent }}%</div>
+              <div class="break-value">
+                {{
+                  get503020Breakdown().remaining
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
+              </div>
+              <div class="break-percent">
+                {{ get503020Breakdown().remainingPercent }}%
+              </div>
             </div>
           </div>
           <div class="break503020-mini">
             <div class="mini-bar">
-              <ng-container *ngFor="let it of get503020Breakdown().items; let i = index">
-                <div class="mini-seg seg-{{i}}" [ngStyle]="{ width: (it.percent || 0) + '%' }"></div>
+              <ng-container
+                *ngFor="let it of get503020Breakdown().items; let i = index"
+              >
+                <div
+                  class="mini-seg seg-{{ i }}"
+                  [ngStyle]="{ width: (it.percent || 0) + '%' }"
+                ></div>
               </ng-container>
             </div>
             <div class="mini-legend">
-              <span class="legend-item"><span class="dot dot-0"></span> 50</span>
-              <span class="legend-item"><span class="dot dot-1"></span> 30</span>
-              <span class="legend-item"><span class="dot dot-2"></span> 20</span>
+              <span class="legend-item"
+                ><span class="dot dot-0"></span> 50</span
+              >
+              <span class="legend-item"
+                ><span class="dot dot-1"></span> 30</span
+              >
+              <span class="legend-item"
+                ><span class="dot dot-2"></span> 20</span
+              >
             </div>
           </div>
         </div>
         <div class="recurring-summary" *ngIf="accountId">
           <div class="summary-item">
             <div class="summary-label">Revenus prévus</div>
-            <div class="summary-amount positive">+ {{ expectedIncomeTotal | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+            <div class="summary-amount positive">
+              +
+              {{
+                expectedIncomeTotal
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
+            </div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Dépenses prévues</div>
-            <div class="summary-amount negative">- {{ expectedExpensesTotal | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+            <div class="summary-amount negative">
+              -
+              {{
+                expectedExpensesTotal
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
+            </div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Dépenses restantes</div>
-            <div class="summary-amount negative">- {{ remainingExpensesThisMonth | currency:'EUR':'symbol':'1.2-2':'fr' }}</div>
+            <div class="summary-amount negative">
+              -
+              {{
+                remainingExpensesThisMonth
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
+            </div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Prévisionnel (Fin du mois)</div>
-            <div class="summary-amount" [class.positive]="forecastedBalance >= 0" [class.negative]="forecastedBalance < 0">
-              {{ forecastedBalance | currency:'EUR':'symbol':'1.2-2':'fr' }}
+            <div
+              class="summary-amount"
+              [class.positive]="forecastedBalance >= 0"
+              [class.negative]="forecastedBalance < 0"
+            >
+              {{
+                forecastedBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Bouton pour afficher/masquer les Ã©chÃ©ances (si compte spÃ©cifique) -->
-    <div class="recurring-toggle" *ngIf="accountId && recurringTransactions.length > 0">
+    <!-- Bouton pour afficher/masquer les échéances (si compte spécifique) -->
+    <div
+      class="recurring-toggle"
+      *ngIf="accountId && pendingSchedules.length > 0"
+    >
       <p-button
-        [label]="showRecurring ? 'Masquer les Ã©chÃ©ances' : 'Afficher les Ã©chÃ©ances (' + recurringTransactions.length + ')'"
+        [label]="
+          showRecurring
+            ? 'Masquer les échéances à venir'
+            : 'Afficher les échéances à venir (' + pendingSchedules.length + ')'
+        "
         icon="pi pi-calendar"
         (onClick)="toggleRecurring()"
-        styleClass="p-button-outlined p-button-secondary">
+        styleClass="p-button-outlined p-button-secondary"
+      >
       </p-button>
     </div>
 
-    <!-- Liste des Ã©chÃ©ances rÃ©currentes -->
-    <div class="recurring-list" *ngIf="showRecurring && sortedRecurringTransactions.length > 0">
-      <div class="recurring-items">
-        <div *ngFor="let recurring of sortedRecurringTransactions" class="recurring-item" [class.realized]="isRecurringRealized(recurring['id']!)">
-          <div class="recurring-info flex items-center">
-            <i class="pi pi-calendar mr-2"></i>
-            <div class="recurring-details">
-              <div class="recurring-description">{{ recurring['label'] }}</div>
-              <div class="recurring-schedule">{{ getDayLabel(recurring) }} - {{ recurring['frequency'] === 'monthly' ? 'Mensuel' : 'Hebdomadaire' }}</div>
+    <!-- Liste des échéances récurrentes -->
+    <div class="recurring-list" *ngIf="showRecurring">
+      <ng-container
+        *ngIf="pendingSchedules.length > 0; else noPendingSchedules"
+      >
+        <div class="recurring-items">
+          <div
+            *ngFor="let schedule of pendingSchedules"
+            class="recurring-item"
+            [class.overdue]="schedule.isOverdue"
+          >
+            <div class="recurring-info flex items-center">
+              <i class="pi pi-calendar mr-2"></i>
+              <div class="recurring-details">
+                <div class="recurring-description">
+                  {{ getRecurringDisplayLabel(schedule.recurringTransaction) }}
+                </div>
+                <div class="recurring-schedule">
+                  {{ schedule.dueDate | date: "dd MMM yyyy" }} •
+                  {{ getFrequencyLabel(schedule.recurringTransaction) }}
+                  <span
+                    *ngIf="
+                      getRecurringKindBadge(
+                        schedule.recurringTransaction
+                      ) as badge
+                    "
+                    class="recurring-kind-badge"
+                    [ngClass]="badge.cssClass"
+                  >
+                    {{ badge.label }}
+                  </span>
+                  <span
+                    *ngIf="schedule.isOverdue"
+                    class="recurring-kind-badge overdue-badge"
+                  >
+                    En retard
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div
+              class="recurring-amount"
+              [class.positive]="schedule.amount > 0"
+              [class.negative]="schedule.amount < 0"
+            >
+              {{
+                schedule.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
+            </div>
+            <div class="recurring-status">
+              <div class="due-chip" [class.overdue-text]="schedule.isOverdue">
+                {{ schedule.dueDate | date: "dd/MM" }}
+              </div>
+              <p-button
+                icon="pi pi-check"
+                [rounded]="true"
+                [text]="true"
+                [raised]="true"
+                severity="help"
+                styleClass="p-button-text p-button-success"
+                [style]="{ 'margin-left': '0.5rem' }"
+                (onClick)="markRecurringAsPaid(schedule.recurringTransaction)"
+                pTooltip="Valider"
+                tooltipPosition="top"
+              ></p-button>
             </div>
           </div>
-          <div class="recurring-amount" [class.positive]="recurring['financialFlowId'] === 1" [class.negative]="recurring['financialFlowId'] === 2">
-            {{ (recurring['financialFlowId'] === 2 ? -1 : 1) * (recurring['amount'] || 0) | currency:'EUR':'symbol':'1.2-2':'fr' }}
-          </div>
-          <div class="recurring-status">
-            <i *ngIf="isRecurringRealized(recurring['id']!)" class="pi pi-check-circle realized-icon"></i>
-            <i *ngIf="!isRecurringRealized(recurring['id']!)" class="pi pi-clock pending-icon"></i>
-          </div>
         </div>
-      </div>
+      </ng-container>
+      <ng-template #noPendingSchedules>
+        <div class="no-data text-center py-4">
+          <i class="pi pi-check-circle mr-2"></i>
+          <span>Aucune échéance à afficher pour cette période.</span>
+        </div>
+      </ng-template>
     </div>
 
-    <!-- ContrÃ´les -->
+    <!-- Contrôles -->
     <div class="list-controls p-3 surface-card border-round-lg shadow-1">
       <!-- Ligne de filtres -->
       <div class="filters-row flex flex-wrap gap-3">
@@ -138,7 +258,9 @@
 
         <!-- Filtre par description -->
         <p-inputGroup class="flex-1 min-w-[250px]">
-          <p-inputGroupAddon><i class="pi pi-align-left"></i></p-inputGroupAddon>
+          <p-inputGroupAddon
+            ><i class="pi pi-align-left"></i
+          ></p-inputGroupAddon>
           <input
             pInputText
             type="text"
@@ -167,7 +289,9 @@
       </div>
 
       <!-- Ligne des contrÃ´les -->
-      <div class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3">
+      <div
+        class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3"
+      >
         <!-- Groupes par page -->
         <div class="flex align-items-center gap-2">
           <span class="font-medium">Groupes par page :</span>
@@ -194,47 +318,75 @@
           ></button>
         </div>
 
-        <!-- Info rÃ©sultats -->
+        <!-- Info résultats -->
         <div class="results-info font-semibold text-color-secondary">
           {{ filteredTransactions.length }} transaction(s)
         </div>
       </div>
     </div>
 
-
-
-    <!-- Transactions groupÃ©es par date -->
+    <!-- Transactions groupées par date -->
     <div class="grouped-transactions">
-      <div *ngFor="let group of paginatedGroupedTransactions" class="date-group">
-        <!-- En-tÃªte de date -->
+      <div
+        *ngFor="let group of paginatedGroupedTransactions"
+        class="date-group"
+      >
+        <!-- En-tête de date -->
         <div class="date-header">
           <div class="date-label">
             <i class="pi pi-calendar"></i>
             <span class="date-text">{{ group.formattedDate }}</span>
-            <span class="transaction-count">({{ group.transactions.length }} transaction{{ group.transactions.length > 1 ? 's' : '' }})</span>
+            <span class="transaction-count"
+              >({{ group.transactions.length }} transaction{{
+                group.transactions.length > 1 ? "s" : ""
+              }})</span
+            >
           </div>
-          <div class="date-total" [class.positive]="group.total > 0" [class.negative]="group.total < 0">
-            {{ group.total | currency:'EUR':'symbol':'1.2-2':'fr' }}
+          <div
+            class="date-total"
+            [class.positive]="group.total > 0"
+            [class.negative]="group.total < 0"
+          >
+            {{ group.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
           </div>
         </div>
 
         <!-- Liste des transactions de cette date -->
         <div class="transactions-list">
-          <div *ngFor="let transaction of group.transactions" class="transaction-item">
+          <div
+            *ngFor="let transaction of group.transactions"
+            class="transaction-item"
+          >
             <div class="transaction-main">
               <div class="transaction-description">
                 <i
                   class="transaction-icon"
-                  [ngClass]="{'pi pi-arrow-down text-red-500': (transaction.amountNumber ?? 0) < 0, 'pi pi-arrow-up text-green-500': (transaction.amountNumber ?? 0) > 0}"
+                  [ngClass]="{
+                    'pi pi-arrow-down text-red-500':
+                      (transaction.amountNumber ?? 0) < 0,
+                    'pi pi-arrow-up text-green-500':
+                      (transaction.amountNumber ?? 0) > 0,
+                  }"
                 >
                 </i>
                 <div class="description-content">
-                  <div class="description-text">{{ transaction.description }}</div>
-                  <div class="subcategory-text">{{ transaction.subCategoryLabel }}</div>
+                  <div class="description-text">
+                    {{ transaction.description }}
+                  </div>
+                  <div class="subcategory-text">
+                    {{ transaction.subCategoryLabel }}
+                  </div>
                 </div>
               </div>
-              <div class="transaction-amount" [class.positive]="(transaction.amountNumber ?? 0) > 0" [class.negative]="(transaction.amountNumber ?? 0) < 0">
-                {{ transaction.amountNumber | currency:'EUR':'symbol':'1.2-2':'fr' }}
+              <div
+                class="transaction-amount"
+                [class.positive]="(transaction.amountNumber ?? 0) > 0"
+                [class.negative]="(transaction.amountNumber ?? 0) < 0"
+              >
+                {{
+                  transaction.amountNumber
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
               </div>
             </div>
             <div class="transaction-actions">
@@ -243,14 +395,16 @@
                 (onClick)="editTransaction(transaction)"
                 styleClass="p-button-rounded p-button-text p-button-info"
                 pTooltip="Ã‰diter"
-                tooltipPosition="top">
+                tooltipPosition="top"
+              >
               </p-button>
               <p-button
                 icon="pi pi-trash"
                 (onClick)="deleteTransaction(transaction)"
                 styleClass="p-button-rounded p-button-text p-button-danger"
                 pTooltip="Supprimer"
-                tooltipPosition="top">
+                tooltipPosition="top"
+              >
               </p-button>
             </div>
           </div>
@@ -272,7 +426,8 @@
         [first]="(currentPage - 1) * pageSize"
         (onPageChange)="onPageChange($event)"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} Ã  {last} sur {totalRecords} groupes">
+        currentPageReportTemplate="{first} Ã  {last} sur {totalRecords} groupes"
+      >
       </p-paginator>
     </div>
   </div>

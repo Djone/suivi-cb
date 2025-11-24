@@ -184,6 +184,40 @@
   background: #94a3b8;
 }
 
+.dev-only-block {
+  margin: 1.5rem 1.5rem 0;
+  padding: 1rem;
+  border: 1px dashed #f97316;
+  border-radius: 0.75rem;
+  background: #fff7ed;
+}
+
+.dev-badge {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  background: #ea580c;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.dev-link {
+  border-left-color: #ea580c;
+}
+
+.dev-link i {
+  color: #ea580c;
+}
+
+.dev-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #9a3412;
+}
+
 /* Style pour le pied de page de la version dans le menu */
 .version-footer {
   position: absolute;
@@ -194,6 +228,26 @@
   color: var(--text-color-secondary); /* Utilise les couleurs du thème PrimeNG */
   font-size: 0.8rem;
   padding: 0 1rem;
+}
+
+.version-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.release-notes-link {
+  font-size: 0.75rem;
+  color: var(--primary-color, #3b82f6);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.release-notes-link:hover {
+  text-decoration: underline;
 }
 
 /* Desktop: affichage permanent */

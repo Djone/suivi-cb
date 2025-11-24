@@ -1,24 +1,26 @@
-const db = require('../config/db');
+const db = require("../config/db");
 
 // Fonctions utilitaires pour transformer les callbacks en Promises
-const runQuery = (query, params = []) => new Promise((resolve, reject) => {
-  db.run(query, params, function (err) {
-    if (err) return reject(err);
-    resolve(this);
+const runQuery = (query, params = []) =>
+  new Promise((resolve, reject) => {
+    db.run(query, params, function (err) {
+      if (err) return reject(err);
+      resolve(this);
+    });
   });
-});
 
-const getQuery = (query, params = []) => new Promise((resolve, reject) => {
-  db.get(query, params, (err, row) => {
-    if (err) return reject(err);
-    resolve(row);
+const getQuery = (query, params = []) =>
+  new Promise((resolve, reject) => {
+    db.get(query, params, (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
   });
-});
 
 // Fonction principale d'initialisation, maintenant asynchrone
 const initializeDatabase = async () => {
   try {
-    console.log('🚀 Démarrage des migrations de la base de données...');
+    console.log("🚀 Démarrage des migrations de la base de données...");
 
     await runQuery(`
       CREATE TABLE IF NOT EXISTS transactions (
@@ -69,6 +71,22 @@ const initializeDatabase = async () => {
       );
     `);
     console.log('✓ Table "recurring_transactions" vérifiée/créée.');
+    // Ajout non bloquant de colonnes avancées (si non présentes)
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN start_month INTEGER NULL;`
+    ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN occurrences INTEGER NULL;`
+    ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN active_months TEXT NULL;`
+    ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN recurrence_kind TEXT NULL;`
+    ).catch(() => {});
+    console.log(
+      "-> Colonnes avancées sur recurring_transactions vérifiées/ajoutées."
+    );
 
     await runQuery(`
       CREATE TABLE IF NOT EXISTS accounts (
@@ -83,28 +101,34 @@ const initializeDatabase = async () => {
     console.log('✓ Table "accounts" vérifiée/créée.');
 
     // Insertion des comptes par défaut si la table est vide
-    const row = await getQuery('SELECT COUNT(*) as count FROM accounts');
+    const row = await getQuery("SELECT COUNT(*) as count FROM accounts");
     if (row && row.count === 0) {
-      console.log('-> Aucun compte trouvé, création des comptes par défaut...');
+      console.log("-> Aucun compte trouvé, création des comptes par défaut...");
       await runQuery(
         `INSERT INTO accounts (id, name, description, color, is_active)
          VALUES (1, 'Compte courant', 'Compte bancaire principal', '#1976d2', 1)`
       );
-      console.log('✓ Compte courant créé.');
+      console.log("✓ Compte courant créé.");
 
       await runQuery(
         `INSERT INTO accounts (id, name, description, color, is_active)
          VALUES (2, 'Compte joint', 'Compte bancaire joint', '#4caf50', 1)`
       );
-      console.log('✓ Compte joint créé.');
+      console.log("✓ Compte joint créé.");
     } else {
-      console.log('-> Des comptes existent déjà, aucune insertion nécessaire.');
+      console.log("-> Des comptes existent déjà, aucune insertion nécessaire.");
     }
 
-    console.log('✅ Migrations terminées avec succès.');
+    // Migrations incrémentales V1.1.0
+    const migrateAdvancedRecurring = require("./migrate_2025_advanced_recurring");
+    await migrateAdvancedRecurring();
 
+    console.log("✅ Migrations terminées avec succès.");
   } catch (err) {
-    console.error('❌ ERREUR FATALE lors de l\'initialisation de la base de données:', err.message);
+    console.error(
+      "❌ ERREUR FATALE lors de l'initialisation de la base de données:",
+      err.message
+    );
     // Dans un cas réel, on pourrait vouloir arrêter l'application ici
     process.exit(1);
   }

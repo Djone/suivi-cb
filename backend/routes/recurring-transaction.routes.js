@@ -1,4 +1,4 @@
-// backend/routes/recurring-transaction.routes.js
+﻿// backend/routes/recurring-transaction.routes.js
 const express = require('express');
 const router = express.Router();
 const validate = require('../middlewares/validation.middleware');
@@ -20,4 +20,9 @@ router.delete('/:id', recurringTransactionController.deleteRecurringTransactionB
 // Route pour réactiver une transaction récurrente
 router.patch('/:id/reactivate', recurringTransactionController.reactivateRecurringTransaction);
 
+// Historique des montants d'une transaction r��currente
+router.get('/:id/history', recurringTransactionController.getHistoryForRecurringTransaction);
+router.post('/:id/history', recurringTransactionController.addHistoryEntryForRecurringTransaction);
+
 module.exports = router;
+

@@ -19,6 +19,7 @@ import { TransactionService } from '../../services/transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
+import { FilterManagerService } from '../../services/filter-manager.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { EditTransactionDialogComponent } from '../edit-transaction-dialog/edit-transaction-dialog.component';
 import { Transaction } from '../../models/transaction.model';
@@ -39,6 +40,13 @@ interface GroupedTransactions {
   formattedDate: string;
   transactions: TransactionWithLabel[];
   total: number;
+}
+
+interface UpcomingScheduleLite {
+  recurringTransaction: RecurringTransaction;
+  amount: number;
+  dueDate: Date;
+  isOverdue?: boolean;
 }
 
 @Component({
@@ -73,6 +81,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   paginatedGroupedTransactions: GroupedTransactions[] = [];
   subCategories: SubCategory[] = [];
   recurringTransactions: RecurringTransaction[] = [];
+  pendingSchedules: UpcomingScheduleLite[] = [];
   sortedRecurringTransactions: RecurringTransaction[] = [];
   currentBalance: number = 0;
   forecastedBalance: number = 0;
@@ -849,7 +858,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       rec,
       currentYear,
       currentMonth,
-    ).filter((d) => d.date >= today && !this.isRecurringRealized(d.rt.id!));
+    ).filter((d) => !this.isRecurringRealized(d.rt.id!));
 
     const nextStartDue: { rt: RecurringTransaction; date: Date }[] = [];
     if (today.getDate() >= 25) {
@@ -870,7 +879,126 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       0,
     );
 
+    this.pendingSchedules = [
+      ...currentMonthDue.map((entry) => ({
+        recurringTransaction: entry.rt,
+        amount: this.getSignedAmountFromRecurring(entry.rt),
+        dueDate: entry.date,
+        isOverdue: entry.date < today,
+      })),
+      ...nextStartDue.map((entry) => ({
+        recurringTransaction: entry.rt,
+        amount: this.getSignedAmountFromRecurring(entry.rt),
+        dueDate: entry.date,
+        isOverdue: false,
+      })),
+    ].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+
     return sumCurrent + sumNext;
+  }
+
+  private shouldApplyRecurring(
+    frequency: RecurringTransaction['frequency'] | null | undefined,
+    monthIndex: number,
+  ): boolean {
+    const month = monthIndex % 12;
+    switch (frequency) {
+      case 'monthly':
+      case 'weekly':
+        return true;
+      case 'bimonthly':
+        return month % 2 === 0;
+      case 'quarterly':
+        return month % 3 === 0;
+      case 'biannual':
+        return month % 6 === 0;
+      case 'yearly':
+        return month === 0;
+      default:
+        return false;
+    }
+  }
+
+  private getFrequencyMonthSpan(
+    frequency?: RecurringTransaction['frequency'] | null,
+  ): number {
+    switch (frequency) {
+      case 'bimonthly':
+        return 2;
+      case 'quarterly':
+        return 3;
+      case 'biannual':
+        return 6;
+      case 'yearly':
+        return 12;
+      default:
+        return 1;
+    }
+  }
+
+  private resolveInstallmentStartMonth(
+    recurring: RecurringTransaction,
+  ): number | null {
+    if (
+      typeof recurring.startMonth === 'number' &&
+      recurring.startMonth >= 1 &&
+      recurring.startMonth <= 12
+    ) {
+      return recurring.startMonth;
+    }
+    if (
+      typeof recurring.installmentStartMonth === 'number' &&
+      recurring.installmentStartMonth >= 1 &&
+      recurring.installmentStartMonth <= 12
+    ) {
+      return recurring.installmentStartMonth;
+    }
+    return null;
+  }
+
+  private getInstallmentStartYear(
+    recurring: RecurringTransaction,
+    startMonth: number,
+  ): number {
+    const createdAt = recurring.createdAt
+      ? new Date(recurring.createdAt as any)
+      : null;
+    if (!createdAt || Number.isNaN(createdAt.getTime())) {
+      return new Date().getFullYear();
+    }
+    const createdMonth = createdAt.getMonth() + 1;
+    let year = createdAt.getFullYear();
+    if (startMonth < createdMonth) {
+      year += 1;
+    }
+    return year;
+  }
+
+  private isInstallmentDateValid(
+    recurring: RecurringTransaction,
+    date: Date,
+  ): boolean {
+    if (recurring.recurrenceKind !== 'installment') {
+      return true;
+    }
+    const startMonth = this.resolveInstallmentStartMonth(recurring);
+    const occurrences = recurring.occurrences;
+    if (!startMonth || !occurrences || occurrences <= 0) {
+      return false;
+    }
+    const monthSpan = this.getFrequencyMonthSpan(recurring.frequency);
+    const startYear = this.getInstallmentStartYear(recurring, startMonth);
+    const firstIndex = startYear * 12 + (startMonth - 1);
+    const targetIndex = date.getFullYear() * 12 + date.getMonth();
+    const delta = targetIndex - firstIndex;
+    if (delta < 0) {
+      return false;
+    }
+    if (delta % monthSpan !== 0) {
+      return false;
+    }
+    const occurrenceIndex = delta / monthSpan;
+    return occurrenceIndex < occurrences;
   }
 
   private buildSchedulesForMonth(
@@ -879,24 +1007,60 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     month: number,
   ) {
     const list: { rt: RecurringTransaction; date: Date }[] = [];
+    const normalizedMonth = ((month % 12) + 12) % 12;
+    const yearOffset = Math.floor(month / 12);
+    const effectiveYear = year + yearOffset;
+
     rec.forEach((rt) => {
       const dayOfMonth =
         typeof rt.dayOfMonth === 'string'
           ? parseInt(rt.dayOfMonth)
           : rt.dayOfMonth || 0;
-      const freq: any = (rt as any).frequency || 'monthly';
-      if (freq === 'weekly') {
-        const first = new Date(year, month, 1);
-        const last = new Date(year, month + 1, 0);
-        const targetDow = dayOfMonth % 7; // 1..7 -> 1..6, 7->0
-        for (let d = first.getDate(); d <= last.getDate(); d++) {
-          const date = new Date(year, month, d);
-          if (date.getDay() === targetDow) list.push({ rt, date });
-        }
-      } else {
-        const date = new Date(year, month, dayOfMonth);
-        list.push({ rt, date });
+      const freq: RecurringTransaction['frequency'] =
+        (rt as any).frequency || 'monthly';
+      const activeMonths = Array.isArray(rt.activeMonths)
+        ? new Set(
+            (rt.activeMonths as number[]).filter(
+              (m) => typeof m === 'number' && m >= 1 && m <= 12,
+            ),
+          )
+        : null;
+      const isInstallment = rt.recurrenceKind === 'installment';
+
+      if (!this.shouldApplyRecurring(freq, normalizedMonth)) {
+        return;
       }
+
+      if (freq === 'weekly') {
+        const first = new Date(effectiveYear, normalizedMonth, 1);
+        const last = new Date(effectiveYear, normalizedMonth + 1, 0);
+        const targetDow = dayOfMonth % 7;
+        for (let d = first.getDate(); d <= last.getDate(); d++) {
+          const date = new Date(effectiveYear, normalizedMonth, d);
+          if (date.getDay() !== targetDow) {
+            continue;
+          }
+          if (activeMonths && !activeMonths.has(date.getMonth() + 1)) {
+            continue;
+          }
+          if (isInstallment && !this.isInstallmentDateValid(rt, date)) {
+            continue;
+          }
+          list.push({ rt, date });
+        }
+        return;
+      }
+
+      if (activeMonths && !activeMonths.has(normalizedMonth + 1)) {
+        return;
+      }
+
+      const targetDay = dayOfMonth > 0 ? dayOfMonth : 1;
+      const date = new Date(effectiveYear, normalizedMonth, targetDay);
+      if (isInstallment && !this.isInstallmentDateValid(rt, date)) {
+        return;
+      }
+      list.push({ rt, date });
     });
     return list;
   }
@@ -929,6 +1093,43 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   // Basculer l'affichage des ÃƒÂ©chÃƒÂ©ances
   toggleRecurring(): void {
     this.showRecurring = !this.showRecurring;
+  }
+
+  markRecurringAsPaid(recurring: RecurringTransaction): void {
+    if (!this.accountId) {
+      return;
+    }
+    const rawAmount =
+      typeof recurring.amount === 'string'
+        ? parseFloat(recurring.amount)
+        : recurring.amount || 0;
+
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
+      width: '450px',
+      data: {
+        title: "Valider l'échéance",
+        message: `Confirmer la réalisation de "${recurring.label}" pour ${Math.abs(rawAmount).toFixed(2)} € ?`,
+        confirmText: 'Valider',
+        cancelText: 'Annuler',
+      },
+    });
+
+    dialogRef.onClose.subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      const tx: Transaction = {
+        description: recurring.label,
+        date: new Date(),
+        amount: Math.abs(rawAmount),
+        accountId: this.accountId!,
+        financialFlowId: recurring.financialFlowId,
+        subCategoryId: recurring.subCategoryId || null,
+        recurringTransactionId: recurring.id,
+      } as any;
+
+      this.transactionService.addTransaction(tx).subscribe(() => {
+        this.loadTransactions();
+      });
+    });
   }
 
   // VÃƒÂ©rifier si une ÃƒÂ©chÃƒÂ©ance a ÃƒÂ©tÃƒÂ© rÃƒÂ©alisÃƒÂ©e ce mois
@@ -979,6 +1180,73 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return daysOfWeek[dayIndex] || recurring.dayOfMonth.toString();
     }
     return 'le ' + recurring.dayOfMonth.toString();
+  }
+
+  getFrequencyLabel(recurring: RecurringTransaction): string {
+    const labels: Record<string, string> = {
+      weekly: 'Hebdomadaire',
+      monthly: 'Mensuel',
+      bimonthly: 'Bimestriel',
+      quarterly: 'Trimestriel',
+      biannual: 'Semestriel',
+      yearly: 'Annuel',
+    };
+    if (!recurring.frequency) {
+      return 'Mensuel';
+    }
+    return labels[recurring.frequency] || 'Mensuel';
+  }
+
+  getRecurringDisplayLabel(recurring: RecurringTransaction): string {
+    const progress = this.getInstallmentProgress(recurring);
+    if (!progress) {
+      return recurring.label;
+    }
+    if (progress.remaining <= 0) {
+      return `${recurring.label} (termine)`;
+    }
+    return `${recurring.label} (reste ${progress.remaining}/${progress.total})`;
+  }
+
+  getRecurringKindBadge(
+    recurring: RecurringTransaction,
+  ): { label: string; cssClass: string } | null {
+    if (recurring.recurrenceKind === 'installment') {
+      return { label: 'Crédit', cssClass: 'badge-credit' };
+    }
+    if (recurring.recurrenceKind === 'seasonal') {
+      return { label: 'Saisonnier', cssClass: 'badge-seasonal' };
+    }
+    return null;
+  }
+
+  private getInstallmentProgress(recurring: RecurringTransaction) {
+    if (
+      recurring.recurrenceKind !== 'installment' ||
+      typeof recurring.id !== 'number'
+    ) {
+      return null;
+    }
+    const total =
+      typeof recurring.occurrences === 'number' && recurring.occurrences > 0
+        ? recurring.occurrences
+        : null;
+    if (!total) {
+      return null;
+    }
+    const completed = this.transactions.filter((t) => {
+      const txRecurringId =
+        typeof t.recurringTransactionId === 'string'
+          ? parseInt(t.recurringTransactionId, 10)
+          : t.recurringTransactionId || null;
+      return txRecurringId === recurring.id;
+    }).length;
+    const boundedCompleted = Math.min(completed, total);
+    return {
+      total,
+      completed: boundedCompleted,
+      remaining: Math.max(total - boundedCompleted, 0),
+    };
   }
 
   createTransaction(): void {

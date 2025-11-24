@@ -44,16 +44,31 @@
 
       <!-- Récurrentes -->
 
+      <div class="dev-only-block" *ngIf="isDevBuild">
+        <div class="dev-badge">DEV</div>
+        <a routerLink="/todo-dev" routerLinkActive="active" class="menu-item dev-link" (click)="onMenuItemClick()">
+          <i class="pi pi-clipboard"></i>
+          <span>TODO V1.1.0</span>
+        </a>
+        <small class="dev-hint">Uniquement disponible côté développement.</small>
+      </div>
+
     </nav>
   </div>
 
   <!-- Bloc à ajouter en bas du menu -->
   <div class="version-footer">
-    <small>
-      <span>Version {{ appVersion }}</span>
-      <br>
-      <span>© {{ currentYear }}</span>
-    </small>
+    <div class="version-line">
+      <small>Version {{ appVersion }}</small>
+      <a
+        routerLink="/release-notes"
+        class="release-notes-link"
+        (click)="onMenuItemClick()"
+      >
+        Notes de version
+      </a>
+    </div>
+    <small>© {{ currentYear }}</small>
   </div>
 
 </div>

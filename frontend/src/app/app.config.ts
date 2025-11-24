@@ -15,10 +15,12 @@ import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import aura from '@primeng/themes/aura';
 
-import { APP_VERSION } from './version';
+import { APP_VERSION, APP_BUILD_TIME, APP_ENV } from './version';
 
 export const APP_INFO = {
   version: APP_VERSION,
+  buildTime: APP_BUILD_TIME,
+  env: APP_ENV,
 };
 
 // Enregistrer les données de locale pour le français

@@ -1,0 +1,39 @@
+<section class="release-notes-page">
+  <header class="release-notes-header">
+    <div>
+      <p class="eyebrow">Notes de version</p>
+      <h1>Version {{ releaseVersion }}</h1>
+      <p class="subtitle">
+        Toutes les nouveautés livrées dans cette version à partir du suivi
+        développement.
+      </p>
+    </div>
+  </header>
+
+  <ng-container *ngIf="releaseItems.length > 0; else emptyRelease">
+    <article class="release-note-card" *ngFor="let item of releaseItems">
+      <div class="release-note-card-title">
+        <h2>{{ item.title }}</h2>
+      </div>
+
+      <ng-container
+        *ngIf="getDescriptionList(item) as bulletList; else plainDescription"
+      >
+        <ul class="release-note-list">
+          <li *ngFor="let bullet of bulletList">{{ bullet }}</li>
+        </ul>
+      </ng-container>
+      <ng-template #plainDescription>
+        <p class="release-note-description">
+          {{ getPlainDescription(item) }}
+        </p>
+      </ng-template>
+    </article>
+  </ng-container>
+
+  <ng-template #emptyRelease>
+    <div class="empty-release">
+      <p>Aucune nouveauté n'a encore été publiée pour cette version.</p>
+    </div>
+  </ng-template>
+</section>

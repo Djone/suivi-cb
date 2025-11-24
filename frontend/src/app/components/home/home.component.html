@@ -1,14 +1,27 @@
 <div class="dashboard-container">
   <ng-container *ngIf="accountBalances.length > 0; else noAccounts">
-    <p-tabView
-      [activeIndex]="getActiveIndex()"
-      (onChange)="onTabChange($event.index)"
-      class="dashboard-tabview"
-    >
-      <p-tabPanel
+    <div class="account-tabs" role="tablist" aria-label="Comptes bancaires">
+      <p-button
         *ngFor="let accountBalance of accountBalances"
-        [header]="accountBalance.account.name"
-      >
+        [label]="accountBalance.account.name"
+        [raised]="true"
+        [outlined]="!isAccountActive(accountBalance.account.id)"
+        [severity]="
+          isAccountActive(accountBalance.account.id) ? 'primary' : 'secondary'
+        "
+        [styleClass]="
+          'account-tab-button' +
+          (isAccountActive(accountBalance.account.id)
+            ? ' account-tab-button--active'
+            : '')
+        "
+        (onClick)="selectAccount(accountBalance.account.id)"
+        [attr.role]="'tab'"
+        [attr.aria-selected]="isAccountActive(accountBalance.account.id)"
+      ></p-button>
+    </div>
+
+    <ng-container *ngIf="getActiveAccountBalance() as accountBalance">
         <!-- Ligne 1: Soldes (gauche) + Notifications (droite) -->
         <div class="row-2cols">
           <div class="col">
@@ -225,7 +238,13 @@
                 </ng-template>
                 <ng-template pTemplate="body" let-s>
                   <tr>
-                    <td>{{ s.recurringTransaction.label }}</td>
+                    <td>
+                      {{
+                        getRecurringLabelWithCountdown(
+                          s.recurringTransaction
+                        )
+                      }}
+                    </td>
                     <td>
                       {{
                         getSubCategoryLabel(
@@ -267,7 +286,7 @@
         <div class="section">
           <div class="section-header">
             <i class="pi pi-chart-bar"></i>
-            <h3>R&eacute;partition du mois (barres empil&eacute;es)</h3>
+            <h3>R&eacute;partition du mois (totaux)</h3>
           </div>
           <p-chart
             type="bar"
@@ -275,8 +294,7 @@
             [options]="stackedBarOptions"
           ></p-chart>
         </div>
-      </p-tabPanel>
-    </p-tabView>
+    </ng-container>
   </ng-container>
 
   <ng-template #noAccounts>
@@ -287,3 +305,4 @@
     </div>
   </ng-template>
 </div>
+

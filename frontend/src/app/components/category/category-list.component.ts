@@ -1,24 +1,37 @@
 // frontend/src/app/components/category/category-list.component.ts
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+
 import { CategoryService } from '../../services/category.service';
+import { SubCategoryService } from '../../services/sub-category.service';
 import { Category } from '../../models/category.model';
+import { SubCategory } from '../../models/sub-category.model';
+import { Transaction } from '../../models/transaction.model';
 import { getFinancialFlowNameById } from '../../utils/utils';
 import { EditCategoryDialogComponent } from '../edit-category-dialog/edit-category-dialog.component';
+import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit-sub-category-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
-import { Subscription } from 'rxjs';
-import { FormsModule } from '@angular/forms';
 
-// PrimeNG Imports
+// PrimeNG
 import { DialogService } from 'primeng/dynamicdialog';
 import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
-import { TagModule } from 'primeng/tag';
 import { InputSwitchModule } from 'primeng/inputswitch';
-import { CardModule } from 'primeng/card';
 import { TooltipModule } from 'primeng/tooltip';
+import { TabViewModule } from 'primeng/tabview';
+import { BadgeModule } from 'primeng/badge';
+import { TagModule } from 'primeng/tag';
+import { TransactionService } from '../../services/transaction.service';
+import { RouterModule, Router } from '@angular/router';
+
+interface CategoryRow extends Category {
+  financialFlowLabel: string;
+  statusLabel: string;
+  subCategories: SubCategory[];
+  subSearchText: string;
+}
 
 @Component({
   selector: 'app-category-list',
@@ -28,122 +41,218 @@ import { TooltipModule } from 'primeng/tooltip';
     FormsModule,
     TableModule,
     ButtonModule,
-    InputTextModule,
-    DropdownModule,
-    TagModule,
     InputSwitchModule,
-    CardModule,
-    TooltipModule
+    TooltipModule,
+    TabViewModule,
+    BadgeModule,
+    TagModule,
+    RouterModule,
   ],
   templateUrl: './category-list.component.html',
-  styleUrls: ['./category-list.component.css']
+  styleUrls: ['./category-list.component.css'],
 })
 export class CategoryListComponent implements OnInit, OnDestroy {
-  categories: Category[] = [];
-  financialFlowNameById = getFinancialFlowNameById;
-  @ViewChild('dt') dt: Table | undefined;
   private subscriptions = new Subscription();
 
-  // Options pour les dropdowns
-  statuses = [
-    { label: 'Actif', value: 1 },
-    { label: 'Inactif', value: 0 }
-  ];
+  categories: Category[] = [];
+  subCategories: SubCategory[] = [];
+  expenseCategories: CategoryRow[] = [];
+  revenueCategories: CategoryRow[] = [];
+  private transactions: Transaction[] = [];
+  private subCategoryOperationCounts = new Map<number, number>();
 
-  financialFlows = [
-    { label: 'Revenu', value: 1 },
-    { label: 'Dépense', value: 2 }
-  ];
+  financialFlowNameById = getFinancialFlowNameById;
+
+  @ViewChild('dtExpense') dtExpense: Table | undefined;
+  @ViewChild('dtRevenue') dtRevenue: Table | undefined;
 
   constructor(
     private categoryService: CategoryService,
-    private dialogService: DialogService
+    private subCategoryService: SubCategoryService,
+    private transactionService: TransactionService,
+    private router: Router,
+    private dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
-    // S'abonner au BehaviorSubject pour les mises à jour automatiques
     this.subscriptions.add(
       this.categoryService.categories$.subscribe({
         next: (data) => {
-          // Enrichir les données pour l'affichage et le filtrage
-          this.categories = data.map(category => ({
+          this.categories = data.map((category) => ({
             ...category,
-            financialFlowLabel: this.financialFlowNameById(category.financialFlowId),
-            statusLabel: this.getStatusLabel(category.isActive),
-            // Assurer que isActive a une valeur pour le p-inputSwitch
-            isActive: category.isActive ?? 0
+            isActive: category.isActive ?? 0,
           }));
-          console.log('CATEGORY LIST : Tableau mis à jour automatiquement', data);
+          this.rebuildViews();
         },
-        error: (err) => console.error('Erreur lors de la mise à jour des catégories:', err)
-      })
+        error: (err) => console.error('CATEGORY LIST: erreur categories', err),
+      }),
     );
-    // Charger les catégories initiales
-    this.loadCategories();
+
+    this.subscriptions.add(
+      this.subCategoryService.subCategories$.subscribe({
+        next: (data) => {
+          this.subCategories = data.map((sub) => ({
+            ...sub,
+            isActive: sub.isActive ?? 1,
+          }));
+          this.rebuildViews();
+        },
+        error: (err) =>
+          console.error('CATEGORY LIST: erreur sous-categories', err),
+      }),
+    );
+
+    this.subscriptions.add(
+      this.transactionService.transactions$.subscribe({
+        next: (transactions) => {
+          this.transactions = transactions;
+          this.recomputeOperationCounts();
+          this.rebuildViews();
+        },
+        error: (err) =>
+          console.error('CATEGORY LIST: erreur transactions', err),
+      }),
+    );
+
+    this.categoryService.getCategories().subscribe();
+    this.subCategoryService.getSubCategories().subscribe();
+    this.transactionService.loadTransactions();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
 
-  loadCategories(): void {
-    this.categoryService.getCategories().subscribe();
+  private rebuildViews(): void {
+    if (!this.categories.length) {
+      this.expenseCategories = [];
+      this.revenueCategories = [];
+      return;
+    }
+
+    const enrich = (category: Category): CategoryRow => {
+      const children = this.subCategories.filter(
+        (sub) => sub.categoryId === category.id,
+      ).map((sub) => ({
+        ...sub,
+        operationsCount: this.getOperationsCount(sub.id),
+      }));
+      return {
+        ...category,
+        financialFlowLabel: this.financialFlowNameById(
+          category.financialFlowId,
+        ),
+        statusLabel: this.getStatusLabel(category.isActive),
+        subCategories: children,
+        subSearchText: children.map((sub) => sub.label).join(' '),
+      };
+    };
+
+    this.expenseCategories = this.categories
+      .filter((category) => category.financialFlowId === 2)
+      .map(enrich);
+    this.revenueCategories = this.categories
+      .filter((category) => category.financialFlowId === 1)
+      .map(enrich);
+  }
+
+  private recomputeOperationCounts(): void {
+    const counts = new Map<number, number>();
+    this.transactions.forEach((transaction) => {
+      const raw = transaction.subCategoryId;
+      if (raw === null || raw === undefined) {
+        return;
+      }
+      const subId =
+        typeof raw === 'string' ? parseInt(raw, 10) : Number(raw);
+      if (!Number.isFinite(subId)) {
+        return;
+      }
+      counts.set(subId, (counts.get(subId) ?? 0) + 1);
+    });
+    this.subCategoryOperationCounts = counts;
+  }
+
+  private getOperationsCount(subCategoryId?: number): number {
+    if (!subCategoryId) {
+      return 0;
+    }
+    return this.subCategoryOperationCounts.get(subCategoryId) ?? 0;
+  }
+
+  applyGlobalFilter(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    this.dtExpense?.filterGlobal(query, 'contains');
+    this.dtRevenue?.filterGlobal(query, 'contains');
   }
 
   isActive(category: Category): boolean {
-    // Vérifier si la catégorie est active (gère snake_case et camelCase)
     return category.isActive === 1 || category['is_active'] === 1;
   }
 
-  // Créer une nouvelle catégorie
+  getSeverity(isActive: number | undefined): string {
+    return (isActive ?? 0) === 1 ? 'success' : 'danger';
+  }
+
+  getStatusLabel(isActive: number | undefined): string {
+    return (isActive ?? 0) === 1 ? 'Actif' : 'Inactif';
+  }
+
   createCategory(): void {
     const dialogRef = this.dialogService.open(EditCategoryDialogComponent, {
       header: 'Nouvelle catégorie',
       width: '500px',
       data: {
-        category: {
-          label: '',
-          financialFlowId: 2 // Dépense par défaut
-        },
-        isNew: true
-      }
+        category: { label: '', financialFlowId: 2 },
+        isNew: true,
+      },
     });
 
-    dialogRef.onClose.subscribe(result => {
+    dialogRef.onClose.subscribe((result) => {
       if (result) {
         this.categoryService.addCategory(result).subscribe({
-          next: () => {
-            console.log('CATEGORY LIST : Catégorie créée avec succès');
-            this.categoryService.getCategories().subscribe();
-          },
-          error: (err) => console.error('CATEGORY LIST : Erreur lors de la création de la catégorie:', err)
+          next: () => this.categoryService.getCategories().subscribe(),
+          error: (err) =>
+            console.error('CATEGORY LIST: erreur creation categorie', err),
         });
       }
     });
   }
 
-  // Éditer une catégorie existante
   editCategory(category: Category): void {
     const dialogRef = this.dialogService.open(EditCategoryDialogComponent, {
       header: 'Editer une catégorie',
       width: '500px',
       data: {
         category: { ...category },
-        isNew: false
-      }
+        isNew: false,
+      },
     });
 
-    dialogRef.onClose.subscribe(result => {
+    dialogRef.onClose.subscribe((result) => {
       if (result) {
         this.categoryService.updateCategory(result.id!, result).subscribe({
-          next: () => {
-            console.log('CATEGORY LIST : Catégorie mise à jour avec succès');
-            // Recharger les données pour mettre à jour le BehaviorSubject
-            this.categoryService.getCategories().subscribe();
-          },
-          error: (err) => console.error('CATEGORY LIST : Erreur lors de la mise à jour de la catégorie:', err)
+          next: () => this.categoryService.getCategories().subscribe(),
+          error: (err) =>
+            console.error('CATEGORY LIST: erreur maj categorie', err),
         });
       }
+    });
+  }
+
+  toggleActive(category: Category, event: any): void {
+    const newStatus = event.checked === 1;
+    const service$ = newStatus
+      ? this.categoryService.reactivateCategory(category.id!)
+      : this.categoryService.deleteCategory(category.id!);
+
+    service$.subscribe({
+      next: () =>
+        setTimeout(() => this.categoryService.getCategories().subscribe(), 100),
+      error: (err) => {
+        console.error('CATEGORY LIST: erreur toggle categorie', err);
+        this.categoryService.getCategories().subscribe();
+      },
     });
   }
 
@@ -152,23 +261,18 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         title: 'Confirmer la désactivation',
-        message: `Voulez-vous vraiment désactiver la catégorie "${category.label}" ? Elle restera visible mais ne sera plus utilisable pour de nouvelles transactions.`,
+        message: `Voulez-vous désactiver la catégorie "${category.label}" ?`,
         confirmText: 'Désactiver',
-        cancelText: 'Annuler'
-      }
+        cancelText: 'Annuler',
+      },
     });
 
-    dialogRef.onClose.subscribe(confirmed => {
+    dialogRef.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.categoryService.deleteCategory(category.id!).subscribe({
-          next: () => {
-            console.log('CATEGORY LIST : Catégorie désactivée avec succès');
-            this.loadCategories(); // Recharger pour mettre à jour l'affichage
-          },
-          error: (err) => {
-            console.error('CATEGORY LIST : Erreur lors de la désactivation de la catégorie:', err);
-            alert('Une erreur est survenue lors de la désactivation.');
-          }
+          next: () => this.categoryService.getCategories().subscribe(),
+          error: (err) =>
+            console.error('CATEGORY LIST: erreur désactivation categorie', err),
         });
       }
     });
@@ -181,76 +285,109 @@ export class CategoryListComponent implements OnInit, OnDestroy {
         title: 'Confirmer la réactivation',
         message: `Voulez-vous réactiver la catégorie "${category.label}" ?`,
         confirmText: 'Réactiver',
-        cancelText: 'Annuler'
-      }
+        cancelText: 'Annuler',
+      },
     });
 
-    dialogRef.onClose.subscribe(confirmed => {
+    dialogRef.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.categoryService.reactivateCategory(category.id!).subscribe({
-          next: () => {
-            console.log('CATEGORY LIST : Catégorie réactivée avec succès');
-            this.loadCategories(); // Recharger pour mettre à jour l'affichage
-          },
-          error: (err) => {
-            console.error('CATEGORY LIST : Erreur lors de la réactivation de la catégorie:', err);
-            alert('Une erreur est survenue lors de la réactivation.');
-          }
+          next: () => this.categoryService.getCategories().subscribe(),
+          error: (err) =>
+            console.error('CATEGORY LIST: erreur réactivation categorie', err),
         });
       }
     });
   }
 
-  // Basculer le statut actif/inactif (sans confirmation)
-  toggleActive(category: Category, event: any): void {
-    // Log pour déboguer
-    console.log('CATEGORY LIST : toggleActive appelé', {
-      category: category.label,
-      categoryId: category.id,
-      currentStatus: category.isActive,
-      event: event,
-      eventChecked: event.checked
+  createSubCategory(category: Category): void {
+    const dialogRef = this.dialogService.open(EditSubCategoryDialogComponent, {
+      width: '500px',
+      data: {
+        subCategory: { label: '', categoryId: category.id },
+        categories: this.categories.filter((cat) => this.isActive(cat)),
+        isNew: true,
+      },
     });
 
-    // Récupérer la nouvelle valeur depuis l'événement
-    const newStatus = event.checked === 1;
-    const action = newStatus ? 'réactiver' : 'désactiver';
-
-    console.log(`CATEGORY LIST : Action à effectuer: ${action}, newStatus: ${newStatus}`);
-
-    const service$ = newStatus
-      ? this.categoryService.reactivateCategory(category.id!)
-      : this.categoryService.deleteCategory(category.id!);
-
-    service$.subscribe({
-      next: () => {
-        console.log(`CATEGORY LIST : Catégorie ${action}e avec succès - rechargement des catégories`);
-        // Attendre un peu avant de recharger pour laisser le temps à la DB de se mettre à jour
-        setTimeout(() => {
-          this.categoryService.getCategories().subscribe({
-            next: () => console.log('CATEGORY LIST : Catégories rechargées après toggle'),
-            error: (err) => console.error('CATEGORY LIST : Erreur lors du rechargement:', err)
-          });
-        }, 100);
-      },
-      error: (err) => {
-        console.error(`CATEGORY LIST : Erreur lors de la ${action}:`, err);
-        alert(`Une erreur est survenue lors de la ${action}.`);
-        // Remettre le switch à son état précédent en cas d'erreur
-        this.loadCategories();
+    dialogRef.onClose.subscribe((result) => {
+      if (result) {
+        this.subCategoryService.addSubCategory(result).subscribe({
+          next: () => this.subCategoryService.getSubCategories().subscribe(),
+          error: (err) =>
+            console.error('CATEGORY LIST: erreur creation sous-categorie', err),
+        });
       }
     });
   }
 
-  getSeverity(isActive: number | undefined): string {
-    return (isActive ?? 0) === 1 ? 'success' : 'danger';
+  editSubCategory(subCategory: SubCategory): void {
+    const dialogRef = this.dialogService.open(EditSubCategoryDialogComponent, {
+      width: '500px',
+      data: {
+        subCategory: { ...subCategory },
+        categories: this.categories.filter((cat) => this.isActive(cat)),
+        isNew: false,
+      },
+    });
+
+    dialogRef.onClose.subscribe((result) => {
+      if (result) {
+        this.subCategoryService
+          .updateSubCategory(result.id!, result)
+          .subscribe({
+            next: () => this.subCategoryService.getSubCategories().subscribe(),
+            error: (err) =>
+              console.error('CATEGORY LIST: erreur maj sous-categorie', err),
+          });
+      }
+    });
   }
 
-  getStatusLabel(isActive: number | undefined): string {
-    return (isActive ?? 0) === 1 ? 'Actif' : 'Inactif';
+  deleteSubCategory(subCategory: SubCategory): void {
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
+      width: '480px',
+      data: {
+        title: 'Confirmer la suppression',
+        message: `Supprimer la sous-catégorie "${subCategory.label}" ?`,
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+      },
+    });
+
+    dialogRef.onClose.subscribe((confirmed) => {
+      if (confirmed) {
+        this.subCategoryService.deleteSubCategory(subCategory.id!).subscribe({
+          next: () => this.subCategoryService.getSubCategories().subscribe(),
+          error: (err) =>
+            console.error(
+              'CATEGORY LIST: erreur suppression sous-categorie',
+              err,
+            ),
+        });
+      }
+    });
   }
 
-  applyFilterGlobal(event: Event, stringVal: string) {
-    this.dt!.filterGlobal((event.target as HTMLInputElement).value, stringVal);
+  viewCategoryTransactions(category: Category): void {
+    if (!category?.id) {
+      return;
+    }
+    const id = category.id;
+    this.transactionService.applyFilterTransactions('categoryId', id);
+    this.router.navigate(['/transactions'], {
+      queryParams: { categoryId: id },
+    });
+  }
+
+  viewSubCategoryTransactions(subCategory: SubCategory): void {
+    if (!subCategory?.id) {
+      return;
+    }
+    const id = subCategory.id;
+    this.transactionService.applyFilterTransactions('subCategoryId', id);
+    this.router.navigate(['/transactions'], {
+      queryParams: { subCategoryId: id },
+    });
   }
 }

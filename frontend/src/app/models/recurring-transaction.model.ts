@@ -11,5 +11,11 @@ export interface RecurringTransaction {
   isActive?: number;
   createdAt?: Date;
   debit503020: number | null; // 1=Charges fixes, 2=Loisir, 3=Epargne
+  // Champs optionnels pour récurrences avancées
+  startMonth?: number | null;
+  occurrences?: number | null;
+  activeMonths?: number[] | null; // 1-12
+  recurrenceKind?: 'permanent' | 'installment' | 'seasonal';
+  installmentStartMonth?: number | null;
   [key: string]: any; // Index signature pour snake_case
 }

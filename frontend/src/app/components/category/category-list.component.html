@@ -1,104 +1,237 @@
-<div class="card">
-  <p-card>
-    <p-table
-      #dt
-      [value]="categories"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 20, 50, 100]"
-      [showCurrentPageReport]="true"
-      currentPageReportTemplate="{first} à {last} sur {totalRecords} catégories"
-      [globalFilterFields]="['label', 'financialFlowLabel', 'statusLabel']"
-      [tableStyle]="{ 'min-width': '50rem' }"
-      styleClass="p-datatable-gridlines p-datatable-striped">
+<section class="category-page">
+  <header class="page-header">
+    <div class="header-actions">
+      <span class="search-wrapper">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          placeholder="Rechercher une catégorie ou sous-catégorie..."
+          (input)="applyGlobalFilter($event)"
+        />
+      </span>
+      <button
+        pButton
+        type="button"
+        label="Nouvelle catégorie"
+        icon="pi pi-plus"
+        class="primary-btn"
+        (click)="createCategory()"
+      ></button>
+    </div>
+  </header>
 
-      
-      <ng-template pTemplate="caption">
-        <div class="flex align-items-center justify-content-between flex-wrap gap-3">
-          <!-- Bouton pour ajouter une catégorie -->
-          <p-button
-            label="Nouvelle catégorie"
-            icon="pi pi-plus"
-            (onClick)="createCategory()"
-            styleClass="p-button-success">
-          </p-button>
-
-          <!-- Champ de recherche -->
-          <input
-            pInputText
-            type="text"
-            (input)="applyFilterGlobal($event, 'contains')"
-            placeholder="🔍 Rechercher une catégorie..."
-            class="w-full"
-            style="max-width: 300px;"
-          />
-        </div>
-      </ng-template>
-
-      <!-- En-têtes de colonnes avec filtres -->
-      <ng-template pTemplate="header">
-        <tr>
-          <th pSortableColumn="label" style="width: 40%">
-            Libellé
-            <p-sortIcon field="label" />
-          </th>
-          <th pSortableColumn="financialFlowId" style="width: 25%">
-            Flux financier
-            <p-sortIcon field="financialFlowId" />
-          </th>
-          <th pSortableColumn="isActive" style="width: 15%">
-            Statut
-            <p-sortIcon field="isActive" />
-          </th>
-          <th style="width: 20%">Actions</th>
-        </tr>
-      </ng-template>
-
-      <!-- Corps du tableau -->
-      <ng-template pTemplate="body" let-category>
-        <tr>
-          <td>{{ category.label }}</td>
-          <td>
-            <p-tag
-              [value]="category.financialFlowLabel"
-              [severity]="category.financialFlowId === 1 ? 'success' : 'danger'">
-            </p-tag>
-          </td>
-          <td>
+  <p-tabView class="tab-wrapper" [scrollable]="true">
+    <p-tabPanel header="Dépenses">
+      <div class="category-grid">
+        <article
+          class="category-card"
+          *ngFor="let category of expenseCategories"
+        >
+          <header class="card-header">
+            <div class="card-main-row">
+              <div>
+                <h3>{{ category.label }}</h3>
+              </div>
+              <div class="card-actions">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-plus"
+                  [text]="true"
+                  pTooltip="Ajouter une sous-catégorie"
+                  (click)="createSubCategory(category)"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  pTooltip="Modifier la catégorie"
+                  (click)="editCategory(category)"
+                ></button>
+                <p-inputSwitch
+                  [ngModel]="category.isActive"
+                  [trueValue]="1"
+                  [falseValue]="0"
+                  (onChange)="toggleActive(category, $event)"
+                  pTooltip="Activer / Désactiver"
+                ></p-inputSwitch>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-eye"
+                  label="Voir"
+                  class="view-btn"
+                  (click)="viewCategoryTransactions(category)"
+                ></button>
+              </div>
+            </div>
             <p-tag
               [value]="category.statusLabel"
-              [severity]="getSeverity(category.isActive)">
-            </p-tag>
-          </td>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <p-button
-                icon="pi pi-pencil"
-                (onClick)="editCategory(category)"
-                styleClass="p-button-rounded p-button-text p-button-info"
-                pTooltip="Éditer"
-                tooltipPosition="top">
-              </p-button>
-              <p-inputSwitch
-                [ngModel]="category.isActive"
-                [trueValue]="1"
-                [falseValue]="0"
-                (onChange)="toggleActive(category, $event)"
-                pTooltip="Activer/Désactiver"
-                tooltipPosition="top">
-              </p-inputSwitch>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
+              [severity]="getSeverity(category.isActive)"
+            ></p-tag>
+          </header>
 
-      <!-- Message si aucune donnée -->
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="4" class="text-center">Aucune catégorie trouvée.</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
-</div>
- 
+          <section
+            class="sub-list"
+            *ngIf="category.subCategories?.length; else emptyExpenseSubs"
+          >
+            <div class="sub-chip-grid">
+              <div class="sub-chip" *ngFor="let sub of category.subCategories">
+                <div class="sub-chip-row">
+                  <span class="sub-chip-label">
+                    {{ sub.label }}
+                    <span class="op-count" *ngIf="sub.operationsCount !== undefined; else fallbackCount">
+                      {{ sub.operationsCount }}
+                    </span>
+                    <ng-template #fallbackCount>
+                      <span class="op-count">0</span>
+                    </ng-template>
+                  </span>
+                </div>
+                <div class="sub-chip-actions">
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-pencil"
+                    [text]="true"
+                    class="edit-action"
+                    (click)="editSubCategory(sub)"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    [text]="true"
+                    class="danger"
+                    (click)="deleteSubCategory(sub)"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-search"
+                    [text]="true"
+                    (click)="viewSubCategoryTransactions(sub)"
+                  ></button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <ng-template #emptyExpenseSubs>
+            <p class="empty-state">Aucune sous-catégorie</p>
+          </ng-template>
+        </article>
+        <div class="empty-state" *ngIf="expenseCategories.length === 0">
+          Aucune catégorie de dépense trouvée.
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <p-tabPanel header="Revenus">
+      <div class="category-grid">
+        <article
+          class="category-card"
+          *ngFor="let category of revenueCategories"
+        >
+          <header class="card-header">
+            <div class="card-main-row">
+              <div>
+                <h3>{{ category.label }}</h3>
+              </div>
+              <div class="card-actions">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-plus"
+                  [text]="true"
+                  pTooltip="Ajouter une sous-catégorie"
+                  (click)="createSubCategory(category)"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  pTooltip="Modifier la catégorie"
+                  (click)="editCategory(category)"
+                ></button>
+                <p-inputSwitch
+                  [ngModel]="category.isActive"
+                  [trueValue]="1"
+                  [falseValue]="0"
+                  (onChange)="toggleActive(category, $event)"
+                  pTooltip="Activer / Désactiver"
+                ></p-inputSwitch>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-eye"
+                  label="Voir"
+                  class="view-btn"
+                  (click)="viewCategoryTransactions(category)"
+                ></button>
+              </div>
+            </div>
+            <p-tag
+              [value]="category.statusLabel"
+              [severity]="getSeverity(category.isActive)"
+            ></p-tag>
+          </header>
+
+          <section
+            class="sub-list"
+            *ngIf="category.subCategories?.length; else emptyRevenueSubs"
+          >
+            <p class="eyebrow small">Sous-catégories</p>
+            <div class="sub-chip-grid">
+              <div class="sub-chip" *ngFor="let sub of category.subCategories">
+                <div class="sub-chip-row">
+                  <span class="sub-chip-label">
+                    {{ sub.label }}
+                    <span class="op-count" *ngIf="sub.operationsCount !== undefined; else fallbackCountRevenue">
+                      {{ sub.operationsCount }}
+                    </span>
+                    <ng-template #fallbackCountRevenue>
+                      <span class="op-count">0</span>
+                    </ng-template>
+                  </span>
+                </div>
+                <div class="sub-chip-actions">
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-pencil"
+                    [text]="true"
+                    class="edit-action"
+                    (click)="editSubCategory(sub)"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    [text]="true"
+                    class="danger"
+                    (click)="deleteSubCategory(sub)"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-search"
+                    [text]="true"
+                    (click)="viewSubCategoryTransactions(sub)"
+                  ></button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <ng-template #emptyRevenueSubs>
+            <p class="empty-state">Aucune sous-catégorie</p>
+          </ng-template>
+        </article>
+        <div class="empty-state" *ngIf="revenueCategories.length === 0">
+          Aucune catégorie de revenu trouvée.
+        </div>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</section>

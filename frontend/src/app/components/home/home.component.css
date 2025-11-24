@@ -585,3 +585,20 @@
   .break503020-container { flex-direction:column; }
   .break503020-mini { width:100%; }
 }
+.account-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.account-tab-button {
+  min-width: 140px;
+  font-weight: 600;
+  text-transform: none;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.account-tab-button--active {
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}

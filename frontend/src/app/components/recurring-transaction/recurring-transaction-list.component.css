@@ -1,161 +1,210 @@
-.recurring-list-container {
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-top: 30px;
+.recurring-dashboard h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0f172a;
 }
 
-.recurring-list-container h3 {
-  margin: 0 0 20px 0;
-  color: #333;
-  font-size: 1.3rem;
-  font-weight: 500;
+.recurring-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.text-muted {
+  color: #64748b;
+  margin: 0;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #475569;
+}
+
+.flow-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.stat-card span {
+  display: block;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.stat-card strong {
+  font-size: 1.4rem;
+  color: #0f172a;
+}
+
+.account-accordion .p-accordion-header-link {
+  padding: 0.75rem 1rem;
+}
+
+.account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+
+.account-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.account-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.account-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.account-summary {
+  background: #f1f5f9;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item span {
+  display: block;
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.summary-item strong {
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.label-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.label-cell small {
+  font-size: 0.8rem;
+}
+
+.action-cell {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: #666;
-  font-style: italic;
+  padding: 2rem 1rem;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-.table-container {
-  overflow-x: auto;
+.empty-state i {
+  font-size: 2rem;
+  color: #94a3b8;
 }
 
-.recurring-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.recurring-table thead {
-  background: #f5f5f5;
-}
-
-.recurring-table th {
-  padding: 12px 15px;
-  text-align: left;
+.recurring-kind-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
   font-weight: 600;
-  color: #555;
-  border-bottom: 2px solid #ddd;
+  margin-left: 0.5rem;
 }
 
-.recurring-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  vertical-align: middle;
+.recurring-kind-badge.badge-credit {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
-.recurring-table tbody tr:hover {
-  background-color: #f9f9f9;
+.recurring-kind-badge.badge-seasonal {
+  background: #fef9c3;
+  color: #b45309;
 }
 
-.inactive-row {
-  opacity: 0.6;
-  background-color: #f5f5f5 !important;
+.history-section {
+  margin-top: 2rem;
 }
 
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
-.status-badge.active {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+.history-chart-wrapper {
+  min-height: 280px;
 }
 
-.status-badge.inactive {
-  background-color: #f5f5f5;
-  color: #757575;
+.history-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #475569;
+  min-height: 160px;
 }
 
-.type-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
+@media (max-width: 768px) {
+  .recurring-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.type-badge.revenue {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
+  .account-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.type-badge.expense {
-  background-color: #ffebee;
-  color: #c62828;
-}
-
-.account-badge {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.frequency-cell {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.day-cell {
-  text-align: center;
-  font-weight: 500;
-  color: #666;
-}
-
-.amount-cell {
-  font-weight: 600;
-  text-align: right;
-  font-size: 1rem;
-}
-
-.revenue-amount {
-  color: #2e7d32;
-}
-
-.expense-amount {
-  color: #c62828;
-}
-
-.actions-cell {
-  text-align: center;
-  white-space: nowrap;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  margin: 0 2px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  color: #6c757d;
-}
-
-.action-btn mat-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
-}
-
-.action-btn.edit-btn:hover {
-  background-color: #cfe2ff;
-  color: #0d6efd;
-}
-
-.action-btn.deactivate-btn:hover {
-  background-color: #fff3cd;
-  color: #f57c00;
-}
-
-.action-btn.activate-btn:hover {
-  background-color: #d1ecf1;
-  color: #0c5460;
+  .action-cell {
+    justify-content: flex-start;
+  }
 }

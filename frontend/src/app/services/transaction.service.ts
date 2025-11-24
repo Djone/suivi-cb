@@ -66,8 +66,8 @@ export class TransactionService {
   }
 
   // Méthode pour mettre à jour les filtres
-  applyFilterTransactions(key: keyof Transaction, value: Transaction): void {
-    const filter = { [key]: value }; // Crée un objet filtre avec une seule clé-valeur
+  applyFilterTransactions<K extends keyof Transaction>(key: K, value: Transaction[K]): void {
+    const filter = { [key]: value } as Partial<Transaction>; // Crée un objet filtre avec une seule clé-valeur
     this.filterManager.setFilters(filter); // Passe l'objet filtre
     this.loadTransactions(); // Recharge les transactions avec les nouveaux filtres
   }

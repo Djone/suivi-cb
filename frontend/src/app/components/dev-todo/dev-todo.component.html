@@ -1,0 +1,79 @@
+<section class="dev-todo-page">
+  <header class="todo-header">
+    <div>
+      <p class="eyebrow">DEV ONLY</p>
+      <h1>RELEASE NOTE V1.1.0</h1>
+    </div>
+    <div class="header-actions">
+      <div class="env-chip">Version {{ appVersion }} · Build local</div>
+      <a routerLink="/release-process" class="release-process-button">
+        Clôture de version
+      </a>
+    </div>
+  </header>
+
+  <div class="status-grid">
+    <section
+      *ngFor="let status of statuses"
+      class="status-column"
+      [ngClass]="status.accent"
+    >
+      <div class="status-header">
+        <div>
+          <p class="eyebrow">{{ status.helper }}</p>
+          <h2>{{ status.label }}</h2>
+        </div>
+      </div>
+
+      <div
+        *ngIf="getItemsByStatus(status.key).length === 0"
+        class="empty-state"
+      >
+        Aucune action
+      </div>
+
+      <article
+        *ngFor="let item of getItemsByStatus(status.key)"
+        class="todo-card"
+      >
+        <div class="todo-card-title">
+          <div class="todo-card-title-text">
+            <h3>{{ item.title }}</h3>
+            <span *ngIf="item.targetVersion" class="tag">
+              Cible {{ item.targetVersion }}
+            </span>
+          </div>
+          <ng-container *ngIf="item.priority as priority">
+            <p-badge
+              [value]="getPriorityBadge(priority).value"
+              [severity]="getPriorityBadge(priority).severity"
+              [styleClass]="
+                'p-badge-circle priority-badge priority-' + priority
+              "
+            >
+              {{ getPriorityBadge(priority).value }}
+            </p-badge>
+          </ng-container>
+        </div>
+        <ng-container
+          *ngIf="getDescriptionList(item) as bulletList; else plainDescription"
+        >
+          <ul class="todo-description bullet-list">
+            <li *ngFor="let bullet of bulletList">{{ bullet }}</li>
+          </ul>
+        </ng-container>
+        <ng-template #plainDescription>
+          <p class="todo-description">{{ getPlainDescription(item) }}</p>
+        </ng-template>
+        <div class="todo-meta">
+          <span *ngIf="item.owner">👤 {{ item.owner }}</span>
+          <span *ngIf="item.notes">{{ item.notes }}</span>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <div class="dev-note">
+    <p>Cette page est volontairement absente du bundle de production.</p>
+  </div>
+</section>

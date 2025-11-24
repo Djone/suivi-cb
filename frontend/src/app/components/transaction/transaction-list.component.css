@@ -18,7 +18,7 @@ h3 {
   font-weight: 500;
 }
 
-/* En-tÃªte avec bouton */
+
 .list-header {
   display: flex;
   justify-content: space-between;
@@ -44,7 +44,7 @@ h3 {
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Affichage des soldes */
+
 .balance-display {
   display: flex;
   align-items: center;
@@ -107,7 +107,6 @@ h3 {
   height: 28px;
 }
 
-/* Récapitulatif des échéances du mois */
 .recurring-summary {
   display: flex;
   gap: 1rem;
@@ -150,7 +149,6 @@ h3 {
   color: #991b1b;
 }
 
-/* Répartition 50/30/20 (sous la carte solde) */
 .break503020-container { display:flex; gap:1rem; align-items:flex-start; margin-top:.75rem; }
 .break503020-list { flex: 1; display:flex; flex-direction:column; gap:.35rem; }
 .break-row { display:grid; grid-template-columns: 1fr auto 60px; gap:.5rem; background: rgba(255,255,255,.6); padding:.4rem .6rem; border-radius:8px; align-items:center; }
@@ -170,7 +168,6 @@ h3 {
 .dot-1 { background:#10b981; }
 .dot-2 { background:#f59e0b; }
 
-/* Accent dédié pour "Reste à vivre" */
 .break-row.remaining { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); }
 .break-row.remaining .break-label { color:#065f46; }
 .break-row.remaining .break-value, .break-row.remaining .break-percent { color:#047857; font-weight:800; }
@@ -180,14 +177,14 @@ h3 {
   .break503020-mini { width:100%; }
 }
 
-/* Bouton d'affichage des Ã©chÃ©ances */
+
 .recurring-toggle {
   padding: 1rem 1.5rem;
   background: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
 }
 
-/* Liste des Ã©chÃ©ances rÃ©currentes */
+
 .recurring-list {
   padding: 1.5rem;
   background: #fff9e6;
@@ -208,7 +205,6 @@ h3 {
   background: white;
   border-left: 4px solid #ffc107;
   border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   transition: all 0.2s;
 }
 
@@ -217,9 +213,12 @@ h3 {
   background: #f1f8f4;
 }
 
-.recurring-item:hover {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+
+.recurring-item.overdue {
+  border-left-color: #ef4444;
+  background: #fef2f2;
 }
+
 
 .recurring-info {
   display: flex;
@@ -254,6 +253,47 @@ h3 {
 .recurring-schedule {
   font-size: 0.85rem;
   color: #6c757d;
+}
+
+.recurring-kind-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.recurring-kind-badge.badge-credit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.recurring-kind-badge.badge-seasonal {
+  background: #fef9c3;
+  color: #b45309;
+}
+
+
+.overdue-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.due-chip {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.due-chip.overdue-text {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .recurring-amount {
@@ -295,11 +335,10 @@ h3 {
   color: #ff9800;
 }
 
-/* ContrÃ´les */
+
 .list-container {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px var(--accent-shadow, rgba(59,130,246,0.3));
   overflow: hidden;
 }
 
@@ -396,7 +435,7 @@ h3 {
   white-space: nowrap;
 }
 
-/* Transactions groupÃ©es */
+
 .grouped-transactions {
   padding: 1rem;
 }
@@ -449,7 +488,7 @@ h3 {
   background: var(--accent-soft, #DBEAFE);
 }
 
-/* Liste des transactions */
+
 .transactions-list {
   display: flex;
   flex-direction: column;
@@ -470,7 +509,6 @@ h3 {
 .transaction-item:hover {
   background: #e9ecef;
   border-left-color: #007bff;
-  box-shadow: 0 2px 4px var(--accent-shadow, rgba(59,130,246,0.3));
 }
 
 .transaction-main {
@@ -583,7 +621,7 @@ h3 {
   color: white;
 }
 
-/* Message vide */
+
 .no-data {
   display: flex;
   align-items: center;
@@ -600,7 +638,7 @@ h3 {
   height: 24px;
 }
 
-/* Pagination */
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -638,7 +676,7 @@ h3 {
   cursor: not-allowed;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .list-header {
     flex-direction: column;

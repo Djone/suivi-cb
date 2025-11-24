@@ -1,0 +1,118 @@
+<section class="release-process-page">
+  <header class="process-header">
+    <div>
+      <p class="eyebrow">Clôture de version</p>
+      <h1>Timeline de mise en production</h1>
+      <p class="subtitle">
+        Avance étape par étape, valide ou ignore chaque action, et reviens en
+        arrière quand tu veux.
+      </p>
+    </div>
+    <button class="reset-btn" type="button" (click)="resetProcess()">
+      Réinitialiser le processus
+    </button>
+  </header>
+
+  <ol class="timeline">
+    <li
+      *ngFor="let step of steps; index as idx"
+      class="timeline-step"
+      [ngClass]="statuses[idx]"
+    >
+      <div class="timeline-index">{{ idx + 1 }}</div>
+      <div class="timeline-body">
+        <div class="timeline-headline">
+          <h2>{{ step.title }}</h2>
+          <span class="status-chip" [ngClass]="statuses[idx]">
+            {{ statuses[idx] }}
+          </span>
+        </div>
+        <p class="timeline-description">{{ step.description }}</p>
+        <p class="timeline-helper">{{ step.helper }}</p>
+
+        <ng-container [ngSwitch]="step.id">
+          <div *ngSwitchCase="'stabilize'" class="step-card">
+            <p>
+              Version actuelle : <strong>{{ currentDevVersion }}</strong>
+            </p>
+            <p>
+              Version stabilisée : <strong>{{ stableCandidate }}</strong>
+            </p>
+            <small
+              >Une fois validée, les release notes pointeront vers cette
+              version.</small
+            >
+          </div>
+
+          <div *ngSwitchCase="'build-check'" class="step-card">
+            <p>
+              Exécute la compilation locale (ex. `npm run build`) et vérifie
+              qu'elle se termine correctement.
+            </p>
+            <small
+              >Tu peux ignorer cette étape si tu viens de lancer un build
+              réussi.</small
+            >
+          </div>
+
+          <div *ngSwitchCase="'production-ready'" class="step-card">
+            <ul>
+              <li>Met à jour package.json / environment.prod.ts</li>
+              <li>Prépare le changelog et les release notes</li>
+              <li>Vérifie la branche master avant merge</li>
+            </ul>
+          </div>
+
+          <div *ngSwitchCase="'next-dev'" class="step-card">
+            <label class="input-label" for="nextVersion"
+              >Prochaine version de dev</label
+            >
+            <input
+              id="nextVersion"
+              class="text-input"
+              placeholder="Ex: 1.2.0-dev"
+              [(ngModel)]="nextDevVersion"
+            />
+            <small
+              >Ce numéro sera utilisé pour préparer le prochain cycle de
+              travail.</small
+            >
+          </div>
+        </ng-container>
+
+        <div *ngIf="currentStepIndex === idx && !finished" class="step-actions">
+          <button
+            type="button"
+            class="primary"
+            (click)="completeCurrentStep()"
+          >
+            Valider l'étape
+          </button>
+          <button type="button" class="ghost" (click)="skipCurrentStep()">
+            Ignorer
+          </button>
+          <button
+            type="button"
+            class="ghost"
+            [disabled]="idx === 0"
+            (click)="goBack()"
+          >
+            Revenir en arrière
+          </button>
+        </div>
+      </div>
+    </li>
+  </ol>
+
+  <div *ngIf="finished" class="process-complete">
+    <h3>Processus terminé</h3>
+    <p>
+      La version {{ stableCandidate }} est prête et la prochaine version dev
+      sera {{ nextDevVersion || 'à définir' }}.
+    </p>
+    <p>
+      Merge la branche de développement sur master, pousse la version, puis
+      relance un cycle quand tu es prêt.
+    </p>
+  </div>
+</section>

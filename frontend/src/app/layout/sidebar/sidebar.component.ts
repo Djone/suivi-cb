@@ -15,6 +15,7 @@ export class SidebarComponent {
   
   public appVersion = environment.version;
   public currentYear = new Date().getFullYear();
+  public readonly isDevBuild = !environment.production;
   
   expandedSections: { [key: string]: boolean } = {
     operations: false

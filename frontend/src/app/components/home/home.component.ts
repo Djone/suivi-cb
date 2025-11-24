@@ -21,7 +21,6 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { TabViewModule } from 'primeng/tabview';
 import { ChartModule } from 'primeng/chart';
 import { DynamicDialogModule, DialogService } from 'primeng/dynamicdialog';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -78,7 +77,7 @@ interface AccountBalance {
   totalUpcoming: number;
   expensesByCategory: CategoryTotal[];
   incomesByCategory: CategoryTotal[];
-  nextMonthLowestBalance: number; // Remplacer le bool├®en par un nombre
+  nextMonthLowestBalance: number; // Remplacer le bool+�en par un nombre
 }
 
 @Component({
@@ -91,7 +90,6 @@ interface AccountBalance {
     TagModule,
     ButtonModule,
     TooltipModule,
-    TabViewModule,
     ChartModule,
     DynamicDialogModule,
   ],
@@ -114,14 +112,20 @@ export class HomeComponent implements OnInit, OnDestroy {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'right' },
+      legend: { display: false },
     },
     scales: {
-      x: { stacked: true },
-      y: { stacked: true },
+      x: { beginAtZero: true },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value: string | number) =>
+            `${Number(value).toLocaleString('fr-FR')} \u20AC`,
+        },
+      },
     },
   };
-  private subCategoriesLoaded = false; // Flag pour savoir si les sous-cat├®gories sont charg├®es
+  private subCategoriesLoaded = false; // Flag pour savoir si les sous-cat+�gories sont charg+�es
 
   constructor(
     private transactionService: TransactionService,
@@ -133,26 +137,21 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Charger les sous-cat├®gories EN PREMIER
+    // Charger les sous-cat+�gories EN PREMIER
     this.subscriptions.add(
       this.subCategoryService.subCategories$.subscribe({
         next: (subCats) => {
-          console.log('SubCategories received:', subCats);
           this.subCategories.clear(); // Vider avant de remplir
           subCats.forEach((sc) => {
             this.subCategories.set(sc.id!, `${sc.categoryLabel}`);
           });
-          console.log(
-            'SubCategories Map after update:',
-            Array.from(this.subCategories.entries()),
-          );
           this.subCategoriesLoaded = true;
           this.calculateAllBalances();
         },
       }),
     );
 
-    // D├®clencher le chargement des sous-cat├®gories
+    // D+�clencher le chargement des sous-cat+�gories
     this.subCategoryService.getSubCategories().subscribe();
 
     // Charger les comptes
@@ -175,7 +174,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       }),
     );
 
-    // Charger les ├®ch├®ances
+    // Charger les +�ch+�ances
     this.subscriptions.add(
       this.recurringTransactionService.recurringTransactions$.subscribe({
         next: (data) => {
@@ -185,11 +184,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       }),
     );
 
-    // Charger les donn├®es initiales
+    // Charger les donn+�es initiales
     this.transactionService.clearFiltersTransactions();
     this.recurringTransactionService.getRecurringTransactions().subscribe();
     this.accountService.getAccounts().subscribe();
-    // getSubCategories() est d├®j├á appel├® plus haut
+    // getSubCategories() est d+�j+� appel+� plus haut
   }
 
   ngOnDestroy(): void {
@@ -197,7 +196,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   calculateAllBalances(): void {
-    // Ne pas calculer si les sous-catégories ne sont pas encore chargées
+    // Ne pas calculer si les sous-cat�gories ne sont pas encore charg�es
     if (!this.subCategoriesLoaded) {
       console.log('Waiting for subcategories to load...');
       return;
@@ -213,7 +212,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
       const allUpcomingSchedules = this.getUpcomingSchedules(accountId);
 
-      // Le total à venir et le prévisionnel doivent inclure toutes les échéances prévues pour le reste du mois et le mois suivant (si applicable).
+      // Le total � venir et le pr�visionnel doivent inclure toutes les �ch�ances pr�vues pour le reste du mois et le mois suivant (si applicable).
       const totalUpcoming = allUpcomingSchedules.reduce(
         (sum, s) => sum + s.amount,
         0,
@@ -248,7 +247,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.activeAccountId = typeof firstId === 'number' ? firstId : null;
     }
 
-    // Correction : Déplacer la logique de mise à jour de l'onglet actif ici
+    // Correction : D�placer la logique de mise � jour de l'onglet actif ici
     if (
       this.accountBalances.length > 0 &&
       (this.activeAccountId === null ||
@@ -282,11 +281,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     recurring: RecurringTransaction,
     nextDueDate: Date,
   ): boolean {
-    // Simplification : on v├®rifie si une transaction correspondante existe pour le mois de l'├®ch├®ance, peu importe le jour.
+    // Simplification : on v+�rifie si une transaction correspondante existe pour le mois de l'+�ch+�ance, peu importe le jour.
     const targetMonth = nextDueDate.getMonth();
     const targetYear = nextDueDate.getFullYear();
 
-    // On cherche une transaction qui correspond ├á l'├®ch├®ance et qui a ├®t├® effectu├®e durant le m├¬me mois et la m├¬me ann├®e.
+    // On cherche une transaction qui correspond +� l'+�ch+�ance et qui a +�t+� effectu+�e durant le m+�me mois et la m+�me ann+�e.
     return this.transactions.some((t) => {
       if (t.recurringTransactionId !== recurring.id) {
         return false;
@@ -307,12 +306,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const daysUntilEndOfMonth = endOfMonth.getDate() - today.getDate();
 
-    // Ne calculer que si on est ├á 5 jours ou moins de la fin du mois
+    // Ne calculer que si on est +� 5 jours ou moins de la fin du mois
     if (daysUntilEndOfMonth > 5) {
       return 0;
     }
 
-    // 1. Calculer le solde ├á la fin du mois en cours
+    // 1. Calculer le solde +� la fin du mois en cours
     const remainingSchedulesThisMonth = this.getUpcomingSchedules(
       accountId,
       false,
@@ -348,7 +347,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
       const currentDayOfWeekJS = currentDate.getDay(); // 0=Dim, 1=Lun, ...
 
-      // R├®cup├®rer TOUTES les ├®ch├®ances pour le jour 'day'
+      // R+�cup+�rer TOUTES les +�ch+�ances pour le jour 'day'
       const schedulesForDay = accountRecurring.filter((rt) => {
         // @ts-ignore
         if (rt.frequency === 'weekly') {
@@ -361,7 +360,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           return targetDayOfWeekJS === currentDayOfWeekJS;
         }
 
-        // Logique pour les ├®ch├®ances mensuelles (et autres bas├®es sur le jour du mois)
+        // Logique pour les +�ch+�ances mensuelles (et autres bas+�es sur le jour du mois)
         const dayOfMonth =
           typeof rt.dayOfMonth === 'string'
             ? parseInt(rt.dayOfMonth)
@@ -369,7 +368,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         return dayOfMonth === day;
       });
 
-      // Calculer l'impact net de la journ├®e
+      // Calculer l'impact net de la journ+�e
       const netChangeForDay = schedulesForDay.reduce((sum, rt) => {
         const amount =
           typeof rt.amount === 'string'
@@ -387,10 +386,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
     }
 
-    // L'alerte est d├®clench├®e si le point le plus bas est n├®gatif
+    // L'alerte est d+�clench+�e si le point le plus bas est n+�gatif
     if (lowestBalanceNextMonth < 0) {
       console.log(
-        `ALERTE Compte ${accountId}: Solde n├®gatif de ${lowestBalanceNextMonth.toFixed(2)}Ôé¼ pr├®vu d├®but de mois prochain.`,
+        `ALERTE Compte ${accountId}: Solde n+�gatif de ${lowestBalanceNextMonth.toFixed(2)}�� pr+�vu d+�but de mois prochain.`,
       );
       return lowestBalanceNextMonth;
     }
@@ -413,10 +412,94 @@ export class HomeComponent implements OnInit, OnDestroy {
       case 'yearly':
         return monthIndex === 0; // January
       default:
-        return false; // Ne pas traiter les fr├®quences inconnues
+        return false; // Ne pas traiter les fr+�quences inconnues
     }
   }
 
+  private isInstallmentDateValid(
+    recurring: RecurringTransaction,
+    date: Date,
+  ): boolean {
+    if (recurring.recurrenceKind !== 'installment') {
+      return true;
+    }
+    const startMonth = this.resolveInstallmentStartMonth(recurring);
+    const occurrences = recurring.occurrences;
+    if (!startMonth || !occurrences || occurrences <= 0) {
+      return false;
+    }
+
+    const monthSpan = this.getFrequencyMonthSpan(recurring.frequency);
+    const startYear = this.getInstallmentStartYear(recurring, startMonth);
+    const firstIndex = startYear * 12 + (startMonth - 1);
+    const targetIndex = date.getFullYear() * 12 + date.getMonth();
+    const delta = targetIndex - firstIndex;
+
+    if (delta < 0) {
+      return false;
+    }
+    if (delta % monthSpan !== 0) {
+      return false;
+    }
+
+    const occurrenceIndex = delta / monthSpan;
+    return occurrenceIndex < occurrences;
+  }
+
+  private resolveInstallmentStartMonth(
+    recurring: RecurringTransaction,
+  ): number | null {
+    if (
+      typeof recurring.startMonth === 'number' &&
+      recurring.startMonth >= 1 &&
+      recurring.startMonth <= 12
+    ) {
+      return recurring.startMonth;
+    }
+    if (
+      typeof recurring.installmentStartMonth === 'number' &&
+      recurring.installmentStartMonth >= 1 &&
+      recurring.installmentStartMonth <= 12
+    ) {
+      return recurring.installmentStartMonth;
+    }
+    return null;
+  }
+
+  private getInstallmentStartYear(
+    recurring: RecurringTransaction,
+    startMonth: number,
+  ): number {
+    const createdAt = recurring.createdAt
+      ? new Date(recurring.createdAt as any)
+      : null;
+    if (!createdAt || Number.isNaN(createdAt.getTime())) {
+      return new Date().getFullYear();
+    }
+    const createdMonth = createdAt.getMonth() + 1;
+    let year = createdAt.getFullYear();
+    if (startMonth < createdMonth) {
+      year += 1;
+    }
+    return year;
+  }
+
+  private getFrequencyMonthSpan(
+    frequency?: RecurringTransaction['frequency'] | null,
+  ): number {
+    switch (frequency) {
+      case 'bimonthly':
+        return 2;
+      case 'quarterly':
+        return 3;
+      case 'biannual':
+        return 6;
+      case 'yearly':
+        return 12;
+      default:
+        return 1;
+    }
+  }
   getUpcomingSchedules(
     accountId: number,
     anticipate: boolean = true,
@@ -441,10 +524,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     const schedules: UpcomingSchedule[] = [];
 
     accountRecurring.forEach((recurring) => {
-      console.log(
-        `[SCHEDULE] Traitement de l'├®ch├®ance: ${recurring.label} (ID: ${recurring.id}, Montant: ${recurring.amount}, Flux: ${recurring.financialFlowId})`,
-      );
-
       const currentMonth = today.getMonth();
       const currentYear = today.getFullYear();
 
@@ -455,7 +534,17 @@ export class HomeComponent implements OnInit, OnDestroy {
           ? parseInt(recurring.dayOfMonth)
           : recurring.dayOfMonth || 0;
 
-      // Boucle pour v├®rifier le mois en cours et le mois suivant (si anticipation)
+      // Garde-fous communs
+      const activeMonths = Array.isArray(recurring.activeMonths)
+        ? new Set(
+            (recurring.activeMonths as number[]).filter(
+              (m) => m >= 1 && m <= 12,
+            ),
+          )
+        : null;
+      const isInstallment = recurring.recurrenceKind === 'installment';
+
+      // Boucle pour v�rifier le mois en cours et le mois suivant (si anticipation)
       for (
         let monthOffset = 0;
         monthOffset <= (anticipateNextMonth ? 1 : 0);
@@ -465,16 +554,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         const targetYear = currentYear + Math.floor(targetMonth / 12);
         const normalizedMonth = targetMonth % 12;
 
-        // V├®rifier si la fr├®quence s'applique ├á ce mois
+        // V�rifier si la fr�quence s'applique � ce mois
         if (!this.shouldApplyRecurring(frequency, normalizedMonth)) {
-          console.log(
-            ` -> Mois ${normalizedMonth + 1}: Fr├®quence '${frequency}' non applicable, ignor├®.`,
-          );
           continue;
         }
 
         if (frequency === 'weekly') {
-          // Pour les échéances hebdos, on calcule toutes les occurrences du mois
+          // Pour les �ch�ances hebdos, on calcule toutes les occurrences du mois
           const firstDay = new Date(targetYear, normalizedMonth, 1);
           const lastDay = new Date(targetYear, normalizedMonth + 1, 0);
 
@@ -482,51 +568,44 @@ export class HomeComponent implements OnInit, OnDestroy {
             const testDate = new Date(targetYear, normalizedMonth, day);
             const targetDayOfWeekJS = dayOfMonth % 7; // 1-6 -> 1-6, 7 -> 0
             if (testDate.getDay() === targetDayOfWeekJS) {
-              // On ajoute l'échéance si elle n'est pas réalisée
+              // On ajoute l'�ch�ance si elle n'est pas r�alis�e
               const isRealized = this.isRecurringRealized(recurring, testDate);
               const isCurrentMonth = monthOffset === 0;
+              // V�rifications avanc�es
+              if (
+                isInstallment &&
+                !this.isInstallmentDateValid(recurring, testDate)
+              ) {
+                continue;
+              }
+              if (activeMonths && !activeMonths.has(testDate.getMonth() + 1)) {
+                continue;
+              }
 
               if (!isRealized && isCurrentMonth) {
                 this.addSchedule(schedules, recurring, testDate, today);
-                console.log(
-                  `%c -> AJOUTé (Hebdo): ${recurring.label} pour le ${testDate.toLocaleDateString()}`,
-                  'color: green;',
-                );
-              } else {
-                let reason = '';
-                if (isRealized) reason = 'd├®j├á r├®alis├®e';
-                else if (!isCurrentMonth) reason = 'pass├®e (mois futur)';
-                if (reason)
-                  console.log(
-                    `%c -> IGNOR├ë (Hebdo): ${recurring.label} pour le ${testDate.toLocaleDateString()} (Raison: ${reason})`,
-                    'color: blue;',
-                  );
               }
             }
           }
         } else {
-          // Pour toutes les autres fr├®quences bas├®es sur le jour du mois
+          // Pour toutes les autres fr�quences bas�es sur le jour du mois
           const dueDate = new Date(targetYear, normalizedMonth, dayOfMonth);
           const isRealized = this.isRecurringRealized(recurring, dueDate);
           const isPast = dueDate < today;
           const isCurrentMonth = monthOffset === 0;
+          // V�rifications avanc�es
+          if (
+            isInstallment &&
+            !this.isInstallmentDateValid(recurring, dueDate)
+          ) {
+            continue;
+          }
+          if (activeMonths && !activeMonths.has(normalizedMonth + 1)) {
+            continue;
+          }
 
           if (!isRealized && (!isPast || isCurrentMonth)) {
             this.addSchedule(schedules, recurring, dueDate, today);
-            console.log(
-              `%c -> AJOUT├ë: ${recurring.label} pour le ${dueDate.toLocaleDateString()}`,
-              'color: green;',
-            );
-          } else {
-            let reason = '';
-            if (isRealized) reason = 'd├®j├á r├®alis├®e';
-            else if (isPast && !isCurrentMonth)
-              reason = 'pass├®e (mois futur)';
-            if (reason)
-              console.log(
-                `%c -> IGNOR├ë: ${recurring.label} pour le ${dueDate.toLocaleDateString()} (Raison: ${reason})`,
-                'color: blue;',
-              );
           }
         }
       }
@@ -534,7 +613,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     return schedules.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
   }
-
   private addSchedule(
     schedules: UpcomingSchedule[],
     recurring: RecurringTransaction,
@@ -551,7 +629,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       recurringTransaction: recurring,
       dueDate,
       amount: signedAmount,
-      isOverdue: dueDate < today, // Une ├®ch├®ance est en retard si sa date est strictement avant aujourd'hui
+      isOverdue: dueDate < today, // Une +�ch+�ance est en retard si sa date est strictement avant aujourd'hui
       subCategoryLabel:
         this.subCategories.get(recurring.subCategoryId!) || 'N/A',
     });
@@ -570,7 +648,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           ? parseInt(t.financialFlowId)
           : t.financialFlowId;
 
-      // Filtrer par compte, type de flux (d├®pense) et mois en cours
+      // Filtrer par compte, type de flux (d+�pense) et mois en cours
       if (tAccountId !== accountId || flowId !== 2) {
         return false;
       }
@@ -585,19 +663,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     const categoryMap = new Map<string, number>();
 
     expenses.forEach((t) => {
-      // Convertir subCategoryId en nombre si c'est une cha├«ne
+      // Convertir subCategoryId en nombre si c'est une cha+�ne
       const subCatId =
         typeof t.subCategoryId === 'string'
           ? parseInt(t.subCategoryId)
           : t.subCategoryId;
 
-      // R├®cup├®rer le label complet de la sous-cat├®gorie
+      // R+�cup+�rer le label complet de la sous-cat+�gorie
       const fullLabel = this.subCategories.get(subCatId!);
 
-      // Extraire uniquement la cat├®gorie (avant le ' - ')
+      // Extraire uniquement la cat+�gorie (avant le ' - ')
       let categoryLabel = 'Autres';
       if (fullLabel && fullLabel.includes(' - ')) {
         categoryLabel = fullLabel.split(' - ')[0];
+      } else if (fullLabel && fullLabel.trim().length > 0) {
+        categoryLabel = fullLabel;
       }
 
       const amount =
@@ -610,7 +690,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     const categories: CategoryTotal[] = [];
     categoryMap.forEach((total, label) => {
-      // Ne garder que les cat├®gories avec un montant > 0
+      // Ne garder que les cat+�gories avec un montant > 0
       if (total > 0) {
         categories.push({
           categoryLabel: label,
@@ -652,19 +732,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     const categoryMap = new Map<string, number>();
 
     incomes.forEach((t) => {
-      // Convertir subCategoryId en nombre si c'est une cha├«ne
+      // Convertir subCategoryId en nombre si c'est une cha+�ne
       const subCatId =
         typeof t.subCategoryId === 'string'
           ? parseInt(t.subCategoryId)
           : t.subCategoryId;
 
-      // R├®cup├®rer le label complet de la sous-cat├®gorie
+      // R+�cup+�rer le label complet de la sous-cat+�gorie
       const fullLabel = this.subCategories.get(subCatId!);
 
-      // Extraire uniquement la cat├®gorie (avant le ' - ')
+      // Extraire uniquement la cat+�gorie (avant le ' - ')
       let categoryLabel = 'Autres';
       if (fullLabel && fullLabel.includes(' - ')) {
         categoryLabel = fullLabel.split(' - ')[0];
+      } else if (fullLabel && fullLabel.trim().length > 0) {
+        categoryLabel = fullLabel;
       }
 
       const amount =
@@ -677,7 +759,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     const categories: CategoryTotal[] = [];
     categoryMap.forEach((total, label) => {
-      // Ne garder que les cat├®gories avec un montant > 0
+      // Ne garder que les cat+�gories avec un montant > 0
       if (total > 0) {
         categories.push({
           categoryLabel: label,
@@ -698,7 +780,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       Habitation: '#3b82f6',
       Transports: '#8b5cf6',
       Divertissements: '#ec4899',
-      'Sant├®': '#ef4444',
+      'Sant+�': '#ef4444',
       Dettes: '#dc2626',
       Epargne: '#059669',
       Fournisseurs: '#0ea5e9',
@@ -713,7 +795,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       Habitation: 'pi-home',
       Transports: 'pi-car',
       Divertissements: 'pi-star',
-      'Sant├®': 'pi-heart',
+      'Sant+�': 'pi-heart',
       Dettes: 'pi-credit-card',
       Epargne: 'pi-wallet',
       Fournisseurs: 'pi-bolt',
@@ -735,13 +817,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     return financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
   }
 
-  // Nouvelle m├®thode pour marquer une ├®ch├®ance comme pay├®e
+  // Nouvelle m+�thode pour marquer une +�ch+�ance comme pay+�e
   markAsPaid(schedule: UpcomingSchedule, accountId: number): void {
     const ref = this.dialogService.open(ConfirmDialogComponent, {
       width: '450px',
       data: {
-        title: "Valider l'échéance",
-        message: `Confirmer la réalisation de "${schedule.recurringTransaction.label}" pour ${Math.abs(schedule.amount).toFixed(2)} € ?`,
+        title: "Valider l'�ch�ance",
+        message: `Confirmer la r�alisation de "${schedule.recurringTransaction.label}" pour ${Math.abs(schedule.amount).toFixed(2)} � ?`,
         confirmText: 'Valider',
         cancelText: 'Annuler',
       },
@@ -810,24 +892,36 @@ export class HomeComponent implements OnInit, OnDestroy {
     return accountId !== undefined && this.expandedIncomes.has(accountId);
   }
 
-  getActiveIndex(): number {
+  getActiveAccountBalance(): AccountBalance | null {
     if (!this.accountBalances.length) {
-      return 0;
+      return null;
     }
-    if (this.activeAccountId == null) {
-      return 0;
+    const fallbackId = this.accountBalances[0]?.account?.id;
+    const activeId =
+      this.activeAccountId ??
+      (typeof fallbackId === 'number' ? fallbackId : null);
+    if (activeId == null) {
+      return this.accountBalances[0] ?? null;
     }
-    const idx = this.accountBalances.findIndex(
-      (ab) => ab.account.id === this.activeAccountId,
+    return (
+      this.accountBalances.find((ab) => ab.account.id === activeId) ??
+      this.accountBalances[0] ??
+      null
     );
-    return idx >= 0 ? idx : 0;
   }
 
-  onTabChange(index: number): void {
-    const balance = this.accountBalances[index];
-    if (balance?.account?.id != null) {
-      this.activeAccountId = balance.account.id;
+  selectAccount(accountId: number | null | undefined): void {
+    if (typeof accountId === 'number') {
+      this.activeAccountId = accountId;
     }
+  }
+
+  isAccountActive(accountId: number | null | undefined): boolean {
+    if (typeof accountId !== 'number') {
+      return false;
+    }
+    const activeBalance = this.getActiveAccountBalance();
+    return activeBalance?.account?.id === accountId;
   }
 
   getNotifications(accountBalance: AccountBalance): DashboardNotification[] {
@@ -841,17 +935,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     } else if (accountBalance.forecastBalance < 100) {
       notes.push({
         severity: 'warn',
-        text: 'Solde pr\u00E9visionnel sous 100 \u20AC',
+        text: 'Solde pr\u00E9visionnel sous 100` \u20AC`',
       });
     }
 
-    const overdueCount = accountBalance.upcomingSchedules.filter(
-      (schedule) => schedule.isOverdue,
-    ).length;
-    if (overdueCount > 0) {
+    const forecastDelta =
+      accountBalance.forecastBalance - accountBalance.currentBalance;
+    if (forecastDelta < -100) {
       notes.push({
         severity: 'warn',
-        text: `\u00C9ch\u00E9ances en retard: ${overdueCount}`,
+        text: `Pr\u00E9vision en baisse de ${this.formatEuroValue(Math.abs(forecastDelta))}`,
+      });
+    } else if (forecastDelta > 150) {
+      notes.push({
+        severity: 'info',
+        text: `Pr\u00E9vision +${this.formatEuroValue(forecastDelta)} vs solde actuel`,
       });
     }
 
@@ -869,9 +967,14 @@ export class HomeComponent implements OnInit, OnDestroy {
     const totalExpenses = this.getTotalExpenses(
       accountBalance.expensesByCategory,
     );
-    if (totalExpenses > 0 && accountBalance.expensesByCategory.length > 0) {
-      const topExpense = accountBalance.expensesByCategory[0];
-      const share = topExpense.total / totalExpenses;
+    const meaningfulExpenses = accountBalance.expensesByCategory.filter(
+      (cat) => this.normalizeLabel(cat.categoryLabel) !== 'autres',
+    );
+    if (totalExpenses > 0 && meaningfulExpenses.length > 0) {
+      const topExpense = meaningfulExpenses.sort(
+        (a, b) => b.total - a.total,
+      )[0];
+      const share = Math.min(topExpense.total, totalExpenses) / totalExpenses;
       if (share > 0.3) {
         notes.push({
           severity: 'info',
@@ -881,6 +984,100 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     const today = new Date();
+
+    const expenseLabelsDebug = accountBalance.expensesByCategory.map((cat) => ({
+      label: cat.categoryLabel,
+      normalized: this.normalizeLabel(cat.categoryLabel),
+    }));
+    console.debug('HOME NOTIF – catégories dépenses', {
+      account: accountBalance.account.name,
+      labels: expenseLabelsDebug,
+    });
+    const savingsCategory = accountBalance.expensesByCategory.find((cat) =>
+      this.normalizeLabel(cat.categoryLabel).includes('eparg'),
+    );
+    if (savingsCategory && savingsCategory.total > 0) {
+      notes.push({
+        severity: 'info',
+        text: `\u00C9pargne ce mois: ${this.formatEuroValue(savingsCategory.total)}`,
+      });
+    }
+
+    const fiveDays = 5 * 24 * 60 * 60 * 1000;
+    const upcoming5Days = accountBalance.upcomingSchedules.filter(
+      (schedule) => {
+        const due = new Date(schedule.dueDate);
+        return due.getTime() - today.getTime() <= fiveDays && due >= today;
+      },
+    );
+    if (upcoming5Days.length > 0) {
+      const net = upcoming5Days.reduce(
+        (sum, schedule) => sum + schedule.amount,
+        0,
+      );
+      notes.push({
+        severity: net < 0 ? 'warn' : 'info',
+        text: `Flux 5 jours: ${this.formatEuroValue(net)}`,
+      });
+    }
+
+    const overdueIncome = accountBalance.upcomingSchedules.find(
+      (schedule) =>
+        schedule.isOverdue &&
+        schedule.recurringTransaction.financialFlowId === 1,
+    );
+    if (overdueIncome) {
+      notes.push({
+        severity: 'warn',
+        text: `Revenu en retard: ${overdueIncome.recurringTransaction.label}`,
+      });
+    }
+
+    const highDebit = accountBalance.upcomingSchedules
+      .filter((schedule) => schedule.amount < 0)
+      .sort((a, b) => a.amount - b.amount)[0];
+    if (highDebit && Math.abs(highDebit.amount) >= 200) {
+      notes.push({
+        severity: 'warn',
+        text: `Grosse sortie \u00E0 venir: ${highDebit.recurringTransaction.label} ${this.formatEuroValue(highDebit.amount)}`,
+      });
+    }
+
+    const accountId = accountBalance.account?.id;
+    if (typeof accountId === 'number') {
+      const breakdown = this.get503020Breakdown(accountId);
+      const bucketThresholds: { id: number; limit: number }[] = [
+        { id: 1, limit: 50 },
+        { id: 2, limit: 30 },
+        { id: 3, limit: 20 },
+      ];
+      bucketThresholds.forEach(({ id, limit }) => {
+        const bucket = breakdown.items.find((item) => item.id === id);
+        if (bucket && bucket.percent > limit) {
+          notes.push({
+            severity: 'warn',
+            text: `D\u00E9passement ${bucket.name}: ${bucket.percent}% (> ${limit}%)`,
+          });
+        }
+      });
+
+      if (breakdown.total > 0) {
+        const usagePercent = (breakdown.totalExpenses / breakdown.total) * 100;
+        const formattedPercent = usagePercent.toFixed(0);
+        if (usagePercent > 90) {
+          notes.push({
+            severity: 'danger',
+            text: `Budget 50/30/20 d\u00E9pass\u00E9 (${formattedPercent}%)`,
+          });
+        } else if (usagePercent > 80) {
+          notes.push({
+            severity: 'warn',
+            text: `Budget 50/30/20 critique (${formattedPercent}%)`,
+          });
+        }
+      }
+    }
+
     if (today.getDate() >= 25) {
       const coverage = this.getNextMonthCoverage(accountBalance);
       const tooltip = `Solde fin mois: ${this.formatEuroValue(coverage.soldeFinMois)} \u2022 D\u00E9penses 1\u20132: ${this.formatEuroValue(coverage.depensesDebutMoisSuivant)} \u2022 Marge: ${this.formatEuroValue(coverage.marge)}`;
@@ -932,7 +1129,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       .filter((schedule) => {
         const due = new Date(schedule.dueDate);
         due.setHours(0, 0, 0, 0);
-        return due >= today;
+        return schedule.isOverdue || due >= today;
       })
       .sort(
         (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
@@ -1052,40 +1249,28 @@ export class HomeComponent implements OnInit, OnDestroy {
       return { labels: [], datasets: [] };
     }
 
-    const labels = Array.from(
-      new Set([
-        ...balance.expensesByCategory.map((cat) => cat.categoryLabel),
-        ...balance.incomesByCategory.map((cat) => cat.categoryLabel),
-      ]),
+    const totalExpenses = Math.abs(
+      balance.expensesByCategory.reduce(
+        (sum, category) => sum + category.total,
+        0,
+      ),
     );
-
-    const expensesMap = new Map(
-      balance.expensesByCategory.map((cat) => [
-        cat.categoryLabel,
-        Math.abs(cat.total),
-      ]),
-    );
-    const incomesMap = new Map(
-      balance.incomesByCategory.map((cat) => [
-        cat.categoryLabel,
-        Math.abs(cat.total),
-      ]),
+    const totalIncomes = Math.abs(
+      balance.incomesByCategory.reduce(
+        (sum, category) => sum + category.total,
+        0,
+      ),
     );
 
     return {
-      labels,
+      labels: ['D\u00E9penses', 'Revenus'],
       datasets: [
         {
-          label: 'D\u00E9penses',
-          backgroundColor: '#ef4444',
-          data: labels.map((label) => expensesMap.get(label) ?? 0),
-          stack: 'stack',
-        },
-        {
-          label: 'Revenus',
-          backgroundColor: '#10b981',
-          data: labels.map((label) => incomesMap.get(label) ?? 0),
-          stack: 'stack',
+          label: 'Montants',
+          backgroundColor: ['#ef4444', '#10b981'],
+          borderColor: ['#b91c1c', '#047857'],
+          borderWidth: 1,
+          data: [totalExpenses, totalIncomes],
         },
       ],
     };
@@ -1149,6 +1334,54 @@ export class HomeComponent implements OnInit, OnDestroy {
       maximumFractionDigits: 2,
     });
     return `${formatted} \u20AC`;
+  }
+
+  private normalizeLabel(label: string): string {
+    return (label || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  getRecurringLabelWithCountdown(recurring: RecurringTransaction): string {
+    const progress = this.getInstallmentProgressInfo(recurring);
+    if (!progress) {
+      return recurring.label;
+    }
+    if (progress.remaining <= 0) {
+      return `${recurring.label} (termine)`;
+    }
+    return `${recurring.label} (reste ${progress.remaining}/${progress.total})`;
+  }
+
+  private getInstallmentProgressInfo(recurring: RecurringTransaction) {
+    if (
+      recurring.recurrenceKind !== 'installment' ||
+      typeof recurring.id !== 'number'
+    ) {
+      return null;
+    }
+    const total =
+      typeof recurring.occurrences === 'number' && recurring.occurrences > 0
+        ? recurring.occurrences
+        : null;
+    if (!total) {
+      return null;
+    }
+    const completed = this.transactions.filter((tx) => {
+      const txRecurringId =
+        typeof tx.recurringTransactionId === 'string'
+          ? parseInt(tx.recurringTransactionId, 10)
+          : tx.recurringTransactionId || null;
+      return txRecurringId === recurring.id;
+    }).length;
+    const boundedCompleted = Math.min(completed, total);
+    return {
+      total,
+      completed: boundedCompleted,
+      remaining: Math.max(total - boundedCompleted, 0),
+    };
   }
 
   getTotalExpenses(categories: CategoryTotal[]): number {
