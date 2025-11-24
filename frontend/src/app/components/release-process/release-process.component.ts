@@ -29,7 +29,10 @@ export class ReleaseProcessComponent {
       id: 'stabilize',
       title: 'Stabilisation de la version',
       description: 'Passer de la version de développement à la version stable.',
-      helper: `${this.currentDevVersion} → ${this.stableCandidate}`,
+      helper: [
+        `${this.currentDevVersion} → ${this.stableCandidate}`,
+        "Modification de l'environment.ts",
+      ].join('\r'),
     },
     {
       id: 'build-check',
@@ -37,7 +40,7 @@ export class ReleaseProcessComponent {
       description:
         'Confirme que le build se passe correctement avant de figer les notes.',
       helper:
-        'Lance `npm run build` (ou équivalent) et valide le résultat avant de continuer.',
+        'Lance `scripts/build-production.bat` et valide le résultat avant de continuer.',
     },
     {
       id: 'production-ready',
@@ -47,7 +50,7 @@ export class ReleaseProcessComponent {
       helper: [
         '1) package.json + environment.prod.ts : version, URL, drapeaux prod.',
         '2) Changelog + release notes : date, fonctionnalités, impacts.',
-        '3) Avant merge : rebase/merge master, vérifier que git diff est propre.'
+        '3) Avant merge : rebase/merge master, vérifier que git diff est propre. (Lancer check-master-status.ps1)',
       ].join('\n'),
     },
     {
@@ -61,7 +64,7 @@ export class ReleaseProcessComponent {
   ];
 
   public readonly statuses: StepStatus[] = this.steps.map((_, index) =>
-    index === 0 ? 'active' : 'pending'
+    index === 0 ? 'active' : 'pending',
   );
 
   public currentStepIndex = 0;
@@ -69,7 +72,9 @@ export class ReleaseProcessComponent {
 
   completeCurrentStep(): void {
     if (this.isNextDevStep() && !this.nextDevVersion.trim()) {
-      alert('Renseigne la prochaine version de développement avant de valider.');
+      alert(
+        'Renseigne la prochaine version de développement avant de valider.',
+      );
       return;
     }
 
