@@ -1,14 +1,27 @@
-<div class="layout-sidebar" [class.active]="menuService.sidebarVisible$ | async">
+<div
+  class="layout-sidebar"
+  [class.active]="menuService.sidebarVisible$ | async"
+>
   <div class="sidebar-content">
     <nav class="menu">
       <!-- Dashboard -->
-      <a routerLink="/home" routerLinkActive="active" class="menu-item" (click)="onMenuItemClick()">
+      <a
+        routerLink="/home"
+        routerLinkActive="active"
+        class="menu-item"
+        (click)="onMenuItemClick()"
+      >
         <i class="pi pi-home"></i>
         <span>Dashboard</span>
       </a>
 
       <!-- Statistiques -->
-      <a routerLink="/statistics" routerLinkActive="active" class="menu-item" (click)="onMenuItemClick()">
+      <a
+        routerLink="/statistics"
+        routerLinkActive="active"
+        class="menu-item"
+        (click)="onMenuItemClick()"
+      >
         <i class="pi pi-chart-bar"></i>
         <span>Statistiques</span>
       </a>
@@ -20,24 +33,42 @@
             <i class="pi pi-tags"></i>
             <span>Opérations</span>
           </div>
-          <i class="pi" [class.pi-chevron-down]="!expandedSections['operations']" [class.pi-chevron-up]="expandedSections['operations']"></i>
+          <i
+            class="pi"
+            [class.pi-chevron-down]="!expandedSections['operations']"
+            [class.pi-chevron-up]="expandedSections['operations']"
+          ></i>
         </div>
-        <div class="menu-submenu" [class.expanded]="expandedSections['operations']">
-          <a routerLink="/transactions-list" routerLinkActive="active" class="menu-subitem" (click)="onMenuItemClick()">
+        <div
+          class="menu-submenu"
+          [class.expanded]="expandedSections['operations']"
+        >
+          <a
+            routerLink="/transactions-list"
+            routerLinkActive="active"
+            class="menu-subitem"
+            (click)="onMenuItemClick()"
+          >
             <i class="pi pi-list"></i>
             <span>Transactions</span>
           </a>
-          <a routerLink="/recurring-transactions" routerLinkActive="active" class="menu-subitem" (click)="onMenuItemClick()">
+          <a
+            routerLink="/recurring-transactions"
+            routerLinkActive="active"
+            class="menu-subitem"
+            (click)="onMenuItemClick()"
+          >
             <i class="pi pi-sync"></i>
             <span>Récurrentes</span>
           </a>
-          <a routerLink="/category" routerLinkActive="active" class="menu-subitem" (click)="onMenuItemClick()">
+          <a
+            routerLink="/category"
+            routerLinkActive="active"
+            class="menu-subitem"
+            (click)="onMenuItemClick()"
+          >
             <i class="pi pi-tag"></i>
             <span>Catégories</span>
-          </a>
-          <a routerLink="/sub-categories" routerLinkActive="active" class="menu-subitem" (click)="onMenuItemClick()">
-            <i class="pi pi-bookmark"></i>
-            <span>Sous-catégories</span>
           </a>
         </div>
       </div>
@@ -46,13 +77,19 @@
 
       <div class="dev-only-block" *ngIf="isDevBuild">
         <div class="dev-badge">DEV</div>
-        <a routerLink="/todo-dev" routerLinkActive="active" class="menu-item dev-link" (click)="onMenuItemClick()">
+        <a
+          routerLink="/todo-dev"
+          routerLinkActive="active"
+          class="menu-item dev-link"
+          (click)="onMenuItemClick()"
+        >
           <i class="pi pi-clipboard"></i>
-          <span>TODO V1.1.0</span>
+          <span>TODO {{ appVersion }}</span>
         </a>
-        <small class="dev-hint">Uniquement disponible côté développement.</small>
+        <small class="dev-hint"
+          >Uniquement disponible côté développement.</small
+        >
       </div>
-
     </nav>
   </div>
 
@@ -70,10 +107,10 @@
     </div>
     <small>© {{ currentYear }}</small>
   </div>
-
 </div>
 
-<div class="layout-sidebar-overlay"
-     [class.active]="menuService.sidebarVisible$ | async"
-     (click)="menuService.hideSidebar()">
-</div>
+<div
+  class="layout-sidebar-overlay"
+  [class.active]="menuService.sidebarVisible$ | async"
+  (click)="menuService.hideSidebar()"
+></div>
