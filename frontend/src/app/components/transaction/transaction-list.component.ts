@@ -85,19 +85,19 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   sortedRecurringTransactions: RecurringTransaction[] = [];
   currentBalance: number = 0;
   forecastedBalance: number = 0;
-  // Totaux des Ã©chÃ©ances (nouvel affichage)
+  // Totaux des échéances (nouvel affichage)
   expectedIncomeTotal: number = 0;
   expectedExpensesTotal: number = 0;
   realizedExpensesThisMonth: number = 0;
   remainingExpensesThisMonth: number = 0;
-  // Anciennes mÃ©triques conservÃ©es pour compatibilitÃ© interne
+  // Anciennes métriques conservées pour compatibilité interne
   recurringTotalThisMonth: number = 0;
   recurringRealizedThisMonth: number = 0;
   recurringRemainingThisMonth: number = 0;
   private subscriptions = new Subscription();
   Math = Math;
 
-  // Accent couleur du compte (appliquÃ©e au header et aux dates)
+  // Accent couleur du compte (appliquée au header et aux dates)
   accentStart = '#60A5FA';
   accentEnd = '#3B82F6';
   accent = '#3B82F6';
@@ -138,7 +138,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // RÃƒÂ©cupÃƒÂ©rer l'accountId depuis les paramÃƒÂ¨tres de route
+    // Récupérer l'accountId depuis les paramètres de route
     this.route.params.subscribe((params) => {
       if (params['accountId']) {
         this.accountId = parseInt(params['accountId'], 10);
@@ -168,7 +168,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       this.transactionService.transactions$.subscribe({
         next: (data) => {
           console.log(
-            'TRANSACTION LIST : DonnÃƒÂ©es reÃƒÂ§ues - Total:',
+            'TRANSACTION LIST : Données reçues - Total:',
             data.length,
           );
           if (data.length > 0) {
@@ -189,7 +189,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
               return tAccountId === this.accountId;
             });
             console.log(
-              'TRANSACTION LIST : AprÃƒÂ¨s filtrage:',
+              'TRANSACTION LIST : Après filtrage:',
               this.transactions.length,
               'transactions',
             );
@@ -206,13 +206,13 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       }),
     );
 
-    // Charger toutes les sous-catÃƒÂ©gories pour l'affichage
+    // Charger toutes les sous-catégories pour l'affichage
     this.subscriptions.add(
       this.subCategoryService.subCategories$.subscribe({
         next: (data) => {
           this.subCategories = data;
           console.log(
-            'TRANSACTION LIST : Sous-catÃƒÂ©gories chargÃƒÂ©es - Total:',
+            'TRANSACTION LIST : Sous-catégories chargées - Total:',
             data.length,
           );
           if (this.transactions.length > 0) {
@@ -221,7 +221,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         },
         error: (err) =>
           console.error(
-            'TRANSACTION LIST : Erreur lors du chargement des sous-catÃƒÂ©gories:',
+            'TRANSACTION LIST : Erreur lors du chargement des sous-catégories:',
             err,
           ),
       }),
@@ -279,7 +279,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.updatePagination();
   }
 
-  // Calcul des totaux d'Ã©chÃ©ances pour le mois courant
+  // Calcul des totaux d'échéances pour le mois courant
   calculateRecurringMonthTotals(): void {
     if (!this.accountId) {
       this.expectedIncomeTotal = 0;
@@ -293,7 +293,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    // IDs des Ã©chÃ©ances rÃ©currentes actives de ce compte
+    // IDs des échéances récurrentes actives de ce compte
     const recurringIds = new Set(
       this.recurringTransactions
         .filter((rt) => {
@@ -306,7 +306,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         .map((rt) => rt.id!),
     );
 
-    // Total planifiÃ© du mois (une occurrence par Ã©chÃ©ance)
+    // Total planifié du mois (une occurrence par échéance)
     this.recurringTotalThisMonth = this.recurringTransactions.reduce(
       (sum, rt) => {
         const rtAccountId =
@@ -329,7 +329,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       0,
     );
 
-    // Total rÃ©alisÃ© dans le mois (transactions liÃ©es)
+    // Total réalisé dans le mois (transactions liées)
     this.recurringRealizedThisMonth = this.transactions.reduce((sum, t) => {
       if (!t.recurringTransactionId) return sum;
       if (!recurringIds.has(t.recurringTransactionId)) return sum;
@@ -351,7 +351,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.calculateRecurringBreakdown();
   }
 
-  // Nouveau dÃ©coupage: revenus prÃ©vus, dÃ©penses prÃ©vues, dÃ©penses restantes, prÃ©visionnel simple
+  // Nouveau découpage: revenus prévus, dépenses prévues, dépenses restantes, prévisionnel simple
   private calculateRecurringBreakdown(): void {
     if (!this.accountId) {
       this.expectedIncomeTotal = 0;
@@ -386,7 +386,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return rt.financialFlowId === 2 ? sum + Math.abs(amount) : sum;
     }, 0);
 
-    // DÃ©penses rÃ©alisÃ©es ce mois (liÃ©es Ã  une Ã©chÃ©ance)
+    // Dépenses réalisées ce mois (liées à une échéance)
     this.realizedExpensesThisMonth = this.transactions.reduce((sum, t) => {
       if (
         !t.recurringTransactionId ||
@@ -413,7 +413,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       0,
     );
 
-    // PrÃ©visionnel simple demandÃ©: revenus prÃ©vus - dÃ©penses restantes
+    // Prévisionnel simple demandé: revenus prévus - dépenses restantes
     if (this.accountId) {
       const upcomingSum = this.computeUpcomingForForecast(this.accountId);
       this.forecastedBalance = this.currentBalance + upcomingSum;
@@ -422,7 +422,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // RÃ©partition 50/30/20 basÃ©e sur le salaire (revenus prÃ©vus) du mois courant
+  // Répartition 50/30/20 basée sur le salaire (revenus prévus) du mois courant
   get503020Breakdown() {
     const salaryBase = this.expectedIncomeTotal || 0;
     const accountId = this.accountId;
@@ -524,7 +524,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.applyFiltersAndSort();
   }
 
-  // Obtenir le nom de la sous-catÃƒÂ©gorie
+  // Obtenir le nom de la sous-catégorie
   getSubCategoryName(subCategoryId: number | null): string {
     if (!subCategoryId) return 'N/A';
 
@@ -536,7 +536,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     if (!subCategory && this.subCategories.length > 0) {
       console.log(
-        `TRANSACTION LIST : Sous-catÃƒÂ©gorie ${id} non trouvÃƒÂ©e. Sous-catÃƒÂ©gories disponibles:`,
+        `TRANSACTION LIST : Sous-catégorie ${id} non trouvée. Sous-catégories disponibles:`,
         this.subCategories.map((sc) => sc.id),
       );
     }
@@ -558,16 +558,16 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         ? parseInt(transaction.financialFlowId)
         : transaction.financialFlowId || 0;
 
-    // financialFlowId: 1 = Revenu (positif), 2 = DÃƒÂ©pense (nÃƒÂ©gatif)
+    // financialFlowId: 1 = Revenu (positif), 2 = Dépense (négatif)
     return financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
   }
 
-  // VÃƒÂ©rifier si le montant est nÃƒÂ©gatif
+  // Vérifier si le montant est négatif
   isNegative(transaction: Transaction): boolean {
     return this.getSignedAmount(transaction) < 0;
   }
 
-  // VÃƒÂ©rifier si le montant est positif
+  // Vérifier si le montant est positif
   isPositive(transaction: Transaction): boolean {
     return this.getSignedAmount(transaction) >= 0;
   }
@@ -608,7 +608,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         grouped.set(dateKey, []);
       }
 
-      // Enrichir la transaction avec le label de sous-catÃƒÂ©gorie et le montant numÃƒÂ©rique
+      // Enrichir la transaction avec le label de sous-catégorie et le montant numérique
       const subCatId =
         typeof transaction.subCategoryId === 'string'
           ? parseInt(transaction.subCategoryId)
@@ -640,7 +640,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       });
     });
 
-    // Trier par date (plus rÃƒÂ©cent en premier par dÃƒÂ©faut)
+    // Trier par date (plus récent en premier par défaut)
     result.sort((a, b) => {
       const dateA = new Date(a.date).getTime();
       const dateB = new Date(b.date).getTime();
@@ -726,7 +726,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Charger les ÃƒÂ©chÃƒÂ©ances rÃƒÂ©currentes du compte
+  // Charger les échéances récurrentes du compte
   loadRecurringTransactions(): void {
     if (!this.accountId) return;
 
@@ -741,11 +741,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
             return rtAccountId === this.accountId && rt.isActive === 1;
           });
           console.log(
-            'TRANSACTION LIST : Ãƒâ€°chÃƒÂ©ances rÃƒÂ©currentes pour le compte:',
+            'TRANSACTION LIST : Échéances récurrentes pour le compte:',
             this.recurringTransactions,
           );
 
-          // Trier les ÃƒÂ©chÃƒÂ©ances : non rÃƒÂ©alisÃƒÂ©es en premier, puis par jour du mois
+          // Trier les échéances : non réalisées en premier, puis par jour du mois
           this.sortRecurringTransactions();
 
           // Recalculer les soldes
@@ -754,7 +754,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         },
         error: (err) =>
           console.error(
-            'TRANSACTION LIST : Erreur lors du chargement des ÃƒÂ©chÃƒÂ©ances:',
+            'TRANSACTION LIST : Erreur lors du chargement des échéances:',
             err,
           ),
       }),
@@ -763,14 +763,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.recurringTransactionService.getRecurringTransactions().subscribe();
   }
 
-  // Trier les ÃƒÂ©chÃƒÂ©ances rÃƒÂ©currentes
+  // Trier les échéances récurrentes
   sortRecurringTransactions(): void {
     this.sortedRecurringTransactions = [...this.recurringTransactions].sort(
       (a, b) => {
         const aRealized = this.isRecurringRealized(a.id!);
         const bRealized = this.isRecurringRealized(b.id!);
 
-        // Les non rÃƒÂ©alisÃƒÂ©es en premier
+        // Les non réalisées en premier
         if (aRealized && !bRealized) return 1;
         if (!aRealized && bRealized) return -1;
 
@@ -788,7 +788,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Calculer les soldes actuel et prÃƒÂ©visionnel
+  // Calculer les soldes actuel et prévisionnel
   calculateBalances(): void {
     if (!this.accountId || !this.account) {
       this.currentBalance = 0;
@@ -796,7 +796,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // RÃƒÂ©cupÃƒÂ©rer le solde initial du compte
+    // Récupérer le solde initial du compte
     const initialBalance =
       typeof this.account['initialBalance'] === 'string'
         ? parseFloat(this.account['initialBalance'])
@@ -833,7 +833,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     console.log('TRANSACTION LIST : Somme des transactions:', transactionsSum);
     console.log(
-      'TRANSACTION LIST : Solde actuel calculÃƒÂ©:',
+      'TRANSACTION LIST : Solde actuel calculé:',
       this.currentBalance,
     );
 
@@ -1132,7 +1132,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // VÃƒÂ©rifier si une ÃƒÂ©chÃƒÂ©ance a ÃƒÂ©tÃƒÂ© rÃƒÂ©alisÃƒÂ©e ce mois
+  // Vérifier si une échéance a été réalisée ce mois
   isRecurringRealized(recurringId: number): boolean {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -1150,14 +1150,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     if (isRealized) {
       console.log(
-        `TRANSACTION LIST : Ãƒâ€°chÃƒÂ©ance ${recurringId} rÃƒÂ©alisÃƒÂ©e - Transaction trouvÃƒÂ©e.`,
+        `TRANSACTION LIST : Échéance ${recurringId} réalisée - Transaction trouvée.`,
       );
     }
 
     return isRealized;
   }
 
-  // Obtenir le libellÃƒÂ© du jour pour une ÃƒÂ©chÃƒÂ©ance
+  // Obtenir le libellé du jour pour une échéance
   getDayLabel(recurring: RecurringTransaction): string {
     if (recurring.dayOfMonth === null || recurring.dayOfMonth === undefined) {
       return 'N/A';
@@ -1250,9 +1250,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   createTransaction(): void {
-    // DÃƒÂ©terminer le compte ÃƒÂ  utiliser par dÃƒÂ©faut
-    const defaultAccountId = this.accountId || 1; // Utiliser le compte actuel ou 1 par dÃƒÂ©faut
-    const defaultFinancialFlowId = 2; // DÃƒÂ©pense par dÃƒÂ©faut
+    // Déterminer le compte à utiliser par défaut
+    const defaultAccountId = this.accountId || 1; // Utiliser le compte actuel ou 1 par défaut
+    const defaultFinancialFlowId = 2; // Dépense par défaut
 
     const dialogRef = this.dialogService.open(EditTransactionDialogComponent, {
       width: '500px',
@@ -1273,25 +1273,23 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (result) {
         this.transactionService.addTransaction(result).subscribe({
           next: () => {
-            console.log(
-              'TRANSACTION LIST : Transaction crÃƒÂ©ÃƒÂ©e avec succÃƒÂ¨s',
-            );
+            console.log('TRANSACTION LIST : Transaction créée avec succès');
             this.loadTransactions();
             this.messageService.add({
               severity: 'success',
-              summary: 'SuccÃƒÂ¨s',
-              detail: 'Transaction crÃƒÂ©ÃƒÂ©e avec succÃƒÂ¨s.',
+              summary: 'Succès',
+              detail: 'Transaction créée avec succès.',
             });
           },
           error: (err) => {
             console.error(
-              'TRANSACTION LIST : Erreur lors de la crÃƒÂ©ation de la transaction:',
+              'TRANSACTION LIST : Erreur lors de la création de la transaction:',
               err,
             );
             this.messageService.add({
               severity: 'error',
               summary: 'Erreur',
-              detail: 'Erreur lors de la crÃƒÂ©ation de la transaction.',
+              detail: 'Erreur lors de la création de la transaction.',
             });
           },
         });
@@ -1319,24 +1317,24 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               console.log(
-                'TRANSACTION LIST : Transaction mise ÃƒÂ  jour avec succÃƒÂ¨s',
+                'TRANSACTION LIST : Transaction mise à jour avec succès',
               );
               this.loadTransactions();
               this.messageService.add({
                 severity: 'success',
-                summary: 'SuccÃƒÂ¨s',
-                detail: 'Transaction mise ÃƒÂ  jour avec succÃƒÂ¨s.',
+                summary: 'Succès',
+                detail: 'Transaction mise à jour avec succès.',
               });
             },
             error: (err) => {
               console.error(
-                'TRANSACTION LIST : Erreur lors de la mise ÃƒÂ  jour de la transaction:',
+                'TRANSACTION LIST : Erreur lors de la mise à jour de la transaction:',
                 err,
               );
               this.messageService.add({
                 severity: 'error',
                 summary: 'Erreur',
-                detail: 'Erreur lors de la mise ÃƒÂ  jour de la transaction.',
+                detail: 'Erreur lors de la mise à jour de la transaction.',
               });
             },
           });
@@ -1359,14 +1357,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (confirmed) {
         this.transactionService.deleteTransaction(transaction.id!).subscribe({
           next: () => {
-            console.log(
-              'TRANSACTION LIST : Transaction supprimÃƒÂ©e avec succÃƒÂ¨s',
-            );
+            console.log('TRANSACTION LIST : Transaction supprimée avec succès');
             this.loadTransactions();
             this.messageService.add({
               severity: 'info',
-              summary: 'SuccÃƒÂ¨s',
-              detail: 'Transaction supprimÃƒÂ©e avec succÃƒÂ¨s.',
+              summary: 'Succès',
+              detail: 'Transaction supprimée avec succès.',
             });
           },
           error: (err) => {
