@@ -19,7 +19,9 @@ function Ensure-GitRepo {
 Ensure-GitRepo
 
 if (-not (git show-ref --quiet "refs/heads/$Branch")) {
-    throw "Local branch '$Branch' does not exist. Fetch or create it first."
+    if ($LASTEXITCODE -ne 0) {
+        throw "Local branch '$Branch' does not exist. Fetch or create it first."
+    }
 }
 
 $currentBranch = git rev-parse --abbrev-ref HEAD
