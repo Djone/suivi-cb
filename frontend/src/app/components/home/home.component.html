@@ -22,278 +22,269 @@
     </div>
 
     <ng-container *ngIf="getActiveAccountBalance() as accountBalance">
-        <!-- Ligne 1: Soldes (gauche) + Notifications (droite) -->
-        <div class="row-2cols">
-          <div class="col">
+      <!-- Ligne 1: Soldes (gauche) + Notifications (droite) -->
+      <div class="row-2cols">
+        <div class="col">
+          <div
+            class="balances-card"
+            (click)="navigateToTransactions(accountBalance.account.id!)"
+          >
+            <div class="balances-inline">
+              <div class="balance-inline-item">
+                <span class="label"><i class="pi pi-euro mr-1"></i>Actuel</span>
+                <span
+                  class="value"
+                  [class.positive]="accountBalance.currentBalance >= 0"
+                  [class.negative]="accountBalance.currentBalance < 0"
+                >
+                  {{
+                    accountBalance.currentBalance
+                      | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                  }}
+                </span>
+              </div>
+              <span class="sep">|</span>
+              <div class="balance-inline-item">
+                <span class="label"
+                  ><i class="pi pi-chart-line mr-1"></i
+                  >Pr&eacute;visionnel</span
+                >
+                <span
+                  class="value"
+                  [class.positive]="accountBalance.forecastBalance >= 0"
+                  [class.negative]="accountBalance.forecastBalance < 0"
+                >
+                  {{
+                    accountBalance.forecastBalance
+                      | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                  }}
+                </span>
+              </div>
+            </div>
             <div
-              class="balances-card"
-              (click)="navigateToTransactions(accountBalance.account.id!)"
+              *ngIf="accountBalance.nextMonthLowestBalance < 0"
+              class="alert-banner mt-2"
             >
-              <div class="balances-inline">
-                <div class="balance-inline-item">
-                  <span class="label"
-                    ><i class="pi pi-euro mr-1"></i>Actuel</span
-                  >
-                  <span
-                    class="value"
-                    [class.positive]="accountBalance.currentBalance >= 0"
-                    [class.negative]="accountBalance.currentBalance < 0"
-                  >
-                    {{
-                      accountBalance.currentBalance
-                        | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                    }}
-                  </span>
-                </div>
-                <span class="sep">|</span>
-                <div class="balance-inline-item">
-                  <span class="label"
-                    ><i class="pi pi-chart-line mr-1"></i
-                    >Pr&eacute;visionnel</span
-                  >
-                  <span
-                    class="value"
-                    [class.positive]="accountBalance.forecastBalance >= 0"
-                    [class.negative]="accountBalance.forecastBalance < 0"
-                  >
-                    {{
-                      accountBalance.forecastBalance
-                        | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                    }}
-                  </span>
-                </div>
+              <i class="pi pi-exclamation-triangle"></i>
+              <div class="alert-text">
+                Risque de solde n&eacute;gatif !
+                <span class="alert-amount"
+                  >Point bas:
+                  {{
+                    accountBalance.nextMonthLowestBalance
+                      | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                  }}</span
+                >
               </div>
-              <div
-                *ngIf="accountBalance.nextMonthLowestBalance < 0"
-                class="alert-banner mt-2"
-              >
-                <i class="pi pi-exclamation-triangle"></i>
-                <div class="alert-text">
-                  Risque de solde n&eacute;gatif !
-                  <span class="alert-amount"
-                    >Point bas:
-                    {{
-                      accountBalance.nextMonthLowestBalance
-                        | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                    }}</span
-                  >
-                </div>
-              </div>
+            </div>
 
-              <!-- Répartition 50/30/20 sous la carte solde -->
-              <div
-                class="break503020-container"
-                *ngIf="
-                  get503020Breakdown(accountBalance.account.id!).items as items
-                "
-              >
-                <div class="break503020-list">
-                  <div class="break-row" *ngFor="let it of items">
-                    <div class="break-label">{{ it.name }}</div>
-                    <div class="break-value">
-                      {{
-                        it.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                      }}
-                    </div>
-                    <div class="break-percent">{{ it.percent }}%</div>
+            <!-- Répartition 50/30/20 sous la carte solde -->
+            <div
+              class="break503020-container"
+              *ngIf="
+                get503020Breakdown(accountBalance.account.id!).items as items
+              "
+            >
+              <div class="break503020-list">
+                <div class="break-row" *ngFor="let it of items">
+                  <div class="break-label">{{ it.name }}</div>
+                  <div class="break-value">
+                    {{
+                      it.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                    }}
                   </div>
-                  <div class="break-row remaining">
-                    <div class="break-label">Reste à vivre</div>
-                    <div class="break-value">
-                      {{
-                        get503020Breakdown(accountBalance.account.id!).remaining
-                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                      }}
-                    </div>
-                    <div class="break-percent">
-                      {{
-                        get503020Breakdown(accountBalance.account.id!)
-                          .remainingPercent
-                      }}%
-                    </div>
+                  <div class="break-percent">{{ it.percent }}%</div>
+                </div>
+                <div class="break-row remaining">
+                  <div class="break-label">Reste à vivre</div>
+                  <div class="break-value">
+                    {{
+                      get503020Breakdown(accountBalance.account.id!).remaining
+                        | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                    }}
+                  </div>
+                  <div class="break-percent">
+                    {{
+                      get503020Breakdown(accountBalance.account.id!)
+                        .remainingPercent
+                    }}%
                   </div>
                 </div>
-                <div class="break503020-mini">
-                  <div class="mini-bar">
-                    <ng-container *ngFor="let it of items; let i = index">
-                      <div
-                        class="mini-seg seg-{{ i }}"
-                        [ngStyle]="{ width: (it.percent || 0) + '%' }"
-                      ></div>
-                    </ng-container>
-                  </div>
-                  <div class="mini-legend">
-                    <span class="legend-item"
-                      ><span class="dot dot-0"></span> 50</span
-                    >
-                    <span class="legend-item"
-                      ><span class="dot dot-1"></span> 30</span
-                    >
-                    <span class="legend-item"
-                      ><span class="dot dot-2"></span> 20</span
-                    >
-                  </div>
+              </div>
+              <div class="break503020-mini">
+                <div class="mini-bar">
+                  <ng-container *ngFor="let it of items; let i = index">
+                    <div
+                      class="mini-seg seg-{{ i }}"
+                      [ngStyle]="{ width: (it.percent || 0) + '%' }"
+                    ></div>
+                  </ng-container>
+                </div>
+                <div class="mini-legend">
+                  <span class="legend-item"
+                    ><span class="dot dot-0"></span> 50</span
+                  >
+                  <span class="legend-item"
+                    ><span class="dot dot-1"></span> 30</span
+                  >
+                  <span class="legend-item"
+                    ><span class="dot dot-2"></span> 20</span
+                  >
                 </div>
               </div>
             </div>
           </div>
-          <div class="col">
-            <div class="notifications-card">
-              <div class="section-header">
-                <i class="pi pi-bell"></i>
-                <h3>Notifications</h3>
-              </div>
-              <div
-                *ngIf="getNotifications(accountBalance).length; else noNotes"
-              >
-                <div class="notifications-list">
-                  <div
-                    *ngFor="let n of getNotifications(accountBalance)"
-                    class="notification-item"
+        </div>
+        <div class="col">
+          <div class="notifications-card">
+            <div class="section-header">
+              <i class="pi pi-bell"></i>
+              <h3>Notifications</h3>
+            </div>
+            <div *ngIf="getNotifications(accountBalance).length; else noNotes">
+              <div class="notifications-list">
+                <div
+                  *ngFor="let n of getNotifications(accountBalance)"
+                  class="notification-item"
+                >
+                  <!-- <p-tag [severity]="n.severity">{{ n.text }}</p-tag> -->
+                  <p-tag
+                    [severity]="n.severity"
+                    [pTooltip]="n.tooltip"
+                    tooltipPosition="top"
+                    [tooltipStyleClass]="n.tooltip ? 'notification-tooltip' : undefined"
+                    (click)="
+                      handleNotificationClick(n, accountBalance.account.id!)
+                    "
+                    [style.cursor]="'pointer'"
                   >
-                    <!-- <p-tag [severity]="n.severity">{{ n.text }}</p-tag> -->
-                    <p-tag
-                      [severity]="n.severity"
-                      [pTooltip]="n.tooltip"
-                      tooltipPosition="top"
-                      (click)="
-                        handleNotificationClick(n, accountBalance.account.id!)
-                      "
-                      [style.cursor]="'pointer'"
-                    >
-                      {{ n.text }}
-                    </p-tag>
-                  </div>
+                    {{ n.text }}
+                  </p-tag>
                 </div>
               </div>
-              <ng-template #noNotes>
-                <div class="no-data">
-                  <i class="pi pi-check-circle"></i> Aucune notification pour ce
-                  mois.
-                </div>
+            </div>
+            <ng-template #noNotes>
+              <div class="no-data">
+                <i class="pi pi-check-circle"></i> Aucune notification pour ce
+                mois.
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ligne 2: 5 dernières (gauche) + 5 prochaines échéances non validées (droite) -->
+      <div class="row-2cols">
+        <div class="col">
+          <div class="section">
+            <div class="section-header">
+              <i class="pi pi-list"></i>
+              <h3>Derni&egrave;res op&eacute;rations</h3>
+            </div>
+            <p-table
+              [value]="getLastFiveTransactions(accountBalance.account.id!)"
+              [paginator]="false"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Date</th>
+                  <th>Libell&eacute;</th>
+                  <th>Cat&eacute;gorie</th>
+                  <th class="text-right">Montant</th>
+                </tr>
               </ng-template>
-            </div>
+              <ng-template pTemplate="body" let-tx>
+                <tr>
+                  <td>{{ tx.date | date: "dd/MM/yyyy" }}</td>
+                  <td>{{ tx.description }}</td>
+                  <td>{{ getSubCategoryLabel(tx.subCategoryId) }}</td>
+                  <td class="text-right">
+                    <p-tag
+                      [severity]="
+                        getAmountSigned(tx) < 0 ? 'danger' : 'success'
+                      "
+                      [value]="
+                        (getAmountSigned(tx)
+                          | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
+                      "
+                    >
+                    </p-tag>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
           </div>
         </div>
+        <div class="col">
+          <div class="section">
+            <div class="section-header">
+              <i class="pi pi-calendar"></i>
+              <h3>Prochaines &eacute;ch&eacute;ances</h3>
+            </div>
+            <p-table
+              [value]="getNextUnpaidSchedulesForBalance(accountBalance, 5)"
+              [paginator]="false"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Libell&eacute;</th>
+                  <th>Cat&eacute;gorie</th>
+                  <th class="text-right">Montant</th>
+                  <th></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-s>
+                <tr>
+                  <td>
+                    {{ getRecurringLabelWithCountdown(s.recurringTransaction) }}
+                  </td>
+                  <td>
+                    {{
+                      getSubCategoryLabel(s.recurringTransaction.subCategoryId)
+                    }}
+                  </td>
+                  <td class="text-right">
+                    <p-tag
+                      [severity]="s.amount < 0 ? 'danger' : 'success'"
+                      [value]="
+                        (s.amount
+                          | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
+                      "
+                    >
+                    </p-tag>
+                  </td>
+                  <td class="text-right">
+                    <p-button
+                      icon="pi pi-check"
+                      [rounded]="true"
+                      [text]="true"
+                      [raised]="true"
+                      severity="help"
+                      styleClass="p-button-text p-button-success"
+                      (onClick)="markAsPaid(s, accountBalance.account.id!)"
+                      pTooltip="Valider"
+                      tooltipPosition="top"
+                    ></p-button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+      </div>
 
-        <!-- Ligne 2: 5 derni&egrave;res (gauche) + 5 prochaines &eacute;ch&eacute;ances non valid&eacute;es (droite) -->
-        <div class="row-2cols">
-          <div class="col">
-            <div class="section">
-              <div class="section-header">
-                <i class="pi pi-list"></i>
-                <h3>Derni&egrave;res op&eacute;rations</h3>
-              </div>
-              <p-table
-                [value]="getLastFiveTransactions(accountBalance.account.id!)"
-                [paginator]="false"
-              >
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th>Date</th>
-                    <th>Libell&eacute;</th>
-                    <th>Cat&eacute;gorie</th>
-                    <th class="text-right">Montant</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-tx>
-                  <tr>
-                    <td>{{ tx.date | date: "dd/MM/yyyy" }}</td>
-                    <td>{{ tx.description }}</td>
-                    <td>{{ getSubCategoryLabel(tx.subCategoryId) }}</td>
-                    <td class="text-right">
-                      <p-tag
-                        [severity]="
-                          getAmountSigned(tx) < 0 ? 'danger' : 'success'
-                        "
-                        [value]="
-                          (getAmountSigned(tx)
-                            | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
-                        "
-                      >
-                      </p-tag>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </div>
-          </div>
-          <div class="col">
-            <div class="section">
-              <div class="section-header">
-                <i class="pi pi-calendar"></i>
-                <h3>Prochaines &eacute;ch&eacute;ances</h3>
-              </div>
-              <p-table
-                [value]="getNextUnpaidSchedulesForBalance(accountBalance, 5)"
-                [paginator]="false"
-              >
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th>Libell&eacute;</th>
-                    <th>Cat&eacute;gorie</th>
-                    <th class="text-right">Montant</th>
-                    <th></th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-s>
-                  <tr>
-                    <td>
-                      {{
-                        getRecurringLabelWithCountdown(
-                          s.recurringTransaction
-                        )
-                      }}
-                    </td>
-                    <td>
-                      {{
-                        getSubCategoryLabel(
-                          s.recurringTransaction.subCategoryId
-                        )
-                      }}
-                    </td>
-                    <td class="text-right">
-                      <p-tag
-                        [severity]="s.amount < 0 ? 'danger' : 'success'"
-                        [value]="
-                          (s.amount
-                            | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
-                        "
-                      >
-                      </p-tag>
-                    </td>
-                    <td class="text-right">
-                      <p-button
-                        icon="pi pi-check"
-                        [rounded]="true"
-                        [text]="true"
-                        [raised]="true"
-                        severity="help"
-                        styleClass="p-button-text p-button-success"
-                        (onClick)="markAsPaid(s, accountBalance.account.id!)"
-                        pTooltip="Valider"
-                        tooltipPosition="top"
-                      ></p-button>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </div>
-          </div>
+      <!-- Graphique (barres empil&eacute;es) -->
+      <div class="section">
+        <div class="section-header">
+          <i class="pi pi-chart-bar"></i>
+          <h3>R&eacute;partition du mois (totaux)</h3>
         </div>
-
-        <!-- Graphique (barres empil&eacute;es) -->
-        <div class="section">
-          <div class="section-header">
-            <i class="pi pi-chart-bar"></i>
-            <h3>R&eacute;partition du mois (totaux)</h3>
-          </div>
-          <p-chart
-            type="bar"
-            [data]="getStackedBarData(accountBalance.account.id!)"
-            [options]="stackedBarOptions"
-          ></p-chart>
-        </div>
+        <p-chart
+          type="bar"
+          [data]="getStackedBarData(accountBalance.account.id!)"
+          [options]="stackedBarOptions"
+        ></p-chart>
+      </div>
     </ng-container>
   </ng-container>
 
@@ -305,4 +296,3 @@
     </div>
   </ng-template>
 </div>
-

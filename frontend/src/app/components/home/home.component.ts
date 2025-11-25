@@ -77,7 +77,7 @@ interface AccountBalance {
   totalUpcoming: number;
   expensesByCategory: CategoryTotal[];
   incomesByCategory: CategoryTotal[];
-  nextMonthLowestBalance: number; // Remplacer le bool+�en par un nombre
+  nextMonthLowestBalance: number; // Remplacer le booléen par un nombre
 }
 
 @Component({
@@ -125,7 +125,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
     },
   };
-  private subCategoriesLoaded = false; // Flag pour savoir si les sous-cat+�gories sont charg+�es
+  private subCategoriesLoaded = false; // Flag pour savoir si les sous-catégories sont chargées
 
   constructor(
     private transactionService: TransactionService,
@@ -137,7 +137,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Charger les sous-cat+�gories EN PREMIER
+    // Charger les sous-catégories EN PREMIER
     this.subscriptions.add(
       this.subCategoryService.subCategories$.subscribe({
         next: (subCats) => {
@@ -151,7 +151,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       }),
     );
 
-    // D+�clencher le chargement des sous-cat+�gories
+    // Déclencher le chargement des sous-catégories
     this.subCategoryService.getSubCategories().subscribe();
 
     // Charger les comptes
@@ -174,7 +174,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       }),
     );
 
-    // Charger les +�ch+�ances
+    // Charger les échéances
     this.subscriptions.add(
       this.recurringTransactionService.recurringTransactions$.subscribe({
         next: (data) => {
@@ -184,11 +184,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       }),
     );
 
-    // Charger les donn+�es initiales
+    // Charger les données initiales
     this.transactionService.clearFiltersTransactions();
     this.recurringTransactionService.getRecurringTransactions().subscribe();
     this.accountService.getAccounts().subscribe();
-    // getSubCategories() est d+�j+� appel+� plus haut
+    // getSubCategories() est déjà appelé plus haut
   }
 
   ngOnDestroy(): void {
@@ -196,7 +196,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   calculateAllBalances(): void {
-    // Ne pas calculer si les sous-cat�gories ne sont pas encore charg�es
+    // Ne pas calculer si les sous-catégories ne sont pas encore chargées
     if (!this.subCategoriesLoaded) {
       console.log('Waiting for subcategories to load...');
       return;
@@ -212,7 +212,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
       const allUpcomingSchedules = this.getUpcomingSchedules(accountId);
 
-      // Le total � venir et le pr�visionnel doivent inclure toutes les �ch�ances pr�vues pour le reste du mois et le mois suivant (si applicable).
+      // Le total à venir et le prévisionnel doivent inclure toutes les échéances prévues pour le reste du mois et le mois suivant (si applicable).
       const totalUpcoming = allUpcomingSchedules.reduce(
         (sum, s) => sum + s.amount,
         0,
@@ -247,7 +247,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.activeAccountId = typeof firstId === 'number' ? firstId : null;
     }
 
-    // Correction : D�placer la logique de mise � jour de l'onglet actif ici
+    // Correction : Déplacer la logique de mise à jour de l'onglet actif ici
     if (
       this.accountBalances.length > 0 &&
       (this.activeAccountId === null ||
@@ -281,11 +281,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     recurring: RecurringTransaction,
     nextDueDate: Date,
   ): boolean {
-    // Simplification : on v+�rifie si une transaction correspondante existe pour le mois de l'+�ch+�ance, peu importe le jour.
+    // Simplification : on vérifie si une transaction correspondante existe pour le mois de l'échéance, peu importe le jour.
     const targetMonth = nextDueDate.getMonth();
     const targetYear = nextDueDate.getFullYear();
 
-    // On cherche une transaction qui correspond +� l'+�ch+�ance et qui a +�t+� effectu+�e durant le m+�me mois et la m+�me ann+�e.
+    // On cherche une transaction qui correspond à l'échéance et qui a été effectuée durant le même mois et la même année.
     return this.transactions.some((t) => {
       if (t.recurringTransactionId !== recurring.id) {
         return false;
@@ -306,12 +306,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const daysUntilEndOfMonth = endOfMonth.getDate() - today.getDate();
 
-    // Ne calculer que si on est +� 5 jours ou moins de la fin du mois
+    // Ne calculer que si on est à 5 jours ou moins de la fin du mois
     if (daysUntilEndOfMonth > 5) {
       return 0;
     }
 
-    // 1. Calculer le solde +� la fin du mois en cours
+    // 1. Calculer le solde à la fin du mois en cours
     const remainingSchedulesThisMonth = this.getUpcomingSchedules(
       accountId,
       false,
@@ -347,7 +347,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
       const currentDayOfWeekJS = currentDate.getDay(); // 0=Dim, 1=Lun, ...
 
-      // R+�cup+�rer TOUTES les +�ch+�ances pour le jour 'day'
+      // Récupérer TOUTES les échéances pour le jour 'day'
       const schedulesForDay = accountRecurring.filter((rt) => {
         // @ts-ignore
         if (rt.frequency === 'weekly') {
@@ -360,7 +360,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           return targetDayOfWeekJS === currentDayOfWeekJS;
         }
 
-        // Logique pour les +�ch+�ances mensuelles (et autres bas+�es sur le jour du mois)
+        // Logique pour les échéances mensuelles (et autres basées sur le jour du mois)
         const dayOfMonth =
           typeof rt.dayOfMonth === 'string'
             ? parseInt(rt.dayOfMonth)
@@ -368,7 +368,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         return dayOfMonth === day;
       });
 
-      // Calculer l'impact net de la journ+�e
+      // Calculer l'impact net de la journée
       const netChangeForDay = schedulesForDay.reduce((sum, rt) => {
         const amount =
           typeof rt.amount === 'string'
@@ -386,10 +386,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
     }
 
-    // L'alerte est d+�clench+�e si le point le plus bas est n+�gatif
+    // L'alerte est déclenchée si le point le plus bas est négatif
     if (lowestBalanceNextMonth < 0) {
       console.log(
-        `ALERTE Compte ${accountId}: Solde n+�gatif de ${lowestBalanceNextMonth.toFixed(2)}�� pr+�vu d+�but de mois prochain.`,
+        `ALERTE Compte ${accountId}: Solde négatif de ${lowestBalanceNextMonth.toFixed(2)}€ prévu début de mois prochain.`,
       );
       return lowestBalanceNextMonth;
     }
@@ -544,7 +544,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         : null;
       const isInstallment = recurring.recurrenceKind === 'installment';
 
-      // Boucle pour v�rifier le mois en cours et le mois suivant (si anticipation)
+      // Boucle pour vérifier le mois en cours et le mois suivant (si anticipation)
       for (
         let monthOffset = 0;
         monthOffset <= (anticipateNextMonth ? 1 : 0);
@@ -554,13 +554,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         const targetYear = currentYear + Math.floor(targetMonth / 12);
         const normalizedMonth = targetMonth % 12;
 
-        // V�rifier si la fr�quence s'applique � ce mois
+        // Vérifier si la fréquence s'applique à ce mois
         if (!this.shouldApplyRecurring(frequency, normalizedMonth)) {
           continue;
         }
 
         if (frequency === 'weekly') {
-          // Pour les �ch�ances hebdos, on calcule toutes les occurrences du mois
+          // Pour les échéances hebdos, on calcule toutes les occurrences du mois
           const firstDay = new Date(targetYear, normalizedMonth, 1);
           const lastDay = new Date(targetYear, normalizedMonth + 1, 0);
 
@@ -568,10 +568,10 @@ export class HomeComponent implements OnInit, OnDestroy {
             const testDate = new Date(targetYear, normalizedMonth, day);
             const targetDayOfWeekJS = dayOfMonth % 7; // 1-6 -> 1-6, 7 -> 0
             if (testDate.getDay() === targetDayOfWeekJS) {
-              // On ajoute l'�ch�ance si elle n'est pas r�alis�e
+              // On ajoute l'échéance si elle n'est pas réalisée
               const isRealized = this.isRecurringRealized(recurring, testDate);
               const isCurrentMonth = monthOffset === 0;
-              // V�rifications avanc�es
+              // Vérifications avancées
               if (
                 isInstallment &&
                 !this.isInstallmentDateValid(recurring, testDate)
@@ -588,12 +588,12 @@ export class HomeComponent implements OnInit, OnDestroy {
             }
           }
         } else {
-          // Pour toutes les autres fr�quences bas�es sur le jour du mois
+          // Pour toutes les autres fréquences basées sur le jour du mois
           const dueDate = new Date(targetYear, normalizedMonth, dayOfMonth);
           const isRealized = this.isRecurringRealized(recurring, dueDate);
           const isPast = dueDate < today;
           const isCurrentMonth = monthOffset === 0;
-          // V�rifications avanc�es
+          // Vérifications avancées
           if (
             isInstallment &&
             !this.isInstallmentDateValid(recurring, dueDate)
@@ -629,7 +629,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       recurringTransaction: recurring,
       dueDate,
       amount: signedAmount,
-      isOverdue: dueDate < today, // Une +�ch+�ance est en retard si sa date est strictement avant aujourd'hui
+      isOverdue: dueDate < today, // Une échéance est en retard si sa date est strictement avant aujourd'hui
       subCategoryLabel:
         this.subCategories.get(recurring.subCategoryId!) || 'N/A',
     });
@@ -648,7 +648,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           ? parseInt(t.financialFlowId)
           : t.financialFlowId;
 
-      // Filtrer par compte, type de flux (d+�pense) et mois en cours
+      // Filtrer par compte, type de flux (dépense) et mois en cours
       if (tAccountId !== accountId || flowId !== 2) {
         return false;
       }
@@ -663,16 +663,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     const categoryMap = new Map<string, number>();
 
     expenses.forEach((t) => {
-      // Convertir subCategoryId en nombre si c'est une cha+�ne
+      // Convertir subCategoryId en nombre si c'est une chaîne
       const subCatId =
         typeof t.subCategoryId === 'string'
           ? parseInt(t.subCategoryId)
           : t.subCategoryId;
 
-      // R+�cup+�rer le label complet de la sous-cat+�gorie
+      // Récupérer le label complet de la sous-catégorie
       const fullLabel = this.subCategories.get(subCatId!);
 
-      // Extraire uniquement la cat+�gorie (avant le ' - ')
+      // Extraire uniquement la catégorie (avant le ' - ')
       let categoryLabel = 'Autres';
       if (fullLabel && fullLabel.includes(' - ')) {
         categoryLabel = fullLabel.split(' - ')[0];
@@ -690,7 +690,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     const categories: CategoryTotal[] = [];
     categoryMap.forEach((total, label) => {
-      // Ne garder que les cat+�gories avec un montant > 0
+      // Ne garder que les catégories avec un montant > 0
       if (total > 0) {
         categories.push({
           categoryLabel: label,
@@ -732,16 +732,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     const categoryMap = new Map<string, number>();
 
     incomes.forEach((t) => {
-      // Convertir subCategoryId en nombre si c'est une cha+�ne
+      // Convertir subCategoryId en nombre si c'est une chaîne
       const subCatId =
         typeof t.subCategoryId === 'string'
           ? parseInt(t.subCategoryId)
           : t.subCategoryId;
 
-      // R+�cup+�rer le label complet de la sous-cat+�gorie
+      // Récupérer le label complet de la sous-catégorie
       const fullLabel = this.subCategories.get(subCatId!);
 
-      // Extraire uniquement la cat+�gorie (avant le ' - ')
+      // Extraire uniquement la catégorie (avant le ' - ')
       let categoryLabel = 'Autres';
       if (fullLabel && fullLabel.includes(' - ')) {
         categoryLabel = fullLabel.split(' - ')[0];
@@ -759,7 +759,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     const categories: CategoryTotal[] = [];
     categoryMap.forEach((total, label) => {
-      // Ne garder que les cat+�gories avec un montant > 0
+      // Ne garder que les catégories avec un montant > 0
       if (total > 0) {
         categories.push({
           categoryLabel: label,
@@ -817,13 +817,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     return financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
   }
 
-  // Nouvelle m+�thode pour marquer une +�ch+�ance comme pay+�e
+  // Nouvelle méthode pour marquer une échéance comme payée
   markAsPaid(schedule: UpcomingSchedule, accountId: number): void {
     const ref = this.dialogService.open(ConfirmDialogComponent, {
       width: '450px',
       data: {
-        title: "Valider l'�ch�ance",
-        message: `Confirmer la r�alisation de "${schedule.recurringTransaction.label}" pour ${Math.abs(schedule.amount).toFixed(2)} � ?`,
+        title: "Valider l'échéance",
+        message: `Confirmer la réalisation de "${schedule.recurringTransaction.label}" pour ${Math.abs(schedule.amount).toFixed(2)} € ?`,
         confirmText: 'Valider',
         cancelText: 'Annuler',
       },
@@ -997,9 +997,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.normalizeLabel(cat.categoryLabel).includes('eparg'),
     );
     if (savingsCategory && savingsCategory.total > 0) {
+      const savingsTooltip = this.buildSavingsTooltip(accountBalance, today);
       notes.push({
         severity: 'info',
         text: `\u00C9pargne ce mois: ${this.formatEuroValue(savingsCategory.total)}`,
+        tooltip: savingsTooltip,
       });
     }
 
@@ -1080,10 +1082,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     if (today.getDate() >= 25) {
       const coverage = this.getNextMonthCoverage(accountBalance);
-      const tooltip = `Solde fin mois: ${this.formatEuroValue(coverage.soldeFinMois)} \u2022 D\u00E9penses 1\u20132: ${this.formatEuroValue(coverage.depensesDebutMoisSuivant)} \u2022 Marge: ${this.formatEuroValue(coverage.marge)}`;
+      const tooltip = `Solde fin mois : ${this.formatEuroValue(coverage.soldeFinMois)} \n Dépenses : ${this.formatEuroValue(coverage.depensesDebutMoisSuivant)} \n Marge: ${this.formatEuroValue(coverage.marge)}`;
       notes.push({
         severity: coverage.marge >= 0 ? 'info' : 'danger',
-        text: 'Couverture d\u00E9but mois prochain (1\u20132)',
+        text: 'Couverture d\u00E9but mois prochain',
         tooltip,
         type: 'coverage',
       });
@@ -1169,6 +1171,71 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!full || full === '-') return full;
     const idx = full.indexOf(' - ');
     return idx >= 0 ? full.substring(idx + 3) : full;
+  }
+
+  private buildSavingsTooltip(
+    accountBalance: AccountBalance,
+    referenceDate: Date,
+  ): string | undefined {
+    const accountId = accountBalance.account?.id;
+    if (typeof accountId !== 'number') {
+      return undefined;
+    }
+
+    const month = referenceDate.getMonth();
+    const year = referenceDate.getFullYear();
+
+    const savingsTransactions = this.transactions.filter((tx) => {
+      if (!tx.date) {
+        return false;
+      }
+      const txAccountId =
+        typeof tx.accountId === 'string'
+          ? parseInt(tx.accountId, 10)
+          : tx.accountId;
+      if (txAccountId !== accountId) {
+        return false;
+      }
+      const txDate = new Date(tx.date);
+      if (txDate.getMonth() !== month || txDate.getFullYear() !== year) {
+        return false;
+      }
+      const flowId =
+        typeof tx.financialFlowId === 'string'
+          ? parseInt(tx.financialFlowId, 10)
+          : tx.financialFlowId;
+      if (flowId !== 2) {
+        return false;
+      }
+      const label = this.getSubCategoryLabel(tx.subCategoryId);
+      return this.normalizeLabel(label).includes('eparg');
+    });
+
+    if (!savingsTransactions.length) {
+      return undefined;
+    }
+
+    const sortedTransactions = [...savingsTransactions].sort((a, b) => {
+      const aTime = a.date ? new Date(a.date).getTime() : 0;
+      const bTime = b.date ? new Date(b.date).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    const lines = sortedTransactions.map((tx) => {
+      const txDate = tx.date ? new Date(tx.date) : null;
+      const dateLabel = txDate
+        ? txDate.toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+          })
+        : 'N/A';
+      const label =
+        tx.description || this.getSubCategoryOnlyLabel(tx.subCategoryId) || '-';
+      const amount = this.formatEuroValue(this.getAmountNumber(tx));
+      return `• ${dateLabel} · ${label} - ${amount}`;
+    });
+
+    return lines.join('\n');
   }
 
   get503020Breakdown(accountId: number): Debit503020Breakdown {

@@ -1,0 +1,229 @@
+<div class="couple-split-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Répartition couple</p>
+      <h2>Qui paye quoi ?</h2>
+      <p class="hint">
+        Gérez la répartition 50/50, prorata revenus ou fixe. Cochez
+        <strong>Inclure</strong> pour intégrer les charges déjà présentes (courant ou joint).
+      </p>
+    </div>
+    <div class="month-box">
+      <label for="month">Mois courant</label>
+      <input
+        id="month"
+        type="month"
+        [(ngModel)]="selectedMonth"
+        class="month-input"
+      />
+    </div>
+  </div>
+
+  <div class="grid">
+    <p-card class="member-card" [style]="{ borderColor: members()[0].color }">
+      <div class="card-title">Personne A</div>
+      <div class="input-row">
+        <label>Nom</label>
+        <input
+          pInputText
+          [ngModel]="members()[0].name"
+          (ngModelChange)="updateMemberName('A', $event)"
+        />
+      </div>
+      <div class="input-row">
+        <label>Revenu (mois)</label>
+        <p-inputNumber
+          [ngModel]="members()[0].income"
+          (ngModelChange)="updateMemberIncome('A', $event)"
+          mode="currency"
+          currency="EUR"
+          locale="fr-FR"
+          [minFractionDigits]="2"
+        ></p-inputNumber>
+      </div>
+    </p-card>
+
+    <p-card class="member-card" [style]="{ borderColor: members()[1].color }">
+      <div class="card-title">Personne B</div>
+      <div class="input-row">
+        <label>Nom</label>
+        <input
+          pInputText
+          [ngModel]="members()[1].name"
+          (ngModelChange)="updateMemberName('B', $event)"
+        />
+      </div>
+      <div class="input-row">
+        <label>Revenu (mois)</label>
+        <p-inputNumber
+          [ngModel]="members()[1].income"
+          (ngModelChange)="updateMemberIncome('B', $event)"
+          mode="currency"
+          currency="EUR"
+          locale="fr-FR"
+          [minFractionDigits]="2"
+        ></p-inputNumber>
+      </div>
+    </p-card>
+
+    <p-card class="summary-card">
+      <div class="card-title">Synthèse</div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span>{{ members()[0].name }}</span>
+          <strong>{{ totals().totalA | currency: 'EUR':'symbol':'1.0-0':'fr' }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>{{ members()[1].name }}</span>
+          <strong>{{ totals().totalB | currency: 'EUR':'symbol':'1.0-0':'fr' }}</strong>
+        </div>
+        <div class="summary-item delta" [class.positive]="totals().delta < 0">
+          <span>Écart</span>
+          <strong>
+            {{ totals().delta | currency: 'EUR':'symbol':'1.0-0':'fr' }}
+          </strong>
+          <small *ngIf="totals().delta > 0">
+            {{ members()[0].name }} paye {{ totals().delta | currency:'EUR':'symbol':'1.0-0':'fr' }} de plus
+          </small>
+          <small *ngIf="totals().delta < 0">
+            {{ members()[1].name }} paye {{ (totals().delta * -1) | currency:'EUR':'symbol':'1.0-0':'fr' }} de plus
+          </small>
+          <small *ngIf="totals().delta === 0">Répartition équilibrée</small>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <p-chart type="doughnut" [data]="chartData()" [options]="chartOptions"></p-chart>
+      </div>
+    </p-card>
+  </div>
+
+  <p-card class="table-card">
+    <div class="table-header">
+      <div>
+        <div class="card-title">Charges</div>
+        <p class="hint">
+          Import auto : charges récurrentes courantes ou jointes (non incluses par défaut).
+        </p>
+      </div>
+      <div class="table-actions">
+        <p-dropdown
+          [options]="availableRecurringOptions"
+          placeholder="Choisir une charge fixe existante"
+          [showClear]="true"
+          [(ngModel)]="selectedRecurringId"
+          styleClass="w-20rem"
+        ></p-dropdown>
+        <button
+          pButton
+          label="Ajouter cette charge"
+          icon="pi pi-download"
+          class="p-button-outlined"
+          (click)="addRecurringLine()"
+          [disabled]="!selectedRecurringId"
+        ></button>
+        <button pButton label="Ajouter manuellement" icon="pi pi-plus" (click)="addManualLine()"></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="lines()"
+      [tableStyle]="{ 'min-width': '100%' }"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 70px">Inclure</th>
+          <th>Libellé</th>
+          <th>Compte</th>
+          <th style="width: 140px">Montant</th>
+          <th style="width: 160px">Mode</th>
+          <th style="width: 180px">Ratio / Payer</th>
+          <th style="width: 140px">Part {{ members()[0].name }}</th>
+          <th style="width: 140px">Part {{ members()[1].name }}</th>
+          <th style="width: 60px"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+        <tr>
+          <td class="center">
+            <p-checkbox
+              [(ngModel)]="row.includeInSplit"
+              binary="true"
+              inputId="include-{{ rowIndex }}"
+            ></p-checkbox>
+          </td>
+          <td>
+            <input pInputText [(ngModel)]="row.label" />
+            <div class="sub-label" *ngIf="row.categoryLabel">{{ row.categoryLabel }}</div>
+          </td>
+          <td>
+            <span class="account-pill" *ngIf="row.accountName">{{ row.accountName }}</span>
+            <span class="account-pill ghost" *ngIf="!row.accountName">Manuelle</span>
+          </td>
+          <td>
+            <p-inputNumber
+              [(ngModel)]="row.amount"
+              mode="currency"
+              currency="EUR"
+              locale="fr-FR"
+              [minFractionDigits]="2"
+            ></p-inputNumber>
+          </td>
+          <td>
+            <p-dropdown
+              [options]="modeOptions"
+              [(ngModel)]="row.mode"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            ></p-dropdown>
+          </td>
+          <td>
+            <ng-container [ngSwitch]="row.mode">
+              <div *ngSwitchCase="'fixed'" class="ratio-row">
+                <p-inputNumber
+                  [(ngModel)]="row.fixedRatioA"
+                  [min]="0"
+                  [max]="100"
+                  suffix="%"
+                ></p-inputNumber>
+                <span class="ratio-hint">
+                  {{ 100 - (row.fixedRatioA || 0) }}% {{ members()[1].name }}
+                </span>
+              </div>
+              <div *ngSwitchCase="'single'">
+                <p-dropdown
+                  [options]="payerOptionsDynamic"
+                  [(ngModel)]="row.payer"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                ></p-dropdown>
+              </div>
+              <div *ngSwitchDefault class="ratio-row muted">
+                Auto
+              </div>
+            </ng-container>
+          </td>
+          <td class="number">
+            {{ getParts(row).partA | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          </td>
+          <td class="number">
+            {{ getParts(row).partB | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          </td>
+          <td class="center">
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger"
+              (click)="removeLine(rowIndex)"
+              pTooltip="Supprimer cette charge de la liste"
+              tooltipPosition="top"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

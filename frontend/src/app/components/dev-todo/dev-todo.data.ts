@@ -15,20 +15,22 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
   {
     title: '[Ticket 2] Data : Import des anciennes transactions ',
     description: [
-      "[ ] Créer un fichier d'import avec les données 2020 à 2024",
-      '[ ] Importer les données dans la nouvelle base de données',
+      "[X] Créer un fichier d'import avec les données 2022",
+      "[X] Créer un fichier d'import avec les données 2023",
+      "[X] Créer un fichier d'import avec les données 2024",
+      '[X] Importer les données dans la nouvelle base de données',
     ],
-    status: 'todo',
+    status: 'done',
     targetVersion: '1.2.0',
     priority: 'high',
   },
   {
     title: '[Ticket 3] Compte Joint : répartition par couple',
     description: [
-      '[ ] Calcul de la répartition 1/3 - 2/3 ou 50/50 en fonction du salaire',
-      '[ ] Créer une interface pour gérer cette répartition',
+      '[X] Calcul de la répartition 1/3 - 2/3 ou 50/50 en fonction du salaire',
+      '[X] Créer une interface pour gérer cette répartition',
     ],
-    status: 'todo',
+    status: 'done',
     targetVersion: '1.2.0',
     priority: 'medium',
   },

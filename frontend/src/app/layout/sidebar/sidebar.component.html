@@ -53,13 +53,22 @@
             <span>Transactions</span>
           </a>
           <a
+            routerLink="/couple-split"
+            routerLinkActive="active"
+            class="menu-subitem"
+            (click)="onMenuItemClick()"
+          >
+            <i class="pi pi-users"></i>
+            <span>Répartition couple</span>
+          </a>
+          <a
             routerLink="/recurring-transactions"
             routerLinkActive="active"
             class="menu-subitem"
             (click)="onMenuItemClick()"
           >
             <i class="pi pi-sync"></i>
-            <span>Récurrentes</span>
+            <span>Récurrentes 1</span>
           </a>
           <a
             routerLink="/category"

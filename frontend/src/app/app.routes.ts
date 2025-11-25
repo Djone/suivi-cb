@@ -29,6 +29,13 @@ const childRoutes: Routes = [
     path: 'recurring-transactions',
     component: RecurringTransactionListComponent,
   },
+  {
+    path: 'couple-split',
+    loadComponent: () =>
+      import('./components/couple-split/couple-split.component').then(
+        (m) => m.CoupleSplitComponent,
+      ),
+  },
   { path: 'statistics', component: StatisticsComponent },
   { path: 'release-notes', component: ReleaseNotesComponent },
   { path: 'release-process', component: ReleaseProcessComponent },
