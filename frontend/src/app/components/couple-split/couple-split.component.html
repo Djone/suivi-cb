@@ -1,26 +1,21 @@
 <div class="couple-split-page">
   <div class="page-header">
     <div>
-      <p class="eyebrow">Répartition couple</p>
       <h2>Qui paye quoi ?</h2>
+
       <p class="hint">
-        Gérez la répartition 50/50, prorata revenus ou fixe. Cochez
-        <strong>Inclure</strong> pour intégrer les charges déjà présentes (courant ou joint).
+        Gérez la répartition 50/50, prorata revenus ou fixe. Les charges
+        récurrentes existantes sont incluses automatiquement : supprimez la
+        ligne si vous ne voulez pas la prendre en compte.
       </p>
-    </div>
-    <div class="month-box">
-      <label for="month">Mois courant</label>
-      <input
-        id="month"
-        type="month"
-        [(ngModel)]="selectedMonth"
-        class="month-input"
-      />
     </div>
   </div>
 
   <div class="grid">
-    <p-card class="member-card" [style]="{ borderColor: members()[0].color }">
+    <p-card
+      class="member-card member-card-a"
+      [style]="{ borderColor: members()[0].color }"
+    >
       <div class="card-title">Personne A</div>
       <div class="input-row">
         <label>Nom</label>
@@ -43,7 +38,10 @@
       </div>
     </p-card>
 
-    <p-card class="member-card" [style]="{ borderColor: members()[1].color }">
+    <p-card
+      class="member-card member-card-b"
+      [style]="{ borderColor: members()[1].color }"
+    >
       <div class="card-title">Personne B</div>
       <div class="input-row">
         <label>Nom</label>
@@ -71,38 +69,110 @@
       <div class="summary-grid">
         <div class="summary-item">
           <span>{{ members()[0].name }}</span>
-          <strong>{{ totals().totalA | currency: 'EUR':'symbol':'1.0-0':'fr' }}</strong>
+          <strong>{{
+            totals().totalA | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+          }}</strong>
+          <small class="summary-percent">
+            {{
+              percent(totals().totalA, totals().totalA + totals().totalB)
+                | number: "1.0-1"
+            }}
+            %
+          </small>
         </div>
         <div class="summary-item">
           <span>{{ members()[1].name }}</span>
-          <strong>{{ totals().totalB | currency: 'EUR':'symbol':'1.0-0':'fr' }}</strong>
+          <strong>{{
+            totals().totalB | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+          }}</strong>
+          <small class="summary-percent">
+            {{
+              percent(totals().totalB, totals().totalA + totals().totalB)
+                | number: "1.0-1"
+            }}
+            %
+          </small>
+        </div>
+        <div class="summary-item">
+          <span>Total charges</span>
+          <strong>{{
+            totalCharges() | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+          }}</strong>
         </div>
         <div class="summary-item delta" [class.positive]="totals().delta < 0">
           <span>Écart</span>
           <strong>
-            {{ totals().delta | currency: 'EUR':'symbol':'1.0-0':'fr' }}
+            {{ totals().delta | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
           </strong>
           <small *ngIf="totals().delta > 0">
-            {{ members()[0].name }} paye {{ totals().delta | currency:'EUR':'symbol':'1.0-0':'fr' }} de plus
+            {{ members()[0].name }} paye
+            {{ totals().delta | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
+            de plus
           </small>
           <small *ngIf="totals().delta < 0">
-            {{ members()[1].name }} paye {{ (totals().delta * -1) | currency:'EUR':'symbol':'1.0-0':'fr' }} de plus
+            {{ members()[1].name }} paye
+            {{
+              totals().delta * -1 | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+            }}
+            de plus
           </small>
           <small *ngIf="totals().delta === 0">Répartition équilibrée</small>
         </div>
       </div>
       <div class="chart-wrapper">
-        <p-chart type="doughnut" [data]="chartData()" [options]="chartOptions"></p-chart>
+        <p-chart
+          type="doughnut"
+          [data]="chartData()"
+          [options]="chartOptions"
+        ></p-chart>
       </div>
     </p-card>
   </div>
+
+  <p-card class="prorata-card standalone">
+    <div class="card-title">Paramétrage prorata</div>
+
+    <div class="prorata-custom">
+      <p-slider
+        [ngModel]="customProrataA()"
+        (ngModelChange)="setCustomProrata('A', $event)"
+        [min]="0"
+        [max]="100"
+        [step]="1"
+        styleClass="w-full"
+      ></p-slider>
+      <div class="prorata-inputs">
+        <div class="input-row">
+          <label>{{ members()[0].name }}</label>
+          <p-inputNumber
+            [ngModel]="customProrataA()"
+            (ngModelChange)="setCustomProrata('A', $event)"
+            [min]="0"
+            [max]="100"
+            suffix="%"
+          ></p-inputNumber>
+        </div>
+        <div class="input-row">
+          <label>{{ members()[1].name }}</label>
+          <p-inputNumber
+            [ngModel]="100 - customProrataA()"
+            (ngModelChange)="setCustomProrata('B', $event)"
+            [min]="0"
+            [max]="100"
+            suffix="%"
+          ></p-inputNumber>
+        </div>
+      </div>
+    </div>
+  </p-card>
 
   <p-card class="table-card">
     <div class="table-header">
       <div>
         <div class="card-title">Charges</div>
         <p class="hint">
-          Import auto : charges récurrentes courantes ou jointes (non incluses par défaut).
+          Import auto : charges récurrentes courantes ou jointes (incluses par
+          défaut).
         </p>
       </div>
       <div class="table-actions">
@@ -111,6 +181,8 @@
           placeholder="Choisir une charge fixe existante"
           [showClear]="true"
           [(ngModel)]="selectedRecurringId"
+          appendTo="body"
+          scrollHeight="260px"
           styleClass="w-20rem"
         ></p-dropdown>
         <button
@@ -121,7 +193,12 @@
           (click)="addRecurringLine()"
           [disabled]="!selectedRecurringId"
         ></button>
-        <button pButton label="Ajouter manuellement" icon="pi pi-plus" (click)="addManualLine()"></button>
+        <button
+          pButton
+          label="Ajouter manuellement"
+          icon="pi pi-plus"
+          (click)="addManualLine()"
+        ></button>
       </div>
     </div>
 
@@ -132,12 +209,11 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 70px">Inclure</th>
           <th>Libellé</th>
           <th>Compte</th>
           <th style="width: 140px">Montant</th>
           <th style="width: 160px">Mode</th>
-          <th style="width: 180px">Ratio / Payer</th>
+          <th style="width: 190px">Ratio / Payer</th>
           <th style="width: 140px">Part {{ members()[0].name }}</th>
           <th style="width: 140px">Part {{ members()[1].name }}</th>
           <th style="width: 60px"></th>
@@ -146,24 +222,30 @@
 
       <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
         <tr>
-          <td class="center">
-            <p-checkbox
-              [(ngModel)]="row.includeInSplit"
-              binary="true"
-              inputId="include-{{ rowIndex }}"
-            ></p-checkbox>
+          <td>
+            <input
+              pInputText
+              [(ngModel)]="row.label"
+              [readonly]="row.source === 'recurring'"
+              (ngModelChange)="onLineChange()"
+            />
+            <div class="sub-label" *ngIf="row.categoryLabel">
+              {{ row.categoryLabel }}
+            </div>
           </td>
           <td>
-            <input pInputText [(ngModel)]="row.label" />
-            <div class="sub-label" *ngIf="row.categoryLabel">{{ row.categoryLabel }}</div>
-          </td>
-          <td>
-            <span class="account-pill" *ngIf="row.accountName">{{ row.accountName }}</span>
-            <span class="account-pill ghost" *ngIf="!row.accountName">Manuelle</span>
+            <span class="account-pill" *ngIf="row.accountName">{{
+              row.accountName
+            }}</span>
+            <span class="account-pill ghost" *ngIf="!row.accountName"
+              >Manuelle</span
+            >
           </td>
           <td>
             <p-inputNumber
               [(ngModel)]="row.amount"
+              [disabled]="row.source === 'recurring'"
+              (ngModelChange)="onLineChange()"
               mode="currency"
               currency="EUR"
               locale="fr-FR"
@@ -174,8 +256,11 @@
             <p-dropdown
               [options]="modeOptions"
               [(ngModel)]="row.mode"
+              (ngModelChange)="onLineChange()"
               optionLabel="label"
               optionValue="value"
+              appendTo="body"
+              scrollHeight="260px"
               styleClass="w-full"
             ></p-dropdown>
           </td>
@@ -184,6 +269,7 @@
               <div *ngSwitchCase="'fixed'" class="ratio-row">
                 <p-inputNumber
                   [(ngModel)]="row.fixedRatioA"
+                  (ngModelChange)="onLineChange()"
                   [min]="0"
                   [max]="100"
                   suffix="%"
@@ -196,21 +282,26 @@
                 <p-dropdown
                   [options]="payerOptionsDynamic"
                   [(ngModel)]="row.payer"
+                  (ngModelChange)="onLineChange()"
                   optionLabel="label"
                   optionValue="value"
+                  appendTo="body"
+                  scrollHeight="260px"
                   styleClass="w-full"
                 ></p-dropdown>
               </div>
-              <div *ngSwitchDefault class="ratio-row muted">
-                Auto
-              </div>
+              <div *ngSwitchDefault class="ratio-row muted">Auto</div>
             </ng-container>
           </td>
           <td class="number">
-            {{ getParts(row).partA | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+            {{
+              getParts(row).partA | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
           </td>
           <td class="number">
-            {{ getParts(row).partB | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+            {{
+              getParts(row).partB | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
           </td>
           <td class="center">
             <button

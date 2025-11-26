@@ -119,6 +119,35 @@ const initializeDatabase = async () => {
       console.log("-> Des comptes existent déjà, aucune insertion nécessaire.");
     }
 
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS couple_split_configs (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        members_json TEXT NOT NULL,
+        lines_json TEXT NOT NULL,
+        custom_prorata_a REAL NOT NULL DEFAULT 50,
+        ignored_recurring_ids TEXT NOT NULL DEFAULT '[]',
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('�o" Table "couple_split_configs" vérifiée/créée.');
+    await runQuery(
+      `ALTER TABLE couple_split_configs ADD COLUMN ignored_recurring_ids TEXT NOT NULL DEFAULT '[]';`,
+    ).catch(() => {});
+    const coupleSplitRow = await getQuery("SELECT COUNT(*) as count FROM couple_split_configs");
+    if (coupleSplitRow && coupleSplitRow.count === 0) {
+      const defaultMembers = JSON.stringify([
+        { id: "A", name: "A", color: "#6366F1", income: 0 },
+        { id: "B", name: "B", color: "#10B981", income: 0 },
+      ]);
+      const defaultLines = JSON.stringify([]);
+      await runQuery(
+        `INSERT INTO couple_split_configs (id, members_json, lines_json, custom_prorata_a, ignored_recurring_ids)
+         VALUES (1, ?, ?, 50, '[]')`,
+        [defaultMembers, defaultLines]
+      );
+      console.log('�o" Configuration couple_split_configs initialisée.');
+    }
+
     // Migrations incrémentales V1.1.0
     const migrateAdvancedRecurring = require("./migrate_2025_advanced_recurring");
     await migrateAdvancedRecurring();

@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { RecurringTransaction } from '../models/recurring-transaction.model';
 import { Account } from '../models/account.model';
+import { environment } from '../../environments/environment';
 
 export type SplitMode = 'equal' | 'prorata' | 'fixed' | 'single';
 
@@ -21,7 +25,6 @@ export interface SplitLine {
   mode: SplitMode;
   fixedRatioA?: number; // 0-100
   payer?: 'A' | 'B';
-  includeInSplit: boolean;
   source?: 'recurring' | 'manual';
 }
 
@@ -31,10 +34,27 @@ export interface SplitTotals {
   delta: number; // positif si A paye plus que B
 }
 
+export interface CoupleSplitConfig {
+  members: SplitMember[];
+  lines: SplitLine[];
+  customProrataA: number;
+  ignoredRecurringIds: number[];
+}
+
+export interface CoupleSplitConfigResponse {
+  config: CoupleSplitConfig;
+  totals: SplitTotals;
+  parts: Array<{ id?: number; label: string; partA: number; partB: number }>;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class CoupleSplitService {
+  private apiUrl = `${environment.apiUrl}/api/couple-split`;
+
+  constructor(private http: HttpClient) {}
+
   mapRecurringToLines(
     recurrences: RecurringTransaction[],
     accounts: Account[],
@@ -66,7 +86,6 @@ export class CoupleSplitService {
           mode: 'prorata',
           fixedRatioA: 50,
           payer: 'A',
-          includeInSplit: false,
           source: 'recurring',
         } as SplitLine;
       });
@@ -76,14 +95,17 @@ export class CoupleSplitService {
     line: SplitLine,
     memberAIncome: number,
     memberBIncome: number,
+    prorataRatioA?: number,
   ): { partA: number; partB: number } {
-    if (!line.includeInSplit) {
-      return { partA: 0, partB: 0 };
-    }
-
     const amount = Math.max(0, line.amount || 0);
     const totalIncome = memberAIncome + memberBIncome;
-    const ratioA = totalIncome > 0 ? memberAIncome / totalIncome : 0.5;
+    const ratioA =
+      typeof prorataRatioA === 'number'
+        ? prorataRatioA
+        : totalIncome > 0
+          ? memberAIncome / totalIncome
+          : 0.5;
+    const safeRatioA = Math.min(1, Math.max(0, ratioA));
 
     switch (line.mode) {
       case 'equal': {
@@ -91,7 +113,7 @@ export class CoupleSplitService {
         return { partA: half, partB: half };
       }
       case 'prorata': {
-        const partA = amount * ratioA;
+        const partA = amount * safeRatioA;
         return { partA, partB: amount - partA };
       }
       case 'fixed': {
@@ -115,6 +137,7 @@ export class CoupleSplitService {
     lines: SplitLine[],
     memberAIncome: number,
     memberBIncome: number,
+    prorataRatioA?: number,
   ): SplitTotals {
     return lines.reduce(
       (acc, line) => {
@@ -122,6 +145,7 @@ export class CoupleSplitService {
           line,
           memberAIncome,
           memberBIncome,
+          prorataRatioA,
         );
         acc.totalA += partA;
         acc.totalB += partB;
@@ -129,5 +153,23 @@ export class CoupleSplitService {
       },
       { totalA: 0, totalB: 0, delta: 0 } as SplitTotals,
     );
+  }
+
+  getConfig(): Observable<CoupleSplitConfig> {
+    return this.http
+      .get<CoupleSplitConfigResponse>(`${this.apiUrl}/config`)
+      .pipe(map((res) => res.config));
+  }
+
+  saveConfig(config: CoupleSplitConfig): Observable<CoupleSplitConfig> {
+    return this.http
+      .put<CoupleSplitConfigResponse>(`${this.apiUrl}/config`, config)
+      .pipe(map((res) => res.config));
+  }
+
+  getRecurringLines(): Observable<SplitLine[]> {
+    return this.http
+      .get<{ lines: SplitLine[] }>(`${this.apiUrl}/recurring-lines`)
+      .pipe(map((res) => res.lines || []));
   }
 }

@@ -7,26 +7,24 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
-import { CheckboxModule } from 'primeng/checkbox';
+import { SliderModule } from 'primeng/slider';
 import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
 import { ChartModule } from 'primeng/chart';
-import { Subscription, combineLatest } from 'rxjs';
+import { Subscription, Subject, forkJoin, of } from 'rxjs';
+import { debounceTime, switchMap, tap } from 'rxjs/operators';
 import {
   CoupleSplitService,
   SplitLine,
   SplitMember,
   SplitMode,
+  CoupleSplitConfig,
 } from '../../services/couple-split.service';
-import { RecurringTransactionService } from '../../services/recurring-transaction.service';
-import { AccountService } from '../../services/account.service';
-import { RecurringTransaction } from '../../models/recurring-transaction.model';
-import { Account } from '../../models/account.model';
 
 interface DropdownOption<T> {
   label: string;
@@ -44,10 +42,10 @@ interface DropdownOption<T> {
     InputTextModule,
     InputNumberModule,
     DropdownModule,
-    CheckboxModule,
+    SliderModule,
     ButtonModule,
-    TagModule,
     ChartModule,
+    HttpClientModule,
   ],
   templateUrl: './couple-split.component.html',
   styleUrls: ['./couple-split.component.css'],
@@ -62,6 +60,10 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
   recurringPool = signal<SplitLine[]>([]);
   selectedRecurringId = signal<number | null>(null);
   selectedMonth = this.buildMonthString(new Date());
+  customProrataA = signal<number>(50);
+  ignoredRecurringIds = signal<number[]>([]);
+  private saveQueue$ = new Subject<void>();
+  private readyToPersist = false;
   private subscriptions = new Subscription();
 
   modeOptions: DropdownOption<SplitMode>[] = [
@@ -103,24 +105,32 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
 
   constructor(
     private coupleSplit: CoupleSplitService,
-    private recurringService: RecurringTransactionService,
-    private accountService: AccountService,
   ) {}
 
   ngOnInit(): void {
-    const combined$ = combineLatest([
-      this.recurringService.recurringTransactions$,
-      this.accountService.accounts$,
-    ]);
-
     this.subscriptions.add(
-      combined$.subscribe(([recurring, accounts]) => {
-        this.syncWithRecurring(recurring, accounts);
+      this.saveQueue$
+        .pipe(debounceTime(500), switchMap(() => this.persistConfig()))
+        .subscribe(),
+    );
+
+    const config$ = this.coupleSplit.getConfig().pipe(
+      tap((config) => {
+        this.members.set(config.members);
+        this.lines.set(config.lines);
+        this.customProrataA.set(config.customProrataA ?? 50);
+        this.ignoredRecurringIds.set(config.ignoredRecurringIds ?? []);
       }),
     );
 
-    this.recurringService.getRecurringTransactions().subscribe();
-    this.accountService.getAccounts().subscribe();
+    const recurring$ = this.coupleSplit.getRecurringLines().pipe(tap((lines) => this.recurringPool.set(lines)));
+
+    this.subscriptions.add(
+      forkJoin([config$, recurring$]).subscribe(() => {
+        this.syncWithRecurring(this.recurringPool());
+        this.readyToPersist = true;
+      }),
+    );
   }
 
   ngOnDestroy(): void {
@@ -135,16 +145,22 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
       mode: 'prorata',
       fixedRatioA: 50,
       payer: 'A',
-      includeInSplit: true,
       source: 'manual',
     };
     this.lines.set([...current, next]);
+    this.scheduleSave();
   }
 
   removeLine(index: number): void {
     const copy = [...this.lines()];
-    copy.splice(index, 1);
+    const [removed] = copy.splice(index, 1);
+    if (removed?.id && removed.source === 'recurring') {
+      const ids = new Set(this.ignoredRecurringIds());
+      ids.add(removed.id);
+      this.ignoredRecurringIds.set([...ids]);
+    }
     this.lines.set(copy);
+    this.scheduleSave();
   }
 
   addRecurringLine(): void {
@@ -160,15 +176,18 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
     if (!base) {
       return;
     }
+    this.ignoredRecurringIds.set(
+      this.ignoredRecurringIds().filter((id) => id !== selectedId),
+    );
     this.lines.set([
       ...this.lines(),
       {
         ...base,
-        includeInSplit: true,
         source: 'recurring',
       },
     ]);
     this.selectedRecurringId.set(null);
+    this.scheduleSave();
   }
 
   updateMemberName(id: 'A' | 'B', value: string): void {
@@ -176,6 +195,7 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
       m.id === id ? { ...m, name: value } : m,
     );
     this.members.set(updated);
+    this.scheduleSave();
   }
 
   updateMemberIncome(id: 'A' | 'B', value: number | null): void {
@@ -184,11 +204,17 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
       m.id === id ? { ...m, income } : m,
     );
     this.members.set(updated);
+    this.scheduleSave();
   }
 
   getParts(line: SplitLine): { partA: number; partB: number } {
     const [a, b] = this.members();
-    return this.coupleSplit.computeParts(line, a.income, b.income);
+    return this.coupleSplit.computeParts(
+      line,
+      a.income,
+      b.income,
+      this.prorataRatioA(),
+    );
   }
 
   totals() {
@@ -197,9 +223,15 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
       this.lines(),
       a.income,
       b.income,
+      this.prorataRatioA(),
     );
     totals.delta = totals.totalA - totals.totalB;
     return totals;
+  }
+
+  totalCharges(): number {
+    const t = this.totals();
+    return t.totalA + t.totalB;
   }
 
   get payerOptionsDynamic(): DropdownOption<'A' | 'B'>[] {
@@ -215,31 +247,86 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
     return this.recurringPool()
       .filter((l) => typeof l.id === 'number' && !usedIds.has(l.id))
       .map((l) => ({
-        label: l.accountName ? `${l.label} • ${l.accountName}` : l.label,
+        label: l.accountName ? `${l.label} - ${l.accountName}` : l.label,
         value: l.id as number,
       }));
   }
 
-  private syncWithRecurring(
-    recurring: RecurringTransaction[],
-    accounts: Account[],
-  ) {
+  prorataRatioA(): number {
+    return (this.customProrataA() ?? 50) / 100;
+  }
+
+  percent(value: number, total: number): number {
+    if (total <= 0) {
+      return 0;
+    }
+    return (value / total) * 100;
+  }
+
+  setCustomProrata(part: 'A' | 'B', value: number | null): void {
+    const clamped = Math.min(100, Math.max(0, value ?? 0));
+    if (part === 'A') {
+      this.customProrataA.set(clamped);
+    } else {
+      this.customProrataA.set(100 - clamped);
+    }
+    this.scheduleSave();
+  }
+
+  onLineChange(): void {
+    this.scheduleSave();
+  }
+
+  private buildConfig(): CoupleSplitConfig {
+    return {
+      members: this.members(),
+      lines: this.lines(),
+      customProrataA: this.customProrataA(),
+      ignoredRecurringIds: this.ignoredRecurringIds(),
+    };
+  }
+
+  private persistConfig() {
+    if (!this.readyToPersist) {
+      return of(null);
+    }
+    return this.coupleSplit.saveConfig(this.buildConfig());
+  }
+
+  private scheduleSave(): void {
+    if (!this.readyToPersist) {
+      return;
+    }
+    this.saveQueue$.next();
+  }
+
+  private syncWithRecurring(recurringLines: SplitLine[]) {
     const current = this.lines();
     const byId = new Map<number, SplitLine>();
     current
       .filter((l) => typeof l.id === 'number')
       .forEach((l) => byId.set(l.id as number, l));
 
-    const mapped = this.coupleSplit.mapRecurringToLines(recurring, accounts);
-    this.recurringPool.set(mapped);
+    this.recurringPool.set(recurringLines);
 
-    const merged: SplitLine[] = mapped.map((line) => {
-      if (line.id && byId.has(line.id)) {
-        const existing = byId.get(line.id)!;
-        return { ...line, ...existing, source: 'recurring' as const };
-      }
-      return line;
-    });
+    const ignoredIds = new Set(this.ignoredRecurringIds());
+    const merged: SplitLine[] = recurringLines
+      .filter((l) => !(l.id && ignoredIds.has(l.id)))
+      .map((line) => {
+        if (line.id && byId.has(line.id)) {
+          const existing = byId.get(line.id)!;
+          // Pour les lignes récurrentes, on garde les choix de répartition,
+          // mais on laisse le libellé/montant issus de la source.
+          return {
+            ...line,
+            mode: existing.mode,
+            fixedRatioA: existing.fixedRatioA,
+            payer: existing.payer,
+            source: 'recurring' as const,
+          };
+        }
+        return line;
+      });
 
     const manual: SplitLine[] = current
       .filter((l) => l.source === 'manual')
@@ -253,3 +340,6 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
     return `${year}-${month}`;
   }
 }
+
+
+

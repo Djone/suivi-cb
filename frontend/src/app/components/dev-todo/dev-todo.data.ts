@@ -28,8 +28,15 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     title: '[Ticket 3] Compte Joint : répartition par couple',
     description: [
       '[X] Calcul de la répartition 1/3 - 2/3 ou 50/50 en fonction du salaire',
-      '[X] Créer une interface pour gérer cette répartition',
+      '[X] Créer une interface front pour gérer cette répartition',
     ],
+    status: 'done',
+    targetVersion: '1.2.0',
+    priority: 'medium',
+  },
+  {
+    title: '[Ticket 3] Compte Joint - répartition par couple : Backend',
+    description: ['[X] Intégrer la logique backend'],
     status: 'done',
     targetVersion: '1.2.0',
     priority: 'medium',
