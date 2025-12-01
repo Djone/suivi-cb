@@ -14,6 +14,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { DropdownModule } from 'primeng/dropdown';
+import { MultiSelectModule } from 'primeng/multiselect';
 
 import { TransactionService } from '../../services/transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
@@ -63,6 +64,7 @@ interface UpcomingScheduleLite {
     InputGroupModule,
     InputGroupAddonModule,
     DropdownModule,
+    MultiSelectModule,
   ],
   templateUrl: './transaction-list.component.html',
   styleUrls: [
@@ -80,6 +82,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   groupedTransactions: GroupedTransactions[] = [];
   paginatedGroupedTransactions: GroupedTransactions[] = [];
   subCategories: SubCategory[] = [];
+  private subCategoryIndex = new Map<number, SubCategory>();
+  categoryOptions: { label: string; value: number }[] = [];
   recurringTransactions: RecurringTransaction[] = [];
   pendingSchedules: UpcomingScheduleLite[] = [];
   sortedRecurringTransactions: RecurringTransaction[] = [];
@@ -109,6 +113,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     dateRange: null as Date[] | null,
     description: '',
     amount: '',
+    categoryIds: [] as number[],
+    subCategoryIds: [] as number[],
   };
 
   // Tri
@@ -211,6 +217,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       this.subCategoryService.subCategories$.subscribe({
         next: (data) => {
           this.subCategories = data;
+          this.refreshSubCategoryIndex(data);
+          this.categoryOptions = this.buildCategoryOptions(data);
           console.log(
             'TRANSACTION LIST : Sous-catégories chargées - Total:',
             data.length,
@@ -236,6 +244,67 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   loadTransactions(): void {
     this.transactionService.loadTransactions();
+  }
+
+  private refreshSubCategoryIndex(list: SubCategory[]): void {
+    this.subCategoryIndex.clear();
+    list.forEach((sc) => {
+      if (typeof sc.id === 'number') {
+        this.subCategoryIndex.set(sc.id, sc);
+      }
+    });
+  }
+
+  private buildCategoryOptions(
+    list: SubCategory[],
+  ): { label: string; value: number }[] {
+    const grouped = new Map<number, { label: string; count: number }>();
+    list.forEach((sc) => {
+      if (typeof sc.categoryId !== 'number') return;
+      const label = sc.categoryLabel || `Catégorie ${sc.categoryId}`;
+      if (!grouped.has(sc.categoryId)) {
+        grouped.set(sc.categoryId, { label, count: 0 });
+      }
+      grouped.get(sc.categoryId)!.count += 1;
+    });
+
+    return Array.from(grouped.entries())
+      .map(([value, info]) => ({
+        value,
+        label: `${info.label} (${info.count})`,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+  }
+
+  get filteredSubCategoryOptions(): { label: string; value: number }[] {
+    const allowedCategories = this.filters.categoryIds;
+    const subset = allowedCategories.length
+      ? this.subCategories.filter((sc) =>
+          allowedCategories.includes(sc.categoryId),
+        )
+      : this.subCategories;
+
+    return subset
+      .filter((sc) => typeof sc.id === 'number')
+      .map((sc) => ({
+        label: `${sc.categoryLabel || 'Catégorie'} > ${sc.label}`,
+        value: sc.id as number,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+  }
+
+  private getSubCategoryById(
+    subCategoryId: number | string | null | undefined,
+  ): SubCategory | null {
+    if (subCategoryId === null || subCategoryId === undefined) return null;
+    const id =
+      typeof subCategoryId === 'string'
+        ? parseInt(subCategoryId, 10)
+        : subCategoryId;
+    if (Number.isNaN(id)) {
+      return null;
+    }
+    return this.subCategoryIndex.get(id) || null;
   }
 
   // Appliquer les filtres et le tri
@@ -271,7 +340,27 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           transaction.amount !== undefined &&
           transaction.amount.toString().includes(this.filters.amount));
 
-      return matchDate && matchDescription && matchAmount;
+      const subCategory = this.getSubCategoryById(transaction.subCategoryId);
+
+      const matchCategory =
+        this.filters.categoryIds.length === 0
+          ? true
+          : subCategory
+            ? this.filters.categoryIds.includes(subCategory.categoryId)
+            : false;
+
+      const matchSubCategory =
+        this.filters.subCategoryIds.length === 0 ||
+        (typeof subCategory?.id === 'number' &&
+          this.filters.subCategoryIds.includes(subCategory.id));
+
+      return (
+        matchDate &&
+        matchDescription &&
+        matchAmount &&
+        matchCategory &&
+        matchSubCategory
+      );
     });
 
     this.calculateBalances();
@@ -495,6 +584,18 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.filters.dateRange = null;
     this.applyFilter();
   }
+  onCategoryFilterChange(): void {
+    if (this.filters.categoryIds.length === 0) {
+      this.filters.subCategoryIds = [];
+    } else {
+      const allowed = new Set(this.filters.categoryIds);
+      this.filters.subCategoryIds = this.filters.subCategoryIds.filter((id) => {
+        const sc = this.getSubCategoryById(id);
+        return sc ? allowed.has(sc.categoryId) : false;
+      });
+    }
+    this.applyFilter();
+  }
 
   allowOnlyNumbers(event: KeyboardEvent): void {
     const allowedKeys = [
@@ -525,18 +626,19 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   // Obtenir le nom de la sous-catégorie
-  getSubCategoryName(subCategoryId: number | null): string {
+  // Obtenir le nom de la sous-categorie
+  getSubCategoryName(subCategoryId: number | string | null): string {
     if (!subCategoryId) return 'N/A';
 
-    const id =
+    const subCategory = this.getSubCategoryById(subCategoryId);
+    const normalizedId =
       typeof subCategoryId === 'string'
-        ? parseInt(subCategoryId)
+        ? parseInt(subCategoryId, 10)
         : subCategoryId;
-    const subCategory = this.subCategories.find((sc) => sc.id === id);
 
     if (!subCategory && this.subCategories.length > 0) {
       console.log(
-        `TRANSACTION LIST : Sous-catégorie ${id} non trouvée. Sous-catégories disponibles:`,
+        `TRANSACTION LIST : Sous-categorie ${normalizedId} non trouvee. Sous-categories disponibles:`,
         this.subCategories.map((sc) => sc.id),
       );
     }
@@ -545,7 +647,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       ? `${subCategory.categoryLabel} - ${subCategory.label}`
       : 'N/A';
   }
-
   // Obtenir le montant avec signe
   getSignedAmount(transaction: Transaction): number {
     const amount =
@@ -609,22 +710,17 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       }
 
       // Enrichir la transaction avec le label de sous-catégorie et le montant numérique
-      const subCatId =
-        typeof transaction.subCategoryId === 'string'
-          ? parseInt(transaction.subCategoryId)
-          : transaction.subCategoryId;
-
-      const subCategory = this.subCategories.find((sc) => sc.id === subCatId);
+      // Enrichir la transaction avec le label de sous-categorie et le montant numerique
+      const subCategory = this.getSubCategoryById(transaction.subCategoryId);
       const subCategoryLabel = subCategory
         ? `${subCategory.categoryLabel} - ${subCategory.label}`
-        : 'Non catÃƒÂ©gorisÃƒÂ©';
+        : 'Non categorise';
 
       const enrichedTransaction: TransactionWithLabel = {
         ...transaction,
         subCategoryLabel: subCategoryLabel,
         amountNumber: this.getSignedAmount(transaction),
       };
-
       grouped.get(dateKey)!.push(enrichedTransaction);
     });
 
@@ -1441,3 +1537,4 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 }
+
