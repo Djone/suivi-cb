@@ -67,18 +67,6 @@
   margin-bottom: 2rem;
 }
 
-.category-table {
-  margin-top: 2rem;
-}
-
-.category-dot {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 0.5rem;
-}
-
 /* Évolution */
 
 .evolution-table {
@@ -86,21 +74,6 @@
 }
 
 /* Moyennes */
-.averages-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  gap: 2.5rem;
-  margin-bottom: 2rem !important;
-}
-
-::ng-deep .average-card {
-  height: 100%;
-}
-
-.average-table {
-  max-height: 500px;
-  overflow-y: auto;
-}
 
 /* Tableaux */
 .text-right {
@@ -170,13 +143,90 @@
   padding: 0;
 }
 
+.tabs-card ::ng-deep .p-tabview-nav {
+  background: #f8fafc;
+  border: none;
+}
+
+.tabs-card ::ng-deep .p-tabview-nav-link {
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.tabs-card ::ng-deep .p-highlight .p-tabview-nav-link {
+  background: #fff;
+  color: #111827;
+  border-bottom: 3px solid #6366f1;
+}
+
+.table-description {
+  color: #475569;
+  margin: 0 0 1rem 0;
+}
+
+.monthly-table ::ng-deep .p-datatable-thead > tr > th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.expander-column {
+  width: 3rem;
+}
+
+.toggle-button {
+  width: 2rem;
+  height: 2rem;
+}
+
+.row-label {
+  font-weight: 600;
+}
+
+.expansion-cell {
+  background: #f8fafc;
+}
+
+.sub-table ::ng-deep .p-datatable-thead > tr > th {
+  background: #e2e8f0;
+}
+
+.sub-table ::ng-deep .p-datatable-tbody > tr > td {
+  background: #ffffff;
+}
+
+.monthly-table-wrapper {
+  overflow-x: auto;
+}
+
+.plain-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.plain-table th {
+  background-color: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.plain-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.plain-table tr:hover td {
+  background-color: #f8fafc;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
-  .charts-row,
-  .averages-row {
-    grid-template-columns: 1fr;
-  }
-
   .filters-grid {
     grid-template-columns: 1fr;
   }

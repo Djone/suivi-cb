@@ -42,9 +42,7 @@
           <p-button
             label="Réinitialiser"
             icon="pi pi-refresh"
-            (onClick)="
-              selectedAccount = null; selectedMonth = null; applyFilters()
-            "
+            (onClick)="selectedAccount = null; selectedMonth = null; applyFilters()"
             styleClass="p-button-outlined"
           >
           </p-button>
@@ -53,7 +51,7 @@
     </p-card>
   </div>
 
-  <!-- Évolution mensuelle -->
+  <!-- Evolution mensuelle -->
   <div class="section-wrapper">
     <p-card
       header="Évolution mensuelle {{ selectedYear }}"
@@ -69,7 +67,6 @@
         </canvas>
       </div>
 
-      <!-- Tableau de l'évolution -->
       <div class="evolution-table">
         <p-table [value]="monthlyEvolution" [paginator]="false">
           <ng-template pTemplate="header">
@@ -86,9 +83,7 @@
                 <strong>{{ month.month }}</strong>
               </td>
               <td class="text-right amount-cell negative">
-                {{
-                  month.expenses | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
+                {{ month.expenses | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
               </td>
               <td class="text-right amount-cell positive">
                 {{ month.income | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
@@ -98,9 +93,7 @@
                 [class.positive]="month.balance > 0"
                 [class.negative]="month.balance < 0"
               >
-                {{
-                  month.balance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
+                {{ month.balance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
               </td>
             </tr>
           </ng-template>
@@ -109,163 +102,160 @@
     </p-card>
   </div>
 
-  <!-- Graphiques par catégorie -->
-  <div class="charts-row">
-    <p-card header="Dépenses par catégorie" styleClass="chart-card">
-      <div class="chart-container" *ngIf="isBrowser">
-        <canvas
-          baseChart
-          [data]="pieChartExpensesData"
-          [type]="pieChartType"
-          [options]="pieChartOptions"
-        >
-        </canvas>
-      </div>
+  <!-- Vue annuelle -->
+  <div class="section-wrapper">
+    <p-card header="Vue annuelle par catégorie" styleClass="tabs-card">
+      <p-tabView>
+        <p-tabPanel header="Dépenses">
+          <div class="table-description">
+            Totaux et moyennes mensuels des catégories, avec le détail par sous-catégorie.
+          </div>
+          <div class="monthly-table-wrapper" *ngIf="expensesMonthlyTable.length > 0; else noExpenseData">
+            <table class="plain-table">
+              <thead>
+                <tr>
+                  <th class="expander-column"></th>
+                  <th>Catégorie</th>
+                  <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
+                  <th class="text-right">Total</th>
+                  <th class="text-right">Moyenne</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let category of expensesMonthlyTable">
+                  <tr>
+                    <td>
+                      <button
+                        type="button"
+                        pButton
+                        class="p-button-text p-button-rounded p-button-plain toggle-button"
+                        [icon]="expenseExpanded[category.label] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                        (click)="toggleExpenseRow(category.label)"
+                      ></button>
+                    </td>
+                    <td class="row-label">{{ category.label }}</td>
+                    <td *ngFor="let month of monthColumns" class="text-right amount-cell negative">
+                      {{ category.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    </td>
+                    <td class="text-right amount-cell negative">
+                      {{ category.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    </td>
+                    <td class="text-right amount-cell negative">
+                      {{ category.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    </td>
+                  </tr>
+                  <tr *ngIf="expenseExpanded[category.label]">
+                    <td [attr.colspan]="monthColumns.length + 4" class="expansion-cell">
+                      <table class="plain-table sub-table">
+                        <thead>
+                          <tr>
+                            <th>Sous-catégorie</th>
+                            <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
+                            <th class="text-right">Total</th>
+                            <th class="text-right">Moyenne</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let sub of category.subCategories">
+                            <td class="row-label">{{ sub.label }}</td>
+                            <td *ngFor="let month of monthColumns" class="text-right amount-cell negative">
+                              {{ sub.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            </td>
+                            <td class="text-right amount-cell negative">
+                              {{ sub.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            </td>
+                            <td class="text-right amount-cell negative">
+                              {{ sub.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noExpenseData>
+            <div class="no-data">Aucune dépense pour cette période.</div>
+          </ng-template>
+        </p-tabPanel>
 
-      <!-- Tableau des dépenses -->
-      <div class="category-table" *ngIf="expensesByCategory.length > 0">
-        <p-table [value]="expensesByCategory" [paginator]="false">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Catégorie</th>
-              <th class="text-right">Total</th>
-            </tr>
+        <p-tabPanel header="Revenus">
+          <div class="table-description">
+            Totaux et moyennes mensuels des catégories, avec le détail par sous-catégorie.
+          </div>
+          <div class="monthly-table-wrapper" *ngIf="incomesMonthlyTable.length > 0; else noIncomeData">
+            <table class="plain-table">
+              <thead>
+                <tr>
+                  <th class="expander-column"></th>
+                  <th>Catégorie</th>
+                  <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
+                  <th class="text-right">Total</th>
+                  <th class="text-right">Moyenne</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let category of incomesMonthlyTable">
+                  <tr>
+                    <td>
+                      <button
+                        type="button"
+                        pButton
+                        class="p-button-text p-button-rounded p-button-plain toggle-button"
+                        [icon]="incomeExpanded[category.label] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                        (click)="toggleIncomeRow(category.label)"
+                      ></button>
+                    </td>
+                    <td class="row-label">{{ category.label }}</td>
+                    <td *ngFor="let month of monthColumns" class="text-right amount-cell positive">
+                      {{ category.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    </td>
+                    <td class="text-right amount-cell positive">
+                      {{ category.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    </td>
+                    <td class="text-right amount-cell positive">
+                      {{ category.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    </td>
+                  </tr>
+                  <tr *ngIf="incomeExpanded[category.label]">
+                    <td [attr.colspan]="monthColumns.length + 4" class="expansion-cell">
+                      <table class="plain-table sub-table">
+                        <thead>
+                          <tr>
+                            <th>Sous-catégorie</th>
+                            <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
+                            <th class="text-right">Total</th>
+                            <th class="text-right">Moyenne</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let sub of category.subCategories">
+                            <td class="row-label">{{ sub.label }}</td>
+                            <td *ngFor="let month of monthColumns" class="text-right amount-cell positive">
+                              {{ sub.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            </td>
+                            <td class="text-right amount-cell positive">
+                              {{ sub.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            </td>
+                            <td class="text-right amount-cell positive">
+                              {{ sub.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noIncomeData>
+            <div class="no-data">Aucun revenu pour cette période.</div>
           </ng-template>
-          <ng-template pTemplate="body" let-category>
-            <tr>
-              <td>
-                <span
-                  class="category-dot"
-                  [style.background-color]="category.color"
-                ></span>
-                {{ category.categoryLabel }}
-              </td>
-              <td class="text-right amount-cell negative">
-                {{
-                  category.total | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="footer">
-            <tr>
-              <td><strong>TOTAL</strong></td>
-              <td class="text-right">
-                <strong>{{
-                  getTotalExpenses()
-                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}</strong>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </p-card>
-
-    <p-card header="Revenus par catégorie" styleClass="chart-card">
-      <div class="chart-container" *ngIf="isBrowser">
-        <canvas
-          baseChart
-          [data]="pieChartIncomesData"
-          [type]="pieChartType"
-          [options]="pieChartOptions"
-        >
-        </canvas>
-      </div>
-
-      <!-- Tableau des revenus -->
-      <div class="category-table" *ngIf="incomesByCategory.length > 0">
-        <p-table [value]="incomesByCategory" [paginator]="false">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Catégorie</th>
-              <th class="text-right">Total</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-category>
-            <tr>
-              <td>
-                <span
-                  class="category-dot"
-                  [style.background-color]="category.color"
-                ></span>
-                {{ category.categoryLabel }}
-              </td>
-              <td class="text-right amount-cell positive">
-                {{
-                  category.total | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="footer">
-            <tr>
-              <td><strong>TOTAL</strong></td>
-              <td class="text-right">
-                <strong>{{
-                  getTotalIncomes()
-                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}</strong>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </p-card>
-  </div>
-
-  <!-- Moyennes annuelles -->
-  <div class="averages-row">
-    <p-card
-      header="Moyennes mensuelles - Dépenses {{ selectedYear }}"
-      styleClass="average-card"
-    >
-      <div class="average-table">
-        <p-table [value]="yearlyExpensesAverage" [paginator]="false">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Catégorie</th>
-              <th class="text-right">Moyenne mensuelle</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-category>
-            <tr>
-              <td>{{ category.categoryLabel }}</td>
-              <td class="text-right amount-cell negative">
-                {{
-                  category.average | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </p-card>
-
-    <p-card
-      header="Moyennes mensuelles - Revenus {{ selectedYear }}"
-      styleClass="average-card"
-    >
-      <div class="average-table">
-        <p-table [value]="yearlyIncomesAverage" [paginator]="false">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Catégorie</th>
-              <th class="text-right">Moyenne mensuelle</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-category>
-            <tr>
-              <td>{{ category.categoryLabel }}</td>
-              <td class="text-right amount-cell positive">
-                {{
-                  category.average | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
+        </p-tabPanel>
+      </p-tabView>
     </p-card>
   </div>
 </div>
