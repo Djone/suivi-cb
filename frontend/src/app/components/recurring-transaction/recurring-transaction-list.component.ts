@@ -33,6 +33,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { TabViewModule } from 'primeng/tabview';
 import { AccordionModule } from 'primeng/accordion';
 import { ChartModule } from 'primeng/chart';
+import { DialogModule } from 'primeng/dialog';
 
 type FlowFilter = 'all' | 'expenses' | 'incomes';
 
@@ -78,13 +79,15 @@ interface RecurringDialogResult {
     InputNumberModule,
     TabViewModule,
     AccordionModule,
-    ChartModule
+    ChartModule,
+    DialogModule,
   ],
   templateUrl: './recurring-transaction-list.component.html',
   styleUrls: ['./recurring-transaction-list.component.css']
 })
 
 export class RecurringTransactionListComponent implements OnInit, OnDestroy {
+  private baseRecurringTransactions: RecurringTransaction[] = [];
   recurringTransactions: RecurringTransaction[] = [];
   subCategories: SubCategory[] = [];
   accounts: Account[] = [];
@@ -140,6 +143,18 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
   historyLoading = false;
   private lastHistoryLoadedId: number | null = null;
   private readonly flowFilters: FlowFilter[] = ['all', 'expenses', 'incomes'];
+  // Modal d'évolution par ligne
+  historyDialogVisible = false;
+  historyDialogData: any = null;
+  historyDialogTitle = '';
+  historyDialogLoading = false;
+  historyDialogEntries: RecurringTransactionHistory[] = [];
+  historyRowsPerPageOptions = [5, 10, 20];
+  historyRowsPerPage = 5;
+  historyRowsDropdownOptions = this.historyRowsPerPageOptions.map((o) => ({
+    label: `${o} lignes`,
+    value: o,
+  }));
 
   constructor(
     private recurringTransactionService: RecurringTransactionService,
@@ -156,18 +171,8 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.recurringTransactionService.recurringTransactions$.subscribe({
         next: (data) => {
-          // Enrichir les données pour l'affichage et le filtrage global
-          this.recurringTransactions = data.map(transaction => ({
-            ...transaction,
-            subCategoryLabel: this.getSubCategoryName(transaction.subCategoryId),
-            accountLabel: this.getAccountName(transaction.accountId),
-            frequencyLabel: this.getFrequencyLabel(transaction.frequency),
-            statusLabel: this.getStatusLabel(transaction.isActive),
-            debitLabel: this.getDebitLabel(transaction.debit503020),
-            isActive: transaction.isActive ?? 0
-          }));
-          this.updateFlowStats();
-          this.refreshHistoryCandidates();
+          this.baseRecurringTransactions = data;
+          this.remapRecurringTransactions();
         },
         error: (err) => console.error('Erreur lors du chargement des transactions récurrentes:', err)
       })
@@ -179,6 +184,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
       this.subCategoryService.subCategories$.subscribe({
         next: (data) => {
           this.subCategories = data;
+          this.remapRecurringTransactions();
         },
         error: (err) => console.error('Erreur lors du chargement des sous-catégories:', err)
       })
@@ -197,8 +203,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
               value: account.id ?? null
             }))
           ];
-          this.updateFlowStats();
-          this.refreshHistoryCandidates();
+          this.remapRecurringTransactions();
         },
         error: (err) => console.error('Erreur lors du chargement des comptes:', err)
       })
@@ -234,6 +239,20 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
 
   loadAccounts(): void {
     this.accountService.getAccounts().subscribe();
+  }
+
+  private remapRecurringTransactions(): void {
+    this.recurringTransactions = this.baseRecurringTransactions.map(transaction => ({
+      ...transaction,
+      subCategoryLabel: this.getSubCategoryName(transaction.subCategoryId),
+      accountLabel: this.getAccountName(transaction.accountId),
+      frequencyLabel: this.getFrequencyLabel(transaction.frequency),
+      statusLabel: this.getStatusLabel(transaction.isActive),
+      debitLabel: this.getDebitLabel(transaction.debit503020),
+      isActive: transaction.isActive ?? 0
+    }));
+    this.updateFlowStats();
+    this.refreshHistoryCandidates();
   }
 
   getSubCategoryName(subCategoryId: number): string {
@@ -399,7 +418,11 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
 
     let workingEntries: HistoryPoint[] = entries.map((entry) => ({
       ...entry,
-      amount: Math.abs(entry.amount ?? 0),
+      amount: Math.abs(
+        typeof (entry as any).amount === 'string'
+          ? parseFloat((entry as any).amount.replace(',', '.'))
+          : Number((entry as any).amount ?? 0),
+      ),
       effectiveFrom: entry.effectiveFrom
         ? new Date(entry.effectiveFrom as any)
         : new Date(),
@@ -426,11 +449,13 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
       year: '2-digit',
     });
 
-    const sorted = workingEntries.sort(
-      (a, b) =>
-        new Date(a.effectiveFrom as any).getTime() -
-        new Date(b.effectiveFrom as any).getTime(),
-    );
+    const sorted = workingEntries
+      .filter((e) => Number.isFinite(e.amount))
+      .sort(
+        (a, b) =>
+          new Date(a.effectiveFrom as any).getTime() -
+          new Date(b.effectiveFrom as any).getTime(),
+      );
     const labels = sorted.map((entry) =>
       formatter.format(new Date(entry.effectiveFrom as any)),
     );
@@ -444,6 +469,92 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
           data,
           borderColor: '#3B82F6',
           backgroundColor: 'rgba(59, 130, 246, 0.3)',
+          fill: false,
+          tension: 0.3,
+          pointRadius: 4,
+        },
+      ],
+    };
+  }
+
+  openHistoryModal(transaction: RecurringTransaction): void {
+    if (!transaction?.id) {
+      return;
+    }
+    this.historyDialogVisible = true;
+    this.historyDialogLoading = true;
+    this.historyDialogTitle = `Évolution - ${this.getRecurringDisplayLabel(transaction)}`;
+    this.historyDialogData = null;
+    this.historyDialogEntries = [];
+    this.historyService.getHistory(transaction.id).subscribe({
+      next: (history) => {
+        this.historyDialogLoading = false;
+        this.historyDialogEntries = history;
+        this.historyDialogData = this.buildHistoryChartDataForModal(transaction, history);
+      },
+      error: () => {
+        this.historyDialogLoading = false;
+        this.historyDialogData = null;
+      },
+    });
+  }
+
+  private buildHistoryChartDataForModal(
+    transaction: RecurringTransaction,
+    entries: RecurringTransactionHistory[],
+  ) {
+    type HistoryPoint = RecurringTransactionHistory & { effectiveFrom: Date };
+    let workingEntries: HistoryPoint[] = entries.map((entry) => ({
+      ...entry,
+      amount: Math.abs(
+        typeof (entry as any).amount === 'string'
+          ? parseFloat((entry as any).amount.replace(',', '.'))
+          : Number((entry as any).amount ?? 0),
+      ),
+      effectiveFrom: entry.effectiveFrom
+        ? new Date(entry.effectiveFrom as any)
+        : new Date(),
+    }));
+
+    if (!workingEntries.length) {
+      const fallback = Math.abs(this.getTransactionAmount(transaction));
+      if (fallback) {
+        workingEntries = [
+          {
+            recurringId: transaction.id!,
+            amount: fallback,
+            effectiveFrom: new Date(),
+          } as HistoryPoint,
+        ];
+      }
+    }
+
+    const formatter = new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+    });
+
+    const sorted = workingEntries
+      .filter((e) => Number.isFinite(e.amount))
+      .sort(
+        (a, b) =>
+          new Date(a.effectiveFrom as any).getTime() -
+          new Date(b.effectiveFrom as any).getTime(),
+      );
+    const labels = sorted.map((entry) =>
+      formatter.format(new Date(entry.effectiveFrom as any)),
+    );
+    const data = sorted.map((entry) => entry.amount ?? 0);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: this.getRecurringDisplayLabel(transaction),
+          data,
+          borderColor: '#3B82F6',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
           fill: false,
           tension: 0.3,
           pointRadius: 4,
@@ -864,10 +975,4 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
   }
 
 }
-
-
-
-
-
-
 

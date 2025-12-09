@@ -36,6 +36,20 @@ const childRoutes: Routes = [
         (m) => m.CoupleSplitComponent,
       ),
   },
+  {
+    path: 'salary-tracker',
+    loadComponent: () =>
+      import('./components/salary-tracker/salary-tracker.component').then(
+        (m) => m.SalaryTrackerComponent,
+      ),
+  },
+  {
+    path: 'impots',
+    loadComponent: () =>
+      import('./components/impots/impots.component').then(
+        (m) => m.ImpotsComponent,
+      ),
+  },
   { path: 'statistics', component: StatisticsComponent },
   { path: 'release-notes', component: ReleaseNotesComponent },
   { path: 'release-process', component: ReleaseProcessComponent },

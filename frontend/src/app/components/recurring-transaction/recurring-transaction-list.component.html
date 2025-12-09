@@ -3,13 +3,16 @@
     <div class="recurring-header">
       <div>
         <h2>Transactions récurrentes</h2>
-        <p class="text-muted">Affichez vos prélèvements par compte et type de flux.</p>
+        <p class="text-muted">
+          Affichez vos prélèvements par compte et type de flux.
+        </p>
       </div>
       <p-button
         label="Nouvelle récurrence"
         icon="pi pi-plus"
         (onClick)="createRecurringTransaction()"
-        styleClass="p-button-success">
+        styleClass="p-button-success"
+      >
       </p-button>
     </div>
 
@@ -21,7 +24,8 @@
           [(ngModel)]="selectedAccountFilter"
           (onChange)="onAccountFilterChange()"
           [style]="{ width: '100%' }"
-          placeholder="Tous les comptes">
+          placeholder="Tous les comptes"
+        >
         </p-dropdown>
       </div>
       <div class="filter-field">
@@ -33,7 +37,8 @@
             type="text"
             [(ngModel)]="searchTerm"
             (ngModelChange)="onSearchTermChange($event)"
-            placeholder="Rechercher une récurrence...">
+            placeholder="Rechercher une récurrence..."
+          />
         </span>
       </div>
     </div>
@@ -42,7 +47,8 @@
       <p-tabPanel
         *ngFor="let tab of flowTabs"
         [header]="tab.label"
-        [leftIcon]="tab.icon">
+        [leftIcon]="tab.icon"
+      >
         <div class="flow-stats">
           <div class="stat-card">
             <span>Récurrences</span>
@@ -50,7 +56,10 @@
           </div>
           <div class="stat-card">
             <span>Montant mensuel</span>
-            <strong>{{ getFlowTotal(tab.value) | currency:'EUR':'symbol':'1.0-0':'fr' }}</strong>
+            <strong>{{
+              getFlowTotal(tab.value)
+                | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+            }}</strong>
           </div>
         </div>
 
@@ -70,18 +79,35 @@
                       <div class="account-title">
                         <span
                           class="account-dot"
-                          [style.background]="section.account?.color || '#475569'">
+                          [style.background]="
+                            section.account?.color || '#475569'
+                          "
+                        >
                         </span>
-                        <span>{{ section.account?.name || 'Compte non défini' }}</span>
+                        <span>{{
+                          section.account?.name || "Compte non défini"
+                        }}</span>
                       </div>
                       <div class="account-badges">
                         <p-tag
-                          [value]="(section.totalAmount | currency:'EUR':'symbol':'1.0-0':'fr') || ''"
-                         [severity]="tab.value === 'incomes' ? 'success' : tab.value === 'expenses' ? 'danger' : 'info'">
+                          [value]="
+                            (section.totalAmount
+                              | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr') ||
+                            ''
+                          "
+                          [severity]="
+                            tab.value === 'incomes'
+                              ? 'success'
+                              : tab.value === 'expenses'
+                                ? 'danger'
+                                : 'info'
+                          "
+                        >
                         </p-tag>
                         <p-tag
                           [value]="section.activeCount + ' actifs'"
-                          severity="info">
+                          severity="info"
+                        >
                         </p-tag>
                       </div>
                     </div>
@@ -90,7 +116,10 @@
                   <div class="account-summary">
                     <div class="summary-item">
                       <span>Total mensuel</span>
-                      <strong>{{ section.totalAmount | currency:'EUR':'symbol':'1.2-2':'fr' }}</strong>
+                      <strong>{{
+                        section.totalAmount
+                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                      }}</strong>
                     </div>
                     <div class="summary-item">
                       <span>Prochain prélèvement</span>
@@ -103,96 +132,118 @@
                     class="recurring-table"
                     [responsiveLayout]="'stack'"
                     breakpoint="960px"
-                    sortMode="multiple">
+                    sortMode="multiple"
+                  >
                     <ng-template pTemplate="header">
                       <tr>
-
                         <th pSortableColumn="label">
-
                           Libelle <p-sortIcon field="label"></p-sortIcon>
-
                         </th>
 
                         <th pSortableColumn="amount">
-
                           Montant <p-sortIcon field="amount"></p-sortIcon>
-
                         </th>
 
                         <th pSortableColumn="dayOfMonth">
-
                           Jour <p-sortIcon field="dayOfMonth"></p-sortIcon>
-
                         </th>
 
                         <th pSortableColumn="frequencyLabel">
-
-                          Frequence <p-sortIcon field="frequencyLabel"></p-sortIcon>
-
+                          Frequence
+                          <p-sortIcon field="frequencyLabel"></p-sortIcon>
                         </th>
 
                         <th pSortableColumn="subCategoryLabel">
-
-                          Sous-categorie <p-sortIcon field="subCategoryLabel"></p-sortIcon>
-
+                          Sous-categorie
+                          <p-sortIcon field="subCategoryLabel"></p-sortIcon>
                         </th>
 
                         <th pSortableColumn="debitLabel">
-
                           50/30/20 <p-sortIcon field="debitLabel"></p-sortIcon>
-
                         </th>
 
                         <th pSortableColumn="statusLabel">
-
                           Statut <p-sortIcon field="statusLabel"></p-sortIcon>
-
                         </th>
 
                         <th>Actions</th>
-
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-transaction>
                       <tr>
                         <td>
                           <div class="label-cell">
-                            <strong>{{ getRecurringDisplayLabel(transaction) }}</strong>
-                            <small class="text-muted">{{ getFinancialFlowName(transaction.financialFlowId) }}</small>
+                            <strong>{{
+                              getRecurringDisplayLabel(transaction)
+                            }}</strong>
+                            <small class="text-muted">{{
+                              getFinancialFlowName(transaction.financialFlowId)
+                            }}</small>
                           </div>
                         </td>
                         <td>
                           <p-tag
-                            [value]="(transaction.amount | currency:'EUR':'symbol':'1.2-2':'fr') ?? ''"
-                            [severity]="getFinancialFlowSeverity(transaction.financialFlowId)">
+                            [value]="
+                              (transaction.amount
+                                | currency
+                                  : 'EUR'
+                                  : 'symbol'
+                                  : '1.2-2'
+                                  : 'fr') ?? ''
+                            "
+                            [severity]="
+                              getFinancialFlowSeverity(
+                                transaction.financialFlowId
+                              )
+                            "
+                          >
                           </p-tag>
                         </td>
                         <td>{{ getDayLabel(transaction) }}</td>
                         <td>
-                          {{ transaction.frequencyLabel || getFrequencyLabel(transaction.frequency) }}
+                          {{
+                            transaction.frequencyLabel ||
+                              getFrequencyLabel(transaction.frequency)
+                          }}
                           <span
                             *ngIf="getRecurringKindBadge(transaction) as badge"
                             class="recurring-kind-badge"
-                            [ngClass]="badge.cssClass">
+                            [ngClass]="badge.cssClass"
+                          >
                             {{ badge.label }}
                           </span>
                         </td>
-                        <td>{{ transaction.subCategoryLabel || getSubCategoryName(transaction.subCategoryId) }}</td>
+                        <td>
+                          {{
+                            transaction.subCategoryLabel ||
+                              getSubCategoryName(transaction.subCategoryId)
+                          }}
+                        </td>
                         <td>{{ transaction.debitLabel }}</td>
                         <td>
                           <p-tag
                             [value]="transaction.statusLabel"
-                            [severity]="getSeverity(transaction.isActive)">
+                            [severity]="getSeverity(transaction.isActive)"
+                          >
                           </p-tag>
                         </td>
                         <td>
                           <div class="action-cell">
                             <p-button
+                              icon="pi pi-chart-line"
+                              (onClick)="openHistoryModal(transaction)"
+                              styleClass="p-button-rounded p-button-text"
+                              pTooltip="Évolution"
+                              tooltipPosition="top"
+                            >
+                            </p-button>
+                            <p-button
                               icon="pi pi-pencil"
                               (onClick)="editRecurringTransaction(transaction)"
                               styleClass="p-button-rounded p-button-text p-button-info"
                               pTooltip="Éditer"
-                              tooltipPosition="top">
+                              tooltipPosition="top"
+                            >
                             </p-button>
                             <p-inputSwitch
                               [ngModel]="transaction.isActive"
@@ -200,7 +251,8 @@
                               [falseValue]="0"
                               (onChange)="toggleActive(transaction, $event)"
                               pTooltip="Activer/Désactiver"
-                              tooltipPosition="top">
+                              tooltipPosition="top"
+                            >
                             </p-inputSwitch>
                           </div>
                         </td>
@@ -222,53 +274,79 @@
       </p-tabPanel>
     </p-tabView>
 
-    <div class="section history-section">
-      <div class="section-header">
-        <i class="pi pi-chart-line"></i>
-        <h3>Évolution des charges fixes</h3>
-      </div>
+    <p-dialog
+      header="{{ historyDialogTitle }}"
+      [(visible)]="historyDialogVisible"
+      [modal]="true"
+      [style]="{ width: '520px' }"
+      [breakpoints]="{ '960px': '90vw', '640px': '95vw' }"
+      [dismissableMask]="true"
+    >
+      <div class="history-dialog">
+        <div class="history-loading" *ngIf="historyDialogLoading">
+          <i class="pi pi-spin pi-spinner" style="margin-right: 0.5rem"></i>
+          Chargement de l'historique...
+        </div>
+        <ng-container *ngIf="!historyDialogLoading">
+          <p-chart
+            *ngIf="historyDialogData; else noHistoryDataModal"
+            type="line"
+            [data]="historyDialogData"
+            [options]="historyChartOptions"
+            styleClass="history-dialog-chart"
+          ></p-chart>
 
-      <div class="history-controls">
-        <label>Sélectionner une récurrence</label>
-        <p-dropdown
-          [options]="historyRecurringOptions"
-          [style]="{ width: '280px' }"
-          placeholder="Choisir une récurrence"
-          [(ngModel)]="selectedHistoryRecurringId"
-          (onChange)="onHistoryRecurringChange($event.value)">
-        </p-dropdown>
-      </div>
-
-      <ng-container *ngIf="historyRecurringOptions.length > 0; else noHistoryCandidates">
-        <div class="history-chart-wrapper">
-          <div class="history-loading" *ngIf="historyLoading">
-            <i class="pi pi-spin pi-spinner" style="margin-right: 0.5rem"></i>
-            Chargement de l'historique...
+          <div
+            class="history-table-controls"
+            *ngIf="historyDialogEntries?.length"
+          >
+            <label>Nombre de lignes</label>
+            <p-dropdown
+              [options]="historyRowsDropdownOptions"
+              [(ngModel)]="historyRowsPerPage"
+              [style]="{ width: '160px' }"
+              appendTo="body"
+            ></p-dropdown>
           </div>
-          <ng-container *ngIf="!historyLoading">
-            <p-chart
-              *ngIf="historyChartData; else noHistoryData"
-              type="line"
-              [data]="historyChartData"
-              [options]="historyChartOptions">
-            </p-chart>
-          </ng-container>
-        </div>
-      </ng-container>
-      <ng-template #noHistoryCandidates>
-        <div class="empty-state mt-3">
-          <i class="pi pi-info-circle"></i>
-          <p>Aucune charge fixe active à historiser pour le moment.</p>
-        </div>
-      </ng-template>
-      <ng-template #noHistoryData>
-        <div class="empty-state mt-3">
-          <i class="pi pi-info-circle"></i>
-          <p>Aucune donnée d'historique pour cette récurrence.</p>
-        </div>
-      </ng-template>
-    </div>
+
+          <p-table
+            *ngIf="historyDialogEntries?.length"
+            [value]="historyDialogEntries"
+            [paginator]="true"
+            [rows]="historyRowsPerPage"
+            [rowsPerPageOptions]="historyRowsPerPageOptions"
+            sortMode="multiple"
+            [responsiveLayout]="'stack'"
+            breakpoint="960px"
+            class="history-table"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="effectiveFrom">
+                  Date effet <p-sortIcon field="effectiveFrom"></p-sortIcon>
+                </th>
+                <th pSortableColumn="amount">
+                  Montant <p-sortIcon field="amount"></p-sortIcon>
+                </th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.effectiveFrom | date: "dd/MM/yyyy" }}</td>
+                <td>
+                  {{ row.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </ng-container>
+        <ng-template #noHistoryDataModal>
+          <div class="empty-state mt-3">
+            <i class="pi pi-info-circle"></i>
+            <p>Aucune donnée d'historique pour cette récurrence.</p>
+          </div>
+        </ng-template>
+      </div>
+    </p-dialog>
   </p-card>
 </div>
-
-

@@ -52,6 +52,14 @@ export class RecurringTransactionHistoryService {
     if (camel.effectiveFrom && typeof camel.effectiveFrom === 'string') {
       camel.effectiveFrom = new Date(camel.effectiveFrom);
     }
+    if (camel.amount != null) {
+      const rawAmount = camel.amount as unknown;
+      const parsed =
+        typeof rawAmount === 'string'
+          ? parseFloat(rawAmount.replace(',', '.'))
+          : Number(rawAmount);
+      camel.amount = Number.isFinite(parsed) ? parsed : 0;
+    }
     return camel as RecurringTransactionHistory;
   }
 }

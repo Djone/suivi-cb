@@ -208,3 +208,25 @@
     justify-content: flex-start;
   }
 }
+
+.history-dialog {
+  min-height: 240px;
+}
+
+.history-table-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.history-dialog-chart {
+  width: 100%;
+  height: 260px;
+}
+
+
+.history-table {
+  margin-top: 1rem;
+}
+
