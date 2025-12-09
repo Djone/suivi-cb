@@ -220,6 +220,8 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
   save(): void {
     const normalizedAmount = this.normalizeAmount(this.data.transaction.amount) || 0;
     this.data.transaction.amount = normalizedAmount;
+    const debit503020 = this.normalizeDebit503020(this.data.transaction.debit503020);
+    this.data.transaction.debit503020 = debit503020;
     const amountChanged =
       !this.isNew &&
       this.initialAmount !== null &&
@@ -236,7 +238,7 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
       activeMonths: this.stringifyActiveMonths(),
       recurrenceKind: this.data.transaction.recurrenceKind || null,
       // La règle 50/30/20 sera envoyée en snake_case par humps
-      debit_503020: this.data.transaction.debit503020 ?? null
+      debit_503020: debit503020
     };
 
     if (this.data.transaction.recurrenceKind === 'installment') {
@@ -275,6 +277,9 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
       t.frequency && t.subCategoryId && t.accountId
     );
     if (!base) return false;
+
+    const debit = this.normalizeDebit503020(t.debit503020);
+    if (debit === null) return false;
 
     if (t.recurrenceKind === 'installment') {
       if (!t.occurrences || t.occurrences < 1) return false;
@@ -408,6 +413,17 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
     if (typeof value === 'string' && value.trim() !== '') {
       const parsed = Number(value);
       return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  }
+
+  private normalizeDebit503020(value: number | string | null | undefined): number | null {
+    if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
     }
     return null;
   }

@@ -271,6 +271,37 @@
           />
         </p-inputGroup>
 
+        <!-- Filtre par categorie -->
+        <p-multiSelect
+          class="flex-1 min-w-[220px]"
+          [options]="categoryOptions"
+          [(ngModel)]="filters.categoryIds"
+          optionLabel="label"
+          optionValue="value"
+          display="chip"
+          [showClear]="true"
+          placeholder="Filtrer par categorie"
+          (onChange)="onCategoryFilterChange()"
+        >
+        </p-multiSelect>
+
+        <!-- Filtre par sous-categorie -->
+        <p-multiSelect
+          class="flex-1 min-w-[240px]"
+          [options]="filteredSubCategoryOptions"
+          [(ngModel)]="filters.subCategoryIds"
+          optionLabel="label"
+          optionValue="value"
+          display="chip"
+          [filter]="true"
+          [showClear]="true"
+          [virtualScroll]="true"
+          [virtualScrollItemSize]="40"
+          placeholder="Filtrer par sous-categorie"
+          (onChange)="applyFilter()"
+        >
+        </p-multiSelect>
+
         <!-- Filtre par montant -->
         <p-inputGroup class="flex-1 min-w-[150px]">
           <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
@@ -288,7 +319,7 @@
         </p-inputGroup>
       </div>
 
-      <!-- Ligne des contrÃ´les -->
+      <!-- Ligne des contrôles -->
       <div
         class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3"
       >
@@ -394,7 +425,7 @@
                 icon="pi pi-pencil"
                 (onClick)="editTransaction(transaction)"
                 styleClass="p-button-rounded p-button-text p-button-info"
-                pTooltip="Ã‰diter"
+                pTooltip="Éditer"
                 tooltipPosition="top"
               >
               </p-button>
@@ -415,7 +446,7 @@
     <!-- Message si aucune transaction -->
     <div *ngIf="paginatedGroupedTransactions.length === 0" class="no-data">
       <i class="pi pi-info-circle mr-2"></i>
-      <span>Aucune transaction trouvÃ©e pour les filtres actuels.</span>
+      <span>Aucune transaction trouvée pour les filtres actuels.</span>
     </div>
 
     <!-- Pagination -->
@@ -426,7 +457,7 @@
         [first]="(currentPage - 1) * pageSize"
         (onPageChange)="onPageChange($event)"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} Ã  {last} sur {totalRecords} groupes"
+        currentPageReportTemplate="{first} à  {last} sur {totalRecords} groupes"
       >
       </p-paginator>
     </div>

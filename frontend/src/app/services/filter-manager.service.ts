@@ -13,7 +13,6 @@ export class FilterManagerService {
 
   // Récupère les filtres actifs
   getFilters(): Partial<Transaction> {
-    console.log('FILTER SERVICE : Filtres actifs :', this.filters);
     return this.filters;
   }
 
@@ -22,7 +21,7 @@ export class FilterManagerService {
     Object.keys(filters).forEach((key) => {
       const filterKey = key as keyof Transaction;
       const value = filters[filterKey];
-  
+
       if (value !== undefined && value !== null) {
         this.filters[filterKey] = value;
       } else {
@@ -33,6 +32,6 @@ export class FilterManagerService {
 
   // Réinitialise tous les filtres
   clearFilters(): void {
-    this.filters = {}; 
+    this.filters = {};
   }
 }

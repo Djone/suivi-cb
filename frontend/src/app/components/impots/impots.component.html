@@ -1,0 +1,413 @@
+<div class="impots-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Pilotage fiscal</p>
+      <h1>Impôts</h1>
+      <p class="subtitle">
+        Simuler l'impôt sur le revenu et suivre l'évolution de la taxe foncière, en attendant le branchement back.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button pButton type="button" label="Exporter CSV" icon="pi pi-download" class="p-button-text"></button>
+      <button pButton type="button" label="Exporter PDF" icon="pi pi-file-pdf" class="p-button-text"></button>
+    </div>
+  </div>
+
+  <p-tabView>
+    <p-tabPanel header="Impôt sur le revenu">
+      <div class="grid grid-2">
+        <p-card class="panel">
+          <ng-template pTemplate="header">Foyer fiscal</ng-template>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Adultes</label>
+                <p-inputNumber [(ngModel)]="adults" [min]="1" [max]="4" [showButtons]="true"></p-inputNumber>
+              </div>
+              <div class="form-field">
+                <label>Enfants</label>
+                <p-inputNumber [(ngModel)]="children" [min]="0" [max]="6" [showButtons]="true"></p-inputNumber>
+              </div>
+              <div class="form-field">
+                <label>Parts calculées</label>
+                <div class="pill pill-strong">{{ parts | number:'1.1-1' }}</div>
+              </div>
+              <div class="form-field">
+                <label>Taux PAS prévisionnel</label>
+                <p-inputNumber [(ngModel)]="pasRate" mode="decimal" [minFractionDigits]="2" suffix=" %" [maxFractionDigits]="2"></p-inputNumber>
+              </div>
+            </div>
+
+            <div class="people-section">
+              <div class="people-header">
+                <span class="label-strong">Revenus imposables</span>
+                <div class="pill">Total: {{ totalHouseholdIncome | number:'1.0-0' }} €</div>
+              </div>
+              <div class="person-row" *ngFor="let person of household">
+                <span class="person-name">{{ person.name }}</span>
+                <p-inputNumber
+                  [(ngModel)]="person.netImposable"
+                  mode="currency"
+                  currency="EUR"
+                  locale="fr-FR"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="0"
+                  placeholder="Net imposable"
+                ></p-inputNumber>
+                <p-inputNumber
+                  [(ngModel)]="person.other"
+                  mode="currency"
+                  currency="EUR"
+                  locale="fr-FR"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="0"
+                  placeholder="Autre"
+                ></p-inputNumber>
+              </div>
+            </div>
+
+            <div class="hint">
+              <strong>Astuce parts :</strong> 0,5 part par enfant jusqu'au 2ème, puis 1 part à partir du 3ème. Ajustez si besoin.
+            </div>
+          </div>
+        </p-card>
+
+        <p-card class="panel">
+          <ng-template pTemplate="header">
+            <div class="header-with-select">
+              <span>Synthèse</span>
+              <p-dropdown
+                [options]="incomeYearOptions"
+                [(ngModel)]="selectedIncomeYear"
+                placeholder="Année"
+                styleClass="year-select"
+              ></p-dropdown>
+            </div>
+          </ng-template>
+          <div class="panel-body summary-list">
+            <div class="summary-row summary-head">
+              <span>Poste</span>
+              <span>{{ selectedIncomeYear }}</span>
+              <span *ngIf="hasPrevious()">Précédent</span>
+              <span>Statut</span>
+            </div>
+            <div class="summary-row" *ngFor="let item of currentYearSummaries">
+              <span class="summary-label">{{ item.label }}</span>
+              <span class="summary-value">{{ formatCurrency(item.current) }}</span>
+              <span class="summary-previous" *ngIf="hasPrevious()">
+                {{ item.previous !== undefined ? formatCurrency(item.previous) : '–' }}
+              </span>
+              <p-tag [value]="item.tone ? (item.tone === 'positive' ? 'OK' : 'À surveiller') : 'Info'" [severity]="getToneTag(item.tone)"></p-tag>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="grid grid-2">
+        <p-card class="panel">
+          <ng-template pTemplate="header">Tranches {{ selectedIncomeYear }}</ng-template>
+          <div class="panel-body">
+            <p-table [value]="currentBrackets" styleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Tranche</th>
+                  <th>MT Min</th>
+                  <th>MT Max</th>
+                  <th>TI</th>
+                  <th>Écart</th>
+                  <th>MMI</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-row>
+                <tr>
+                  <td>{{ row.code }}</td>
+                  <td>{{ formatCurrency(row.min) }}</td>
+                  <td>{{ row.max ? formatCurrency(row.max) : '—' }}</td>
+                  <td>{{ row.rate }} %</td>
+                  <td>{{ formatCurrency(row.gap) }}</td>
+                  <td>{{ row.mmi ? formatCurrency(row.mmi) : '—' }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            <div class="hint muted">TI = taux de la tranche, MMI = montant minimal d'impôt pour la tranche.</div>
+          </div>
+        </p-card>
+
+        <p-card class="panel">
+          <ng-template pTemplate="header">Réductions & actions rapides</ng-template>
+          <div class="panel-body actions-panel">
+            <ul class="bullet-list">
+              <li>Renseignez les crédits/réductions (dons, emploi à domicile, etc.).</li>
+              <li>Calculez un taux de PAS cible à partir de la simulation.</li>
+              <li>Gardez une trace par année pour comparer les écarts.</li>
+            </ul>
+            <div class="quick-actions">
+              <button pButton type="button" label="Simuler PAS" icon="pi pi-percentage" class="p-button-outlined"></button>
+              <button pButton type="button" label="Sauvegarder la simulation" icon="pi pi-save" class="p-button-success p-button-outlined"></button>
+            </div>
+            <div class="pill muted">Back à brancher plus tard · données mockées</div>
+          </div>
+        </p-card>
+      </div>
+    </p-tabPanel>
+
+    <p-tabPanel header="Taxe foncière">
+      <div class="grid grid-2-1">
+        <p-card class="panel">
+          <ng-template pTemplate="header">
+            <div class="header-with-meta">
+              <span>Historique taxe foncière</span>
+              <div class="meta-line">
+                <span>Total: {{ formatCurrency(totalPropertyTax) }}</span>
+                <span *ngIf="avgEvolution !== null">Évol. moyenne: {{ formatPercent(avgEvolution) }}</span>
+              </div>
+            </div>
+          </ng-template>
+          <div class="panel-body">
+            <p-table [value]="taxRows" styleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Année</th>
+                  <th>Adresse</th>
+                  <th>Taxe</th>
+                  <th>Évol. TF</th>
+                  <th>Évol. Moyenne</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-row>
+                <tr>
+                  <td>{{ row.year }}</td>
+                  <td class="address-cell">{{ row.address }}</td>
+                  <td>{{ formatCurrency(row.amount) }}</td>
+                  <td>
+                    <span class="evol-chip" [ngClass]="getEvolutionClass(row.evolTf)">
+                      {{ row.evolTf !== null && row.evolTf !== undefined ? formatPercent(row.evolTf) : '—' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="evol-chip" [ngClass]="getEvolutionClass(row.evolAvg)">
+                      {{ row.evolAvg !== null && row.evolAvg !== undefined ? formatPercent(row.evolAvg) : '—' }}
+                    </span>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-card>
+
+        <div class="stack">
+          <p-card class="panel">
+            <ng-template pTemplate="header">Projection</ng-template>
+            <div class="panel-body projection">
+              <div class="form-field">
+                <label>Taux d'augmentation</label>
+                <p-inputNumber
+                  [(ngModel)]="taxProjectionRate"
+                  mode="decimal"
+                  [minFractionDigits]="2"
+                  [maxFractionDigits]="2"
+                  suffix=" %"
+                ></p-inputNumber>
+              </div>
+              <div class="projected-amount">
+                <span>Montant prévisionnel</span>
+                <div class="projected-value">{{ formatCurrency(projectedTaxAmount) }}</div>
+                <small>Basé sur {{ getProjectionReference() }} · ajustez avec vos taux locaux</small>
+              </div>
+            </div>
+          </p-card>
+
+          <p-card class="panel">
+            <ng-template pTemplate="header">Points d'attention</ng-template>
+            <div class="panel-body">
+              <ul class="bullet-list">
+                <li>Surveillez les années avec hausse > 8 % (rouge).</li>
+                <li>Ajoutez les nouvelles adresses pour segmenter par bien.</li>
+                <li>Préparez l'import CSV (année, adresse, montant) quand le back sera prêt.</li>
+              </ul>
+              <div class="pill muted">Mode maquette · données statiques</div>
+            </div>
+          </p-card>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <p-tabPanel header="Paramétrage">
+      <div class="grid grid-2-1">
+        <div class="stack">
+          <p-card class="panel">
+            <ng-template pTemplate="header">Barème par année</ng-template>
+            <div class="panel-body">
+              <div class="pill muted">Mock · import/export à brancher</div>
+              <div class="bar-grid">
+                <div class="bar-card" *ngFor="let year of barYears">
+                  <div class="bar-card-header">
+                    <span class="label-strong">{{ year }}</span>
+                    <button pButton type="button" label="Ajouter" icon="pi pi-plus" class="p-button-text p-button-sm"></button>
+                  </div>
+                  <p-table [value]="filterBarByYear(year)" styleClass="p-datatable-sm">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>Tranche</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>TI</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-row>
+                      <tr>
+                        <td>{{ row.tranche }}</td>
+                        <td>{{ formatCurrency(row.min) }}</td>
+                        <td>{{ row.max ? formatCurrency(row.max) : '—' }}</td>
+                        <td>{{ row.rate }} %</td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+              </div>
+            </div>
+          </p-card>
+
+          <p-card class="panel">
+            <ng-template pTemplate="header">Réductions d'impôt (dons)</ng-template>
+            <div class="panel-body">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Mode</label>
+                  <p-dropdown
+                    [options]="[{label:'Manuel', value:'manuel'}, {label:'Auto (tags compte courant)', value:'auto'}]"
+                    [(ngModel)]="reductionMode"
+                    styleClass="w-full"
+                  ></p-dropdown>
+                </div>
+                <div class="form-field">
+                  <label>Total</label>
+                  <div class="pill pill-strong">{{ formatCurrency(reductionsTotal) }}</div>
+                </div>
+              </div>
+              <p-table [value]="reductions" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Année</th>
+                    <th>Organisme</th>
+                    <th>Montant</th>
+                    <th>Case</th>
+                    <th>%</th>
+                    <th>Source</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-row>
+                  <tr>
+                    <td>{{ row.year }}</td>
+                    <td>{{ row.org }}</td>
+                    <td>{{ formatCurrency(row.amount) }}</td>
+                    <td>{{ row.caseCode }}</td>
+                    <td>{{ row.percent }} %</td>
+                    <td><p-tag [value]="formatSource(row.source)" severity="info"></p-tag></td>
+                  </tr>
+                </ng-template>
+              </p-table>
+              <div class="hint muted">En mode auto, les montants proviennent des tags appliqués sur le compte courant.</div>
+            </div>
+          </p-card>
+        </div>
+
+        <div class="stack">
+          <p-card class="panel">
+            <ng-template pTemplate="header">Crédits d'impôt</ng-template>
+            <div class="panel-body">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Mode</label>
+                  <p-dropdown
+                    [options]="[{label:'Manuel', value:'manuel'}, {label:'Auto (tags compte courant)', value:'auto'}]"
+                    [(ngModel)]="creditMode"
+                    styleClass="w-full"
+                  ></p-dropdown>
+                </div>
+                <div class="form-field">
+                  <label>Total</label>
+                  <div class="pill pill-strong">{{ formatCurrency(creditsTotal) }}</div>
+                </div>
+              </div>
+              <p-table [value]="credits" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Année</th>
+                    <th>Organisme</th>
+                    <th>Montant</th>
+                    <th>Case</th>
+                    <th>%</th>
+                    <th>Source</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-row>
+                  <tr>
+                    <td>{{ row.year }}</td>
+                    <td>{{ row.org }}</td>
+                    <td>{{ formatCurrency(row.amount) }}</td>
+                    <td>{{ row.caseCode }}</td>
+                    <td>{{ row.percent }} %</td>
+                    <td><p-tag [value]="formatSource(row.source)" severity="info"></p-tag></td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-card>
+
+          <p-card class="panel">
+            <ng-template pTemplate="header">Taux par case</ng-template>
+            <div class="panel-body">
+              <p-table [value]="caseRates" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Case</th>
+                    <th>Taux</th>
+                    <th>MAJ</th>
+                    <th>Source</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-row>
+                  <tr>
+                    <td>{{ row.caseCode }}</td>
+                    <td>{{ row.rate }} %</td>
+                    <td>{{ row.updated }}</td>
+                    <td>{{ formatSource(row.source) }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-card>
+
+          <p-card class="panel">
+            <ng-template pTemplate="header">Adresses postales</ng-template>
+            <div class="panel-body">
+              <p-table [value]="addresses" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Année</th>
+                    <th>Adresse</th>
+                    <th>Défaut</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-row>
+                  <tr>
+                    <td>{{ row.year }}</td>
+                    <td>{{ row.address }}</td>
+                    <td>
+                      <p-tag [value]="row.main ? 'Par défaut' : 'Secondaire'" [severity]="row.main ? 'success' : 'info'"></p-tag>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+              <div class="quick-actions">
+                <button pButton type="button" label="Ajouter une adresse" icon="pi pi-plus" class="p-button-outlined"></button>
+                <button pButton type="button" label="Exporter CSV" icon="pi pi-download" class="p-button-text"></button>
+              </div>
+            </div>
+          </p-card>
+        </div>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>

@@ -6,7 +6,7 @@ import { Account } from '../models/account.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AccountService {
   private apiUrl = `${environment.apiUrl}/api/accounts`;
@@ -20,26 +20,31 @@ export class AccountService {
 
   // Charger les comptes avec leurs configurations
   private loadAccountsWithConfig(): void {
-    this.http.get<Account[]>(this.apiUrl).subscribe(accounts => {
-      this.http.get<any>(`${this.configApiUrl}/accounts`).subscribe(config => {
-        console.log('ACCOUNT SERVICE : Config récupérée:', config);
+    this.http.get<Account[]>(this.apiUrl).subscribe((accounts) => {
+      this.http.get<any>(`${this.configApiUrl}/accounts`).subscribe(
+        (config) => {
+          // Fusionner les données des comptes avec la config
+          const accountsWithConfig = accounts.map((account) => {
+            const accountConfig = config.accounts?.find(
+              (c: any) => c.accountId === account.id,
+            );
+            return {
+              ...account,
+              initialBalance: accountConfig?.initialBalance || 0,
+            };
+          });
 
-        // Fusionner les données des comptes avec la config
-        const accountsWithConfig = accounts.map(account => {
-          const accountConfig = config.accounts?.find((c: any) => c.accountId === account.id);
-          return {
-            ...account,
-            initialBalance: accountConfig?.initialBalance || 0
-          };
-        });
-
-        console.log('ACCOUNT SERVICE : Comptes avec config:', accountsWithConfig);
-        this.accountsSubject.next(accountsWithConfig);
-      }, error => {
-        console.error('ACCOUNT SERVICE : Erreur lors du chargement de la config', error);
-        // En cas d'erreur, charger sans config
-        this.accountsSubject.next(accounts);
-      });
+          this.accountsSubject.next(accountsWithConfig);
+        },
+        (error) => {
+          console.error(
+            'ACCOUNT SERVICE : Erreur lors du chargement de la config',
+            error,
+          );
+          // En cas d'erreur, charger sans config
+          this.accountsSubject.next(accounts);
+        },
+      );
     });
   }
 
@@ -52,18 +57,18 @@ export class AccountService {
   // Récupérer tous les comptes y compris inactifs
   getAllAccountsIncludingInactive(): Observable<Account[]> {
     return this.http.get<Account[]>(`${this.apiUrl}/all`).pipe(
-      tap((accounts) => {
-        console.log('ACCOUNT SERVICE : Tous les comptes récupérés avec succès', accounts);
-      })
+      tap(() => {
+        this.getAccounts().subscribe();
+      }),
     );
   }
 
   // Récupérer un compte par son ID
   getAccountById(id: number): Observable<Account> {
     return this.http.get<Account>(`${this.apiUrl}/${id}`).pipe(
-      tap((account) => {
-        console.log('ACCOUNT SERVICE : Compte récupéré avec succès', account);
-      })
+      tap(() => {
+        this.getAccounts().subscribe();
+      }),
     );
   }
 
@@ -71,9 +76,8 @@ export class AccountService {
   addAccount(account: Account): Observable<any> {
     return this.http.post<any>(this.apiUrl, account).pipe(
       tap(() => {
-        console.log('ACCOUNT SERVICE : Compte ajouté avec succès');
         this.getAccounts().subscribe();
-      })
+      }),
     );
   }
 
@@ -82,9 +86,8 @@ export class AccountService {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<void>(url, account).pipe(
       tap(() => {
-        console.log('ACCOUNT SERVICE : Compte mis à jour avec succès');
         this.getAccounts().subscribe();
-      })
+      }),
     );
   }
 
@@ -93,9 +96,8 @@ export class AccountService {
     const url = `${this.apiUrl}/${id}/deactivate`;
     return this.http.patch<void>(url, {}).pipe(
       tap(() => {
-        console.log('ACCOUNT SERVICE : Compte désactivé avec succès');
         this.getAccounts().subscribe();
-      })
+      }),
     );
   }
 
@@ -104,9 +106,8 @@ export class AccountService {
     const url = `${this.apiUrl}/${id}/reactivate`;
     return this.http.patch<void>(url, {}).pipe(
       tap(() => {
-        console.log('ACCOUNT SERVICE : Compte réactivé avec succès');
         this.getAccounts().subscribe();
-      })
+      }),
     );
   }
 }

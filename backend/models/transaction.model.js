@@ -19,8 +19,35 @@ const dbRun = (query, params = []) => new Promise((resolve, reject) => {
 
 const Transaction = {
   // Récupérer toutes les transactions (avec jointures pour les détails)
-  getAll: async () => {
-    const query = `
+  getAll: async (filters = {}) => {
+    const normalizedFilters = humps.decamelizeKeys(filters || {});
+    const allowedFilters = {
+      category_id: 'c.id',
+      sub_category_id: 't.sub_category_id',
+      account_id: 't.account_id',
+      financial_flow_id: 't.financial_flow_id',
+    };
+
+    const conditions = [];
+    const params = [];
+
+    Object.entries(allowedFilters).forEach(([key, column]) => {
+      const rawValue = normalizedFilters[key];
+
+      if (
+        rawValue === undefined ||
+        rawValue === null ||
+        rawValue === '' ||
+        Number.isNaN(Number(rawValue))
+      ) {
+        return;
+      }
+
+      conditions.push(`${column} = ?`);
+      params.push(Number(rawValue));
+    });
+
+    let query = `
       SELECT
         t.id,
         t.date,
@@ -34,13 +61,19 @@ const Transaction = {
         t.financial_flow_id,
         t.recurring_transaction_id
       FROM transactions t
-      JOIN subcategories sc ON t.sub_category_id = sc.id
-      JOIN categories c ON sc.category_id = c.id
-      JOIN accounts a ON t.account_id = a.id
-      ORDER BY t.date DESC, t.id DESC
+      LEFT JOIN subcategories sc ON t.sub_category_id = sc.id
+      LEFT JOIN categories c ON sc.category_id = c.id
+      LEFT JOIN accounts a ON t.account_id = a.id
     `;
-    const rows = await dbAll(query);
-    return rows.map(row => humps.camelizeKeys(row));
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY t.date DESC, t.id DESC';
+
+    const rows = await dbAll(query, params);
+    return rows.map((row) => humps.camelizeKeys(row));
   },
 
   // Ajouter une nouvelle transaction

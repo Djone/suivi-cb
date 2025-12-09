@@ -1,0 +1,291 @@
+:host {
+  display: block;
+}
+
+.impots-page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.page-header h1 {
+  margin: 0.25rem 0;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 0.15rem 0 0;
+  color: #475569;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.grid-2-1 {
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.35rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.65rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.pill-strong {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #a5f3fc;
+}
+
+.people-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.people-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.person-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.person-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.label-strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.hint {
+  padding: 0.65rem 0.75rem;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.hint.muted {
+  border-style: solid;
+}
+
+.header-with-select,
+.header-with-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.year-select {
+  min-width: 140px;
+}
+
+.summary-list {
+  gap: 0.35rem;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 0.6fr;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.summary-head {
+  font-weight: 700;
+  color: #475569;
+  border-bottom-width: 2px;
+}
+
+.summary-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.summary-value,
+.summary-previous {
+  color: #0f172a;
+}
+
+.actions-panel {
+  gap: 0.75rem;
+}
+
+.bullet-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #475569;
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meta-line {
+  display: flex;
+  gap: 1rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.address-cell {
+  max-width: 280px;
+  white-space: normal;
+}
+
+.evol-chip {
+  display: inline-flex;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.evol-hot {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.evol-warm {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.evol-neutral {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.evol-cool {
+  background: #ecfeff;
+  color: #0ea5e9;
+}
+
+.projection {
+  gap: 0.75rem;
+}
+
+.projected-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.projected-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.bar-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.bar-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+}
+
+.bar-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 960px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .grid-2-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}

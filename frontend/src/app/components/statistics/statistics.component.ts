@@ -16,6 +16,7 @@ import { CardModule } from 'primeng/card';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
+import { TabViewModule } from 'primeng/tabview';
 
 interface CategoryStat {
   categoryLabel: string;
@@ -35,6 +36,14 @@ interface YearlyAverage {
   average: number;
 }
 
+interface MonthlyCategoryRow {
+  label: string;
+  monthlyTotals: number[];
+  total: number;
+  average: number;
+  subCategories: MonthlyCategoryRow[];
+}
+
 @Component({
   selector: 'app-statistics',
   standalone: true,
@@ -45,7 +54,8 @@ interface YearlyAverage {
     CardModule,
     DropdownModule,
     ButtonModule,
-    TableModule
+    TableModule,
+    TabViewModule
   ],
   templateUrl: './statistics.component.html',
   styleUrls: ['./statistics.component.css']
@@ -89,6 +99,24 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   monthlyEvolution: MonthlyEvolution[] = [];
   yearlyExpensesAverage: YearlyAverage[] = [];
   yearlyIncomesAverage: YearlyAverage[] = [];
+  expensesMonthlyTable: MonthlyCategoryRow[] = [];
+  incomesMonthlyTable: MonthlyCategoryRow[] = [];
+  expenseExpanded: { [key: string]: boolean } = {};
+  incomeExpanded: { [key: string]: boolean } = {};
+  monthColumns = [
+    { label: 'Janv.', index: 0 },
+    { label: 'Févr.', index: 1 },
+    { label: 'Mars', index: 2 },
+    { label: 'Avr.', index: 3 },
+    { label: 'Mai', index: 4 },
+    { label: 'Juin', index: 5 },
+    { label: 'Juil.', index: 6 },
+    { label: 'Août', index: 7 },
+    { label: 'Sept.', index: 8 },
+    { label: 'Oct.', index: 9 },
+    { label: 'Nov.', index: 10 },
+    { label: 'Déc.', index: 11 },
+  ];
 
   // Configuration Chart.js pour dépenses par catégorie
   public pieChartExpensesData: ChartData<'pie'> = {
@@ -295,6 +323,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
     this.calculateIncomesByCategory(filteredTransactions);
     this.calculateMonthlyEvolution();
     this.calculateYearlyAverages();
+    this.calculateMonthlyCategoryTables();
   }
 
   calculateExpensesByCategory(transactions: Transaction[]): void {
@@ -582,5 +611,91 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
   getTotalIncomes(): number {
     return this.incomesByCategory.reduce((sum, c) => sum + c.total, 0);
+  }
+
+  calculateMonthlyCategoryTables(): void {
+    const transactionsForYear = this.transactions.filter(t => {
+      if (!t.date) return false;
+      const tYear = new Date(t.date).getFullYear();
+      if (tYear !== this.selectedYear) return false;
+
+      if (this.selectedAccount !== null) {
+        const tAccountId = typeof t.accountId === 'string' ? parseInt(t.accountId) : t.accountId;
+        if (tAccountId !== this.selectedAccount) return false;
+      }
+      return true;
+    });
+
+    this.expensesMonthlyTable = this.buildMonthlyCategoryRows(transactionsForYear, 2);
+    this.incomesMonthlyTable = this.buildMonthlyCategoryRows(transactionsForYear, 1);
+    this.expenseExpanded = {};
+    this.incomeExpanded = {};
+  }
+
+  private buildMonthlyCategoryRows(transactions: Transaction[], flowId: number): MonthlyCategoryRow[] {
+    const categoryMap = new Map<string, { monthlyTotals: number[]; subMap: Map<string, number[]> }>();
+
+    transactions.forEach(t => {
+      if (!t.date) return;
+      const parsedFlowId = typeof t.financialFlowId === 'string' ? parseInt(t.financialFlowId) : t.financialFlowId;
+      if (parsedFlowId !== flowId) return;
+
+      const transactionDate = new Date(t.date);
+      const month = transactionDate.getMonth();
+      const amount = Math.abs(typeof t.amount === 'string' ? parseFloat(t.amount) : (t.amount || 0));
+
+      const subCatId = typeof t.subCategoryId === 'string' ? parseInt(t.subCategoryId) : t.subCategoryId;
+      const subCategory = this.subCategories.find(sc => sc.id === subCatId);
+      const categoryLabel = subCategory?.categoryLabel || 'Non catégorisé';
+      const subLabel = subCategory?.label || 'Sans sous-catégorie';
+
+      if (!categoryMap.has(categoryLabel)) {
+        categoryMap.set(categoryLabel, { monthlyTotals: Array(12).fill(0), subMap: new Map<string, number[]>() });
+      }
+
+      const categoryData = categoryMap.get(categoryLabel)!;
+      categoryData.monthlyTotals[month] += amount;
+
+      if (!categoryData.subMap.has(subLabel)) {
+        categoryData.subMap.set(subLabel, Array(12).fill(0));
+      }
+      const subTotals = categoryData.subMap.get(subLabel)!;
+      subTotals[month] += amount;
+      categoryData.subMap.set(subLabel, subTotals);
+    });
+
+    return Array.from(categoryMap.entries())
+      .map(([label, data]) => {
+        const total = data.monthlyTotals.reduce((sum, value) => sum + value, 0);
+        const subCategories = Array.from(data.subMap.entries())
+          .map(([subLabel, monthlyTotals]) => {
+            const subTotal = monthlyTotals.reduce((sum, value) => sum + value, 0);
+            return {
+              label: subLabel,
+              monthlyTotals,
+              total: subTotal,
+              average: subTotal / 12,
+              subCategories: []
+            };
+          })
+          .sort((a, b) => b.total - a.total);
+
+        return {
+          label,
+          monthlyTotals: data.monthlyTotals,
+          total,
+          average: total / 12,
+          subCategories
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  }
+
+  toggleExpenseRow(label: string): void {
+    this.expenseExpanded = { ...this.expenseExpanded, [label]: !this.expenseExpanded[label] };
+  }
+
+  toggleIncomeRow(label: string): void {
+    this.incomeExpanded = { ...this.incomeExpanded, [label]: !this.incomeExpanded[label] };
   }
 }

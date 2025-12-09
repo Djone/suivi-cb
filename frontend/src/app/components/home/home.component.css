@@ -198,6 +198,16 @@
   color: #3B82F6;
 }
 
+::ng-deep .notification-tooltip {
+  max-width: 520px;
+}
+
+::ng-deep .notification-tooltip .p-tooltip-text {
+  max-width: 520px;
+  white-space: pre-line;
+  line-height: 1.4;
+}
+
 .header-right {
   display: flex;
   align-items: center;

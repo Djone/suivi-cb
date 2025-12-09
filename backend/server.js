@@ -9,6 +9,7 @@ const subcategoryRoutes = require('./routes/subcategory.routes');
 const configRoutes = require('./routes/config.routes');
 const recurringTransactionRoutes = require('./routes/recurring-transaction.routes');
 const accountRoutes = require('./routes/account.routes');
+const coupleSplitRoutes = require('./routes/couple-split.routes');
 
 const app = express();
 const PORT_BACK = process.env.PORT_BACK || 3000;
@@ -31,6 +32,7 @@ const startServer = async () => {
     app.use('/api/config', configRoutes);
     app.use('/api/recurring-transactions', recurringTransactionRoutes);
     app.use('/api/accounts', accountRoutes);
+    app.use('/api/couple-split', coupleSplitRoutes);
 
     // 3. Démarrer le serveur Express
     app.listen(PORT_BACK, () => {

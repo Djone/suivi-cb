@@ -2,33 +2,51 @@
   <header class="release-notes-header">
     <div>
       <p class="eyebrow">Notes de version</p>
-      <h1>Version {{ releaseVersion }}</h1>
+      <h1>Historique des livraisons</h1>
       <p class="subtitle">
-        Toutes les nouveautés livrées dans cette version à partir du suivi
+        Toutes les nouveautés livrées par version, basées sur le suivi
         développement.
       </p>
     </div>
   </header>
 
-  <ng-container *ngIf="releaseItems.length > 0; else emptyRelease">
-    <article class="release-note-card" *ngFor="let item of releaseItems">
-      <div class="release-note-card-title">
-        <h2>{{ item.title }}</h2>
+  <ng-container *ngFor="let section of releaseSections">
+    <div class="release-version">
+      <div class="release-version-header">
+        <h2>Version {{ section.version }}</h2>
+        <button
+          type="button"
+          class="accordion-toggle"
+          (click)="toggleSection(section.version)"
+          [attr.aria-expanded]="isExpanded(section.version)"
+        >
+          {{ isExpanded(section.version) ? 'Masquer' : 'Afficher' }}
+        </button>
       </div>
 
-      <ng-container
-        *ngIf="getDescriptionList(item) as bulletList; else plainDescription"
-      >
-        <ul class="release-note-list">
-          <li *ngFor="let bullet of bulletList">{{ bullet }}</li>
-        </ul>
+      <ng-container *ngIf="isExpanded(section.version)">
+        <ng-container *ngIf="section.items.length > 0; else emptyRelease">
+          <article class="release-note-card" *ngFor="let item of section.items">
+            <div class="release-note-card-title">
+              <h3>{{ item.title }}</h3>
+            </div>
+
+            <ng-container
+              *ngIf="getDescriptionList(item) as bulletList; else plainDescription"
+            >
+              <ul class="release-note-list">
+                <li *ngFor="let bullet of bulletList">{{ bullet }}</li>
+              </ul>
+            </ng-container>
+            <ng-template #plainDescription>
+              <p class="release-note-description">
+                {{ getPlainDescription(item) }}
+              </p>
+            </ng-template>
+          </article>
+        </ng-container>
       </ng-container>
-      <ng-template #plainDescription>
-        <p class="release-note-description">
-          {{ getPlainDescription(item) }}
-        </p>
-      </ng-template>
-    </article>
+    </div>
   </ng-container>
 
   <ng-template #emptyRelease>
