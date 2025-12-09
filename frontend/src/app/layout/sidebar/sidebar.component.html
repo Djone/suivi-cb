@@ -26,6 +26,16 @@
         <span>Statistiques</span>
       </a>
 
+      <a
+        routerLink="/impots"
+        routerLinkActive="active"
+        class="menu-item"
+        (click)="onMenuItemClick()"
+      >
+        <i class="pi pi-percentage"></i>
+        <span>Impôts</span>
+      </a>
+
       <!-- Catégories -->
       <div class="menu-group">
         <div class="menu-item-header" (click)="toggleSection('operations')">
