@@ -258,6 +258,14 @@ npm test -- --code-coverage
 
 ## 📝 Changelog
 
+### Version 1.2.0 (2025-12-01)
+
+✨ **Nouvelles fonctionnalités**
+- Sous-catégories : Supprimer la partie dédiée dans le menu opérations
+- Compte Joint : répartition par couple
+- Liste des transactions : ajout d'un filtre sur les catégories et sous-catégories
+- Stats : amélioration de la visualisation des données statistiques par mois et par catégorie / sous-catégorie
+  
 ### Version 1.0.0 (2025-01-17)
 
 ✨ **Nouvelles fonctionnalités**
