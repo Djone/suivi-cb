@@ -12,6 +12,9 @@
       optionLabel="name"
       optionValue="id"
       placeholder="Sélectionnez un compte"
+      [filter]="true"
+      filterBy="name"
+      [showClear]="true"
       [style]="{ width: '100%' }">
     </p-dropdown>
   </div>
@@ -82,41 +85,47 @@
       id="amount"
       [(ngModel)]="data.transaction.amount"
       (ngModelChange)="onFieldChange()"
-      mode="decimal"
+      mode="currency"
+      currency="EUR"
+      locale="fr-FR"
       [minFractionDigits]="2"
       [maxFractionDigits]="2"
-      placeholder="0.00"
+      placeholder="0,00 €"
       [style]="{ width: '100%' }">
     </p-inputNumber>
   </div>
 
-  <!-- Sous-catégorie avec autocomplétion -->
+  <!-- Sous-catégorie -->
   <div class="p-field mb-3">
     <label for="subcategory" class="block mb-2">Sous-catégorie *</label>
-    <p-autoComplete
+    <p-dropdown
       id="subcategory"
-      [formControl]="subCategoryControl"
-      [suggestions]="filteredSubcategories"
-      (completeMethod)="filterSubcategories($event)"
-      field="label"
-      placeholder="Rechercher une sous-catégorie..."
-      (onSelect)="onSubCategorySelected($event)"
-      [dropdown]="true"
+      [options]="activeSubCategories"
+      [(ngModel)]="selectedSubCategoryId"
+      (onChange)="onSubCategorySelected()"
+      (onFilter)="onSubCategoryFilter($event)"
+      optionLabel="label"
+      optionValue="id"
+      placeholder="Sélectionnez une sous-catégorie"
+      [filter]="true"
+      filterBy="label,categoryLabel"
+      [showClear]="true"
       styleClass="w-full"
       [appendTo]="'body'">
-      <ng-template pTemplate="empty">
-        <div class="autocomplete-empty">
-          <span>Aucune sous-catégorie trouvée.</span>
-          <button
-            type="button"
-            pButton
-            label="Créer une sous-catégorie"
-            icon="pi pi-plus"
-            (click)="openCreateSubCategory($event)">
-          </button>
-        </div>
+      <ng-template let-sub pTemplate="item">
+        <div>{{ sub.label }} <small *ngIf="sub.categoryLabel">({{ sub.categoryLabel }})</small></div>
       </ng-template>
-    </p-autoComplete>
+      <ng-template pTemplate="footer">
+        <button
+          type="button"
+          pButton
+          label="Créer une sous-catégorie"
+          icon="pi pi-plus"
+          class="w-full"
+          (click)="openCreateSubCategory($event)">
+        </button>
+      </ng-template>
+    </p-dropdown>
   </div>
 </div>
 
