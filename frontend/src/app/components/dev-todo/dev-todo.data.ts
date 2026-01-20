@@ -31,4 +31,14 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     targetVersion: '1.3.0',
     priority: 'medium',
   },
+  {
+    title: '[Ticket 10] Améliorations UI/UX',
+    description: [
+      "[X] Modal Nouvelle transaction : Ajouter la fonctionnalité d'ajout de sous-catégories directement dans la liste déroulante des catégories",
+      '[] Modal Nouvelle transaction :  Textebox montant - Avoir la même cohérence que celle de Nouvelle récurrence',
+    ],
+    status: 'in-progress',
+    targetVersion: '1.3.0',
+    priority: 'medium',
+  },
 ];

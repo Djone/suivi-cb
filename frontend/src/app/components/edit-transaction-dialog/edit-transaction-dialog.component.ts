@@ -1,9 +1,9 @@
-import { Component, OnInit, } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 
 // PrimeNG Imports
-import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { DynamicDialogRef, DynamicDialogConfig, DialogService } from 'primeng/dynamicdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -13,12 +13,15 @@ import { DropdownModule } from 'primeng/dropdown';
 
 import { Transaction } from '../../models/transaction.model';
 import { SubCategory } from '../../models/sub-category.model';
+import { Category } from '../../models/category.model';
 import { Account } from '../../models/account.model';
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
+import { CategoryService } from '../../services/category.service';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
+import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit-sub-category-dialog.component';
 
 @Component({
   selector: 'app-edit-transaction-dialog',
@@ -32,10 +35,10 @@ import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
     InputNumberModule,
     AutoCompleteModule,
     ButtonModule,
-    DropdownModule
+    DropdownModule,
   ],
   templateUrl: './edit-transaction-dialog.component.html',
-  styleUrls: ['./edit-transaction-dialog.component.css']
+  styleUrls: ['./edit-transaction-dialog.component.css'],
 })
 export class EditTransactionDialogComponent implements OnInit {
   subcategories: SubCategory[] = [];
@@ -43,6 +46,9 @@ export class EditTransactionDialogComponent implements OnInit {
   filteredSubcategories: SubCategory[] = [];
   transactionDate!: Date;
   selectedSubCategoryId!: number;
+  categories: Category[] = [];
+  availableCategories: Category[] = [];
+  currentSubCategoryQuery: string = '';
   dialogTitle: string = 'Éditer la transaction';
   isNew: boolean = false;
 
@@ -61,17 +67,17 @@ export class EditTransactionDialogComponent implements OnInit {
     public config: DynamicDialogConfig,
     private subCategoryService: SubCategoryService,
     private accountService: AccountService,
-    private recurringTransactionService: RecurringTransactionService // Injecter le service
+    private recurringTransactionService: RecurringTransactionService,
+    private categoryService: CategoryService,
+    private dialogService: DialogService,
   ) {
     this.isNew = this.data.isNew || false;
     this.dialogTitle = this.isNew ? 'Nouvelle transaction' : 'Éditer la transaction';
 
     // Écouter les changements du FormControl pour synchroniser selectedSubCategoryId
-    this.subCategoryControl.valueChanges.subscribe(value => {
-      console.log('FormControl value changed:', value);
+    this.subCategoryControl.valueChanges.subscribe((value) => {
       if (value && typeof value === 'object' && value.id) {
         this.selectedSubCategoryId = value.id;
-        console.log('selectedSubCategoryId synchronisé:', this.selectedSubCategoryId);
       } else if (value === null || value === '') {
         this.selectedSubCategoryId = 0;
       }
@@ -79,25 +85,24 @@ export class EditTransactionDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-
     // Charger les comptes
     this.accountService.accounts$.subscribe({
       next: (accounts) => {
         this.accounts = accounts;
       },
-      error: (err) => console.error('Erreur lors du chargement des comptes:', err)
+      error: (err) => console.error('Erreur lors du chargement des comptes:', err),
     });
 
     // Charger les transactions récurrentes si c'est une nouvelle transaction
     if (this.isNew) {
       this.recurringTransactionService.recurringTransactions$.subscribe({
         next: (recurring) => {
-          this.allRecurringTransactions = recurring.filter(rt => rt.isActive === 1);
-        }
+          this.allRecurringTransactions = recurring.filter((rt) => rt.isActive === 1);
+        },
       });
     }
 
-    // Convertir la date string en objet Date (CORRECTION DU PROBLEME DE DECALAGE)
+    // Convertir la date string en objet Date (correction du problème de décalage)
     if (this.data.transaction.date) {
       if (this.data.transaction.date instanceof Date) {
         this.transactionDate = this.data.transaction.date;
@@ -123,15 +128,27 @@ export class EditTransactionDialogComponent implements OnInit {
 
     // Charger les sous-catégories en fonction du flux financier de la transaction
     this.loadSubcategories(financialFlowId!);
+
+    // Charger les catégories pour alimenter la création rapide de sous-catégories
+    this.categoryService.categories$.subscribe({
+      next: (categories) => {
+        this.categories = categories;
+        if (financialFlowId) {
+          this.updateAvailableCategories(financialFlowId);
+        }
+      },
+      error: (err) => console.error('Erreur lors du chargement des catégories:', err),
+    });
+    this.categoryService.getCategories().subscribe();
   }
 
-  // --- NOUVELLE LOGIQUE POUR LES ÉCHÉANCES ---
+  // --- Nouvelle logique pour les échéances ---
 
   filterRecurring(event: any): void {
     const query = event.query.toLowerCase();
     // Filtrer les échéances pour le compte sélectionné
-    this.filteredRecurringTransactions = this.allRecurringTransactions.filter(rt =>
-      rt.label.toLowerCase().includes(query) && rt.accountId === this.data.transaction.accountId
+    this.filteredRecurringTransactions = this.allRecurringTransactions.filter(
+      (rt) => rt.label.toLowerCase().includes(query) && rt.accountId === this.data.transaction.accountId,
     );
   }
 
@@ -146,7 +163,7 @@ export class EditTransactionDialogComponent implements OnInit {
     this.data.transaction.recurringTransactionId = selectedRecurring.id; // Lier la transaction
 
     // Mettre à jour le champ de sous-catégorie
-    const selectedSubCat = this.subcategories.find(sc => sc.id === selectedRecurring.subCategoryId);
+    const selectedSubCat = this.subcategories.find((sc) => sc.id === selectedRecurring.subCategoryId);
     if (selectedSubCat) {
       this.subCategoryControl.setValue(selectedSubCat);
     }
@@ -158,23 +175,29 @@ export class EditTransactionDialogComponent implements OnInit {
     this.onFieldChange();
   }
 
-  // --- FIN DE LA NOUVELLE LOGIQUE ---
+  // --- Fin de la nouvelle logique ---
 
   // Charger les sous-catégories en fonction du flux financier
   loadSubcategories(financialFlowId: number): void {
+    if (!financialFlowId) {
+      return;
+    }
+
+    this.updateAvailableCategories(financialFlowId);
+
     this.subCategoryService.getAllSubCategoriesByFinancialFlowId(financialFlowId).subscribe({
       next: (data) => {
         this.subcategories = data;
         this.filteredSubcategories = [...data];
 
         // Initialiser le contrôle d'autocomplétion avec la sous-catégorie actuelle
-        const currentSubCategory = this.subcategories.find(sc => sc.id == this.selectedSubCategoryId);
+        const currentSubCategory = this.subcategories.find((sc) => sc.id === this.selectedSubCategoryId);
 
         if (currentSubCategory) {
           this.subCategoryControl.setValue(currentSubCategory);
         }
       },
-      error: (err) => console.error('Erreur lors du chargement des sous-catégories:', err)
+      error: (err) => console.error('Erreur lors du chargement des sous-catégories:', err),
     });
   }
 
@@ -192,21 +215,18 @@ export class EditTransactionDialogComponent implements OnInit {
 
   // Méthode de filtrage pour PrimeNG AutoComplete
   filterSubcategories(event: any): void {
-    const query = event.query.toLowerCase();
-    this.filteredSubcategories = this.subcategories.filter(sc =>
-      sc.label.toLowerCase().includes(query)
-    );
+    const query = (event.query || '').toLowerCase();
+    this.currentSubCategoryQuery = query;
+    this.filteredSubcategories = this.subcategories.filter((sc) => sc.label.toLowerCase().includes(query));
   }
 
   // Méthode appelée lors de la sélection d'une sous-catégorie
   onSubCategorySelected(event: any): void {
-
     // PrimeNG AutoComplete passe un objet avec une propriété 'value'
     const subCategory = event.value || event;
 
     if (subCategory && subCategory.id) {
       this.selectedSubCategoryId = subCategory.id;
-      console.log('Sous-catégorie sélectionnée - ID:', this.selectedSubCategoryId, 'Label:', subCategory.label);
     } else {
       console.warn('Sous-catégorie invalide:', subCategory);
     }
@@ -266,5 +286,72 @@ export class EditTransactionDialogComponent implements OnInit {
 
   cancel(): void {
     this.ref.close();
+  }
+
+  private updateAvailableCategories(financialFlowId: number): void {
+    this.availableCategories = this.categories.filter((category) => {
+      const flowMatches = category.financialFlowId === financialFlowId;
+      const isActive = (category.isActive ?? (category as any)['is_active'] ?? 0) === 1;
+      return flowMatches && isActive;
+    });
+  }
+
+  openCreateSubCategory(event?: Event): void {
+    event?.stopPropagation();
+
+    if (!this.data.transaction.financialFlowId) {
+      console.warn('Impossible de créer une sous-catégorie sans type de transaction.');
+      return;
+    }
+
+    if (this.availableCategories.length === 0) {
+      console.warn('Aucune catégorie active disponible pour ce type de transaction.');
+      return;
+    }
+
+    const dialogRef = this.dialogService.open(EditSubCategoryDialogComponent, {
+      width: '500px',
+      data: {
+        subCategory: {
+          label: this.currentSubCategoryQuery || '',
+          categoryId: this.availableCategories[0].id,
+        },
+        categories: this.availableCategories,
+        isNew: true,
+      },
+    });
+
+    dialogRef.onClose.subscribe((result) => {
+      if (!result) {
+        return;
+      }
+
+      this.subCategoryService.addSubCategory(result).subscribe({
+        next: () => {
+          this.subCategoryService
+            .getAllSubCategoriesByFinancialFlowId(this.data.transaction.financialFlowId!)
+            .subscribe({
+              next: (list) => {
+                this.subcategories = list;
+                this.filteredSubcategories = [...list];
+
+                const created = list.find(
+                  (sub) =>
+                    sub.label.toLowerCase() === result.label.toLowerCase() &&
+                    sub.categoryId === result.categoryId,
+                );
+
+                if (created) {
+                  this.selectedSubCategoryId = created.id!;
+                  this.subCategoryControl.setValue(created);
+                }
+              },
+              error: (err) =>
+                console.error('Erreur lors du rechargement des sous-catégories après création:', err),
+            });
+        },
+        error: (err) => console.error('Erreur lors de la création de la sous-catégorie:', err),
+      });
+    });
   }
 }

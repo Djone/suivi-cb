@@ -12,7 +12,7 @@
       optionLabel="name"
       optionValue="id"
       placeholder="Sélectionnez un compte"
-      [style]="{'width': '100%'}">
+      [style]="{ width: '100%' }">
     </p-dropdown>
   </div>
 
@@ -28,7 +28,7 @@
       (onSelect)="onRecurringTransactionSelected($event)"
       [dropdown]="true"
       [forceSelection]="true"
-      [style]="{'width': '100%'}">
+      [style]="{ width: '100%' }">
     </p-autoComplete>
   </div>
 
@@ -43,7 +43,7 @@
       optionLabel="name"
       optionValue="id"
       placeholder="Sélectionnez un type"
-      [style]="{'width': '100%'}">
+      [style]="{ width: '100%' }">
     </p-dropdown>
   </div>
 
@@ -86,7 +86,7 @@
       [minFractionDigits]="2"
       [maxFractionDigits]="2"
       placeholder="0.00"
-      [style]="{'width': '100%'}">
+      [style]="{ width: '100%' }">
     </p-inputNumber>
   </div>
 
@@ -103,7 +103,19 @@
       (onSelect)="onSubCategorySelected($event)"
       [dropdown]="true"
       styleClass="w-full"
-      [appendTo]="'body'">      
+      [appendTo]="'body'">
+      <ng-template pTemplate="empty">
+        <div class="autocomplete-empty">
+          <span>Aucune sous-catégorie trouvée.</span>
+          <button
+            type="button"
+            pButton
+            label="Créer une sous-catégorie"
+            icon="pi pi-plus"
+            (click)="openCreateSubCategory($event)">
+          </button>
+        </div>
+      </ng-template>
     </p-autoComplete>
   </div>
 </div>

@@ -18,3 +18,15 @@ mat-dialog-actions {
 mat-dialog-actions button {
   min-width: 120px;
 }
+
+.autocomplete-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.autocomplete-empty button {
+  white-space: nowrap;
+}
