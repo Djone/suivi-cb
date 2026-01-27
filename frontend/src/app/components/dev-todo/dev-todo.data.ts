@@ -36,6 +36,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     description: [
       "[X] Modal Nouvelle transaction : Ajouter la fonctionnalite d'ajout de sous-categories directement dans la liste deroulante des categories",
       '[ ] Modal Nouvelle transaction : Textebox montant - Avoir la meme coherence que celle de Nouvelle recurrence',
+      '[X] Modal Nouvelle transaction : Rendre une autocompletion intelligente pour la textbox "Description"',
     ],
     status: 'in-progress',
     targetVersion: '1.3.0',

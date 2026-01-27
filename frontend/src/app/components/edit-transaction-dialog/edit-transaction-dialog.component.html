@@ -53,14 +53,22 @@
   <!-- Description -->
   <div class="p-field mb-3">
     <label for="description" class="block mb-2">Description *</label>
-    <input
-      pInputText
+    <p-autoComplete
       id="description"
-      type="text"
+      [suggestions]="filteredDescriptionSuggestions"
+      (completeMethod)="onDescriptionComplete($event)"
+      (onSelect)="onDescriptionSelected($event)"
+      field="label"
       [(ngModel)]="data.transaction.description"
       (ngModelChange)="onFieldChange()"
       placeholder="Entrez la description"
-      class="w-full" />
+      [dropdown]="true"
+      styleClass="w-full"
+      [appendTo]="'body'">
+      <ng-template let-suggestion pTemplate="item">
+        <div>{{ suggestion.label }} <small>({{ suggestion.count }})</small></div>
+      </ng-template>
+    </p-autoComplete>
   </div>
 
   <!-- Date -->

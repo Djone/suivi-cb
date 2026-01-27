@@ -19,6 +19,7 @@ import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
+import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit-sub-category-dialog.component';
@@ -43,6 +44,8 @@ import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit
 export class EditTransactionDialogComponent implements OnInit {
   subcategories: SubCategory[] = [];
   activeSubCategories: SubCategory[] = [];
+  allTransactions: Transaction[] = [];
+  filteredDescriptionSuggestions: DescriptionSuggestion[] = [];
   transactionDate!: Date;
   selectedSubCategoryId = 0;
   categories: Category[] = [];
@@ -56,7 +59,6 @@ export class EditTransactionDialogComponent implements OnInit {
   financialFlowList = FINANCIAL_FLOW_LIST;
   allRecurringTransactions: RecurringTransaction[] = [];
   filteredRecurringTransactions: RecurringTransaction[] = [];
-  private initialAmount: number | null = null;
 
   get data() {
     return this.config.data;
@@ -68,12 +70,12 @@ export class EditTransactionDialogComponent implements OnInit {
     private subCategoryService: SubCategoryService,
     private accountService: AccountService,
     private recurringTransactionService: RecurringTransactionService,
+    private transactionService: TransactionService,
     private categoryService: CategoryService,
     private dialogService: DialogService,
   ) {
     this.isNew = this.data.isNew || false;
     this.dialogTitle = this.isNew ? 'Nouvelle transaction' : 'Editer la transaction';
-    this.initialAmount = this.normalizeAmount(this.data.transaction.amount);
   }
 
   ngOnInit(): void {
@@ -93,6 +95,14 @@ export class EditTransactionDialogComponent implements OnInit {
         },
       });
     }
+
+    this.transactionService.transactions$.subscribe({
+      next: (transactions) => {
+        this.allTransactions = transactions || [];
+      },
+      error: (err) => console.error('Erreur lors du chargement des transactions:', err),
+    });
+    this.transactionService.loadTransactions();
 
     // Convertir la date string en objet Date (correction du décalage)
     if (this.data.transaction.date) {
@@ -202,6 +212,38 @@ export class EditTransactionDialogComponent implements OnInit {
     // [(ngModel)] already syncs the selection
   }
 
+  onDescriptionComplete(event: any): void {
+    const query = (event.query || '').trim().toLowerCase();
+    if (query.length < 2) {
+      this.filteredDescriptionSuggestions = [];
+      return;
+    }
+
+    this.filteredDescriptionSuggestions = this.buildDescriptionSuggestions(query);
+  }
+
+  onDescriptionSelected(event: any): void {
+    const suggestion = event.value as DescriptionSuggestion | undefined;
+    if (!suggestion) {
+      return;
+    }
+
+    this.data.transaction.description = suggestion.label;
+
+    if (
+      suggestion.financialFlowId &&
+      this.data.transaction.financialFlowId !== suggestion.financialFlowId
+    ) {
+      this.data.transaction.financialFlowId = suggestion.financialFlowId;
+      this.loadSubcategories(suggestion.financialFlowId);
+    }
+
+    if (typeof suggestion.subCategoryId === 'number') {
+      this.selectedSubCategoryId = suggestion.subCategoryId;
+      this.data.transaction.subCategoryId = suggestion.subCategoryId;
+    }
+  }
+
   get isFormValid(): boolean {
     const normalizedAmount = this.normalizeAmount(this.data.transaction.amount);
     const isValidAmount = normalizedAmount !== null && normalizedAmount > 0;
@@ -292,6 +334,78 @@ export class EditTransactionDialogComponent implements OnInit {
     return null;
   }
 
+  private buildDescriptionSuggestions(query: string): DescriptionSuggestion[] {
+    const stats = new Map<string, DescriptionStats>();
+    const accountId = this.toNumber(this.data.transaction.accountId);
+    const financialFlowId = this.toNumber(this.data.transaction.financialFlowId);
+
+    for (const transaction of this.allTransactions) {
+      const desc = typeof transaction.description === 'string' ? transaction.description.trim() : '';
+      if (!desc) continue;
+
+      const normalized = desc.toLowerCase();
+      if (!normalized.includes(query)) continue;
+
+      const tAccountId = this.toNumber(transaction.accountId);
+      if (accountId && tAccountId && tAccountId !== accountId) continue;
+
+      const tFlowId = this.toNumber(transaction.financialFlowId);
+      if (financialFlowId && tFlowId && tFlowId !== financialFlowId) continue;
+
+      const entry = stats.get(normalized) ?? {
+        label: desc,
+        count: 0,
+        subCounts: new Map<number, number>(),
+        flowCounts: new Map<number, number>(),
+      };
+
+      entry.count += 1;
+      stats.set(normalized, entry);
+
+      const subId = this.toNumber(transaction.subCategoryId);
+      if (subId) {
+        entry.subCounts.set(subId, (entry.subCounts.get(subId) ?? 0) + 1);
+      }
+
+      if (tFlowId) {
+        entry.flowCounts.set(tFlowId, (entry.flowCounts.get(tFlowId) ?? 0) + 1);
+      }
+    }
+
+    return Array.from(stats.values())
+      .filter((entry) => entry.count >= 3)
+      .map((entry) => ({
+        label: entry.label,
+        count: entry.count,
+        subCategoryId: this.getMostFrequentId(entry.subCounts),
+        financialFlowId: this.getMostFrequentId(entry.flowCounts),
+      }))
+      .sort((a, b) => (b.count - a.count) || a.label.localeCompare(b.label, 'fr'));
+  }
+
+  private getMostFrequentId(counts: Map<number, number>): number | undefined {
+    let bestId: number | undefined;
+    let bestCount = 0;
+    counts.forEach((count, id) => {
+      if (count > bestCount) {
+        bestCount = count;
+        bestId = id;
+      }
+    });
+    return bestId;
+  }
+
+  private toNumber(value: number | string | null | undefined): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  }
+
   openCreateSubCategory(event?: Event): void {
     event?.stopPropagation();
 
@@ -349,4 +463,18 @@ export class EditTransactionDialogComponent implements OnInit {
       });
     });
   }
+}
+
+interface DescriptionSuggestion {
+  label: string;
+  count: number;
+  subCategoryId?: number;
+  financialFlowId?: number;
+}
+
+interface DescriptionStats {
+  label: string;
+  count: number;
+  subCounts: Map<number, number>;
+  flowCounts: Map<number, number>;
 }
