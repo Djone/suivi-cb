@@ -1,0 +1,517 @@
+date,amount,description,subcategory_id,account,type
+2024-01-02,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit,1,1,debit
+2024-01-02,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-01-02,"-50.99",Orange,Internet,1,1,debit
+2024-01-02,"-13.49",Netflix,Services en ligne,1,1,debit
+2024-01-03,"-23.93",Bricomarché,Bricolage,1,1,debit
+2024-01-04,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-01-04,"-38.50",Peugeot 2008,Carburant,1,1,debit
+2024-01-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-01-05,"-370.95",MAM,Compte joint,1,1,debit
+2024-01-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-01-05,"-9.00",SAUR,Eau,1,1,debit
+2024-01-05,"-85.00",EDF,Électricité,1,1,debit
+2024-01-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-01-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-01-05,"-10.99",SOSH,Téléphone,1,1,debit
+2024-01-05,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-01-05,"-250.00",AXA,Epargne retraite,1,1,debit
+2024-01-05,"-115.48",Dons réguliers,Dons,1,1,debit
+2024-01-05,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-01-09,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-01-09,"-37.70",Bricomarché,Bricolage,1,1,debit
+2024-01-10,"-29.26",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-01-10,"-38.53",Polo,Carburant,1,1,debit
+2024-01-10,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-01-10,"-30.05",Hyper U - Vallet,Courses,1,1,debit
+2024-01-10,"-65.70",Liquides ,Cigarette électronique,1,1,debit
+2024-01-11,"-60.88",Bricomarché ,Bricolage,1,1,debit
+2024-01-14,"-71.15",Pic du midi - location de ski,WE - Divertissements,1,1,debit
+2024-01-15,"-17.50",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-01-15,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-01-16,"-11.44",Elec44 - Prise de courant USB,Bricolage,1,1,debit
+2024-01-18,"-10.50",La Poste - Renvoi pantalon bask in the sun,Habillement,1,1,debit
+2024-01-23,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-01-16,"-7.90",Serum phy,Pharmacie,1,1,debit
+2024-01-18,"-129.50",Leroy Merlin,Bricolage,1,1,debit
+2024-01-18,"-88.95",360 Outdoor Expert,Habillement,1,1,debit
+2024-01-18,"-74.98",Intersport,Habillement,1,1,debit
+2024-01-22,"-65.00",Biosfaire - Peinture ,Bricolage,1,1,debit
+2024-01-22,"-11.90",Espace Emeraude - sable,Bricolage,1,1,debit
+2024-01-24,"-9.35",Bricomarché,Bricolage,1,1,debit
+2024-01-25,"-0.90",Boulangerie,Alimentation,1,1,debit
+2024-01-25,"-24.00",Pic du midi - La Yunta,WE - Restaurants/Brasserie,1,1,debit
+2024-01-28,"-9.20",Pic du midi - Restauration autoroute,WE - Alimentation,1,1,debit
+2024-01-28,"-18.75",Mcdo,Alimentation,1,1,debit
+2024-01-26,"-26.80",Pic du midi - Pharmacie,WE - Divertissements,1,1,debit
+2024-01-27,"-30.00",Pic du midi - Le Schuss,WE - Restaurants/Brasserie,1,1,debit
+2024-01-26,"-35.00",Pic du midi - Auberge des neiges,WE - Restaurants/Brasserie,1,1,debit
+2024-01-26,"-64.00",Pic du midi - Forfait,WE - Divertissements,1,1,debit
+2024-01-27,"-178.00",Pic du midi - L'Isard,WE - Restaurants/Brasserie,1,1,debit
+2024-01-30,"-52.67",Leroy Merlin,Bricolage,1,1,debit
+2024-01-30,"-6.00",Elly - Sirop ,Pharmacie,1,1,debit
+2024-02-01,"-47.62",bricomarché ,Bricolage,1,1,debit
+2024-02-01,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-02-01,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-02-01,"-50.99",Orange,Internet,1,1,debit
+2024-02-01,"-13.49",Netflix,Services en ligne,1,1,debit
+2024-02-02,"-10.00",Lucile - boucle d'oreilles,Anniversaire,1,1,debit
+2024-02-02,"-46.00",Lucile - BD,Anniversaire,1,1,debit
+2024-02-02,"-17.60",Lucile - Chocolats,Anniversaire,1,1,debit
+2024-02-03,"-21.00",CA8M,Remboursement,1,1,debit
+2024-02-04,"-15.45",Boulangerie,Alimentation,1,1,debit
+2024-02-05,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-02-05,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-02-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-02-05,"-273.25",MAM,Compte joint,1,1,debit
+2024-02-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-02-05,"-9.00",SAUR,Eau,1,1,debit
+2024-02-05,"-85.00",EDF,Électricité,1,1,debit
+2024-02-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-02-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-02-05,"-10.99",SOSH,Téléphone,1,1,debit
+2024-02-05,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-02-05,"-250.00",AXA,Epargne retraite,1,1,debit
+2024-02-05,"-115.48",Dons réguliers,Dons,1,1,debit
+2024-02-06,"-99.99",Bricomarché - Projecteur LED,Bricolage,1,1,debit
+2024-02-07,"-155.75",Biosfaire - Peinture ,Bricolage,1,1,debit
+2024-02-09,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-02-11,"-21.00",Bières québecoises,Bières,1,1,debit
+2024-02-12,"-29.26",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-02-12,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-02-12,"-100.00",Cadeau West Side Story,Anniversaire,1,1,debit
+2024-02-15,"-17.50",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-02-15,"-50.00",Anniv Gro,Anniversaire,1,1,debit
+2024-02-15,"-42.35",Bricomarché ,Bricolage,1,1,debit
+2024-02-16,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-02-17,"-1.90",Burger King,Restaurants/Brasserie,1,1,debit
+2024-02-19,"-65.00",Biosfaire - Peinture ,Bricolage,1,1,debit
+2024-02-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-02-21,"-35.29",Bricomarché,Bricolage,1,1,debit
+2024-02-22,"-14.54",Pic du midi - remboursement Vince,WE - Divertissements,1,1,debit
+2024-02-24,"-31.47",Peugeot 2008,Carburant,1,1,debit
+2024-02-25,"-56.00",Goûter post Escape Game,Bistrot,1,1,debit
+2024-02-27,"-65.22",Champion Clisson,Bricolage,1,1,debit
+2024-02-28,"-3.49",Bureau Vallée,Fournitures personnelles,1,1,debit
+2024-02-28,"-42.99",Jardiland,Pelouse/jardin,1,1,debit
+2024-02-28,"-99.99",Netgear Security - Abo. annuel,Services en ligne,1,1,debit
+2024-02-29,"-106.36",Bricomarché,Bricolage,1,1,debit
+2024-03-01,"-19.09",Bricomarché,Bricolage,1,1,debit
+2024-03-01,"-2.00",La Sanguèze,Restaurants/Brasserie,1,1,debit
+2024-03-01,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-03-01,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-03-01,"-60.00",Free,Internet,1,1,debit
+2024-03-04,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-03-05,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-03-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-03-05,"-313.39",MAM,Compte joint,1,1,debit
+2024-03-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-03-05,"-9.00",SAUR,Eau,1,1,debit
+2024-03-05,"-85.00",EDF,Électricité,1,1,debit
+2024-03-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-03-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-03-05,"-10.99",SOSH,Téléphone,1,1,debit
+2024-03-05,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-03-05,"-115.48",Dons réguliers,Dons,1,1,debit
+2024-03-05,"-250.00",AXA,Epargne retraite,1,1,debit
+2024-03-05,"-15.11",OVH - Abonnement annuel ,Abonnements,1,1,debit
+2024-03-06,"-50.00",Cadeau décès Sophie Nobiron,Cadeau,1,1,debit
+2024-03-07,"-300.00",Helios,Epargne,1,1,debit
+2024-03-07,"-7.67",déjeuner ,Alimentation,1,1,debit
+2024-03-10,"-27.73",Supermarché Le Pallet ,Alimentation,1,1,debit
+2024-03-10,"-2.40",Boulangerie ,Alimentation,1,1,debit
+2024-03-11,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-03-11,"-29.26",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-03-11,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-03-13,"-76.90",Peinture Algo - Toilettes,Bricolage,1,1,debit
+2024-03-13,"-50.00",Abondement Fortuneo,Internet,1,1,debit
+2024-03-15,"-17.50",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-03-15,"-109.99",Le Monde - Abonnement annuel ,Abonnements,1,1,debit
+2024-03-15,"-69.00",Médiacités - Abonnement annuel ,Abonnements,1,1,debit
+2024-03-15,"-33.78",Polo,Carburant,1,1,debit
+2024-03-15,"-7.80",Le Berlin,Restaurants/Brasserie,1,1,debit
+2024-03-16,"-34.00",Leroy Merlin ,Bricolage,1,1,debit
+2024-03-18,"-8.70",Carrefour market La Gare,Alimentation,1,1,debit
+2024-03-18,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-03-18,"-9.00",SPAR,Alimentation,1,1,debit
+2024-03-20,"-6.20",Boulangerie,Alimentation,1,1,debit
+2024-03-20,"-20.00",Fleurs obsèque papa Babeth,Cadeau,1,1,debit
+2024-03-21,"-60.09",Bricomarché,Bricolage,1,1,debit
+2024-03-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-03-27,"-79.87",Liquides ,Cigarette électronique,1,1,debit
+2024-03-27,"-8.99",Bonbonne de gaz,Sodastream,1,1,debit
+2024-03-27,"-4.35",Boulangerie,Alimentation,1,1,debit
+2024-03-28,"-9.80",Boulangerie,Alimentation,1,1,debit
+2024-03-29,"-32.30",CDP,Restaurants/Brasserie,1,1,debit
+2024-03-29,"-66.90",Boulangerie - Pâques,Alimentation,1,1,debit
+2024-04-02,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-04-02,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-04-02,"-56.99",Free,Internet,1,1,debit
+2024-04-04,"-14.70",Boulangerie,Alimentation,1,1,debit
+2024-04-04,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-04-05,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-04-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-04-05,"-343.17",MAM,Compte joint,1,1,debit
+2024-04-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-04-05,"-9.00",SAUR,Eau,1,1,debit
+2024-04-05,"-85.00",EDF,Électricité,1,1,debit
+2024-04-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-04-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-04-05,"-10.99",SOSH,Téléphone,1,1,debit
+2024-04-05,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-04-05,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-04-05,"-300.00",HELIOS,Epargne,1,1,debit
+2024-04-05,"-267.00",AXA,Epargne retraite,1,1,debit
+2024-04-07,"-11.30",Boulangerie,Alimentation,1,1,debit
+2024-04-09,"-10.00",FDJ,Jeux,1,1,debit
+2024-04-09,"-7.40",Boulangerie,Alimentation,1,1,debit
+2024-04-09,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-04-10,"-29.26",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-04-10,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-04-10,"-147.73",Matériel Bricolage,Bricolage,1,1,debit
+2024-04-10,"-17.00",Bagels,Restaurants/Brasserie,1,1,debit
+2024-04-11,"-21.75",Ferme de Chez nous,Alimentation,1,1,debit
+2024-04-12,"-42.80",Win & Cook,Restaurants/Brasserie,1,1,debit
+2024-04-12,"-33.44",Peugeot 2008,Carburant,1,1,debit
+2024-04-14,"-5.30",Boulangerie,Alimentation,1,1,debit
+2024-04-15,"-17.50",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-04-16,"-3.60",Boulangerie,Alimentation,1,1,debit
+2024-04-16,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-04-17,"-17.50",SoFresh,Restaurants/Brasserie,1,1,debit
+2024-04-18,"-9.80",Boulangerie,Alimentation,1,1,debit
+2024-04-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-04-22,"-13.47",Leclerc,Courses,1,1,debit
+2024-04-22,"-7.30",Boulangerie,Alimentation,1,1,debit
+2024-04-22,"-1.58",Champion Clisson,Bricolage,1,1,debit
+2024-04-23,"-10.00",Boulangerie,Alimentation,1,1,debit
+2024-04-24,"-28.10",CDP,Restaurants/Brasserie,1,1,debit
+2024-04-24,"-24.90",BD Story,BD,1,1,debit
+2024-04-24,"-15.00",LU,Bistrot,1,1,debit
+2024-04-25,"-42.30",Leroy Merlin,Bricolage,1,1,debit
+2024-04-25,"-7.93",Leclerc,Alimentation,1,1,debit
+2024-04-29,"-35.00",Smartbox,Loisirs,1,1,debit
+2024-05-02,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-05-02,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-05-02,"-57.49",Free,Internet,1,1,debit
+2024-05-02,"-300.00",CA,Epargne,1,1,debit
+2024-05-03,"-125.00",Bières,Bières,1,1,debit
+2024-05-03,"-12.20",CDP,Restaurants/Brasserie,1,1,debit
+2024-05-05,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-05-05,"-267.00",AXA,Epargne retraite,1,1,debit
+2024-05-05,"-60.00",7ème vague - Places ,Concerts/spectacles,1,1,debit
+2024-05-05,"-7.00",Canal +,Services en ligne,1,1,debit
+2024-05-06,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-05-06,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-05-06,"-329.43",MAM,Compte joint,1,1,debit
+2024-05-06,"-300.00",Abondement,Compte joint,1,1,debit
+2024-05-06,"-9.00",SAUR,Eau,1,1,debit
+2024-05-06,"-85.00",EDF,Électricité,1,1,debit
+2024-05-06,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-05-04,"-26.50",Cave à vin le Pallet,Bières,1,1,debit
+2024-05-06,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-05-06,"-10.99",SOSH,Téléphone,1,1,debit
+2024-05-06,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-05-06,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-05-07,"-23.80",Cave à vin Vallet,Bières,1,1,debit
+2024-05-07,"-26.40",Pressing Vallet,Blanchisserie/nettoyage à sec,1,1,debit
+2024-05-07,"-86.58",Vapostore,Cigarette électronique,1,1,debit
+2024-05-08,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-05-10,"-29.26",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-05-11,"-23.81",Peugeot 2008,Carburant,1,1,debit
+2024-05-11,"-32.00",7ème vague,Concerts/spectacles,1,1,debit
+2024-05-11,"-61.00",7ème vague,Concerts/spectacles,1,1,debit
+2024-05-13,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-05-14,"-26.55",Liquides ,Cigarette électronique,1,1,debit
+2024-05-15,"-17.50",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-05-15,"-90.00",3 cartons de Triboulette,Bières,1,1,debit
+2024-05-16,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-05-16,"-35.20",Weldom,Bricolage,1,1,debit
+2024-05-16,"-4.90",Paul,Alimentation,1,1,debit
+2024-05-18,"-1.50",Zoo La boissière,Alimentation,1,1,debit
+2024-05-19,"-11.45",Boulangerie,Alimentation,1,1,debit
+2024-05-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-05-22,"-20.00",Taxi,Mariage,1,1,debit
+2024-05-22,"-11.99",Lunettes de soleil,Habillement,1,1,debit
+2024-05-22,"-1.52",CA,Cotisation Compte bancaires,1,1,debit
+2024-05-23,"-5.57",Hyper U - Vallet,Courses,1,1,debit
+2024-05-23,"-7.10",CDP,Restaurants/Brasserie,1,1,debit
+2024-05-24,"-41.50",Rêve en Tête - Vallet,Coiffure/soins esthétiques,1,1,debit
+2024-05-30,"-10.00",Kebab,Alimentation,1,1,debit
+2024-06-02,"-6.30",Boulangerie,Alimentation,1,1,debit
+2024-06-02,"-16.40",Poulet roti - marché Vallet,Alimentation,1,1,debit
+2024-06-03,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-06-03,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-06-03,"-57.49",Free,Internet,1,1,debit
+2024-06-03,"-300.00",CA,Epargne,1,1,debit
+2024-06-03,"-8.81",Cantine EDF,Restaurants/Brasserie,1,1,debit
+2024-06-03,"-35.27",Polo,Carburant,1,1,debit
+2024-06-04,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-06-05,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-06-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-06-05,"-528.09",MAM,Compte joint,1,1,debit
+2024-06-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-06-05,"-9.00",SAUR,Eau,1,1,debit
+2024-06-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-06-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-06-05,"-10.99",SOSH,Téléphone,1,1,debit
+2024-06-05,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-06-05,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-06-05,"-7.00",Canal +,Services en ligne,1,1,debit
+2024-06-05,"-267.00",AXA,Epargne retraite,1,1,debit
+2024-06-08,"-29.90",Arnaud - Carburant débroussailleuse,Bricolage,1,1,debit
+2024-06-08,"-21.60",Les papas brasseurs,Bistrot,1,1,debit
+2024-06-10,"-30.46",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-06-10,"-50.00",Guigui et Lucie,Mariage,1,1,debit
+2024-06-10,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-06-11,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-06-11,"-106.20",Liquides,Cigarette électronique,1,1,debit
+2024-06-12,"-2.15",RATP,Transports en commun,1,1,debit
+2024-06-13,"-3.20",RATP,Transports en commun,1,1,debit
+2024-06-15,"-101.20",Leroy Merlin - Chaises + brass compost,Pelouse/jardin,1,1,debit
+2024-06-17,"-18.26",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-06-18,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-06-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-06-21,"-15.40",CDP,Restaurants/Brasserie,1,1,debit
+2024-06-21,"-41.20",Les papas brasseurs,Bistrot,1,1,debit
+2024-06-21,"-72.00",Bières bouteilles - Les Papas brasseurs,Bières,1,1,debit
+2024-06-23,"-22.70",McDo,Restaurants/Brasserie,1,1,debit
+2024-06-24,"-20.00",Caisse d'épargne,Retrait,1,1,debit
+2024-06-26,"-25.00",NDJ - Casquette,Habillement,1,1,debit
+2024-06-26,"-12.33",Kesskece,Restaurants/Brasserie,1,1,debit
+2024-06-26,"-33.13",Polo,Carburant,1,1,debit
+2024-06-27,"-11.30",Boulangerie,Alimentation,1,1,debit
+2024-06-27,"-35.48",Boucherie,Alimentation,1,1,debit
+2024-07-01,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-07-01,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-07-01,"-57.49",Free,Internet,1,1,debit
+2024-07-02,"-300.00",HELIOS,Epargne,1,1,debit
+2024-07-04,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-07-05,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-07-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-07-05,"-386.96",MAM,Compte joint,1,1,debit
+2024-07-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-07-05,"-9.00",SAUR,Eau,1,1,debit
+2024-07-05,"-77.36",EDF,Électricité,1,1,debit
+2024-07-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-07-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-07-05,"-10.99",SOSH,Téléphone,1,1,debit
+2024-07-05,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-07-05,"-267.00",AXA,Epargne retraite,1,1,debit
+2024-07-05,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-07-05,"-7.00",Canal +,Services en ligne,1,1,debit
+2024-07-05,"-76.00",Binocle - Lunettes,Habillement,1,1,debit
+2024-07-06,"-280.80",Les Galloires,Vins,1,1,debit
+2024-07-06,"-165.00",L'Aiguillette,Vins,1,1,debit
+2024-07-09,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-07-10,"-30.46",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-07-10,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-07-15,"-18.25",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-07-16,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-07-16,"-106.20",Liquides,Cigarette électronique,1,1,debit
+2024-07-16,"-10.90",Bricomarché,Bricolage,1,1,debit
+2024-07-18,"-20.00",Coque Samsung S24,Téléphone,1,1,debit
+2024-07-18,"-30.00",Protection écran Samsung S24,Téléphone,1,1,debit
+2024-07-18,"-39.95",Materiel.net - mini station,Matériel informatique,1,1,debit
+2024-07-18,"-0.60",Nantes - Mouzillon :(,Péage,1,1,debit
+2024-07-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-07-23,"-7.15",Bricomarché,Pelouse/jardin,1,1,debit
+2024-07-24,"-723.00",Lucile - Remboursement impôts,Remboursement,1,1,debit
+2024-07-24,"-1500.00",Helios,Epargne,1,1,debit
+2024-07-26,"-17.80",Café du Passage,Restaurants/Brasserie,1,1,debit
+2024-08-02,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-08-02,"-47.90",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-08-02,"-57.49",Free,Internet,1,1,debit
+2024-08-03,"-4.55",McDo,Restaurants/Brasserie,1,1,debit
+2024-08-04,"-12.40",Crêpes ,Alimentation,1,1,debit
+2024-08-05,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-08-05,"-40.00",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-08-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-08-05,"-306.62",MAM,Compte joint,1,1,debit
+2024-08-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-08-05,"-9.00",SAUR,Eau,1,1,debit
+2024-08-05,"-77.36",EDF,Électricité,1,1,debit
+2024-08-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-08-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-08-05,"-99.10",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-08-05,"-300.00",HELIOS,Epargne,1,1,debit
+2024-08-05,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-08-05,"-7.00",Canal +,Services en ligne,1,1,debit
+2024-08-05,"-9.99",Free Mobile,Téléphone,1,1,debit
+2024-08-05,"-24.99",Free - Location S24,Téléphone,1,1,debit
+2024-08-07,"-9.89",La Poste - Envoi téléphone pro,Courses,1,1,debit
+2024-08-07,"-6.68",Larmor-Plage,Pharmacie,1,1,debit
+2024-08-08,"-260.00",Goodvest,Epargne retraite,1,1,debit
+2024-08-08,"-41.00",Tavarn- Lorient ,Restaurants/Brasserie,1,1,debit
+2024-08-08,"-19.40",Tavarn - Lorient,Bistrot,1,1,debit
+2024-08-08,"-16.60",Soirée Lorient ,Bistrot,1,1,debit
+2024-08-09,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-08-10,"-44.20",Lorient - Saint Gilles AR,Transports en commun,1,1,debit
+2024-08-11,"-17.10",Guinguette Toulhars,Bistrot,1,1,debit
+2024-08-12,"-30.46",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-08-12,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-08-12,"-55.66",Mangas,Anniversaire,1,1,debit
+2024-08-12,"-114.80",Whisky Rhum,Anniversaire,1,1,debit
+2024-08-12,"-33.00",La cabane de Luc,Bistrot,1,1,debit
+2024-08-13,"-24.00",Casino,Bistrot,1,1,debit
+2024-08-13,"-6.35",Épicerie Saint Gilles,Alimentation,1,1,debit
+2024-08-13,"-31.40",FIL,Bistrot,1,1,debit
+2024-08-13,"-40.00",Casino ,Retrait,1,1,debit
+2024-08-14,"-19.00",FIL - Bouquin,Livres,1,1,debit
+2024-08-16,"-18.25",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-08-16,"-35.35",Bricomarché - Jardin,Pelouse/jardin,1,1,debit
+2024-08-17,"-46.50",La Guinguette - St Herblain,Bistrot,1,1,debit
+2024-08-18,"-3.60",Boulangerie ,Alimentation,1,1,debit
+2024-08-19,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-08-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-08-22,"-10.74",7eme vague - Côtes de boeuf,Concerts/spectacles,1,1,debit
+2024-08-23,"-38.77",Bricomarché,Bricolage,1,1,debit
+2024-08-23,"-40.00",CA,Retrait,1,1,debit
+2024-08-24,"-19.10",Win & Wok,Restaurants/Brasserie,1,1,debit
+2024-08-25,"-4.95",Market - Le Pallet,Alimentation,1,1,debit
+2024-08-25,"-14.05",Boulangerie,Alimentation,1,1,debit
+2024-08-28,"-8.99",Bonbonne de gaz,Sodastream,1,1,debit
+2024-08-30,"-21.80",City Vap - Liquides,Cigarette électronique,1,1,debit
+2024-09-02,"-57.49",Free,Internet,1,1,debit
+2024-09-02,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-09-02,"-51.76",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-09-02,"-300.00",HELIOS,Epargne,1,1,debit
+2024-09-04,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-09-05,"-48.42",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-09-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-09-05,"-350.00",MAM,Compte joint,1,1,debit
+2024-09-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-09-05,"-9.00",SAUR,Eau,1,1,debit
+2024-09-05,"-77.36",EDF,Électricité,1,1,debit
+2024-09-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-09-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-09-05,"-98.00",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-09-05,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-09-05,"-7.00",Canal +,Services en ligne,1,1,debit
+2024-09-05,"-12.00",Tickets métro,Note de frais,1,1,debit
+2024-09-05,"-9.99",Free Mobile,Téléphone,1,1,debit
+2024-09-05,"-24.99",Free - Location S24,Téléphone,1,1,debit
+2024-09-05,"-18.51",EDF - Déjeuner midi,Note de frais,1,1,debit
+2024-09-06,"-32.24",Polo,Carburant,1,1,debit
+2024-09-06,"-17.89",Bricomarché,Bricolage,1,1,debit
+2024-09-09,"-18.60",Brico dépot,Bricolage,1,1,debit
+2024-09-09,"-22.99",Chargeur téléphone,Matériel,1,1,debit
+2024-09-10,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-09-10,"-30.46",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-09-10,"-275.00",Goodvest,Epargne retraite,1,1,debit
+2024-09-10,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-09-12,"-7.65",Déjeuner,Restaurants/Brasserie,1,1,debit
+2024-09-12,"-55.40",Leroy Merlin,Aménagements,1,1,debit
+2024-09-16,"-9.90",Weldom,Bricolage,1,1,debit
+2024-09-16,"-18.25",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-09-16,"-10.80",Plum,Epargne,1,1,debit
+2024-09-17,"-56.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-09-18,"-27.99",Plum,Epargne,1,1,debit
+2024-09-18,"-10.80",Tickets métro,Note de frais,1,1,debit
+2024-09-18,"-10.00",Liquides,Cigarette électronique,1,1,debit
+2024-09-18,"-36.00",Pot entre collègues,Bistrot,1,1,debit
+2024-09-18,"-73.50",Pot entre collègues,Bistrot,1,1,debit
+2024-09-19,"-80.00",80 ans KL,Anniversaire,1,1,debit
+2024-09-19,"-4.23",Taxe de séjour,Note de frais,1,1,debit
+2024-09-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-09-22,"-23.10",l'Epicerie,Restaurants/Brasserie,1,1,debit
+2024-09-22,"-5.90",Parking Nantes,Parking,1,1,debit
+2024-09-24,"-4.58",Hyper U - Vallet,Courses,1,1,debit
+2024-09-24,"-24.77",Peugeot 2008,Carburant,1,1,debit
+2024-09-25,"-41.70",Plum,Epargne,1,1,debit
+2024-09-25,"-96.22",Camping Saint-Malo,WE - Hôtels/Camping,1,1,debit
+2024-09-26,"-14.00",Boulangerie,Alimentation,1,1,debit
+2024-09-27,"-43.60",City Vap - Liquides,Cigarette électronique,1,1,debit
+2024-09-28,"-5.30",Saint Malo,Parking,1,1,debit
+2024-10-01,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-10-01,"-51.73",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-10-01,"-57.49",Free,Internet,1,1,debit
+2024-10-01,"-9.99",Free Mobile,Téléphone,1,1,debit
+2024-10-01,"-24.99",Free - Location S24,Téléphone,1,1,debit
+2024-10-01,"-20.00",Jeux à gratter,Jeux,1,1,debit
+2024-10-02,"-39.70",Plum,Epargne,1,1,debit
+2024-10-03,"-8.78",Déjeuner EDF,Restaurants/Brasserie,1,1,debit
+2024-10-03,"-171.89",Anniv Jo - Leclerc Clisson,Anniversaire,1,1,debit
+2024-10-04,"-39.16",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-10-05,"-13.80",Bricomarché,Pelouse/jardin,1,1,debit
+2024-10-05,"-25.44",Bricomarché,Bricolage,1,1,debit
+2024-10-05,"-50.00",Anniv Jo - Arômes divins,Anniversaire,1,1,debit
+2024-10-05,"-100.07",Anniv Jo - Boucherie Le Pallet,Anniversaire,1,1,debit
+2024-10-07,"-48.42",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-10-07,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-10-07,"-270.98",MAM,Compte joint,1,1,debit
+2024-10-07,"-300.00",Abondement,Compte joint,1,1,debit
+2024-10-07,"-9.00",SAUR,Eau,1,1,debit
+2024-10-07,"-77.36",EDF,Électricité,1,1,debit
+2024-10-07,"-59.00",Taxe foncière,Impôts fonciers,1,1,debit
+2024-10-07,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-10-07,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-10-07,"-99.10",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-10-07,"-300.00",Helios,Epargne,1,1,debit
+2024-10-07,"-275.00",Goodvest,Epargne retraite,1,1,debit
+2024-10-07,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-10-07,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-10-07,"-7.00",Canal +,Services en ligne,1,1,debit
+2024-10-09,"-8.06",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-10-09,"-63.84",Plum,Epargne,1,1,debit
+2024-10-10,"-30.46",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-10-10,"-21.00",Bricomarché,Pelouse/jardin,1,1,debit
+2024-10-10,"-15.77",Bricomarché,Bricolage,1,1,debit
+2024-10-11,"-100.00",Anniv Jo - Prestation Lucile,Anniversaire,1,1,debit
+2024-10-14,"-29.90",Polo,Carburant,1,1,debit
+2024-10-15,"-18.25",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-10-16,"-51.21",Plum,Epargne,1,1,debit
+2024-10-18,"-43.60",City Vap,Cigarette électronique,1,1,debit
+2024-10-19,"-39.00",Pizza Groix,WE - Restaurants/Brasserie,1,1,debit
+2024-10-20,"-24.60",Planches apéro - Groix,WE - Restaurants/Brasserie,1,1,debit
+2024-10-22,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-10-23,"-32.51",Plum,Epargne,1,1,debit
+2024-10-23,"-11.75",Boulangerie,Alimentation,1,1,debit
+2024-10-25,"-8.99",Bonbonne de gaz,Sodastream,1,1,debit
+2024-10-26,"-37.80",Clos du Chaillou,Vins,1,1,debit
+2024-10-29,"-31.22",Polo,Carburant,1,1,debit
+2024-10-30,"-21.50",Plum,Epargne,1,1,debit
+2024-10-30,"-41.50",Rêve en tête,Coiffure/soins esthétiques,1,1,debit
+2024-10-30,"-0.86",Hyper U,Alimentation,1,1,debit
+2024-10-31,"-29.97",Boulanger,Courses,1,1,debit
+2024-11-02,"-3.60",Déménagement KL,Péage,1,1,debit
+2024-11-03,"-3.60",Boulangerie,Alimentation,1,1,debit
+2024-11-04,"-42.32",Crédit Agricole,Assurance Habitation,1,1,debit
+2024-11-04,"-9.25",Crédit Agricole,Assurance Protection Juridique,1,1,debit
+2024-11-04,"-51.73",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-11-04,"-57.49",Free,Internet,1,1,debit
+2024-11-04,"-9.99",Free Mobile,Téléphone,1,1,debit
+2024-11-04,"-24.99",Free - Location S24,Téléphone,1,1,debit
+2024-11-04,"-100.99",Sonos Move 2,Matériel,1,1,debit
+2024-11-05,"-48.42",UTWIN,Assurance Prêt Habitation,1,1,debit
+2024-11-05,"-5.44",Assurance PTZ (9 993€),Assurance Prêt Travaux,1,1,debit
+2024-11-05,"-264.23",MAM,Compte joint,1,1,debit
+2024-11-05,"-300.00",Abondement,Compte joint,1,1,debit
+2024-11-05,"-9.00",SAUR,Eau,1,1,debit
+2024-11-05,"-77.36",EDF,Électricité,1,1,debit
+2024-11-05,"-450.00",Crédit Agricole (221 647€),Prêt habitation,1,1,debit
+2024-11-05,"-138.79",Crédit Agricole - PTZ (9 993€),Prêt travaux,1,1,debit
+2024-11-05,"-100.80",TER / TAN - Mensuel,Transports en commun,1,1,debit
+2024-11-05,"-300.00",Helios,Epargne,1,1,debit
+2024-11-05,"-275.00",Goodvest,Epargne retraite,1,1,debit
+2024-11-05,"-50.00",CIC,Epargne salariale,1,1,debit
+2024-11-05,"-125.48",Dons réguliers,Dons,1,1,debit
+2024-11-05,"-7.00",Canal +,Services en ligne,1,1,debit
+2024-11-06,"-16.65",Hyper U,Courses,1,1,debit
+2024-11-06,"-8.79",Plum,Epargne,1,1,debit
+2024-11-09,"-1.20",Boulangerie,Alimentation,1,1,debit
+2024-11-10,"-1.15",Boulangerie,Alimentation,1,1,debit
+2024-11-15,"-18.25",Crédit Agricole,Assurance Accident de la Vie,1,1,debit
+2024-11-12,"-8.47",Crédit Agricole,Assurance de personnes,1,1,debit
+2024-11-12,"-30.46",Crédit Agricole,Assurance Voiture,1,1,debit
+2024-11-21,"-16.00",Crédit Agricole - CB Gold Premium,Cotisation Compte bancaires,1,1,debit
+2024-11-08,"-59.30",Plum,Epargne,1,1,debit
+2024-11-08,"-27.50",Café du passage,Restaurants/Brasserie,1,1,debit
+2024-11-12,"-60.25",Nature & Découverte - Cadeau Arnaud,Noël,1,1,debit
+2024-11-16,"-95.60",Papas Brasseurs,Bières,1,1,debit
+2024-11-14,"-2.94",La Ferme de Chez Nous,Alimentation,1,1,debit
+2024-11-14,"-24.90",Liquides,Cigarette électronique,1,1,debit
+2024-11-18,"-97.80",Bières Gat,Bières,1,1,debit
+2024-11-20,"-48.22",Plum ,Epargne,1,1,debit
+2024-11-22,"-11.90",Librairie Durance,BD,1,1,debit
+2024-11-22,"-77.40",Café du Passage,Restaurants/Brasserie,1,1,debit
+2024-11-27,"-28.82",Plum,Epargne,1,1,debit
