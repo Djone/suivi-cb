@@ -390,16 +390,6 @@
           >
             <div class="transaction-main">
               <div class="transaction-description">
-                <i
-                  class="transaction-icon"
-                  [ngClass]="{
-                    'pi pi-arrow-down text-red-500':
-                      (transaction.amountNumber ?? 0) < 0,
-                    'pi pi-arrow-up text-green-500':
-                      (transaction.amountNumber ?? 0) > 0,
-                  }"
-                >
-                </i>
                 <div class="description-content">
                   <div class="description-text">
                     {{ transaction.description }}
