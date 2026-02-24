@@ -15,13 +15,16 @@
       [filter]="true"
       filterBy="name"
       [showClear]="true"
-      [style]="{ width: '100%' }">
+      [style]="{ width: '100%' }"
+    >
     </p-dropdown>
   </div>
 
   <!-- Lier à une échéance (seulement en création) -->
   <div *ngIf="isNew" class="p-field mb-3">
-    <label for="recurring" class="block mb-2">Lier à une échéance (optionnel)</label>
+    <label for="recurring" class="block mb-2"
+      >Lier à une échéance (optionnel)</label
+    >
     <p-autoComplete
       id="recurring"
       [suggestions]="filteredRecurringTransactions"
@@ -31,7 +34,8 @@
       (onSelect)="onRecurringTransactionSelected($event)"
       [dropdown]="true"
       [forceSelection]="true"
-      [style]="{ width: '100%' }">
+      [style]="{ width: '100%' }"
+    >
     </p-autoComplete>
   </div>
 
@@ -46,7 +50,8 @@
       optionLabel="name"
       optionValue="id"
       placeholder="Sélectionnez un type"
-      [style]="{ width: '100%' }">
+      [style]="{ width: '100%' }"
+    >
     </p-dropdown>
   </div>
 
@@ -64,9 +69,12 @@
       placeholder="Entrez la description"
       [dropdown]="true"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
       <ng-template let-suggestion pTemplate="item">
-        <div>{{ suggestion.label }} <small>({{ suggestion.count }})</small></div>
+        <div>
+          {{ suggestion.label }} <small>({{ suggestion.count }})</small>
+        </div>
       </ng-template>
     </p-autoComplete>
   </div>
@@ -82,7 +90,8 @@
       dateFormat="dd/mm/yy"
       placeholder="Sélectionnez une date"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
     </p-calendar>
   </div>
 
@@ -99,8 +108,24 @@
       [minFractionDigits]="2"
       [maxFractionDigits]="2"
       placeholder="0,00 €"
-      [style]="{ width: '100%' }">
+      [style]="{ width: '100%' }"
+    >
     </p-inputNumber>
+  </div>
+
+  <div class="p-field mb-3">
+    <div class="flex align-items-center gap-2">
+      <p-checkbox
+        inputId="advanceToJointAccount"
+        [binary]="true"
+        [(ngModel)]="data.transaction.advanceToJointAccount"
+        (onChange)="onFieldChange()"
+      >
+      </p-checkbox>
+      <label for="advanceToJointAccount" class="mb-0">
+        Avance compte joint
+      </label>
+    </div>
   </div>
 
   <!-- Sous-catégorie -->
@@ -119,9 +144,13 @@
       filterBy="label,categoryLabel"
       [showClear]="true"
       styleClass="w-full"
-      [appendTo]="'body'">
+      [appendTo]="'body'"
+    >
       <ng-template let-sub pTemplate="item">
-        <div>{{ sub.label }} <small *ngIf="sub.categoryLabel">({{ sub.categoryLabel }})</small></div>
+        <div>
+          {{ sub.label }}
+          <small *ngIf="sub.categoryLabel">({{ sub.categoryLabel }})</small>
+        </div>
       </ng-template>
       <ng-template pTemplate="footer">
         <button
@@ -130,8 +159,8 @@
           label="Créer une sous-catégorie"
           icon="pi pi-plus"
           class="w-full"
-          (click)="openCreateSubCategory($event)">
-        </button>
+          (click)="openCreateSubCategory($event)"
+        ></button>
       </ng-template>
     </p-dropdown>
   </div>
@@ -142,13 +171,15 @@
     label="Annuler"
     icon="pi pi-times"
     (onClick)="cancel()"
-    styleClass="p-button-text p-button-secondary">
+    styleClass="p-button-text p-button-secondary"
+  >
   </p-button>
   <p-button
     [label]="isNew ? 'Créer' : 'Enregistrer'"
     icon="pi pi-check"
     (onClick)="save()"
     [disabled]="!isFormValid"
-    styleClass="p-button-success">
+    styleClass="p-button-success"
+  >
   </p-button>
 </div>

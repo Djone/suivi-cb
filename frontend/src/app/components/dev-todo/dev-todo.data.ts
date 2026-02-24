@@ -35,10 +35,10 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     title: '[Ticket 10] Ameliorations UI/UX',
     description: [
       "[X] Modal Nouvelle transaction : Ajouter la fonctionnalite d'ajout de sous-categories directement dans la liste deroulante des categories",
-      '[ ] Modal Nouvelle transaction : Textebox montant - Avoir la meme coherence que celle de Nouvelle recurrence',
-      '[ ] Modal Nouvelle transaction : liste déroulante catégorie - Avoir la meme coherence que celle de Nouvelle recurrence',
+      '[X] Modal Nouvelle transaction : Textebox montant - Avoir la meme coherence que celle de Nouvelle recurrence',
+      '[X] Modal Nouvelle transaction : liste déroulante catégorie - Avoir la meme coherence que celle de Nouvelle recurrence',
       '[X] Modal Nouvelle transaction : Rendre une autocompletion intelligente pour la textbox "Description"',
-      '[ ] Modal Nouvelle transaction : Avoir la possibilité de taguer une transaction du compte courant comme "Avance compte joint" : attribuer une couleur differente dans le tableau de transactions; lui associer une icone "tick" cliquable dans la liste des transactions; quand on clique sur cette icone, la transaction est automatiquement déversée dans le compte joint et la transaction du compte courant est supprimée',
+      '[X] Modal Nouvelle transaction : Avoir la possibilité de taguer une transaction du compte courant comme "Avance compte joint" : attribuer une couleur differente dans le tableau de transactions; lui associer une icone "tick" cliquable dans la liste des transactions; quand on clique sur cette icone, la transaction est automatiquement déversée dans le compte joint et la transaction du compte courant est supprimée',
     ],
     status: 'in-progress',
     targetVersion: '1.3.0',

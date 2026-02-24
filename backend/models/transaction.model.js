@@ -59,7 +59,8 @@ const Transaction = {
         t.account_id,
         a.name as account_name,
         t.financial_flow_id,
-        t.recurring_transaction_id
+        t.recurring_transaction_id,
+        t.advance_to_joint_account
       FROM transactions t
       LEFT JOIN subcategories sc ON t.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
@@ -79,8 +80,8 @@ const Transaction = {
   // Ajouter une nouvelle transaction
   add: async (transaction) => {
     const query = `
-      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id, advance_to_joint_account)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [
       transaction.date,
@@ -89,7 +90,8 @@ const Transaction = {
       transaction.sub_category_id, // Correction: Utiliser snake_case
       transaction.account_id,      // Correction: Utiliser snake_case
       transaction.financial_flow_id, // Correction: Utiliser snake_case
-      transaction.recurring_transaction_id
+      transaction.recurring_transaction_id,
+      transaction.advance_to_joint_account ? 1 : 0,
     ];
     console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, params);
@@ -100,7 +102,7 @@ const Transaction = {
   update: async (id, transaction) => {
     const query = `
       UPDATE transactions
-      SET date = ?, amount = ?, description = ?, sub_category_id = ?, account_id = ?, financial_flow_id = ?
+      SET date = ?, amount = ?, description = ?, sub_category_id = ?, account_id = ?, financial_flow_id = ?, advance_to_joint_account = ?
       WHERE id = ?
     `;
     const params = [
@@ -110,6 +112,7 @@ const Transaction = {
       transaction.sub_category_id,
       transaction.account_id,
       transaction.financial_flow_id,
+      transaction.advance_to_joint_account ? 1 : 0,
       id
     ];
     console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}" (Transaction)`);

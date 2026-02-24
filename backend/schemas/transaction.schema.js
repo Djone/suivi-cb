@@ -49,6 +49,13 @@ const transactionSchema = Joi.object({
       .allow(null)
       .optional()
       .description('L\'ID de l\'échéance récurrente liée (optionnel).'),
+    advance_to_joint_account: Joi.alternatives()
+      .try(
+        Joi.boolean(),
+        Joi.number().valid(0, 1),
+      )
+      .optional()
+      .description('Indique si la transaction est une avance vers le compte joint.'),
   });
 
 module.exports = { 

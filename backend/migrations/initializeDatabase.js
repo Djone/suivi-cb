@@ -31,9 +31,13 @@ const initializeDatabase = async () => {
         sub_category_id INTEGER NOT NULL,
         account_id INTEGER NOT NULL,
         financial_flow_id INTEGER NOT NULL,
-        recurring_transaction_id INTEGER NULL REFERENCES recurring_transactions(id) ON DELETE SET NULL
+        recurring_transaction_id INTEGER NULL REFERENCES recurring_transactions(id) ON DELETE SET NULL,
+        advance_to_joint_account INTEGER NOT NULL DEFAULT 0
       );
     `);
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN advance_to_joint_account INTEGER NOT NULL DEFAULT 0;`
+    ).catch(() => {});
     console.log('✓ Table "transactions" vérifiée/créée.');
 
     await runQuery(`

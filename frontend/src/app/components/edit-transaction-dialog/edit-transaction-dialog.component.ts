@@ -3,13 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 // PrimeNG Imports
-import { DynamicDialogRef, DynamicDialogConfig, DialogService } from 'primeng/dynamicdialog';
+import {
+  DynamicDialogRef,
+  DynamicDialogConfig,
+  DialogService,
+} from 'primeng/dynamicdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule, DropdownFilterEvent } from 'primeng/dropdown';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { CheckboxModule } from 'primeng/checkbox';
 
 import { Transaction } from '../../models/transaction.model';
 import { SubCategory } from '../../models/sub-category.model';
@@ -37,6 +42,7 @@ import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit
     ButtonModule,
     DropdownModule,
     AutoCompleteModule,
+    CheckboxModule,
   ],
   templateUrl: './edit-transaction-dialog.component.html',
   styleUrls: ['./edit-transaction-dialog.component.css'],
@@ -75,7 +81,9 @@ export class EditTransactionDialogComponent implements OnInit {
     private dialogService: DialogService,
   ) {
     this.isNew = this.data.isNew || false;
-    this.dialogTitle = this.isNew ? 'Nouvelle transaction' : 'Editer la transaction';
+    this.dialogTitle = this.isNew
+      ? 'Nouvelle transaction'
+      : 'Editer la transaction';
   }
 
   ngOnInit(): void {
@@ -84,14 +92,17 @@ export class EditTransactionDialogComponent implements OnInit {
       next: (accounts) => {
         this.accounts = accounts;
       },
-      error: (err) => console.error('Erreur lors du chargement des comptes:', err),
+      error: (err) =>
+        console.error('Erreur lors du chargement des comptes:', err),
     });
 
     // Charger les transactions récurrentes si c'est une nouvelle transaction
     if (this.isNew) {
       this.recurringTransactionService.recurringTransactions$.subscribe({
         next: (recurring) => {
-          this.allRecurringTransactions = recurring.filter((rt) => rt.isActive === 1);
+          this.allRecurringTransactions = recurring.filter(
+            (rt) => rt.isActive === 1,
+          );
         },
       });
     }
@@ -100,7 +111,8 @@ export class EditTransactionDialogComponent implements OnInit {
       next: (transactions) => {
         this.allTransactions = transactions || [];
       },
-      error: (err) => console.error('Erreur lors du chargement des transactions:', err),
+      error: (err) =>
+        console.error('Erreur lors du chargement des transactions:', err),
     });
     this.transactionService.loadTransactions();
 
@@ -110,7 +122,8 @@ export class EditTransactionDialogComponent implements OnInit {
         this.transactionDate = this.data.transaction.date;
       } else {
         const dateValue = this.data.transaction.date;
-        const dateStr = typeof dateValue === 'string' ? dateValue : String(dateValue);
+        const dateStr =
+          typeof dateValue === 'string' ? dateValue : String(dateValue);
         const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
         this.transactionDate = new Date(year, month - 1, day);
       }
@@ -119,15 +132,32 @@ export class EditTransactionDialogComponent implements OnInit {
     }
 
     // Récupérer le subCategoryId (en snake_case ou camelCase)
-    const rawSubCategoryId = this.data.transaction.subCategoryId || this.data.transaction['sub_category_id'];
-    this.selectedSubCategoryId = typeof rawSubCategoryId === 'string' ? parseInt(rawSubCategoryId, 10) : (rawSubCategoryId || 0);
+    const rawSubCategoryId =
+      this.data.transaction.subCategoryId ||
+      this.data.transaction['sub_category_id'];
+    this.selectedSubCategoryId =
+      typeof rawSubCategoryId === 'string'
+        ? parseInt(rawSubCategoryId, 10)
+        : rawSubCategoryId || 0;
 
     // Normaliser le montant pour l'input currency
     const normalizedAmount = this.normalizeAmount(this.data.transaction.amount);
-    this.data.transaction.amount = normalizedAmount ?? 0;
+    if (this.isNew) {
+      this.data.transaction.amount =
+        normalizedAmount === null || normalizedAmount === 0
+          ? null
+          : normalizedAmount;
+    } else {
+      this.data.transaction.amount = normalizedAmount ?? 0;
+    }
+    this.data.transaction.advanceToJointAccount = this.toBoolean(
+      this.data.transaction.advanceToJointAccount,
+    );
 
     // Récupérer le financialFlowId (en snake_case ou camelCase)
-    const financialFlowId = this.data.transaction.financialFlowId || this.data.transaction['financial_flow_id'];
+    const financialFlowId =
+      this.data.transaction.financialFlowId ||
+      this.data.transaction['financial_flow_id'];
 
     // Charger les sous-catégories en fonction du flux financier de la transaction
     this.loadSubcategories(financialFlowId!);
@@ -141,7 +171,8 @@ export class EditTransactionDialogComponent implements OnInit {
           this.hydrateActiveSubCategories();
         }
       },
-      error: (err) => console.error('Erreur lors du chargement des catégories:', err),
+      error: (err) =>
+        console.error('Erreur lors du chargement des catégories:', err),
     });
     this.categoryService.getCategories().subscribe();
   }
@@ -151,7 +182,9 @@ export class EditTransactionDialogComponent implements OnInit {
   filterRecurring(event: any): void {
     const query = (event.query || '').toLowerCase();
     this.filteredRecurringTransactions = this.allRecurringTransactions.filter(
-      (rt) => rt.label.toLowerCase().includes(query) && rt.accountId === this.data.transaction.accountId,
+      (rt) =>
+        rt.label.toLowerCase().includes(query) &&
+        rt.accountId === this.data.transaction.accountId,
     );
   }
 
@@ -160,7 +193,8 @@ export class EditTransactionDialogComponent implements OnInit {
 
     // Pré-remplir le formulaire
     this.data.transaction.description = selectedRecurring.label;
-    this.data.transaction.amount = this.normalizeAmount(selectedRecurring.amount) ?? 0;
+    this.data.transaction.amount =
+      this.normalizeAmount(selectedRecurring.amount) ?? 0;
     this.data.transaction.financialFlowId = selectedRecurring.financialFlowId;
     this.data.transaction.subCategoryId = selectedRecurring.subCategoryId;
     this.data.transaction.recurringTransactionId = selectedRecurring.id;
@@ -184,18 +218,23 @@ export class EditTransactionDialogComponent implements OnInit {
 
     this.updateAvailableCategories(financialFlowId);
 
-    this.subCategoryService.getAllSubCategoriesByFinancialFlowId(financialFlowId).subscribe({
-      next: (data) => {
-        this.subcategories = data;
-        this.hydrateActiveSubCategories();
+    this.subCategoryService
+      .getAllSubCategoriesByFinancialFlowId(financialFlowId)
+      .subscribe({
+        next: (data) => {
+          this.subcategories = data;
+          this.hydrateActiveSubCategories();
 
-        const exists = this.subcategories.find((sc) => sc.id === this.selectedSubCategoryId);
-        if (!exists) {
-          this.selectedSubCategoryId = 0;
-        }
-      },
-      error: (err) => console.error('Erreur lors du chargement des sous-catégories:', err),
-    });
+          const exists = this.subcategories.find(
+            (sc) => sc.id === this.selectedSubCategoryId,
+          );
+          if (!exists) {
+            this.selectedSubCategoryId = 0;
+          }
+        },
+        error: (err) =>
+          console.error('Erreur lors du chargement des sous-catégories:', err),
+      });
   }
 
   onFinancialFlowChange(event: any): void {
@@ -219,7 +258,8 @@ export class EditTransactionDialogComponent implements OnInit {
       return;
     }
 
-    this.filteredDescriptionSuggestions = this.buildDescriptionSuggestions(query);
+    this.filteredDescriptionSuggestions =
+      this.buildDescriptionSuggestions(query);
   }
 
   onDescriptionSelected(event: any): void {
@@ -270,12 +310,16 @@ export class EditTransactionDialogComponent implements OnInit {
       return;
     }
 
-    const normalizedAmount = this.normalizeAmount(this.data.transaction.amount) ?? 0;
+    const normalizedAmount =
+      this.normalizeAmount(this.data.transaction.amount) ?? 0;
 
     let formattedDate: string | Date | undefined = this.data.transaction.date;
     if (this.transactionDate) {
       const year = this.transactionDate.getFullYear();
-      const month = String(this.transactionDate.getMonth() + 1).padStart(2, '0');
+      const month = String(this.transactionDate.getMonth() + 1).padStart(
+        2,
+        '0',
+      );
       const day = String(this.transactionDate.getDate()).padStart(2, '0');
       formattedDate = `${year}-${month}-${day}`;
     }
@@ -285,10 +329,16 @@ export class EditTransactionDialogComponent implements OnInit {
       description: this.data.transaction.description,
       amount: normalizedAmount,
       date: formattedDate,
-      accountId: this.data.transaction.accountId || this.data.transaction['account_id'],
-      financialFlowId: this.data.transaction.financialFlowId || this.data.transaction['financial_flow_id'],
+      accountId:
+        this.data.transaction.accountId || this.data.transaction['account_id'],
+      financialFlowId:
+        this.data.transaction.financialFlowId ||
+        this.data.transaction['financial_flow_id'],
       subCategoryId: this.selectedSubCategoryId,
       recurringTransactionId: this.data.transaction.recurringTransactionId,
+      advanceToJointAccount: this.toBoolean(
+        this.data.transaction.advanceToJointAccount,
+      ),
     };
 
     this.ref.close(updatedTransaction);
@@ -301,7 +351,8 @@ export class EditTransactionDialogComponent implements OnInit {
   private updateAvailableCategories(financialFlowId: number): void {
     this.availableCategories = this.categories.filter((category) => {
       const flowMatches = category.financialFlowId === financialFlowId;
-      const isActive = (category.isActive ?? (category as any)['is_active'] ?? 0) === 1;
+      const isActive =
+        (category.isActive ?? (category as any)['is_active'] ?? 0) === 1;
       return flowMatches && isActive;
     });
   }
@@ -311,7 +362,8 @@ export class EditTransactionDialogComponent implements OnInit {
       this.categories
         .map((cat) => {
           if (typeof cat.id !== 'number') return null;
-          const label = typeof cat.label === 'string' ? cat.label : (cat as any)['name'];
+          const label =
+            typeof cat.label === 'string' ? cat.label : (cat as any)['name'];
           return label ? [cat.id, label] : null;
         })
         .filter((entry): entry is [number, string] => !!entry),
@@ -319,11 +371,14 @@ export class EditTransactionDialogComponent implements OnInit {
 
     this.activeSubCategories = (this.subcategories || []).map((sc) => ({
       ...sc,
-      categoryLabel: sc.categoryLabel || categoryLabelById.get(sc.categoryId) || '',
+      categoryLabel:
+        sc.categoryLabel || categoryLabelById.get(sc.categoryId) || '',
     }));
   }
 
-  private normalizeAmount(value: number | string | null | undefined): number | null {
+  private normalizeAmount(
+    value: number | string | null | undefined,
+  ): number | null {
     if (typeof value === 'number' && !Number.isNaN(value)) {
       return value;
     }
@@ -337,10 +392,15 @@ export class EditTransactionDialogComponent implements OnInit {
   private buildDescriptionSuggestions(query: string): DescriptionSuggestion[] {
     const stats = new Map<string, DescriptionStats>();
     const accountId = this.toNumber(this.data.transaction.accountId);
-    const financialFlowId = this.toNumber(this.data.transaction.financialFlowId);
+    const financialFlowId = this.toNumber(
+      this.data.transaction.financialFlowId,
+    );
 
     for (const transaction of this.allTransactions) {
-      const desc = typeof transaction.description === 'string' ? transaction.description.trim() : '';
+      const desc =
+        typeof transaction.description === 'string'
+          ? transaction.description.trim()
+          : '';
       if (!desc) continue;
 
       const normalized = desc.toLowerCase();
@@ -380,7 +440,9 @@ export class EditTransactionDialogComponent implements OnInit {
         subCategoryId: this.getMostFrequentId(entry.subCounts),
         financialFlowId: this.getMostFrequentId(entry.flowCounts),
       }))
-      .sort((a, b) => (b.count - a.count) || a.label.localeCompare(b.label, 'fr'));
+      .sort(
+        (a, b) => b.count - a.count || a.label.localeCompare(b.label, 'fr'),
+      );
   }
 
   private getMostFrequentId(counts: Map<number, number>): number | undefined {
@@ -406,16 +468,34 @@ export class EditTransactionDialogComponent implements OnInit {
     return null;
   }
 
+  private toBoolean(value: unknown): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      return normalized === '1' || normalized === 'true';
+    }
+    return false;
+  }
+
   openCreateSubCategory(event?: Event): void {
     event?.stopPropagation();
 
     if (!this.data.transaction.financialFlowId) {
-      console.warn('Impossible de créer une sous-catégorie sans type de transaction.');
+      console.warn(
+        'Impossible de créer une sous-catégorie sans type de transaction.',
+      );
       return;
     }
 
     if (this.availableCategories.length === 0) {
-      console.warn('Aucune catégorie active disponible pour ce type de transaction.');
+      console.warn(
+        'Aucune catégorie active disponible pour ce type de transaction.',
+      );
       return;
     }
 
@@ -439,7 +519,9 @@ export class EditTransactionDialogComponent implements OnInit {
       this.subCategoryService.addSubCategory(result).subscribe({
         next: () => {
           this.subCategoryService
-            .getAllSubCategoriesByFinancialFlowId(this.data.transaction.financialFlowId!)
+            .getAllSubCategoriesByFinancialFlowId(
+              this.data.transaction.financialFlowId!,
+            )
             .subscribe({
               next: (list) => {
                 this.subcategories = list;
@@ -456,10 +538,17 @@ export class EditTransactionDialogComponent implements OnInit {
                 }
               },
               error: (err) =>
-                console.error('Erreur lors du rechargement des sous-catégories après création:', err),
+                console.error(
+                  'Erreur lors du rechargement des sous-catégories après création:',
+                  err,
+                ),
             });
         },
-        error: (err) => console.error('Erreur lors de la création de la sous-catégorie:', err),
+        error: (err) =>
+          console.error(
+            'Erreur lors de la création de la sous-catégorie:',
+            err,
+          ),
       });
     });
   }

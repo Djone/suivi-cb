@@ -138,6 +138,31 @@
             </div>
           </div>
         </div>
+
+        <div
+          class="credit-insight"
+          [class.credit-insight-joint]="isJointAccountView()"
+          *ngIf="isCurrentAccountView() || isJointAccountView()"
+        >
+          <div class="credit-insight-head">
+            <span class="credit-insight-title">
+              {{
+                isJointAccountView()
+                  ? "Montant à deduire (avances compte courant)"
+                  : "Avance sur le compte joint"
+              }}
+            </span>
+            <span class="credit-insight-count"
+              >{{ advanceJointGlobalCount }} transaction(s)</span
+            >
+          </div>
+          <div class="credit-insight-amount">
+            {{
+              advanceJointGlobalTotal
+                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
+          </div>
+        </div>
       </div>
     </div>
 
@@ -302,6 +327,18 @@
         >
         </p-multiSelect>
 
+        <!-- Filtre avance compte joint -->
+        <p-dropdown
+          class="flex-1 min-w-[260px]"
+          [options]="advanceJointFilterOptions"
+          [(ngModel)]="filters.advanceJoint"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Filtrer avances compte joint"
+          (onChange)="applyFilter()"
+        >
+        </p-dropdown>
+
         <!-- Filtre par montant -->
         <p-inputGroup class="flex-1 min-w-[150px]">
           <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
@@ -387,12 +424,21 @@
           <div
             *ngFor="let transaction of group.transactions"
             class="transaction-item"
+            [class.transaction-item-advance-joint]="
+              isAdvanceToJointAccount(transaction)
+            "
           >
             <div class="transaction-main">
               <div class="transaction-description">
                 <div class="description-content">
                   <div class="description-text">
                     {{ transaction.description }}
+                    <span
+                      *ngIf="isAdvanceToJointAccount(transaction)"
+                      class="advance-joint-badge"
+                    >
+                      Avance compte joint
+                    </span>
                   </div>
                   <div class="subcategory-text">
                     {{ transaction.subCategoryLabel }}
@@ -411,6 +457,15 @@
               </div>
             </div>
             <div class="transaction-actions">
+              <p-button
+                *ngIf="canTransferAdvanceToJointAccount(transaction)"
+                icon="pi pi-check"
+                (onClick)="transferAdvanceToJointAccount(transaction)"
+                styleClass="p-button-rounded p-button-text p-button-success"
+                pTooltip="Déverser vers le compte joint"
+                tooltipPosition="top"
+              >
+              </p-button>
               <p-button
                 icon="pi pi-pencil"
                 (onClick)="editTransaction(transaction)"
