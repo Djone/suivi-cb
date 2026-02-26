@@ -1,9 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { interval, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-type StepStatus = 'pending' | 'active' | 'completed' | 'skipped';
+import {
+  ReleaseCommand,
+  ReleaseProcessService,
+  ReleaseRun,
+  ReleaseRunRequest,
+  ReleaseStatusResponse,
+} from '../../services/release-process.service';
 
 interface ReleaseStep {
   id: string;
@@ -19,116 +25,294 @@ interface ReleaseStep {
   templateUrl: './release-process.component.html',
   styleUrls: ['./release-process.component.css'],
 })
-export class ReleaseProcessComponent {
+export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public readonly currentDevVersion = environment.version;
   public readonly stableCandidate = this.currentDevVersion.split('-')[0];
+  public readonly reportPath = 'data/release/last-report.json';
 
+  public stableVersion = this.stableCandidate;
   public nextDevVersion = '';
+  public branch = 'master';
+
+  public allowDirty = false;
+  public skipMasterCheck = false;
+  public skipTests = false;
+  public skipBuild = false;
+  public execute = false;
+  public withNasDeploy = false;
+
+  public createReleaseBranch = false;
+  public releaseBranch = '';
+  public branchPrefix = 'release/';
+  public commit = false;
+  public tag = false;
+  public rollbackOnFailure = true;
+
+  public isRunning = false;
+  public backendMessage = '';
+  public errorMessage = '';
+
+  public activeRun: ReleaseRun | null = null;
+  public lastRun: ReleaseRun | null = null;
+  public lastReport: unknown = null;
+
+  private pollingSub: Subscription | null = null;
+
   public readonly steps: ReleaseStep[] = [
     {
       id: 'stabilize',
       title: 'Stabilisation de la version',
-      description: 'Passer de la version de développement à la version stable.',
-      helper: [
-        `${this.currentDevVersion} → ${this.stableCandidate}`,
-        "Modification de l'environment.ts",
-      ].join('\r'),
+      description:
+        'Définir la version stable à livrer, puis la prochaine version de développement.',
+      helper: `${this.currentDevVersion} -> ${this.stableCandidate}`,
     },
     {
-      id: 'build-check',
-      title: 'Validation de la compilation locale',
+      id: 'validate',
+      title: 'Validation avant production',
       description:
-        'Confirme que le build se passe correctement avant de figer les notes.',
-      helper:
-        'Lance `scripts/build-production.bat` et valide le résultat avant de continuer.',
+        'Vérifier la qualité sans modifier l’état courant du projet.',
+      helper: 'Commande recommandée: dry-run',
     },
     {
-      id: 'production-ready',
-      title: 'Préparation pour la production',
+      id: 'prepare',
+      title: 'Préparation de release',
       description:
-        'Met à jour les fichiers requis (package.json, environment, changelog, etc.).',
-      helper: [
-        '1) package.json + environment.prod.ts : version, URL, drapeaux prod.',
-        '2) Changelog + release notes : date, fonctionnalités, impacts.',
-        '3) Avant merge : rebase/merge master, vérifier que git diff est propre. (Lancer check-master-status.ps1)',
-      ].join('\n'),
+        'Mettre à jour les versions (package + environnements) et options Git si nécessaire.',
+      helper: 'Commande recommandée: prepare',
     },
     {
-      id: 'next-dev',
-      title: 'Planification de la prochaine version',
+      id: 'deploy',
+      title: 'Déploiement',
       description:
-        'Saisis le numéro de la prochaine version de développement pour repartir sur un nouveau cycle.',
-      helper:
-        'Respecte le SemVer : MAJEUR.MINOR.PATCH-dev (ex: 1.2.0-dev, 1.1.1-dev).',
+        'Déployer en réel uniquement avec execute coché (sinon simulation).',
+      helper: 'Commande recommandée: deploy',
     },
   ];
 
-  public readonly statuses: StepStatus[] = this.steps.map((_, index) =>
-    index === 0 ? 'active' : 'pending',
-  );
+  constructor(private readonly releaseService: ReleaseProcessService) {}
 
-  public currentStepIndex = 0;
-  public finished = false;
-
-  completeCurrentStep(): void {
-    if (this.isNextDevStep() && !this.nextDevVersion.trim()) {
-      alert(
-        'Renseigne la prochaine version de développement avant de valider.',
-      );
-      return;
-    }
-
-    this.statuses[this.currentStepIndex] = 'completed';
-    this.advanceToNextStep();
+  ngOnInit(): void {
+    this.refreshStatus();
+    this.startPolling();
   }
 
-  skipCurrentStep(): void {
-    this.statuses[this.currentStepIndex] = 'skipped';
-    this.advanceToNextStep();
+  ngOnDestroy(): void {
+    this.stopPolling();
   }
 
-  goBack(): void {
-    if (this.currentStepIndex === 0) {
+  get dryRunCommand(): string {
+    return `npm run release:dry-run -- --branch=${this.branch}`;
+  }
+
+  get prepareCommand(): string {
+    const next = this.nextDevVersion.trim() || '<next-dev-version>';
+    const branchCmd = this.createReleaseBranch
+      ? ` --create-release-branch --branch-prefix=${this.branchPrefix}`
+      : '';
+    const releaseBranch = this.releaseBranch.trim()
+      ? ` --release-branch=${this.releaseBranch.trim()}`
+      : '';
+    const commitCmd = this.commit ? ' --commit' : '';
+    const tagCmd = this.tag ? ' --tag' : '';
+    const rollbackCmd = this.rollbackOnFailure ? ' --rollback-on-failure' : '';
+
+    return `npm run release:prepare -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${branchCmd}${releaseBranch}${commitCmd}${tagCmd}${rollbackCmd}`;
+  }
+
+  get deployCommand(): string {
+    const executeFlag = this.execute ? ' --execute' : '';
+    const withNas = this.withNasDeploy ? ' --with-nas-deploy' : '';
+    const skipBuild = this.skipBuild ? ' --skip-build' : '';
+    return `npm run release:deploy -- --branch=${this.branch}${executeFlag}${withNas}${skipBuild}`;
+  }
+
+  get fullCommand(): string {
+    const next = this.nextDevVersion.trim() || '<next-dev-version>';
+    const executeFlag = this.execute ? ' --execute' : '';
+    const withNas = this.withNasDeploy ? ' --with-nas-deploy' : '';
+    const branchCmd = this.createReleaseBranch
+      ? ` --create-release-branch --branch-prefix=${this.branchPrefix}`
+      : '';
+    const releaseBranch = this.releaseBranch.trim()
+      ? ` --release-branch=${this.releaseBranch.trim()}`
+      : '';
+    const commitCmd = this.commit ? ' --commit' : '';
+    const tagCmd = this.tag ? ' --tag' : '';
+    const rollbackCmd = this.rollbackOnFailure ? ' --rollback-on-failure' : '';
+
+    return `npm run release:full -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${executeFlag}${withNas}${branchCmd}${releaseBranch}${commitCmd}${tagCmd}${rollbackCmd}`;
+  }
+
+  runDryRun(): void {
+    this.runCommand('dry-run');
+  }
+
+  runPrepare(): void {
+    if (!this.validatePrepareInputs()) {
       return;
     }
-    if (this.finished) {
-      this.finished = false;
+    this.runCommand('prepare');
+  }
+
+  runDeploy(): void {
+    this.runCommand('deploy');
+  }
+
+  runFull(): void {
+    if (!this.validatePrepareInputs()) {
+      return;
     }
-    const currentStatus = this.statuses[this.currentStepIndex];
-    if (currentStatus === 'completed' || currentStatus === 'skipped') {
-      this.statuses[this.currentStepIndex] = 'pending';
+    this.runCommand('full');
+  }
+
+  runRollback(): void {
+    if (!confirm('Confirmer le rollback vers le dernier backup de versions ?')) {
+      return;
     }
-    this.currentStepIndex -= 1;
-    this.statuses[this.currentStepIndex] = 'active';
+    this.runCommand('rollback');
   }
 
   resetProcess(): void {
-    this.statuses.forEach((_, index) => {
-      this.statuses[index] = index === 0 ? 'active' : 'pending';
-    });
-    this.currentStepIndex = 0;
-    this.finished = false;
+    this.stableVersion = this.stableCandidate;
     this.nextDevVersion = '';
+    this.branch = 'master';
+
+    this.allowDirty = false;
+    this.skipMasterCheck = false;
+    this.skipTests = false;
+    this.skipBuild = false;
+    this.execute = false;
+    this.withNasDeploy = false;
+
+    this.createReleaseBranch = false;
+    this.releaseBranch = '';
+    this.branchPrefix = 'release/';
+    this.commit = false;
+    this.tag = false;
+    this.rollbackOnFailure = true;
+
+    this.errorMessage = '';
+    this.backendMessage = '';
   }
 
-  private advanceToNextStep(): void {
-    if (this.currentStepIndex === this.steps.length - 1) {
-      this.finished = true;
+  getLogLines(): string[] {
+    const run = this.activeRun ?? this.lastRun;
+    if (!run) {
+      return [];
+    }
+    return run.logs.map((log) => `[${log.source}] ${log.line}`);
+  }
+
+  getReportPreview(): string {
+    if (!this.lastReport) {
+      return 'Aucun rapport disponible.';
+    }
+    try {
+      return JSON.stringify(this.lastReport, null, 2);
+    } catch {
+      return 'Rapport non lisible.';
+    }
+  }
+
+  getLastStatusLabel(): string {
+    if (!this.lastRun) {
+      return 'Aucune exécution encore lancée.';
+    }
+
+    if (this.lastRun.status === 'passed') {
+      return `Dernière exécution réussie (code ${this.lastRun.exitCode}).`;
+    }
+
+    if (this.lastRun.status === 'failed') {
+      return `Dernière exécution en échec (code ${this.lastRun.exitCode}).`;
+    }
+
+    return 'Exécution en cours.';
+  }
+
+  private runCommand(command: ReleaseCommand): void {
+    if (this.isRunning) {
       return;
     }
-    this.currentStepIndex += 1;
-    this.statuses[this.currentStepIndex] = 'active';
+
+    this.errorMessage = '';
+    this.backendMessage = '';
+
+    const payload: ReleaseRunRequest = {
+      command,
+      stable: this.stableVersion.trim() || undefined,
+      next: this.nextDevVersion.trim() || undefined,
+      branch: this.branch.trim() || 'master',
+      allowDirty: this.allowDirty,
+      skipMasterCheck: this.skipMasterCheck,
+      skipTests: this.skipTests,
+      skipBuild: this.skipBuild,
+      execute: this.execute,
+      withNasDeploy: this.withNasDeploy,
+      createReleaseBranch: this.createReleaseBranch,
+      releaseBranch: this.releaseBranch.trim() || undefined,
+      branchPrefix: this.branchPrefix.trim() || 'release/',
+      commit: this.commit,
+      tag: this.tag,
+      rollbackOnFailure: this.rollbackOnFailure,
+    };
+
+    if (this.execute && !confirm('Confirmer l’exécution réelle (pas en simulation) ?')) {
+      return;
+    }
+
+    this.releaseService.run(payload).subscribe({
+      next: (response) => {
+        this.backendMessage = response.message;
+        this.activeRun = response.run;
+        this.isRunning = true;
+        this.refreshStatus();
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.message ?? 'Erreur lors du lancement de la commande release.';
+      },
+    });
   }
 
-  isCurrentStatus(status: StepStatus): boolean {
-    return this.statuses[this.currentStepIndex] === status;
+  private refreshStatus(): void {
+    this.releaseService.getStatus().subscribe({
+      next: (status) => this.applyStatus(status),
+      error: () => {
+        this.errorMessage =
+          'Impossible de récupérer le statut release. Vérifie que le backend est démarré.';
+      },
+    });
   }
 
-  isFinished(): boolean {
-    return this.finished;
+  private applyStatus(status: ReleaseStatusResponse): void {
+    this.isRunning = status.running;
+    this.activeRun = status.activeRun;
+    this.lastRun = status.lastRun;
+    this.lastReport = status.lastReport;
   }
 
-  isNextDevStep(): boolean {
-    return this.steps[this.currentStepIndex]?.id === 'next-dev';
+  private startPolling(): void {
+    this.stopPolling();
+    this.pollingSub = interval(2000).subscribe(() => {
+      this.refreshStatus();
+    });
+  }
+
+  private stopPolling(): void {
+    this.pollingSub?.unsubscribe();
+    this.pollingSub = null;
+  }
+
+  private validatePrepareInputs(): boolean {
+    if (!this.stableVersion.trim()) {
+      this.errorMessage = 'Version stable obligatoire (ex: 1.3.0).';
+      return false;
+    }
+    if (!this.nextDevVersion.trim()) {
+      this.errorMessage = 'Prochaine version dev obligatoire (ex: 1.4.0-dev).';
+      return false;
+    }
+    return true;
   }
 }

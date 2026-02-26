@@ -2,117 +2,157 @@
   <header class="process-header">
     <div>
       <p class="eyebrow">Clôture de version</p>
-      <h1>Timeline de mise en production</h1>
+      <h1>Assistant de release</h1>
       <p class="subtitle">
-        Avance étape par étape, valide ou ignore chaque action, et reviens en
-        arrière quand tu veux.
+        Cette page permet de lancer les commandes automatiquement. Les étapes en bas sont des repères visuels facultatifs.
       </p>
     </div>
     <button class="reset-btn" type="button" (click)="resetProcess()">
-      Réinitialiser le processus
+      Réinitialiser les options
     </button>
   </header>
 
-  <ol class="timeline">
-    <li
-      *ngFor="let step of steps; index as idx"
-      class="timeline-step"
-      [ngClass]="statuses[idx]"
-    >
-      <div class="timeline-index">{{ idx + 1 }}</div>
-      <div class="timeline-body">
-        <div class="timeline-headline">
-          <h2>{{ step.title }}</h2>
-          <span class="status-chip" [ngClass]="statuses[idx]">
-            {{ statuses[idx] }}
-          </span>
-        </div>
-        <p class="timeline-description">{{ step.description }}</p>
-        <p class="timeline-helper">{{ step.helper }}</p>
+  <section class="guide-panel">
+    <h2>Parcours recommandé</h2>
+    <ol>
+      <li><strong>1. dry-run</strong> pour vérifier (Git + tests) sans modifier la release.</li>
+      <li><strong>2. prepare</strong> pour clôturer la version actuelle et préparer la suivante.</li>
+      <li><strong>3. deploy</strong> pour la mise en production (avec <code>execute</code> coché).</li>
+    </ol>
+    <p class="note-helper">
+      Option rapide: <strong>full</strong> = prepare + deploy en une seule exécution.
+    </p>
+  </section>
 
-        <ng-container [ngSwitch]="step.id">
-          <div *ngSwitchCase="'stabilize'" class="step-card">
-            <p>
-              Version actuelle : <strong>{{ currentDevVersion }}</strong>
-            </p>
-            <p>
-              Version stabilisée : <strong>{{ stableCandidate }}</strong>
-            </p>
-            <small
-              >Une fois validée, les release notes pointeront vers cette
-              version.</small
-            >
-          </div>
+  <section class="automation-panel">
+    <h2>Actions exécutables</h2>
+    <div class="grid">
+      <label>
+        Version stable
+        <input class="text-input" [(ngModel)]="stableVersion" placeholder="1.3.0" />
+      </label>
+      <label>
+        Prochaine version dev
+        <input class="text-input" [(ngModel)]="nextDevVersion" placeholder="1.4.0-dev" />
+      </label>
+      <label>
+        Branche cible
+        <input class="text-input" [(ngModel)]="branch" placeholder="master" />
+      </label>
+    </div>
 
-          <div *ngSwitchCase="'build-check'" class="step-card">
-            <p>
-              Exécute la compilation locale (ex. `npm run build`) et vérifie
-              qu'elle se termine correctement.
-            </p>
-            <small
-              >Tu peux ignorer cette étape si tu viens de lancer un build
-              réussi.</small
-            >
-          </div>
+    <h3>Options de vérification / déploiement</h3>
+    <div class="flag-grid">
+      <label><input type="checkbox" [(ngModel)]="allowDirty" /> allow-dirty</label>
+      <label><input type="checkbox" [(ngModel)]="skipMasterCheck" /> skip-master-check</label>
+      <label><input type="checkbox" [(ngModel)]="skipTests" /> skip-tests</label>
+      <label><input type="checkbox" [(ngModel)]="skipBuild" /> skip-build</label>
+      <label><input type="checkbox" [(ngModel)]="execute" /> execute (actions réelles)</label>
+      <label><input type="checkbox" [(ngModel)]="withNasDeploy" /> with-nas-deploy</label>
+    </div>
 
-          <div *ngSwitchCase="'production-ready'" class="step-card">
-            <ul>
-              <li>Met à jour package.json / environment.prod.ts</li>
-              <li>Prépare le changelog et les release notes</li>
-              <li>Vérifie la branche master avant merge</li>
-            </ul>
-          </div>
+    <h3>Options Git (facultatif)</h3>
+    <div class="flag-grid">
+      <label><input type="checkbox" [(ngModel)]="createReleaseBranch" /> create-release-branch</label>
+      <label><input type="checkbox" [(ngModel)]="commit" /> commit</label>
+      <label><input type="checkbox" [(ngModel)]="tag" /> tag (vX.Y.Z)</label>
+      <label><input type="checkbox" [(ngModel)]="rollbackOnFailure" /> rollback-on-failure</label>
+    </div>
 
-          <div *ngSwitchCase="'next-dev'" class="step-card">
-            <label class="input-label" for="nextVersion"
-              >Prochaine version de dev</label
-            >
-            <input
-              id="nextVersion"
-              class="text-input"
-              placeholder="Ex: 1.2.0-dev"
-              [(ngModel)]="nextDevVersion"
-            />
-            <small
-              >Ce numéro sera utilisé pour préparer le prochain cycle de
-              travail.</small
-            >
-          </div>
-        </ng-container>
+    <div class="grid git-grid">
+      <label>
+        Nom de branche release (optionnel)
+        <input class="text-input" [(ngModel)]="releaseBranch" placeholder="release/1.3.0" />
+      </label>
+      <label>
+        Préfixe branche auto
+        <input class="text-input" [(ngModel)]="branchPrefix" placeholder="release/" />
+      </label>
+    </div>
 
-        <div *ngIf="currentStepIndex === idx && !finished" class="step-actions">
-          <button
-            type="button"
-            class="primary"
-            (click)="completeCurrentStep()"
-          >
-            Valider l'étape
-          </button>
-          <button type="button" class="ghost" (click)="skipCurrentStep()">
-            Ignorer
-          </button>
-          <button
-            type="button"
-            class="ghost"
-            [disabled]="idx === 0"
-            (click)="goBack()"
-          >
-            Revenir en arrière
-          </button>
-        </div>
+    <div class="button-row">
+      <button type="button" class="primary" [disabled]="isRunning" (click)="runDryRun()">Lancer dry-run</button>
+      <button type="button" class="primary" [disabled]="isRunning" (click)="runPrepare()">Lancer prepare</button>
+      <button type="button" class="primary" [disabled]="isRunning" (click)="runDeploy()">Lancer deploy</button>
+      <button type="button" class="primary" [disabled]="isRunning" (click)="runFull()">Lancer full</button>
+      <button type="button" class="ghost rollback-btn" [disabled]="isRunning" (click)="runRollback()">Rollback manuel</button>
+    </div>
+
+    <div class="command-preview">
+      <p><strong>Commande dry-run:</strong> <code>{{ dryRunCommand }}</code></p>
+      <p><strong>Commande prepare:</strong> <code>{{ prepareCommand }}</code></p>
+      <p><strong>Commande deploy:</strong> <code>{{ deployCommand }}</code></p>
+      <p><strong>Commande full:</strong> <code>{{ fullCommand }}</code></p>
+    </div>
+
+    <p class="status-line" *ngIf="isRunning">Statut: commande en cours d'exécution...</p>
+    <p class="status-line ok" *ngIf="!isRunning">{{ getLastStatusLabel() }}</p>
+    <p class="status-line" *ngIf="backendMessage">{{ backendMessage }}</p>
+    <p class="status-line error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </section>
+
+  <section class="notes-panel">
+    <h3>Notes (définitions simples)</h3>
+    <div class="notes-grid">
+      <div class="note-card">
+        <h4>Modes d'exécution</h4>
+        <ul>
+          <li><strong>dry-run</strong>: vérifie sans modifier.</li>
+          <li><strong>prepare</strong>: met à jour les versions.</li>
+          <li><strong>deploy</strong>: déploie (si execute est coché).</li>
+          <li><strong>full</strong>: prepare + deploy.</li>
+        </ul>
       </div>
-    </li>
-  </ol>
+      <div class="note-card">
+        <h4>Options de contrôle</h4>
+        <ul>
+          <li><strong>allow-dirty</strong>: autorise les fichiers non commit.</li>
+          <li><strong>skip-master-check</strong>: ignore le contrôle de synchro master.</li>
+          <li><strong>skip-tests</strong>: ignore les tests.</li>
+          <li><strong>skip-build</strong>: ignore le build pendant deploy.</li>
+          <li><strong>execute</strong>: lance les actions réelles (sinon simulation).</li>
+        </ul>
+      </div>
+      <div class="note-card">
+        <h4>Git et rollback</h4>
+        <ul>
+          <li><strong>create-release-branch</strong>: crée une branche release.</li>
+          <li><strong>commit</strong>: commit automatique des fichiers de version.</li>
+          <li><strong>tag</strong>: crée le tag <code>vX.Y.Z</code>.</li>
+          <li><strong>rollback-on-failure</strong>: restaure automatiquement en cas d'erreur.</li>
+          <li><strong>Rollback manuel</strong>: restaure depuis le dernier backup.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-  <div *ngIf="finished" class="process-complete">
-    <h3>Processus terminé</h3>
-    <p>
-      La version {{ stableCandidate }} est prête et la prochaine version dev
-      sera {{ nextDevVersion || 'à définir' }}.
+  <section class="timeline-area">
+    <h3>Repères visuels (facultatif)</h3>
+    <p class="timeline-caption">
+      Ces étapes sont un guide de lecture. Elles n'exécutent aucune action à elles seules.
     </p>
-    <p>
-      Merge la branche de développement sur master, pousse la version, puis
-      relance un cycle quand tu es prêt.
-    </p>
-  </div>
+
+    <ol class="timeline">
+      <li *ngFor="let step of steps; index as idx" class="timeline-step">
+        <div class="timeline-index">{{ idx + 1 }}</div>
+        <div class="timeline-body">
+          <div class="timeline-headline">
+            <h4>{{ step.title }}</h4>
+            <span class="status-chip">Repère</span>
+          </div>
+          <p class="timeline-description">{{ step.description }}</p>
+          <p class="timeline-helper">{{ step.helper }}</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="run-output">
+    <h3>Logs (temps réel)</h3>
+    <pre class="command-block logs"><code>{{ getLogLines().join('\n') || 'Aucun log pour le moment.' }}</code></pre>
+
+    <h3>Dernier rapport JSON</h3>
+    <p class="timeline-caption">Fichier: <code>{{ reportPath }}</code></p>
+    <pre class="command-block logs"><code>{{ getReportPreview() }}</code></pre>
+  </section>
 </section>

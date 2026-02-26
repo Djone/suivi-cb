@@ -51,7 +51,12 @@
     "test:frontend:coverage": "cd frontend && npm test -- --code-coverage --watch=false --browsers=ChromeHeadless",
     "version": "node scripts/gen-version.js && git add frontend/src/app/version.ts",
     "build": "NODE_ENV=production ng build --configuration production",
-    "build:dev": "NODE_ENV=development ng build"
+    "build:dev": "NODE_ENV=development ng build",
+    "release:dry-run": "node scripts/release-orchestrator.js dry-run",
+    "release:prepare": "node scripts/release-orchestrator.js prepare",
+    "release:deploy": "node scripts/release-orchestrator.js deploy",
+    "release:full": "node scripts/release-orchestrator.js full",
+    "release:rollback": "node scripts/release-orchestrator.js rollback"
   },
   "keywords": [],
   "author": "",
