@@ -148,13 +148,19 @@
             <span class="credit-insight-title">
               {{
                 isJointAccountView()
-                  ? "Montant à deduire (avances compte courant)"
+                  ? "Montant à deduire en attente"
                   : "Avance sur le compte joint"
               }}
             </span>
-            <span class="credit-insight-count"
-              >{{ advanceJointGlobalCount }} transaction(s)</span
+            <button
+              type="button"
+              class="credit-insight-count credit-insight-count-button"
+              (click)="filterToAdvanceJointTransactions()"
+              pTooltip="Afficher uniquement les transactions d'avance compte joint"
+              tooltipPosition="top"
             >
+              {{ advanceJointGlobalCount }} transaction(s)
+            </button>
           </div>
           <div class="credit-insight-amount">
             {{

@@ -180,6 +180,19 @@ h3 {
   padding: 0.12rem 0.55rem;
 }
 
+.credit-insight-count-button {
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.credit-insight-count-button:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.32);
+}
+
 .credit-insight-amount {
   margin-top: 0.35rem;
   font-size: 1.6rem;

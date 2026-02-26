@@ -664,6 +664,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.applyFiltersAndSort();
   }
 
+  filterToAdvanceJointTransactions(): void {
+    this.filters.advanceJoint = 'only';
+    this.applyFilter();
+  }
+
   // Obtenir le nom de la sous-catégorie
   // Obtenir le nom de la sous-categorie
   getSubCategoryName(subCategoryId: number | string | null): string {
