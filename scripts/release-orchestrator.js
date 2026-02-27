@@ -141,6 +141,25 @@ function runCommand(cmd, opts = {}) {
   };
 }
 
+function runCommandLive(cmd, opts = {}) {
+  console.log(`[release] $ ${cmd}`);
+  const result = spawnSync(cmd, {
+    shell: true,
+    cwd: ROOT,
+    encoding: 'utf8',
+    env: { ...process.env, ...(opts.env || {}) },
+    stdio: 'inherit',
+  });
+
+  return {
+    ok: result.status === 0,
+    code: result.status,
+    stdout: '',
+    stderr: '',
+    cmd,
+  };
+}
+
 function toDurationMs(start) {
   return Date.now() - start;
 }
@@ -328,7 +347,8 @@ function verify(report, options) {
     return;
   }
 
-  const test = runCommand('npm test', {
+  console.log('[release] Step: verify-tests');
+  const test = runCommandLive('npm test', {
     env: {
       BROWSERSLIST_IGNORE_OLD_DATA: 'true',
       BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA: 'true',
@@ -448,11 +468,12 @@ function buildAndDeploy(report, options) {
   } else if (!options.execute) {
     skipStep(report, 'deploy-build', 'dry-run (use --execute to run build)');
   } else {
+    console.log('[release] Step: deploy-build');
     const buildCmd = process.platform === 'win32'
       ? 'cmd /c scripts\\build-production.bat'
       : 'bash scripts/build-production.sh';
 
-    const build = runCommand(buildCmd);
+    const build = runCommandLive(buildCmd);
     if (!build.ok) {
       failStep(report, 'deploy-build', start, build.stderr || build.stdout || 'build failed');
       throw new Error('Build failed.');
