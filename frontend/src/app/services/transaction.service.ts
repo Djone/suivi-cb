@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 import { Transaction } from '../models/transaction.model';
 import { FilterManagerService } from './filter-manager.service';
 import { environment } from '../../environments/environment';
@@ -31,12 +31,11 @@ export class TransactionService {
     });
 
     return this.http.get<Transaction[]>(this.apiUrl, { params }).pipe(
-      tap((transactions) => {
-        // Convertir les clés en camelCase
-        const camelCaseTransactions = transactions.map(
-          (t) => humps.camelizeKeys(t) as Transaction,
-        );
-        this.transactionsSubject.next(camelCaseTransactions); // Met à jour les transactions
+      map((transactions) =>
+        transactions.map((t) => humps.camelizeKeys(t) as Transaction),
+      ),
+      tap((camelCaseTransactions) => {
+        this.transactionsSubject.next(camelCaseTransactions);
       }),
       catchError((err) => {
         console.error(

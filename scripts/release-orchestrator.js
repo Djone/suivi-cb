@@ -13,6 +13,7 @@ const GEN_VERSION_FILE = path.join(ROOT, 'scripts', 'gen-version.js');
 
 const SEMVER_STABLE = /^\d+\.\d+\.\d+$/;
 const SEMVER_DEV = /^\d+\.\d+\.\d+-dev(?:\.\d+)?$/;
+const COMMAND_TIMEOUT_MS = 10 * 60 * 1000;
 
 const VERSION_FILES = [
   ROOT_PACKAGE_FILE,
@@ -130,14 +131,17 @@ function runCommand(cmd, opts = {}) {
     cwd: ROOT,
     encoding: 'utf8',
     env: { ...process.env, ...(opts.env || {}) },
+    timeout: opts.timeoutMs || COMMAND_TIMEOUT_MS,
   });
 
+  const timedOut = Boolean(result.error && result.error.code === 'ETIMEDOUT');
   return {
-    ok: result.status === 0,
+    ok: result.status === 0 && !timedOut,
     code: result.status,
     stdout: result.stdout || '',
-    stderr: result.stderr || '',
+    stderr: (result.stderr || '') + (timedOut ? '\nCommand timed out.' : ''),
     cmd,
+    timedOut,
   };
 }
 
@@ -149,14 +153,17 @@ function runCommandLive(cmd, opts = {}) {
     encoding: 'utf8',
     env: { ...process.env, ...(opts.env || {}) },
     stdio: 'inherit',
+    timeout: opts.timeoutMs || COMMAND_TIMEOUT_MS,
   });
 
+  const timedOut = Boolean(result.error && result.error.code === 'ETIMEDOUT');
   return {
-    ok: result.status === 0,
+    ok: result.status === 0 && !timedOut,
     code: result.status,
     stdout: '',
-    stderr: '',
+    stderr: timedOut ? 'Command timed out.' : '',
     cmd,
+    timedOut,
   };
 }
 
@@ -355,7 +362,10 @@ function verify(report, options) {
     },
   });
   if (!test.ok) {
-    failStep(report, 'verify-tests', start, test.stderr || test.stdout || 'tests failed');
+    const failureReason = test.timedOut
+      ? `Tests command timed out after ${Math.round(COMMAND_TIMEOUT_MS / 60000)} minutes.`
+      : test.stderr || test.stdout || 'tests failed';
+    failStep(report, 'verify-tests', start, failureReason);
     throw new Error('Tests failed.');
   }
 

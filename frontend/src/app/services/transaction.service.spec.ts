@@ -1,6 +1,8 @@
-// frontend/src/app/services/transaction.service.spec.ts
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { TransactionService } from './transaction.service';
 import { FilterManagerService } from './filter-manager.service';
 import { Transaction } from '../models/transaction.model';
@@ -13,7 +15,7 @@ describe('TransactionService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [TransactionService, FilterManagerService]
+      providers: [TransactionService, FilterManagerService],
     });
     service = TestBed.inject(TransactionService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -25,7 +27,7 @@ describe('TransactionService', () => {
   });
 
   describe('getTransactions', () => {
-    it('devrait récupérer les transactions et les convertir en camelCase', (done) => {
+    it('devrait recuperer les transactions et les convertir en camelCase', (done) => {
       const mockTransactions = [
         {
           id: 1,
@@ -34,14 +36,14 @@ describe('TransactionService', () => {
           date: '2024-01-01',
           account_id: 1,
           financial_flow_id: 1,
-          sub_category_id: 1
-        }
+          sub_category_id: 1,
+        },
       ];
 
       service.getTransactions().subscribe((transactions) => {
         expect(transactions).toBeDefined();
         expect(transactions.length).toBe(1);
-        expect(transactions[0].accountId).toBe(1); // Vérifie la conversion en camelCase
+        expect(transactions[0].accountId).toBe(1);
         expect(transactions[0].financialFlowId).toBe(1);
         expect(transactions[0].subCategoryId).toBe(1);
         done();
@@ -58,31 +60,38 @@ describe('TransactionService', () => {
       service.getTransactions().subscribe();
 
       const req = httpMock.expectOne((request) => {
-        return request.url === 'http://localhost:3000/api/transactions' &&
-               request.params.get('account_id') === '1' &&
-               request.params.get('financial_flow_id') === '2';
+        return (
+          request.url === 'http://localhost:3000/api/transactions' &&
+          request.params.get('account_id') === '1' &&
+          request.params.get('financial_flow_id') === '2'
+        );
       });
       expect(req.request.method).toBe('GET');
       req.flush([]);
       done();
     });
 
-    it('devrait gérer les erreurs HTTP', (done) => {
+    it('devrait gerer les erreurs HTTP', (done) => {
       service.getTransactions().subscribe({
-        next: () => fail('devrait échouer'),
+        next: () => fail('devrait echouer'),
         error: (error) => {
           expect(error).toBeDefined();
           done();
-        }
+        },
       });
 
       const req = httpMock.expectOne('http://localhost:3000/api/transactions');
-      req.error(new ProgressEvent('error'), { status: 500, statusText: 'Server Error' });
+      req.error(new ProgressEvent('error'), {
+        status: 500,
+        statusText: 'Server Error',
+      });
     });
   });
 
   describe('addTransaction', () => {
     it('devrait ajouter une transaction et convertir en snake_case', (done) => {
+      spyOn(service, 'loadTransactions').and.stub();
+
       const newTransaction: Transaction = {
         description: 'New Transaction',
         amount: 150,
@@ -90,7 +99,7 @@ describe('TransactionService', () => {
         accountId: 1,
         financialFlowId: 1,
         subCategoryId: 1,
-        id: null
+        id: null,
       };
 
       service.addTransaction(newTransaction).subscribe(() => {
@@ -99,8 +108,6 @@ describe('TransactionService', () => {
 
       const req = httpMock.expectOne('http://localhost:3000/api/transactions');
       expect(req.request.method).toBe('POST');
-
-      // Vérifie que les données envoyées sont en snake_case
       expect(req.request.body.account_id).toBe(1);
       expect(req.request.body.financial_flow_id).toBe(1);
       expect(req.request.body.sub_category_id).toBe(1);
@@ -110,11 +117,13 @@ describe('TransactionService', () => {
   });
 
   describe('updateTransaction', () => {
-    it('devrait mettre à jour une transaction', (done) => {
+    it('devrait mettre a jour une transaction', (done) => {
+      spyOn(service, 'loadTransactions').and.stub();
+
       const id = 1;
       const updates: Partial<Transaction> = {
         description: 'Updated',
-        amount: 200
+        amount: 200,
       };
 
       service.updateTransaction(id, updates).subscribe(() => {
@@ -129,6 +138,8 @@ describe('TransactionService', () => {
 
   describe('deleteTransaction', () => {
     it('devrait supprimer une transaction', (done) => {
+      spyOn(service, 'loadTransactions').and.stub();
+
       service.deleteTransaction(1).subscribe(() => {
         done();
       });
@@ -140,7 +151,7 @@ describe('TransactionService', () => {
   });
 
   describe('loadTransactions', () => {
-    it('devrait déclencher le chargement des transactions', () => {
+    it('devrait declencher le chargement des transactions', () => {
       spyOn(service, 'getTransactions').and.returnValue(service.transactions$);
 
       service.loadTransactions();
