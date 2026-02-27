@@ -7,7 +7,7 @@
     "prettier": "3.4.2"
   },
   "name": "suivi-cb",
-  "version": "1.1.0-dev.0",
+  "version": "1.4.0-dev",
   "main": "index.js",
   "dependencies": {
     "ansi-regex": "^5.0.1",
