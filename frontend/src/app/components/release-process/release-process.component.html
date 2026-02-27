@@ -89,7 +89,7 @@
     <p class="status-line" [ngClass]="getLastStatusClass()" *ngIf="!isRunning">{{ getLastStatusLabel() }}</p>
     <p class="status-line" *ngIf="backendMessage">{{ backendMessage }}</p>
     <p class="status-line error" *ngIf="errorMessage">{{ errorMessage }}</p>
-    <div class="report-error" *ngIf="getReportError() as reportError">
+    <div class="report-error" *ngIf="getVisibleReportError() as reportError">
       <p class="report-error-title">Erreur detectee dans le dernier rapport</p>
       <div class="report-error-actions">
         <button type="button" class="ghost copy-error-btn" (click)="copyReportError()">

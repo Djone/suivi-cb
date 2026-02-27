@@ -277,6 +277,18 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  getVisibleReportError(): string | null {
+    if (this.isRunning) {
+      return null;
+    }
+
+    if (!this.lastRun || this.lastRun.status !== 'failed') {
+      return null;
+    }
+
+    return this.getReportError();
+  }
+
   copyReportError(): void {
     const reportError = this.getReportError();
     if (!reportError) {
