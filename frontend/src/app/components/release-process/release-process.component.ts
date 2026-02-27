@@ -18,6 +18,14 @@ interface ReleaseStep {
   helper: string;
 }
 
+interface ReleaseReport {
+  error?: string;
+  steps?: Array<{
+    status?: string;
+    error?: string;
+  }>;
+}
+
 @Component({
   selector: 'app-release-process',
   standalone: true,
@@ -51,6 +59,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public isRunning = false;
   public backendMessage = '';
   public errorMessage = '';
+  public copyErrorFeedback = '';
 
   public activeRun: ReleaseRun | null = null;
   public lastRun: ReleaseRun | null = null;
@@ -228,6 +237,92 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     }
 
     return 'Exécution en cours.';
+  }
+
+  getLastStatusClass(): 'ok' | 'warning' | 'error' {
+    if (!this.lastRun) {
+      return 'warning';
+    }
+
+    if (this.lastRun.status === 'passed') {
+      return 'ok';
+    }
+
+    if (this.lastRun.status === 'failed') {
+      return 'error';
+    }
+
+    return 'warning';
+  }
+
+  getReportError(): string | null {
+    if (!this.lastReport || typeof this.lastReport !== 'object') {
+      return null;
+    }
+
+    const report = this.lastReport as ReleaseReport;
+
+    if (typeof report.error === 'string' && report.error.trim()) {
+      return report.error.replace(/\u001b\[[0-9;]*m/g, '').trim();
+    }
+
+    if (Array.isArray(report.steps)) {
+      const failedStep = report.steps.find(
+        (step) => step?.status === 'failed' && typeof step.error === 'string' && step.error.trim(),
+      );
+      if (failedStep?.error) {
+        return failedStep.error.replace(/\u001b\[[0-9;]*m/g, '').trim();
+      }
+    }
+    return null;
+  }
+
+  copyReportError(): void {
+    const reportError = this.getReportError();
+    if (!reportError) {
+      this.setCopyFeedback('Aucune erreur a copier.');
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(reportError)
+        .then(() => this.setCopyFeedback('Erreur copiee dans le presse-papiers.'))
+        .catch(() => this.copyWithFallback(reportError));
+      return;
+    }
+
+    this.copyWithFallback(reportError);
+  }
+
+  private copyWithFallback(text: string): void {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      const success = document.execCommand('copy');
+      this.setCopyFeedback(
+        success ? 'Erreur copiee dans le presse-papiers.' : 'Copie impossible.',
+      );
+    } catch {
+      this.setCopyFeedback('Copie impossible.');
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+
+  private setCopyFeedback(message: string): void {
+    this.copyErrorFeedback = message;
+    window.setTimeout(() => {
+      if (this.copyErrorFeedback === message) {
+        this.copyErrorFeedback = '';
+      }
+    }, 2500);
   }
 
   private runCommand(command: ReleaseCommand): void {

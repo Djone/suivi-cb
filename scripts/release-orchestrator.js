@@ -328,7 +328,12 @@ function verify(report, options) {
     return;
   }
 
-  const test = runCommand('npm test');
+  const test = runCommand('npm test', {
+    env: {
+      BROWSERSLIST_IGNORE_OLD_DATA: 'true',
+      BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA: 'true',
+    },
+  });
   if (!test.ok) {
     failStep(report, 'verify-tests', start, test.stderr || test.stdout || 'tests failed');
     throw new Error('Tests failed.');

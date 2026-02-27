@@ -13,8 +13,8 @@ describe('Transaction Model', () => {
   describe('getAll', () => {
     it('devrait récupérer toutes les transactions sans filtre', async () => {
       const mockTransactions = [
-        { id: 1, description: 'Test 1', amount: 100, date: '2024-01-01', account_id: 1, financial_flow_id: 1, sub_category_id: 1 },
-        { id: 2, description: 'Test 2', amount: 200, date: '2024-01-02', account_id: 1, financial_flow_id: 1, sub_category_id: 1 }
+        { id: 1, description: 'Test 1', amount: 100, date: '2024-01-01', accountId: 1, financialFlowId: 1, subCategoryId: 1 },
+        { id: 2, description: 'Test 2', amount: 200, date: '2024-01-02', accountId: 1, financialFlowId: 1, subCategoryId: 1 }
       ];
 
       db.all.mockImplementation((query, params, callback) => {
@@ -29,7 +29,7 @@ describe('Transaction Model', () => {
 
     it('devrait filtrer par account_id', async () => {
       const mockTransactions = [
-        { id: 1, description: 'Test 1', amount: 100, date: '2024-01-01', account_id: 1, financial_flow_id: 1, sub_category_id: 1 }
+        { id: 1, description: 'Test 1', amount: 100, date: '2024-01-01', accountId: 1, financialFlowId: 1, subCategoryId: 1 }
       ];
 
       db.all.mockImplementation((query, params, callback) => {
@@ -44,7 +44,7 @@ describe('Transaction Model', () => {
 
     it('devrait filtrer par financial_flow_id', async () => {
       const mockTransactions = [
-        { id: 1, description: 'Test 1', amount: 100, date: '2024-01-01', account_id: 1, financial_flow_id: 2, sub_category_id: 1 }
+        { id: 1, description: 'Test 1', amount: 100, date: '2024-01-01', accountId: 1, financialFlowId: 2, subCategoryId: 1 }
       ];
 
       db.all.mockImplementation((query, params, callback) => {

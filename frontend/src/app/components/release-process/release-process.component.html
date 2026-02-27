@@ -85,10 +85,20 @@
       <p><strong>Commande full:</strong> <code>{{ fullCommand }}</code></p>
     </div>
 
-    <p class="status-line" *ngIf="isRunning">Statut: commande en cours d'exécution...</p>
-    <p class="status-line ok" *ngIf="!isRunning">{{ getLastStatusLabel() }}</p>
+    <p class="status-line warning" *ngIf="isRunning">Statut: commande en cours d'exécution...</p>
+    <p class="status-line" [ngClass]="getLastStatusClass()" *ngIf="!isRunning">{{ getLastStatusLabel() }}</p>
     <p class="status-line" *ngIf="backendMessage">{{ backendMessage }}</p>
     <p class="status-line error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <div class="report-error" *ngIf="getReportError() as reportError">
+      <p class="report-error-title">Erreur detectee dans le dernier rapport</p>
+      <div class="report-error-actions">
+        <button type="button" class="ghost copy-error-btn" (click)="copyReportError()">
+          Copier l'erreur
+        </button>
+        <span class="copy-feedback" *ngIf="copyErrorFeedback">{{ copyErrorFeedback }}</span>
+      </div>
+      <pre class="report-error-body"><code>{{ reportError }}</code></pre>
+    </div>
   </section>
 
   <section class="notes-panel">

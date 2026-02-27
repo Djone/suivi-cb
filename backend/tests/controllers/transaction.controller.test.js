@@ -2,21 +2,21 @@
 const transactionController = require('../../controllers/transaction.controller');
 const Transaction = require('../../models/transaction.model');
 
-// Mock du modèle
 jest.mock('../../models/transaction.model');
 
 describe('Transaction Controller', () => {
-  let req, res;
+  let req;
+  let res;
 
   beforeEach(() => {
     req = {
       params: {},
       body: {},
-      query: {}
+      query: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
     };
   });
 
@@ -28,7 +28,7 @@ describe('Transaction Controller', () => {
     it('devrait retourner toutes les transactions avec code 200', async () => {
       const mockTransactions = [
         { id: 1, description: 'Test 1', amount: 100 },
-        { id: 2, description: 'Test 2', amount: 200 }
+        { id: 2, description: 'Test 2', amount: 200 },
       ];
 
       Transaction.getAll.mockResolvedValue(mockTransactions);
@@ -48,7 +48,7 @@ describe('Transaction Controller', () => {
 
       expect(Transaction.getAll).toHaveBeenCalledWith({
         account_id: '1',
-        financial_flow_id: '2'
+        financial_flow_id: '2',
       });
       expect(res.status).toHaveBeenCalledWith(200);
     });
@@ -71,7 +71,7 @@ describe('Transaction Controller', () => {
         description: 'Test transaction',
         sub_category_id: 1,
         account_id: 1,
-        financial_flow_id: 1
+        financial_flow_id: 1,
       };
 
       Transaction.add.mockResolvedValue({ id: 5 });
@@ -80,8 +80,8 @@ describe('Transaction Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Transaction ajoutée avec succès',
-        id: 5
+        message: 'Transaction ajoutee avec succes',
+        id: 5,
       });
     });
 
@@ -92,7 +92,7 @@ describe('Transaction Controller', () => {
         description: 'Test transaction',
         sub_category_id: 1,
         account_id: 1,
-        financial_flow_id: 1
+        financial_flow_id: 1,
       };
 
       Transaction.add.mockRejectedValue(new Error('Insert failed'));
@@ -101,17 +101,17 @@ describe('Transaction Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Erreur interne du serveur lors de l\'ajout de la transaction'
+        error: "Erreur interne du serveur lors de l'ajout de la transaction",
       });
     });
   });
 
   describe('updateTransaction', () => {
-    it('devrait mettre à jour une transaction avec code 200', async () => {
+    it('devrait mettre a jour une transaction avec code 200', async () => {
       req.params.id = '1';
       req.body = {
         description: 'Updated description',
-        amount: 150
+        amount: 150,
       };
 
       Transaction.update.mockResolvedValue({ id: 1, changes: 1 });
@@ -120,8 +120,8 @@ describe('Transaction Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Transaction mise à jour avec succès.',
-        changes: 1
+        message: 'Transaction mise a jour avec succes.',
+        changes: 1,
       });
     });
 
@@ -156,7 +156,7 @@ describe('Transaction Controller', () => {
       await transactionController.deleteTransactionById(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Transaction supprimée avec succès.' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Transaction supprimee avec succes.' });
     });
 
     it('devrait retourner 400 si l\'ID est invalide', async () => {
@@ -171,12 +171,12 @@ describe('Transaction Controller', () => {
     it('devrait retourner 404 si la transaction n\'existe pas', async () => {
       req.params.id = '999';
 
-      Transaction.deleteById.mockRejectedValue(new Error('Aucune transaction trouvée avec cet ID.'));
+      Transaction.deleteById.mockRejectedValue(new Error('Aucune transaction trouv�e avec cet ID.'));
 
       await transactionController.deleteTransactionById(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Aucune transaction trouvée avec cet ID.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Aucune transaction trouv�e avec cet ID.' });
     });
   });
 });
