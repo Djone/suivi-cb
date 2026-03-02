@@ -59,7 +59,8 @@ const Transaction = {
         t.account_id,
         a.name as account_name,
         t.financial_flow_id,
-        t.recurring_transaction_id
+        t.recurring_transaction_id,
+        t.advance_to_joint_account
       FROM transactions t
       LEFT JOIN subcategories sc ON t.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
@@ -79,8 +80,8 @@ const Transaction = {
   // Ajouter une nouvelle transaction
   add: async (transaction) => {
     const query = `
-      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id, advance_to_joint_account)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [
       transaction.date,
@@ -89,7 +90,8 @@ const Transaction = {
       transaction.sub_category_id, // Correction: Utiliser snake_case
       transaction.account_id,      // Correction: Utiliser snake_case
       transaction.financial_flow_id, // Correction: Utiliser snake_case
-      transaction.recurring_transaction_id
+      transaction.recurring_transaction_id,
+      transaction.advance_to_joint_account ? 1 : 0,
     ];
     console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, params);
@@ -98,29 +100,77 @@ const Transaction = {
 
   // Mettre à jour une transaction
   update: async (id, transaction) => {
+    let targetId = id;
+    let payload = transaction;
+
+    // Compat backward: update({ id, ...fields }) and update(id, fields)
+    if (typeof transaction === 'undefined' && id && typeof id === 'object') {
+      targetId = id.id;
+      payload = { ...id };
+      delete payload.id;
+    }
+
+    if (!targetId) {
+      throw new Error('ID de la transaction manquant.');
+    }
+
+    const fields = [];
+    const params = [];
+    const allowed = [
+      'date',
+      'amount',
+      'description',
+      'sub_category_id',
+      'account_id',
+      'financial_flow_id',
+      'advance_to_joint_account',
+    ];
+
+    for (const key of allowed) {
+      if (!payload || typeof payload[key] === 'undefined') {
+        continue;
+      }
+
+      if (key === 'advance_to_joint_account') {
+        fields.push(`${key} = ?`);
+        params.push(payload[key] ? 1 : 0);
+        continue;
+      }
+
+      fields.push(`${key} = ?`);
+      params.push(payload[key]);
+    }
+
+    if (fields.length === 0) {
+      throw new Error('Aucun champ à mettre à jour.');
+    }
+
     const query = `
       UPDATE transactions
-      SET date = ?, amount = ?, description = ?, sub_category_id = ?, account_id = ?, financial_flow_id = ?
+      SET ${fields.join(', ')}
       WHERE id = ?
     `;
-    const params = [
-      transaction.date,
-      transaction.amount,
-      transaction.description,
-      transaction.sub_category_id,
-      transaction.account_id,
-      transaction.financial_flow_id,
-      id
-    ];
+    params.push(targetId);
     console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}" (Transaction)`);
-    return await dbRun(query, params);
+    const result = await dbRun(query, params);
+    if (!result.changes) {
+      throw new Error('Aucune transaction trouvée avec cet ID.');
+    }
+    return { id: Number(targetId), changes: result.changes };
   },
 
   // Supprimer une transaction par son ID
   deleteById: async (id) => {
+    if (!id) {
+      throw new Error('ID manquant pour la suppression de la transaction.');
+    }
     const query = 'DELETE FROM transactions WHERE id = ?';
     console.log(`[DB_WRITE_DEBUG] Delete operation on DB: "${db.filename}" (Transaction)`);
-    return await dbRun(query, [id]);
+    const result = await dbRun(query, [id]);
+    if (!result.changes) {
+      throw new Error('Aucune transaction trouvée avec cet ID.');
+    }
+    return undefined;
   }
 };
 

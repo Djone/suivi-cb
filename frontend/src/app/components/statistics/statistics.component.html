@@ -42,7 +42,9 @@
           <p-button
             label="Réinitialiser"
             icon="pi pi-refresh"
-            (onClick)="selectedAccount = null; selectedMonth = null; applyFilters()"
+            (onClick)="
+              selectedAccount = null; selectedMonth = null; applyFilters()
+            "
             styleClass="p-button-outlined"
           >
           </p-button>
@@ -83,7 +85,9 @@
                 <strong>{{ month.month }}</strong>
               </td>
               <td class="text-right amount-cell negative">
-                {{ month.expenses | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                {{
+                  month.expenses | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
               </td>
               <td class="text-right amount-cell positive">
                 {{ month.income | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
@@ -93,7 +97,9 @@
                 [class.positive]="month.balance > 0"
                 [class.negative]="month.balance < 0"
               >
-                {{ month.balance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                {{
+                  month.balance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
               </td>
             </tr>
           </ng-template>
@@ -108,15 +114,21 @@
       <p-tabView>
         <p-tabPanel header="Dépenses">
           <div class="table-description">
-            Totaux et moyennes mensuels des catégories, avec le détail par sous-catégorie.
+            Totaux et moyennes mensuels des catégories, avec le détail par
+            sous-catégorie.
           </div>
-          <div class="monthly-table-wrapper" *ngIf="expensesMonthlyTable.length > 0; else noExpenseData">
+          <div
+            class="monthly-table-wrapper"
+            *ngIf="expensesMonthlyTable.length > 0; else noExpenseData"
+          >
             <table class="plain-table">
               <thead>
                 <tr>
                   <th class="expander-column"></th>
                   <th>Catégorie</th>
-                  <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
+                  <th *ngFor="let month of monthColumns" class="text-right">
+                    {{ month.label }}
+                  </th>
                   <th class="text-right">Total</th>
                   <th class="text-right">Moyenne</th>
                 </tr>
@@ -129,43 +141,66 @@
                         type="button"
                         pButton
                         class="p-button-text p-button-rounded p-button-plain toggle-button"
-                        [icon]="expenseExpanded[category.label] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                        [icon]="
+                          expenseExpanded[category.label]
+                            ? 'pi pi-chevron-down'
+                            : 'pi pi-chevron-right'
+                        "
                         (click)="toggleExpenseRow(category.label)"
                       ></button>
                     </td>
                     <td class="row-label">{{ category.label }}</td>
-                    <td *ngFor="let month of monthColumns" class="text-right amount-cell negative">
-                      {{ category.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    <td
+                      *ngFor="let month of monthColumns"
+                      class="text-right amount-cell negative"
+                    >
+                      {{
+                        category.monthlyTotals[month.index]
+                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                      }}
                     </td>
                     <td class="text-right amount-cell negative">
-                      {{ category.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                      {{
+                        category.total
+                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                      }}
                     </td>
                     <td class="text-right amount-cell negative">
-                      {{ category.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                      {{
+                        category.average
+                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                      }}
                     </td>
                   </tr>
                   <tr *ngIf="expenseExpanded[category.label]">
-                    <td [attr.colspan]="monthColumns.length + 4" class="expansion-cell">
+                    <td
+                      [attr.colspan]="monthColumns.length + 4"
+                      class="expansion-cell"
+                    >
                       <table class="plain-table sub-table">
-                        <thead>
-                          <tr>
-                            <th>Sous-catégorie</th>
-                            <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
-                            <th class="text-right">Total</th>
-                            <th class="text-right">Moyenne</th>
-                          </tr>
-                        </thead>
                         <tbody>
                           <tr *ngFor="let sub of category.subCategories">
                             <td class="row-label">{{ sub.label }}</td>
-                            <td *ngFor="let month of monthColumns" class="text-right amount-cell negative">
-                              {{ sub.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            <td
+                              *ngFor="let month of monthColumns"
+                              class="text-right amount-cell negative"
+                            >
+                              {{
+                                sub.monthlyTotals[month.index]
+                                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                              }}
                             </td>
                             <td class="text-right amount-cell negative">
-                              {{ sub.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                              {{
+                                sub.total
+                                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                              }}
                             </td>
                             <td class="text-right amount-cell negative">
-                              {{ sub.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                              {{
+                                sub.average
+                                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                              }}
                             </td>
                           </tr>
                         </tbody>
@@ -183,15 +218,21 @@
 
         <p-tabPanel header="Revenus">
           <div class="table-description">
-            Totaux et moyennes mensuels des catégories, avec le détail par sous-catégorie.
+            Totaux et moyennes mensuels des catégories, avec le détail par
+            sous-catégorie.
           </div>
-          <div class="monthly-table-wrapper" *ngIf="incomesMonthlyTable.length > 0; else noIncomeData">
+          <div
+            class="monthly-table-wrapper"
+            *ngIf="incomesMonthlyTable.length > 0; else noIncomeData"
+          >
             <table class="plain-table">
               <thead>
                 <tr>
                   <th class="expander-column"></th>
                   <th>Catégorie</th>
-                  <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
+                  <th *ngFor="let month of monthColumns" class="text-right">
+                    {{ month.label }}
+                  </th>
                   <th class="text-right">Total</th>
                   <th class="text-right">Moyenne</th>
                 </tr>
@@ -204,28 +245,52 @@
                         type="button"
                         pButton
                         class="p-button-text p-button-rounded p-button-plain toggle-button"
-                        [icon]="incomeExpanded[category.label] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                        [icon]="
+                          incomeExpanded[category.label]
+                            ? 'pi pi-chevron-down'
+                            : 'pi pi-chevron-right'
+                        "
                         (click)="toggleIncomeRow(category.label)"
                       ></button>
                     </td>
                     <td class="row-label">{{ category.label }}</td>
-                    <td *ngFor="let month of monthColumns" class="text-right amount-cell positive">
-                      {{ category.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                    <td
+                      *ngFor="let month of monthColumns"
+                      class="text-right amount-cell positive"
+                    >
+                      {{
+                        category.monthlyTotals[month.index]
+                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                      }}
                     </td>
                     <td class="text-right amount-cell positive">
-                      {{ category.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                      {{
+                        category.total
+                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                      }}
                     </td>
                     <td class="text-right amount-cell positive">
-                      {{ category.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                      {{
+                        category.average
+                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                      }}
                     </td>
                   </tr>
                   <tr *ngIf="incomeExpanded[category.label]">
-                    <td [attr.colspan]="monthColumns.length + 4" class="expansion-cell">
+                    <td
+                      [attr.colspan]="monthColumns.length + 4"
+                      class="expansion-cell"
+                    >
                       <table class="plain-table sub-table">
                         <thead>
                           <tr>
                             <th>Sous-catégorie</th>
-                            <th *ngFor="let month of monthColumns" class="text-right">{{ month.label }}</th>
+                            <th
+                              *ngFor="let month of monthColumns"
+                              class="text-right"
+                            >
+                              {{ month.label }}
+                            </th>
                             <th class="text-right">Total</th>
                             <th class="text-right">Moyenne</th>
                           </tr>
@@ -233,14 +298,26 @@
                         <tbody>
                           <tr *ngFor="let sub of category.subCategories">
                             <td class="row-label">{{ sub.label }}</td>
-                            <td *ngFor="let month of monthColumns" class="text-right amount-cell positive">
-                              {{ sub.monthlyTotals[month.index] | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                            <td
+                              *ngFor="let month of monthColumns"
+                              class="text-right amount-cell positive"
+                            >
+                              {{
+                                sub.monthlyTotals[month.index]
+                                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                              }}
                             </td>
                             <td class="text-right amount-cell positive">
-                              {{ sub.total | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                              {{
+                                sub.total
+                                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                              }}
                             </td>
                             <td class="text-right amount-cell positive">
-                              {{ sub.average | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                              {{
+                                sub.average
+                                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                              }}
                             </td>
                           </tr>
                         </tbody>

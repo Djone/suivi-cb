@@ -29,6 +29,7 @@ import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { SubCategory } from '../../models/sub-category.model';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { DEBIT_503020_LIST } from '../../config/debit_503020';
 
 interface TransactionWithLabel extends Transaction {
@@ -49,6 +50,8 @@ interface UpcomingScheduleLite {
   dueDate: Date;
   isOverdue?: boolean;
 }
+
+type AdvanceJointFilter = 'all' | 'only' | 'exclude';
 
 @Component({
   selector: 'app-transaction-list',
@@ -75,7 +78,9 @@ interface UpcomingScheduleLite {
 export class TransactionListComponent implements OnInit, OnDestroy {
   accountId: number | null = null;
   account: Account | null = null;
+  accounts: Account[] = [];
   showRecurring: boolean = false;
+  allTransactions: Transaction[] = [];
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
   paginatedTransactions: Transaction[] = [];
@@ -115,7 +120,20 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     amount: '',
     categoryIds: [] as number[],
     subCategoryIds: [] as number[],
+    advanceJoint: 'all' as AdvanceJointFilter,
   };
+  advanceJointFilterOptions = [
+    { label: 'Toutes les transactions', value: 'all' as AdvanceJointFilter },
+    {
+      label: 'Avances compte joint uniquement',
+      value: 'only' as AdvanceJointFilter,
+    },
+    { label: 'Hors avances compte joint', value: 'exclude' as AdvanceJointFilter },
+  ];
+  advanceJointTotal = 0;
+  advanceJointCount = 0;
+  advanceJointGlobalTotal = 0;
+  advanceJointGlobalCount = 0;
 
   // Tri
   sortColumn: string = 'date';
@@ -159,7 +177,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     // Charger les comptes
     this.subscriptions.add(
       this.accountService.accounts$.subscribe({
-        next: () => {
+        next: (accounts) => {
+          this.accounts = accounts || [];
           if (this.accountId) {
             this.loadAccountInfo();
           }
@@ -180,6 +199,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           if (data.length > 0) {
             console.log('TRANSACTION LIST : Exemple de transaction:', data[0]);
           }
+
+          this.allTransactions = data || [];
 
           // Filtrer par compte si accountId est fourni
           if (this.accountId !== null) {
@@ -202,6 +223,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           } else {
             this.transactions = data;
           }
+          this.updateAdvanceJointGlobalMetrics();
           this.applyFiltersAndSort();
         },
         error: (err) =>
@@ -354,14 +376,31 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         (typeof subCategory?.id === 'number' &&
           this.filters.subCategoryIds.includes(subCategory.id));
 
+      const isAdvanceJoint = this.isAdvanceToJointAccount(transaction);
+      const matchAdvanceJoint =
+        this.filters.advanceJoint === 'all'
+          ? true
+          : this.filters.advanceJoint === 'only'
+            ? isAdvanceJoint
+            : !isAdvanceJoint;
+
       return (
         matchDate &&
         matchDescription &&
         matchAmount &&
         matchCategory &&
-        matchSubCategory
+        matchSubCategory &&
+        matchAdvanceJoint
       );
     });
+
+    const advanceJointTransactions = this.filteredTransactions.filter((tx) =>
+      this.isAdvanceToJointAccount(tx),
+    );
+    this.advanceJointCount = advanceJointTransactions.length;
+    this.advanceJointTotal = advanceJointTransactions.reduce((sum, tx) => {
+      return sum + Math.abs(this.getSignedAmount(tx));
+    }, 0);
 
     this.calculateBalances();
     this.calculateRecurringMonthTotals();
@@ -625,6 +664,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.applyFiltersAndSort();
   }
 
+  filterToAdvanceJointTransactions(): void {
+    this.filters.advanceJoint = 'only';
+    this.applyFilter();
+  }
+
   // Obtenir le nom de la sous-catégorie
   // Obtenir le nom de la sous-categorie
   getSubCategoryName(subCategoryId: number | string | null): string {
@@ -646,6 +690,51 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return subCategory
       ? `${subCategory.categoryLabel} - ${subCategory.label}`
       : 'N/A';
+  }
+
+  isAdvanceToJointAccount(transaction: Transaction): boolean {
+    const raw = transaction.advanceToJointAccount;
+    if (typeof raw === 'boolean') {
+      return raw;
+    }
+    if (typeof raw === 'number') {
+      return raw === 1;
+    }
+    if (typeof raw === 'string') {
+      const normalized = raw.trim().toLowerCase();
+      return normalized === '1' || normalized === 'true';
+    }
+    return false;
+  }
+
+  isCurrentAccountView(): boolean {
+    const currentAccountId = this.getCurrentAccountId();
+    return currentAccountId !== null && this.accountId === currentAccountId;
+  }
+
+  isJointAccountView(): boolean {
+    const jointAccountId = this.getJointAccountId();
+    return jointAccountId !== null && this.accountId === jointAccountId;
+  }
+
+  canTransferAdvanceToJointAccount(transaction: Transaction): boolean {
+    if (!this.isAdvanceToJointAccount(transaction) || !transaction.id) {
+      return false;
+    }
+    const currentAccountId = this.getCurrentAccountId();
+    const jointAccountId = this.getJointAccountId();
+    const txAccountId =
+      typeof transaction.accountId === 'string'
+        ? parseInt(transaction.accountId, 10)
+        : transaction.accountId;
+
+    return (
+      currentAccountId !== null &&
+      jointAccountId !== null &&
+      jointAccountId !== currentAccountId &&
+      this.accountId === currentAccountId &&
+      txAccountId === currentAccountId
+    );
   }
   // Obtenir le montant avec signe
   getSignedAmount(transaction: Transaction): number {
@@ -1356,10 +1445,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         transaction: {
           description: '',
           date: new Date(),
-          amount: 0,
+          amount: null,
           accountId: defaultAccountId,
           financialFlowId: defaultFinancialFlowId,
           subCategoryId: null,
+          advanceToJointAccount: false,
         },
         isNew: true,
       },
@@ -1435,6 +1525,88 @@ export class TransactionListComponent implements OnInit, OnDestroy {
             },
           });
       }
+    });
+  }
+
+  transferAdvanceToJointAccount(transaction: Transaction): void {
+    if (!this.canTransferAdvanceToJointAccount(transaction)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Action impossible',
+        detail:
+          'Transfert disponible uniquement pour une avance du compte courant vers le compte joint.',
+      });
+      return;
+    }
+
+    const amount = Math.abs(
+      typeof transaction.amount === 'string'
+        ? parseFloat(transaction.amount)
+        : transaction.amount || 0,
+    );
+    const jointAccountId = this.getJointAccountId();
+    if (!jointAccountId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Compte joint introuvable',
+        detail: 'Impossible de trouver le compte joint pour réaliser le transfert.',
+      });
+      return;
+    }
+
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
+      width: '450px',
+      data: {
+        title: 'Déverser vers compte joint',
+        message: `Confirmer le transfert de "${transaction.description}" (${amount.toFixed(2)} €) vers le compte joint ?`,
+        confirmText: 'Déverser',
+        cancelText: 'Annuler',
+      },
+    });
+
+    dialogRef.onClose.subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
+
+      const mirroredTransaction: Transaction = {
+        description: transaction.description,
+        amount,
+        date: transaction.date,
+        subCategoryId: transaction.subCategoryId,
+        accountId: jointAccountId,
+        financialFlowId: transaction.financialFlowId,
+        recurringTransactionId: null,
+        advanceToJointAccount: false,
+      } as Transaction;
+
+      this.transactionService
+        .addTransaction(mirroredTransaction)
+        .pipe(
+          switchMap(() => this.transactionService.deleteTransaction(transaction.id!)),
+        )
+        .subscribe({
+          next: () => {
+            this.loadTransactions();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Transfert effectué',
+              detail: 'La transaction a été déversée dans le compte joint.',
+            });
+          },
+          error: (err) => {
+            console.error(
+              'TRANSACTION LIST : Erreur lors du transfert vers le compte joint:',
+              err,
+            );
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail:
+                'Le transfert n’a pas pu être finalisé complètement. Vérifiez les transactions.',
+            });
+          },
+        });
     });
   }
 
@@ -1536,5 +1708,34 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const { r, g, b } = this.hexToRgb(hex);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
-}
 
+  private getCurrentAccountId(): number | null {
+    const byName = this.accounts.find((account) =>
+      (account.name || '').toLowerCase().includes('courant'),
+    );
+    if (typeof byName?.id === 'number') {
+      return byName.id;
+    }
+    return this.accounts.some((account) => account.id === 1) ? 1 : null;
+  }
+
+  private getJointAccountId(): number | null {
+    const byName = this.accounts.find((account) =>
+      (account.name || '').toLowerCase().includes('joint'),
+    );
+    if (typeof byName?.id === 'number') {
+      return byName.id;
+    }
+    return this.accounts.some((account) => account.id === 2) ? 2 : null;
+  }
+
+  private updateAdvanceJointGlobalMetrics(): void {
+    const globalAdvanceJoint = this.allTransactions.filter((tx) =>
+      this.isAdvanceToJointAccount(tx),
+    );
+    this.advanceJointGlobalCount = globalAdvanceJoint.length;
+    this.advanceJointGlobalTotal = globalAdvanceJoint.reduce((sum, tx) => {
+      return sum + Math.abs(this.getSignedAmount(tx));
+    }, 0);
+  }
+}

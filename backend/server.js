@@ -10,6 +10,7 @@ const configRoutes = require('./routes/config.routes');
 const recurringTransactionRoutes = require('./routes/recurring-transaction.routes');
 const accountRoutes = require('./routes/account.routes');
 const coupleSplitRoutes = require('./routes/couple-split.routes');
+const releaseRoutes = require('./routes/release.routes');
 
 const app = express();
 const PORT_BACK = process.env.PORT_BACK || 3000;
@@ -33,6 +34,7 @@ const startServer = async () => {
     app.use('/api/recurring-transactions', recurringTransactionRoutes);
     app.use('/api/accounts', accountRoutes);
     app.use('/api/couple-split', coupleSplitRoutes);
+    app.use('/api/release', releaseRoutes);
 
     // 3. Démarrer le serveur Express
     app.listen(PORT_BACK, () => {
@@ -46,3 +48,4 @@ const startServer = async () => {
 
 // Lancer le processus de démarrage
 startServer();
+

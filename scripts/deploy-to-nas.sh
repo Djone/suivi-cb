@@ -59,15 +59,19 @@ echo "  - Port SSH: $NAS_SSH_PORT"
 echo "  - Répertoire: $NAS_APP_DIR"
 echo ""
 
-read -p "Ces paramètres sont-ils corrects? (o/n) " -n 1 -r
-echo ""
-if [[ ! $REPLY =~ ^[Oo]$ ]]; then
-    echo "Personnalisez les variables d'environnement:"
-    echo "  export NAS_USER=votre_utilisateur"
-    echo "  export NAS_HOST=votre_ip_ou_domaine"
-    echo "  export NAS_APP_DIR=/volume1/docker/suivi-cb"
-    echo "  export NAS_SSH_PORT=22"
-    exit 1
+if [[ "${NAS_DEPLOY_ASSUME_YES:-false}" != "true" ]]; then
+    read -p "Ces paramètres sont-ils corrects? (o/n) " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Oo]$ ]]; then
+        echo "Personnalisez les variables d'environnement:"
+        echo "  export NAS_USER=votre_utilisateur"
+        echo "  export NAS_HOST=votre_ip_ou_domaine"
+        echo "  export NAS_APP_DIR=/volume1/docker/suivi-cb"
+        echo "  export NAS_SSH_PORT=22"
+        exit 1
+    fi
+else
+    info "Mode non-interactif actif (NAS_DEPLOY_ASSUME_YES=true)"
 fi
 
 # Vérifier la connexion
