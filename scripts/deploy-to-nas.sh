@@ -5,6 +5,16 @@
 
 set -e
 
+# Se placer a la racine du projet (dossier parent de scripts/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${PROJECT_ROOT}"
+
+if [ ! -f "docker-compose.yml" ]; then
+    echo "[ERROR] docker-compose.yml non trouve a la racine du projet: ${PROJECT_ROOT}"
+    exit 1
+fi
+
 echo "======================================"
 echo "Déploiement sur Synology NAS"
 echo "======================================"
@@ -124,7 +134,7 @@ rsync -avz --progress \
     --exclude '*.log' \
     --exclude '.env.local' \
     -e "ssh -p $NAS_SSH_PORT" \
-    ./ $NAS_USER@$NAS_HOST:$NAS_APP_DIR/
+    "${PROJECT_ROOT}/" $NAS_USER@$NAS_HOST:$NAS_APP_DIR/
 
 if [ $? -ne 0 ]; then
     error "Erreur lors de la synchronisation des fichiers"

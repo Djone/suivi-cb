@@ -480,7 +480,11 @@ function gitMergeToMaster(report) {
       ? 'already on master'
       : 'unable to determine source branch');
     skipStep(report, 'git-push-master', 'merge not required');
-    return;
+    return {
+      merged: false,
+      sourceBranch,
+      targetBranch: 'master',
+    };
   }
 
   const fetch = runCommand('git fetch origin');
@@ -525,6 +529,72 @@ function gitMergeToMaster(report) {
   passStep(report, 'git-push-master', pushStart, {
     remote: 'origin',
     branch: 'master',
+  });
+
+  return {
+    merged: true,
+    sourceBranch,
+    targetBranch: 'master',
+  };
+}
+
+function resolveStableVersionForTag(options, sourceBranch) {
+  if (options.stable && SEMVER_STABLE.test(options.stable)) {
+    return options.stable;
+  }
+
+  const fromBranch = (sourceBranch || '').match(/^(\d+\.\d+\.\d+)-dev(?:\.\d+)?$/);
+  if (fromBranch) {
+    return fromBranch[1];
+  }
+
+  return '';
+}
+
+function gitTagAndPushRelease(report, options, mergeResult) {
+  const stable = resolveStableVersionForTag(options, mergeResult.sourceBranch);
+  if (!stable) {
+    skipStep(report, 'git-tag-release', 'no stable version detected (use --stable=x.y.z)');
+    skipStep(report, 'git-push-tag', 'tag not created');
+    return;
+  }
+
+  const tagName = `v${stable}`;
+
+  let start = Date.now();
+  const existingTag = runCommand(`git rev-parse -q --verify refs/tags/${tagName}`);
+  if (existingTag.ok) {
+    skipStep(report, 'git-tag-release', `${tagName} already exists locally`);
+  } else {
+    const createTag = runCommand(`git tag -a ${tagName} -m "Release ${stable}"`);
+    if (!createTag.ok) {
+      failStep(report, 'git-tag-release', start, createTag.stderr || createTag.stdout || 'git tag failed');
+      throw new Error(`Unable to create release tag ${tagName}.`);
+    }
+
+    passStep(report, 'git-tag-release', start, {
+      tagName,
+      stableVersion: stable,
+    });
+  }
+
+  start = Date.now();
+  const remoteTag = runCommand(`git ls-remote --tags origin ${tagName}`);
+  const remoteHasTag = remoteTag.ok && remoteTag.stdout.includes(`refs/tags/${tagName}`);
+  if (remoteHasTag) {
+    skipStep(report, 'git-push-tag', `${tagName} already exists on origin`);
+    return;
+  }
+
+  const pushTag = runCommand(`git push origin ${tagName}`);
+  if (!pushTag.ok) {
+    failStep(report, 'git-push-tag', start, pushTag.stderr || pushTag.stdout || 'git push tag failed');
+    throw new Error(`Unable to push release tag ${tagName} to origin.`);
+  }
+
+  passStep(report, 'git-push-tag', start, {
+    remote: 'origin',
+    tagName,
   });
 }
 
@@ -585,10 +655,18 @@ function run() {
       verify(report, options);
       finalizeForDeployment(report, options);
       if (options.execute) {
-        gitMergeToMaster(report);
+        const mergeResult = gitMergeToMaster(report);
+        if (mergeResult && mergeResult.merged) {
+          gitTagAndPushRelease(report, options, mergeResult);
+        } else {
+          skipStep(report, 'git-tag-release', 'merge not performed');
+          skipStep(report, 'git-push-tag', 'merge not performed');
+        }
       } else {
         skipStep(report, 'git-merge-master', 'dry-run (use --execute to run merge)');
         skipStep(report, 'git-push-master', 'dry-run (use --execute to run push)');
+        skipStep(report, 'git-tag-release', 'dry-run (use --execute to run tag)');
+        skipStep(report, 'git-push-tag', 'dry-run (use --execute to run tag push)');
       }
     } else if (command === 'full') {
       preflight(report, options);
@@ -598,10 +676,18 @@ function run() {
       gitPrepare(report, options);
       finalizeForDeployment(report, options);
       if (options.execute) {
-        gitMergeToMaster(report);
+        const mergeResult = gitMergeToMaster(report);
+        if (mergeResult && mergeResult.merged) {
+          gitTagAndPushRelease(report, options, mergeResult);
+        } else {
+          skipStep(report, 'git-tag-release', 'merge not performed');
+          skipStep(report, 'git-push-tag', 'merge not performed');
+        }
       } else {
         skipStep(report, 'git-merge-master', 'dry-run (use --execute to run merge)');
         skipStep(report, 'git-push-master', 'dry-run (use --execute to run push)');
+        skipStep(report, 'git-tag-release', 'dry-run (use --execute to run tag)');
+        skipStep(report, 'git-push-tag', 'dry-run (use --execute to run tag push)');
       }
     } else if (command === 'rollback') {
       rollbackCommand(report, options);

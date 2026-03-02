@@ -9,7 +9,10 @@ echo Build de production - Suivi CB
 echo ======================================
 echo.
 
-cd ..
+REM Se placer a la racine du projet (dossier parent de scripts\)
+set "SCRIPT_DIR=%~dp0"
+for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
+cd /d "%PROJECT_ROOT%"
 
 REM Vérifier que nous sommes dans le bon répertoire
 if not exist "docker-compose.yml" (

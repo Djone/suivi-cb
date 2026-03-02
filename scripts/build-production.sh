@@ -10,6 +10,11 @@ echo "Build de production - Suivi CB"
 echo "======================================"
 echo ""
 
+# Se placer a la racine du projet (dossier parent de scripts/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${PROJECT_ROOT}"
+
 # Couleurs pour les messages
 RED='\033[0;31m'
 GREEN='\033[0;32m'

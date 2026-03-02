@@ -529,6 +529,7 @@ echo "Backup terminé: database_$DATE.db"
 ```
 
 Utilisation:
+
 ```bash
 chmod +x backup.sh
 ./backup.sh
@@ -615,6 +616,7 @@ alias cbbackup='cd /volume1/docker/suivi-cb && ./backup.sh'
 ```
 
 Puis rechargez:
+
 ```bash
 source ~/.bashrc
 ```
@@ -622,17 +624,20 @@ source ~/.bashrc
 ## Références rapides
 
 ### Ports utilisés
+
 - `3001`: Backend API
 - `4200`: Frontend (mappé sur 80 dans le container)
 - `443`: HTTPS (via reverse proxy DSM)
 
 ### Chemins importants
+
 - Application: `/volume1/docker/suivi-cb`
 - Base de données: `/volume1/docker/suivi-cb/data/database.db`
 - Backups: `/volume1/docker/suivi-cb/backups`
 - Logs: `/volume1/docker/suivi-cb/logs`
 
 ### Commandes les plus utilisées
+
 ```bash
 sudo docker-compose ps          # Status
 sudo docker-compose logs -f     # Logs
