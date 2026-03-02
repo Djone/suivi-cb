@@ -1,3 +1,3 @@
-export const APP_VERSION = '1.4.0-dev-dev+7e73718';
-export const APP_BUILD_TIME = '2026-02-27T10:11:17.010Z';
+export const APP_VERSION = '1.3.0-dev';
+export const APP_BUILD_TIME = '2025-11-05T12:00:00Z';
 export const APP_ENV = 'development';

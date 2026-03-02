@@ -36,7 +36,6 @@ function parseArgs(argv) {
     skipTests: false,
     skipBuild: false,
     execute: false,
-    withNasDeploy: false,
 
     createReleaseBranch: false,
     releaseBranch: '',
@@ -85,10 +84,6 @@ function parseArgs(argv) {
       case 'execute':
         options.execute = true;
         break;
-      case 'with-nas-deploy':
-        options.withNasDeploy = true;
-        break;
-
       case 'create-release-branch':
         options.createReleaseBranch = true;
         break;
@@ -470,55 +465,77 @@ function gitPrepare(report, options) {
   }
 }
 
-function buildAndDeploy(report, options) {
-  let start = Date.now();
+function gitMergeToMaster(report) {
+  const start = Date.now();
 
-  if (options.skipBuild) {
-    skipStep(report, 'deploy-build', 'skip requested');
-  } else if (!options.execute) {
-    skipStep(report, 'deploy-build', 'dry-run (use --execute to run build)');
-  } else {
-    console.log('[release] Step: deploy-build');
-    const buildCmd = process.platform === 'win32'
-      ? 'cmd /c scripts\\build-production.bat'
-      : 'bash scripts/build-production.sh';
-
-    const build = runCommandLive(buildCmd);
-    if (!build.ok) {
-      failStep(report, 'deploy-build', start, build.stderr || build.stdout || 'build failed');
-      throw new Error('Build failed.');
-    }
-
-    passStep(report, 'deploy-build', start, {
-      output: build.stdout.trim().slice(-3000),
-    });
+  const currentBranch = runCommand('git rev-parse --abbrev-ref HEAD');
+  if (!currentBranch.ok) {
+    failStep(report, 'git-merge-master', start, currentBranch.stderr || 'unable to read current branch');
+    throw new Error('Unable to read current branch.');
   }
 
-  start = Date.now();
-  if (!options.withNasDeploy) {
-    skipStep(report, 'deploy-nas', 'disabled (use --with-nas-deploy)');
+  const sourceBranch = currentBranch.stdout.trim();
+  if (!sourceBranch || sourceBranch === 'master') {
+    skipStep(report, 'git-merge-master', sourceBranch === 'master'
+      ? 'already on master'
+      : 'unable to determine source branch');
+    skipStep(report, 'git-push-master', 'merge not required');
     return;
   }
 
-  if (!options.execute) {
-    skipStep(report, 'deploy-nas', 'dry-run (use --execute to run deployment)');
-    return;
+  const fetch = runCommand('git fetch origin');
+  if (!fetch.ok) {
+    failStep(report, 'git-merge-master', start, fetch.stderr || fetch.stdout || 'git fetch failed');
+    throw new Error('Unable to fetch origin.');
   }
 
-  if (process.platform === 'win32') {
-    skipStep(report, 'deploy-nas', 'NAS deploy script available on Linux/Mac only (deploy-to-nas.sh)');
-    return;
+  const checkoutMaster = runCommand('git checkout master');
+  if (!checkoutMaster.ok) {
+    failStep(report, 'git-merge-master', start, checkoutMaster.stderr || checkoutMaster.stdout || 'git checkout master failed');
+    throw new Error('Unable to checkout master.');
   }
 
-  const deploy = runCommand('bash scripts/deploy-to-nas.sh');
-  if (!deploy.ok) {
-    failStep(report, 'deploy-nas', start, deploy.stderr || deploy.stdout || 'nas deploy failed');
-    throw new Error('NAS deployment failed.');
+  const syncMaster = runCommand('git pull --ff-only origin master');
+  if (!syncMaster.ok) {
+    runCommand(`git checkout ${sourceBranch}`);
+    failStep(report, 'git-merge-master', start, syncMaster.stderr || syncMaster.stdout || 'git pull --ff-only failed');
+    throw new Error('Unable to fast-forward local master from origin.');
   }
 
-  passStep(report, 'deploy-nas', start, {
-    output: deploy.stdout.trim().slice(-3000),
+  const mergeCmd = `git merge --no-ff ${sourceBranch} -m "chore(release): merge ${sourceBranch} into master"`;
+  const merge = runCommand(mergeCmd);
+  if (!merge.ok) {
+    runCommand(`git checkout ${sourceBranch}`);
+    failStep(report, 'git-merge-master', start, merge.stderr || merge.stdout || 'git merge failed');
+    throw new Error('Unable to merge source branch into master.');
+  }
+
+  passStep(report, 'git-merge-master', start, {
+    sourceBranch,
+    targetBranch: 'master',
   });
+
+  const pushStart = Date.now();
+  const push = runCommand('git push origin master');
+  if (!push.ok) {
+    failStep(report, 'git-push-master', pushStart, push.stderr || push.stdout || 'git push failed');
+    throw new Error('Unable to push master to origin.');
+  }
+
+  passStep(report, 'git-push-master', pushStart, {
+    remote: 'origin',
+    branch: 'master',
+  });
+}
+
+function finalizeForDeployment(report, options) {
+  // Deployment pipeline is now validation + Git integration only.
+  skipStep(
+    report,
+    'deploy-build',
+    options.skipBuild ? 'skip requested' : 'disabled (pipeline validates and merges only)',
+  );
+  skipStep(report, 'deploy-nas', 'disabled (NAS deployment removed from pipeline)');
 }
 
 function rollbackCommand(report, options) {
@@ -566,14 +583,26 @@ function run() {
     } else if (command === 'deploy') {
       preflight(report, options);
       verify(report, options);
-      buildAndDeploy(report, options);
+      finalizeForDeployment(report, options);
+      if (options.execute) {
+        gitMergeToMaster(report);
+      } else {
+        skipStep(report, 'git-merge-master', 'dry-run (use --execute to run merge)');
+        skipStep(report, 'git-push-master', 'dry-run (use --execute to run push)');
+      }
     } else if (command === 'full') {
       preflight(report, options);
       verify(report, options);
       report.backupPath = createVersionBackup(options);
       prepareVersions(report, options);
       gitPrepare(report, options);
-      buildAndDeploy(report, options);
+      finalizeForDeployment(report, options);
+      if (options.execute) {
+        gitMergeToMaster(report);
+      } else {
+        skipStep(report, 'git-merge-master', 'dry-run (use --execute to run merge)');
+        skipStep(report, 'git-push-master', 'dry-run (use --execute to run push)');
+      }
     } else if (command === 'rollback') {
       rollbackCommand(report, options);
     } else {

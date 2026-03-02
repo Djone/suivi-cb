@@ -17,7 +17,7 @@
     <ol>
       <li><strong>1. dry-run</strong> pour vérifier (Git + tests) sans modifier la release.</li>
       <li><strong>2. prepare</strong> pour clôturer la version actuelle et préparer la suivante.</li>
-      <li><strong>3. deploy</strong> pour la mise en production (avec <code>execute</code> coché).</li>
+      <li><strong>3. deploy</strong> pour finaliser Git (merge vers <code>master</code> + push).</li>
     </ol>
     <p class="note-helper">
       Option rapide: <strong>full</strong> = prepare + deploy en une seule exécution.
@@ -48,7 +48,6 @@
       <label><input type="checkbox" [(ngModel)]="skipTests" /> skip-tests</label>
       <label><input type="checkbox" [(ngModel)]="skipBuild" /> skip-build</label>
       <label><input type="checkbox" [(ngModel)]="execute" /> execute (actions réelles)</label>
-      <label><input type="checkbox" [(ngModel)]="withNasDeploy" /> with-nas-deploy</label>
     </div>
 
     <h3>Options Git (facultatif)</h3>
@@ -109,8 +108,8 @@
         <ul>
           <li><strong>dry-run</strong>: vérifie sans modifier.</li>
           <li><strong>prepare</strong>: met à jour les versions.</li>
-          <li><strong>deploy</strong>: déploie (si execute est coché).</li>
-          <li><strong>full</strong>: prepare + deploy.</li>
+          <li><strong>deploy</strong>: valide, merge vers master et push (si execute est coché).</li>
+          <li><strong>full</strong>: prepare + finalisation Git.</li>
         </ul>
       </div>
       <div class="note-card">
@@ -166,3 +165,4 @@
     <pre class="command-block logs"><code>{{ getReportPreview() }}</code></pre>
   </section>
 </section>
+

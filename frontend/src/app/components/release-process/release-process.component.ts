@@ -47,7 +47,6 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public skipTests = false;
   public skipBuild = false;
   public execute = false;
-  public withNasDeploy = false;
 
   public createReleaseBranch = false;
   public releaseBranch = '';
@@ -91,9 +90,9 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     },
     {
       id: 'deploy',
-      title: 'Déploiement',
+      title: 'Finalisation Git',
       description:
-        'Déployer en réel uniquement avec execute coché (sinon simulation).',
+        'Valider puis fusionner la branche courante vers master et pousser sur origin/master.',
       helper: 'Commande recommandée: deploy',
     },
   ];
@@ -130,15 +129,13 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
 
   get deployCommand(): string {
     const executeFlag = this.execute ? ' --execute' : '';
-    const withNas = this.withNasDeploy ? ' --with-nas-deploy' : '';
     const skipBuild = this.skipBuild ? ' --skip-build' : '';
-    return `npm run release:deploy -- --branch=${this.branch}${executeFlag}${withNas}${skipBuild}`;
+    return `npm run release:deploy -- --branch=${this.branch}${executeFlag}${skipBuild}`;
   }
 
   get fullCommand(): string {
     const next = this.nextDevVersion.trim() || '<next-dev-version>';
     const executeFlag = this.execute ? ' --execute' : '';
-    const withNas = this.withNasDeploy ? ' --with-nas-deploy' : '';
     const branchCmd = this.createReleaseBranch
       ? ` --create-release-branch --branch-prefix=${this.branchPrefix}`
       : '';
@@ -149,7 +146,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     const tagCmd = this.tag ? ' --tag' : '';
     const rollbackCmd = this.rollbackOnFailure ? ' --rollback-on-failure' : '';
 
-    return `npm run release:full -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${executeFlag}${withNas}${branchCmd}${releaseBranch}${commitCmd}${tagCmd}${rollbackCmd}`;
+    return `npm run release:full -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${executeFlag}${branchCmd}${releaseBranch}${commitCmd}${tagCmd}${rollbackCmd}`;
   }
 
   runDryRun(): void {
@@ -164,6 +161,8 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   }
 
   runDeploy(): void {
+    // "Deploy" button performs the real Git finalization (merge + push).
+    this.execute = true;
     this.runCommand('deploy');
   }
 
@@ -191,7 +190,6 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.skipTests = false;
     this.skipBuild = false;
     this.execute = false;
-    this.withNasDeploy = false;
 
     this.createReleaseBranch = false;
     this.releaseBranch = '';
@@ -355,7 +353,6 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       skipTests: this.skipTests,
       skipBuild: this.skipBuild,
       execute: this.execute,
-      withNasDeploy: this.withNasDeploy,
       createReleaseBranch: this.createReleaseBranch,
       releaseBranch: this.releaseBranch.trim() || undefined,
       branchPrefix: this.branchPrefix.trim() || 'release/',
@@ -423,3 +420,4 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     return true;
   }
 }
+
