@@ -1,0 +1,673 @@
+<div class="savings-container">
+  <p-card header="Portefeuilles d'epargne fictifs">
+    <div class="actions-toolbar">
+      <div class="toolbar-actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Creer un portefeuille"
+          (click)="openCreateWalletDialog()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-arrow-right-arrow-left"
+          class="p-button-outlined"
+          label="+ Depot/retrait"
+          (click)="openManualMovementDialog()"
+        ></button>
+      </div>
+      <p-message
+        *ngIf="createWalletError"
+        severity="warn"
+        [text]="createWalletError"
+      ></p-message>
+      <p-message
+        *ngIf="walletActionError"
+        severity="error"
+        [text]="walletActionError"
+      ></p-message>
+    </div>
+
+    <div
+      class="target-budget-banner"
+      [class.is-danger]="getTargetBudgetRemaining() < 0"
+      [class.is-success]="getTargetBudgetRemaining() >= 0"
+    >
+      <div class="target-budget-main">
+        <div class="target-budget-label">Net des mouvements internes epargne</div>
+        <div class="target-budget-value">
+          {{ netAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+        </div>
+      </div>
+      <div class="target-budget-main">
+        <div class="target-budget-label">Objectifs cumules des portefeuilles actifs</div>
+        <div class="target-budget-value">
+          {{ getActiveWalletTargetTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+        </div>
+      </div>
+      <div class="target-budget-status">
+        <div class="target-budget-status-label">
+          {{ getRemainingToAllocate() >= 0 ? 'Marge theorique' : 'Ecart theorique' }}
+        </div>
+        <div class="target-budget-status-value">
+          {{ (getRemainingToAllocate() >= 0 ? getRemainingToAllocate() : getRemainingToAllocateOverage()) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="target-budget-warning" *ngIf="getTargetBudgetRemaining() < 0">
+      Les objectifs depassent le net des mouvements internes observes. Cela reste autorise.
+    </div>
+
+    <p-table [value]="walletProgress" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]">
+      <ng-template pTemplate="caption">
+        <strong>Recapitulatif par portefeuille</strong>
+      </ng-template>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Portefeuille</th>
+          <th class="text-right">Objectif</th>
+          <th class="text-right">Montant mis de cote</th>
+          <th class="text-right">Reste</th>
+          <th class="text-right">Progression</th>
+          <th>Etat</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-progress>
+        <tr [class.wallet-closed]="!progress.isActive">
+          <td>{{ progress.name }}</td>
+          <td class="text-right">
+            {{ progress.targetAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          </td>
+          <td class="text-right">
+            {{ progress.allocatedAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          </td>
+          <td class="text-right">
+            {{ progress.remainingAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          </td>
+          <td class="text-right">
+            {{ progress.progressRate | number: '1.0-1' }} %
+            <div class="wallet-progress-track">
+              <div
+                class="wallet-progress-fill"
+                [style.width.%]="getProgressWidth(progress.progressRate)"
+              ></div>
+            </div>
+          </td>
+          <td>
+            <span
+              class="wallet-state"
+              [class.wallet-state-active]="progress.isActive"
+              [class.wallet-state-closed]="!progress.isActive"
+            >
+              {{ progress.isActive ? 'Actif' : 'Cloture' }}
+            </span>
+          </td>
+          <td>
+            <div class="wallet-actions">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text"
+                label="Modifier"
+                (click)="openEditWalletDialog(progress)"
+              ></button>
+              <button
+                *ngIf="progress.isActive"
+                pButton
+                type="button"
+                icon="pi pi-lock"
+                class="p-button-text"
+                label="Clore"
+                (click)="closeWalletById(progress.id)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger"
+                label="Supprimer"
+                (click)="deleteWallet(progress)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">Aucun portefeuille fictif d'epargne.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <p-card header="Mouvements de transfert interne">
+    <div class="movements-scope-note">
+      Tous les mouvements internes sont listes ici. En revanche, l'agregat par compte epargne exclut les comptes courants et joints.
+    </div>
+
+    <div class="filters-grid">
+      <div class="filter-item">
+        <label>Compte</label>
+        <p-dropdown
+          [options]="accountOptions"
+          [(ngModel)]="selectedAccount"
+          (onChange)="applyFilters()"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-item">
+        <label>Annee</label>
+        <p-dropdown
+          [options]="yearOptions"
+          [(ngModel)]="selectedYear"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="applyFilters()"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-item">
+        <label>Mois</label>
+        <p-dropdown
+          [options]="monthOptions"
+          [(ngModel)]="selectedMonth"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="applyFilters()"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-item">
+        <label>Flux</label>
+        <p-dropdown
+          [options]="flowOptions"
+          [(ngModel)]="selectedFlow"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="applyFilters()"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-item">
+        <label>Portefeuille</label>
+        <p-dropdown
+          [options]="walletFilterOptions"
+          [(ngModel)]="selectedWallet"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="applyFilters()"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-item actions">
+        <button
+          pButton
+          type="button"
+          class="p-button-outlined"
+          icon="pi pi-refresh"
+          label="Reinitialiser"
+          (click)="resetFilters()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card incoming">
+        <div class="summary-label">Entrees sur epargne</div>
+        <div class="summary-value">{{ totalIncoming | currency: 'EUR':'symbol':'1.2-2':'fr' }}</div>
+      </div>
+      <div class="summary-card outgoing">
+        <div class="summary-label">Sorties depuis epargne</div>
+        <div class="summary-value">{{ totalOutgoing | currency: 'EUR':'symbol':'1.2-2':'fr' }}</div>
+      </div>
+      <div class="summary-card net" [class.negative]="netAmount < 0">
+        <div class="summary-label">Net epargne</div>
+        <div class="summary-value">{{ netAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <p-card header="Repartition par type d'epargne">
+        <div class="chart-container" *ngIf="savingsByType.length > 0; else noTypeData">
+          <p-chart
+            type="bar"
+            [data]="savingsTypeChartData"
+            [options]="savingsTypeChartOptions"
+          ></p-chart>
+        </div>
+        <ng-template #noTypeData>
+          <div class="empty-block">Aucun type d'epargne a afficher pour ce filtre.</div>
+        </ng-template>
+      </p-card>
+
+      <p-card header="Montant total par compte epargne">
+        <p-table [value]="savingsByAccount" [paginator]="false">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Compte</th>
+              <th class="text-right">Entrees</th>
+              <th class="text-right">Sorties</th>
+              <th class="text-right">Net</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.accountName }}</td>
+              <td class="text-right amount-positive">
+                {{ row.incoming | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              </td>
+              <td class="text-right amount-negative">
+                {{ row.outgoing | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              </td>
+              <td class="text-right" [class.amount-positive]="row.net >= 0" [class.amount-negative]="row.net < 0">
+                {{ row.net | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4">Aucun mouvement a agreger par compte.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </div>
+
+    <p-table
+      [value]="movements"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[20, 50, 100]"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Compte</th>
+          <th>Categorie</th>
+          <th>Sous-categorie</th>
+          <th class="text-right">Montant</th>
+          <th>Repartition</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-movement>
+        <tr>
+          <td>{{ movement.date | date: 'dd/MM/yyyy' }}</td>
+          <td>{{ movement.description }}</td>
+          <td>{{ movement.accountName }}</td>
+          <td>{{ movement.categoryLabel }}</td>
+          <td>{{ movement.subCategoryLabel }}</td>
+          <td class="text-right">
+            <p-tag
+              [severity]="movement.signedAmount < 0 ? 'danger' : 'success'"
+              [value]="(movement.signedAmount | currency: 'EUR':'symbol':'1.2-2':'fr') || ''"
+            >
+            </p-tag>
+          </td>
+          <td>
+            <div class="allocation-cell" *ngIf="movement.signedAmount > 0 && movement.allocations.length > 0">
+              <div>{{ getAllocationLabel(movement) }}</div>
+              <div class="allocation-metrics">
+                Reparti {{ movement.allocatedAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+                sur {{ getMovementAssignableAmount(movement) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              </div>
+              <div class="allocation-metrics">
+                Reste a repartir : {{ getMovementRemainingAmount(movement) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <button
+              *ngIf="movement.signedAmount > 0"
+              pButton
+              type="button"
+              icon="pi pi-sliders-h"
+              class="p-button-text"
+              label="Repartir"
+              [disabled]="!canAllocateMovement(movement)"
+              (click)="openAllocationDialog(movement)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">Aucun mouvement epargne pour les filtres selectionnes.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<p-dialog
+  [header]="walletDialogMode === 'edit' ? 'Modifier le portefeuille' : 'Nouveau portefeuille fictif'"
+  [(visible)]="walletCreationDialogVisible"
+  [modal]="true"
+  [closable]="true"
+  [dismissableMask]="true"
+  (onHide)="closeCreateWalletDialog()"
+  [style]="{ width: '460px' }"
+>
+  <div class="modal-content">
+    <div class="modal-row">
+      <label>Nom du portefeuille</label>
+      <input
+        pInputText
+        type="text"
+        [(ngModel)]="newWalletName"
+        placeholder="Ex. Vacances d'ete"
+      />
+    </div>
+
+    <div class="modal-row">
+      <label>Objectif (montant)</label>
+      <p-inputNumber
+        [(ngModel)]="newWalletTargetAmount"
+        [min]="0"
+        mode="currency"
+        currency="EUR"
+        locale="fr-FR"
+      ></p-inputNumber>
+    </div>
+
+    <p-message
+      *ngIf="createWalletError"
+      severity="warn"
+      [text]="createWalletError"
+      class="modal-message"
+    ></p-message>
+
+    <div class="modal-actions">
+      <button
+        pButton
+        class="p-button-secondary"
+        type="button"
+        label="Annuler"
+        (click)="closeCreateWalletDialog()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="walletDialogMode === 'edit' ? 'Enregistrer' : 'Creer'"
+        [icon]="walletDialogMode === 'edit' ? 'pi pi-save' : 'pi pi-check'"
+        (click)="createSavingsWallet()"
+      ></button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Depot / retrait interne"
+  [(visible)]="manualMovementDialogVisible"
+  [modal]="true"
+  [closable]="true"
+  [dismissableMask]="true"
+  (onHide)="closeManualMovementDialog()"
+  [style]="{ width: '500px' }"
+>
+  <div class="modal-content">
+    <div class="modal-row">
+      <label>Type de mouvement</label>
+      <p-listbox
+        [options]="manualMovementTypeOptions"
+        [(ngModel)]="manualMovementType"
+        optionLabel="label"
+        optionValue="value"
+      ></p-listbox>
+    </div>
+
+    <div class="modal-row">
+      <label>Date</label>
+      <p-calendar
+        [(ngModel)]="manualMovementDate"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+      ></p-calendar>
+    </div>
+
+    <div class="modal-row">
+      <label>Libelle</label>
+      <input
+        pInputText
+        type="text"
+        [(ngModel)]="manualMovementLabel"
+        placeholder="Ex. Depot espece, retrait exceptionnel"
+      />
+    </div>
+
+    <div class="modal-row">
+      <label>Montant</label>
+      <p-inputNumber
+        [(ngModel)]="manualMovementAmount"
+        [min]="0"
+        mode="currency"
+        currency="EUR"
+        locale="fr-FR"
+      ></p-inputNumber>
+    </div>
+
+    <p-message
+      *ngIf="manualMovementError"
+      severity="warn"
+      [text]="manualMovementError"
+      class="modal-message"
+    ></p-message>
+
+    <div class="modal-actions">
+      <button
+        pButton
+        class="p-button-secondary"
+        type="button"
+        label="Annuler"
+        (click)="closeManualMovementDialog()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Enregistrer"
+        icon="pi pi-save"
+        (click)="saveManualMovement()"
+      ></button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Repartir le transfert interne"
+  [(visible)]="allocationDialogVisible"
+  [modal]="true"
+  [closable]="true"
+  [dismissableMask]="true"
+  (onHide)="closeAllocationDialog()"
+  [style]="{ width: '540px' }"
+>
+  <div class="modal-content" *ngIf="selectedAllocationMovement">
+    <div class="allocation-hero">
+      <div class="allocation-hero-copy">
+        <div class="allocation-kicker">Transfert interne</div>
+        <h3 class="allocation-title">{{ selectedAllocationMovement.description || 'Sans libelle' }}</h3>
+        <div class="allocation-meta">
+          <span>{{ selectedAllocationMovement.date | date: 'dd/MM/yyyy' }}</span>
+          <span>{{ selectedAllocationMovement.accountName }}</span>
+        </div>
+      </div>
+      <div class="allocation-hero-amount">
+        <span class="allocation-hero-label">Montant a repartir</span>
+        <strong>{{ allocationTotalToDistribute | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
+      </div>
+    </div>
+
+    <div class="allocation-overview">
+      <div class="allocation-overview-card">
+        <span class="allocation-overview-label">Reparti</span>
+        <strong>{{ getAllocationTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
+      </div>
+      <div
+        class="allocation-overview-card"
+        [class.is-warning]="getAllocationRemaining() > 0"
+        [class.is-danger]="getAllocationRemaining() < 0"
+      >
+        <span class="allocation-overview-label">Reste</span>
+        <strong>{{ getAllocationRemaining() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
+        <span class="allocation-overview-note" *ngIf="getAllocationRemaining() < 0">
+          Depassement de {{ getAllocationOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+        </span>
+      </div>
+      <div class="allocation-overview-card allocation-overview-card-progress">
+        <span class="allocation-overview-label">Avancement</span>
+        <strong>{{ getAllocationSharePercent(getAllocationTotal()) | number: '1.0-0' }} %</strong>
+        <span class="allocation-overview-note" *ngIf="getAllocationRemaining() < 0">
+          Le total reparti depasse le montant du transfert.
+        </span>
+      </div>
+    </div>
+
+    <div class="allocation-progress-panel" [class.is-danger]="getAllocationRemaining() < 0">
+      <div class="allocation-progress-track">
+        <div
+          class="allocation-progress-fill"
+          [class.is-danger]="getAllocationRemaining() < 0"
+          [style.width.%]="getAllocationSharePercent(getAllocationTotal())"
+        ></div>
+      </div>
+      <div class="allocation-progress-caption">
+        <ng-container *ngIf="getAllocationRemaining() >= 0; else allocationOverflowCaption">
+          Ajustez les montants jusqu'a atteindre exactement le total du transfert.
+        </ng-container>
+        <ng-template #allocationOverflowCaption>
+          Le montant reparti depasse le total du transfert interne. Reduisez une ou plusieurs enveloppes.
+        </ng-template>
+      </div>
+    </div>
+
+    <p-message *ngIf="allocationDialogError" severity="warn" [text]="allocationDialogError" class="modal-message"></p-message>
+
+    <div class="allocation-section">
+      <div class="allocation-section-header">
+        <div>
+          <div class="allocation-section-title">Portefeuilles actifs</div>
+          <div class="allocation-section-subtitle">Repartition libre sur les enveloppes en cours.</div>
+        </div>
+        <div class="allocation-quick-actions" *ngIf="allocationDraft.length > 0">
+          <button
+            pButton
+            type="button"
+            class="p-button-outlined p-button-sm"
+            label="Repartir egalement"
+            icon="pi pi-sort-alt"
+            (click)="splitAllocationEqually()"
+          ></button>
+        </div>
+      </div>
+
+      <div class="allocation-wallet-grid">
+        <div class="allocation-wallet-card" *ngFor="let row of allocationDraft">
+          <div class="allocation-wallet-card-top">
+            <div>
+              <div class="allocation-wallet-name">{{ row.walletName }}</div>
+              <div class="allocation-wallet-hint">
+                {{ getAllocationSharePercent(getDraftDisplayAmount(row.amount)) | number: '1.0-0' }} % du transfert
+              </div>
+            </div>
+            <div class="allocation-wallet-amount">
+              {{ getDraftDisplayAmount(row.amount) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+            </div>
+          </div>
+
+          <div class="allocation-wallet-bar">
+            <div
+              class="allocation-wallet-bar-fill"
+              [style.width.%]="getAllocationSharePercent(getDraftDisplayAmount(row.amount))"
+            ></div>
+          </div>
+
+          <div class="allocation-wallet-input">
+            <div class="allocation-wallet-input-head">
+              <label>Montant a affecter</label>
+              <button
+                pButton
+                type="button"
+                class="p-button-text p-button-sm allocation-inline-action"
+                label="Tout affecter"
+                (click)="allocateAllToWallet(row.walletId)"
+              ></button>
+            </div>
+            <p-inputNumber
+              [(ngModel)]="row.amount"
+              mode="currency"
+              currency="EUR"
+              locale="fr-FR"
+              [min]="0"
+              [showButtons]="false"
+              placeholder="0,00 EUR"
+            ></p-inputNumber>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="allocation-section allocation-section-locked" *ngIf="lockedAllocationDraft.length > 0">
+      <div class="allocation-section-header">
+        <div>
+          <div class="allocation-section-title">Portefeuilles clotures conserves</div>
+          <div class="allocation-section-subtitle">
+            Ces montants restent rattaches a des portefeuilles deja clotures.
+          </div>
+        </div>
+        <div class="allocation-locked-total">
+          {{ getLockedAllocationTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+        </div>
+      </div>
+
+      <div class="allocation-locked-list">
+        <div class="allocation-locked-item" *ngFor="let row of lockedAllocationDraft">
+          <div>
+            <div class="allocation-wallet-name">{{ row.walletName }}</div>
+            <div class="allocation-wallet-hint">Portefeuille cloture</div>
+          </div>
+          <div class="allocation-wallet-amount">
+            {{ row.amount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button
+        *ngIf="selectedAllocationMovement && selectedAllocationMovement.allocations.length > 0"
+        pButton
+        type="button"
+        class="p-button-danger p-button-text"
+        label="Annuler la repartition"
+        icon="pi pi-undo"
+        (click)="clearAllocation()"
+      ></button>
+      <button
+        pButton
+        class="p-button-secondary"
+        type="button"
+        label="Annuler"
+        (click)="closeAllocationDialog()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Enregistrer"
+        icon="pi pi-save"
+        [disabled]="getAllocationRemaining() !== 0"
+        (click)="saveAllocation()"
+      ></button>
+    </div>
+  </div>
+</p-dialog>

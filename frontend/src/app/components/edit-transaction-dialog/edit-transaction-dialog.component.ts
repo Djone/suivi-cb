@@ -153,6 +153,9 @@ export class EditTransactionDialogComponent implements OnInit {
     this.data.transaction.advanceToJointAccount = this.toBoolean(
       this.data.transaction.advanceToJointAccount,
     );
+    this.data.transaction.isInternalTransfer = this.toBoolean(
+      this.data.transaction.isInternalTransfer,
+    );
 
     // Récupérer le financialFlowId (en snake_case ou camelCase)
     const financialFlowId =
@@ -231,6 +234,9 @@ export class EditTransactionDialogComponent implements OnInit {
           if (!exists) {
             this.selectedSubCategoryId = 0;
           }
+          if (this.toBoolean(this.data.transaction.isInternalTransfer)) {
+            this.trySelectSavingsTransferSubCategory();
+          }
         },
         error: (err) =>
           console.error('Erreur lors du chargement des sous-catégories:', err),
@@ -249,6 +255,18 @@ export class EditTransactionDialogComponent implements OnInit {
 
   onSubCategorySelected(): void {
     // [(ngModel)] already syncs the selection
+  }
+
+  onInternalTransferChange(): void {
+    this.data.transaction.isInternalTransfer = this.toBoolean(
+      this.data.transaction.isInternalTransfer,
+    );
+
+    if (this.data.transaction.isInternalTransfer) {
+      this.trySelectSavingsTransferSubCategory();
+    }
+
+    this.onFieldChange();
   }
 
   onDescriptionComplete(event: any): void {
@@ -338,6 +356,9 @@ export class EditTransactionDialogComponent implements OnInit {
       recurringTransactionId: this.data.transaction.recurringTransactionId,
       advanceToJointAccount: this.toBoolean(
         this.data.transaction.advanceToJointAccount,
+      ),
+      isInternalTransfer: this.toBoolean(
+        this.data.transaction.isInternalTransfer,
       ),
     };
 
@@ -480,6 +501,27 @@ export class EditTransactionDialogComponent implements OnInit {
       return normalized === '1' || normalized === 'true';
     }
     return false;
+  }
+
+  private trySelectSavingsTransferSubCategory(): void {
+    const match = this.activeSubCategories.find((subCategory) => {
+      const categoryLabel = this.normalizeLabel(subCategory.categoryLabel || '');
+      const label = this.normalizeLabel(subCategory.label || '');
+      return categoryLabel === 'epargne' && label === 'transfert interne';
+    });
+
+    if (match && typeof match.id === 'number') {
+      this.selectedSubCategoryId = match.id;
+      this.data.transaction.subCategoryId = match.id;
+    }
+  }
+
+  private normalizeLabel(value: string): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
   }
 
   openCreateSubCategory(event?: Event): void {

@@ -9,5 +9,6 @@ export interface Transaction {
   financialFlowId: number | null;
   recurringTransactionId?: number | null;
   advanceToJointAccount?: boolean | number | string | null;
+  isInternalTransfer?: boolean | number | string | null;
   [key: string]: any;
 }

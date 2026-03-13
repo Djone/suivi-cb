@@ -1,7 +1,7 @@
-const humps = require('humps');
+﻿const humps = require('humps');
 const db = require('../config/db');
 
-// Fonctions utilitaires pour "promisifier" les méthodes de la base de données
+// Fonctions utilitaires pour "promisifier" les mÃ©thodes de la base de donnÃ©es
 const dbAll = (query, params = []) => new Promise((resolve, reject) => {
   db.all(query, params, (err, rows) => (err ? reject(err) : resolve(rows)));
 });
@@ -11,14 +11,24 @@ const dbGet = (query, params = []) => new Promise((resolve, reject) => {
 });
 
 const dbRun = (query, params = []) => new Promise((resolve, reject) => {
-  db.run(query, params, function (err) { // Utiliser une fonction normale pour `this`
+  db.run(query, params, function (err) {
     if (err) return reject(err);
     resolve({ lastID: this.lastID, changes: this.changes });
   });
 });
 
+const toDbBoolean = (value) => {
+  if (typeof value === 'boolean') return value ? 1 : 0;
+  if (typeof value === 'number') return value === 1 ? 1 : 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === '1' || normalized === 'true' ? 1 : 0;
+  }
+  return 0;
+};
+
 const Transaction = {
-  // Récupérer toutes les transactions (avec jointures pour les détails)
+  // RÃ©cupÃ©rer toutes les transactions (avec jointures pour les dÃ©tails)
   getAll: async (filters = {}) => {
     const normalizedFilters = humps.decamelizeKeys(filters || {});
     const allowedFilters = {
@@ -26,6 +36,7 @@ const Transaction = {
       sub_category_id: 't.sub_category_id',
       account_id: 't.account_id',
       financial_flow_id: 't.financial_flow_id',
+      is_internal_transfer: 't.is_internal_transfer',
     };
 
     const conditions = [];
@@ -60,7 +71,8 @@ const Transaction = {
         a.name as account_name,
         t.financial_flow_id,
         t.recurring_transaction_id,
-        t.advance_to_joint_account
+        t.advance_to_joint_account,
+        t.is_internal_transfer
       FROM transactions t
       LEFT JOIN subcategories sc ON t.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
@@ -80,25 +92,26 @@ const Transaction = {
   // Ajouter une nouvelle transaction
   add: async (transaction) => {
     const query = `
-      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id, advance_to_joint_account)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id, advance_to_joint_account, is_internal_transfer)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [
       transaction.date,
       transaction.amount,
       transaction.description,
-      transaction.sub_category_id, // Correction: Utiliser snake_case
-      transaction.account_id,      // Correction: Utiliser snake_case
-      transaction.financial_flow_id, // Correction: Utiliser snake_case
+      transaction.sub_category_id,
+      transaction.account_id,
+      transaction.financial_flow_id,
       transaction.recurring_transaction_id,
-      transaction.advance_to_joint_account ? 1 : 0,
+      toDbBoolean(transaction.advance_to_joint_account),
+      toDbBoolean(transaction.is_internal_transfer),
     ];
     console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, params);
     return { id: result.lastID };
   },
 
-  // Mettre à jour une transaction
+  // Mettre Ã  jour une transaction
   update: async (id, transaction) => {
     let targetId = id;
     let payload = transaction;
@@ -124,6 +137,7 @@ const Transaction = {
       'account_id',
       'financial_flow_id',
       'advance_to_joint_account',
+      'is_internal_transfer',
     ];
 
     for (const key of allowed) {
@@ -131,9 +145,9 @@ const Transaction = {
         continue;
       }
 
-      if (key === 'advance_to_joint_account') {
+      if (key === 'advance_to_joint_account' || key === 'is_internal_transfer') {
         fields.push(`${key} = ?`);
-        params.push(payload[key] ? 1 : 0);
+        params.push(toDbBoolean(payload[key]));
         continue;
       }
 
@@ -142,7 +156,7 @@ const Transaction = {
     }
 
     if (fields.length === 0) {
-      throw new Error('Aucun champ à mettre à jour.');
+      throw new Error('Aucun champ Ã  mettre Ã  jour.');
     }
 
     const query = `
@@ -154,7 +168,7 @@ const Transaction = {
     console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, params);
     if (!result.changes) {
-      throw new Error('Aucune transaction trouvée avec cet ID.');
+      throw new Error('Aucune transaction trouvÃ©e avec cet ID.');
     }
     return { id: Number(targetId), changes: result.changes };
   },
@@ -168,10 +182,40 @@ const Transaction = {
     console.log(`[DB_WRITE_DEBUG] Delete operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, [id]);
     if (!result.changes) {
-      throw new Error('Aucune transaction trouvée avec cet ID.');
+      throw new Error('Aucune transaction trouvÃ©e avec cet ID.');
     }
     return undefined;
-  }
+  },
+
+  getById: async (id) => {
+    const parsedId = Number(id);
+    if (!Number.isFinite(parsedId)) {
+      return null;
+    }
+
+    const row = await dbGet(
+      `
+      SELECT
+        id,
+        amount,
+        is_internal_transfer
+      FROM transactions
+      WHERE id = ?
+    `,
+      [parsedId],
+    );
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: Number(row.id),
+      amount: Number(row.amount),
+      isInternalTransfer: Number(row.is_internal_transfer) === 1,
+    };
+  },
 };
 
 module.exports = Transaction;
+

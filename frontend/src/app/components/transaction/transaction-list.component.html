@@ -345,6 +345,17 @@
         >
         </p-dropdown>
 
+        <p-dropdown
+          class="flex-1 min-w-[260px]"
+          [options]="internalTransferFilterOptions"
+          [(ngModel)]="filters.internalTransfer"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Filtrer transferts internes"
+          (onChange)="applyFilter()"
+        >
+        </p-dropdown>
+
         <!-- Filtre par montant -->
         <p-inputGroup class="flex-1 min-w-[150px]">
           <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
@@ -444,6 +455,12 @@
                       class="advance-joint-badge"
                     >
                       Avance compte joint
+                    </span>
+                    <span
+                      *ngIf="isInternalTransfer(transaction)"
+                      class="internal-transfer-badge"
+                    >
+                      Transfert interne
                     </span>
                   </div>
                   <div class="subcategory-text">

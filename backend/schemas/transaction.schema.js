@@ -56,6 +56,13 @@ const transactionSchema = Joi.object({
       )
       .optional()
       .description('Indique si la transaction est une avance vers le compte joint.'),
+    is_internal_transfer: Joi.alternatives()
+      .try(
+        Joi.boolean(),
+        Joi.number().valid(0, 1),
+      )
+      .optional()
+      .description('Indique si la transaction est un transfert interne epargne.'),
   });
 
 module.exports = { 

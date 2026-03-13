@@ -31,4 +31,14 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     targetVersion: '1.4.0',
     priority: 'medium',
   },
+  {
+    title: '[Ticket 11] Epargne : Transfert interne',
+    description: [
+      '[X] Créer une page dédiée pour les transferts internes entre comptes d’épargne',
+      '[X] Intégrer la création de portefeuilles d’épargne dans cette page',
+    ],
+    status: 'in-progress',
+    targetVersion: '1.4.0',
+    priority: 'medium',
+  },
 ];

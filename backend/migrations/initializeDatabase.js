@@ -17,6 +17,68 @@ const getQuery = (query, params = []) =>
     });
   });
 
+const allQuery = (query, params = []) =>
+  new Promise((resolve, reject) => {
+    db.all(query, params, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
+
+const normalizeLabel = (value) =>
+  (value || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+const ensureSavingsSystemData = async () => {
+  const categories = await allQuery(
+    'SELECT id, label, financial_flow_id, is_active FROM categories',
+  );
+
+  for (const financialFlowId of [1, 2]) {
+    let category = categories.find(
+      (item) =>
+        Number(item.financial_flow_id) === financialFlowId &&
+        normalizeLabel(item.label) === 'epargne',
+    );
+
+    if (!category) {
+      const result = await runQuery(
+        'INSERT INTO categories (label, financial_flow_id, is_active) VALUES (?, ?, 1)',
+        ['Épargne', financialFlowId],
+      );
+      category = {
+        id: result.lastID,
+        label: 'Épargne',
+        financial_flow_id: financialFlowId,
+        is_active: 1,
+      };
+      categories.push(category);
+    } else if (Number(category.is_active) !== 1) {
+      await runQuery('UPDATE categories SET is_active = 1 WHERE id = ?', [
+        category.id,
+      ]);
+    }
+
+    const subCategories = await allQuery(
+      'SELECT id, label FROM subcategories WHERE category_id = ?',
+      [category.id],
+    );
+    const hasInternalTransfer = (subCategories || []).some(
+      (subCategory) => normalizeLabel(subCategory.label) === 'transfert interne',
+    );
+    if (!hasInternalTransfer) {
+      await runQuery(
+        'INSERT INTO subcategories (label, category_id) VALUES (?, ?)',
+        ['Transfert interne', category.id],
+      );
+    }
+  }
+};
+
 // Fonction principale d'initialisation, maintenant asynchrone
 const initializeDatabase = async () => {
   try {
@@ -38,6 +100,9 @@ const initializeDatabase = async () => {
     await runQuery(
       `ALTER TABLE transactions ADD COLUMN advance_to_joint_account INTEGER NOT NULL DEFAULT 0;`
     ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN is_internal_transfer INTEGER NOT NULL DEFAULT 0;`
+    ).catch(() => {});
     console.log('✓ Table "transactions" vérifiée/créée.');
 
     await runQuery(`
@@ -57,6 +122,7 @@ const initializeDatabase = async () => {
           label TEXT NOT NULL
       );
     `);
+    await ensureSavingsSystemData();
     console.log('✓ Table "subcategories" vérifiée/créée.');
 
     await runQuery(`
@@ -104,6 +170,36 @@ const initializeDatabase = async () => {
     `);
     console.log('✓ Table "accounts" vérifiée/créée.');
 
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS savings_wallets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        target_amount REAL NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1;`
+    ).catch(() => {});
+    await runQuery(
+      `UPDATE savings_wallets SET is_active = 1 WHERE is_active IS NULL;`
+    ).catch(() => {});
+    console.log('✓ Table "savings_wallets" vérifiée/créée.');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS savings_wallet_allocations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transaction_id INTEGER NOT NULL,
+        wallet_id INTEGER NOT NULL,
+        amount REAL NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(transaction_id, wallet_id),
+        FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+        FOREIGN KEY (wallet_id) REFERENCES savings_wallets(id) ON DELETE CASCADE
+      );
+    `);
+    console.log('✓ Table "savings_wallet_allocations" vérifiée/créée.');
     // Insertion des comptes par défaut si la table est vide
     const row = await getQuery("SELECT COUNT(*) as count FROM accounts");
     if (row && row.count === 0) {
@@ -121,6 +217,24 @@ const initializeDatabase = async () => {
       console.log("✓ Compte joint créé.");
     } else {
       console.log("-> Des comptes existent déjà, aucune insertion nécessaire.");
+    }
+
+    const internalTransferAccount = await getQuery(
+      `SELECT id FROM accounts WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) LIMIT 1`,
+      ['Transfert interne'],
+    );
+    if (!internalTransferAccount) {
+      await runQuery(
+        `INSERT INTO accounts (name, description, color, is_active)
+         VALUES (?, ?, ?, ?)`,
+        [
+          'Transfert interne',
+          'Compte systeme pour les depots et retraits internes d epargne',
+          '#64748b',
+          0,
+        ],
+      );
+      console.log('Compte systeme "Transfert interne" cree.');
     }
 
     await runQuery(`
@@ -170,3 +284,4 @@ const initializeDatabase = async () => {
 };
 
 module.exports = initializeDatabase;
+

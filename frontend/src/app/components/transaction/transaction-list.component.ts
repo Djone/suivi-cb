@@ -52,6 +52,7 @@ interface UpcomingScheduleLite {
 }
 
 type AdvanceJointFilter = 'all' | 'only' | 'exclude';
+type InternalTransferFilter = 'all' | 'only' | 'exclude';
 
 @Component({
   selector: 'app-transaction-list',
@@ -121,6 +122,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     categoryIds: [] as number[],
     subCategoryIds: [] as number[],
     advanceJoint: 'all' as AdvanceJointFilter,
+    internalTransfer: 'all' as InternalTransferFilter,
   };
   advanceJointFilterOptions = [
     { label: 'Toutes les transactions', value: 'all' as AdvanceJointFilter },
@@ -129,6 +131,17 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       value: 'only' as AdvanceJointFilter,
     },
     { label: 'Hors avances compte joint', value: 'exclude' as AdvanceJointFilter },
+  ];
+  internalTransferFilterOptions = [
+    { label: 'Tous les mouvements', value: 'all' as InternalTransferFilter },
+    {
+      label: 'Transferts internes uniquement',
+      value: 'only' as InternalTransferFilter,
+    },
+    {
+      label: 'Hors transferts internes',
+      value: 'exclude' as InternalTransferFilter,
+    },
   ];
   advanceJointTotal = 0;
   advanceJointCount = 0;
@@ -383,6 +396,13 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           : this.filters.advanceJoint === 'only'
             ? isAdvanceJoint
             : !isAdvanceJoint;
+      const isInternalTransfer = this.isInternalTransfer(transaction);
+      const matchInternalTransfer =
+        this.filters.internalTransfer === 'all'
+          ? true
+          : this.filters.internalTransfer === 'only'
+            ? isInternalTransfer
+            : !isInternalTransfer;
 
       return (
         matchDate &&
@@ -390,7 +410,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         matchAmount &&
         matchCategory &&
         matchSubCategory &&
-        matchAdvanceJoint
+        matchAdvanceJoint &&
+        matchInternalTransfer
       );
     });
 
@@ -694,6 +715,21 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   isAdvanceToJointAccount(transaction: Transaction): boolean {
     const raw = transaction.advanceToJointAccount;
+    if (typeof raw === 'boolean') {
+      return raw;
+    }
+    if (typeof raw === 'number') {
+      return raw === 1;
+    }
+    if (typeof raw === 'string') {
+      const normalized = raw.trim().toLowerCase();
+      return normalized === '1' || normalized === 'true';
+    }
+    return false;
+  }
+
+  isInternalTransfer(transaction: Transaction): boolean {
+    const raw = transaction.isInternalTransfer;
     if (typeof raw === 'boolean') {
       return raw;
     }
@@ -1450,6 +1486,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           financialFlowId: defaultFinancialFlowId,
           subCategoryId: null,
           advanceToJointAccount: false,
+          isInternalTransfer: false,
         },
         isNew: true,
       },
@@ -1578,6 +1615,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         financialFlowId: transaction.financialFlowId,
         recurringTransactionId: null,
         advanceToJointAccount: false,
+        isInternalTransfer: false,
       } as Transaction;
 
       this.transactionService

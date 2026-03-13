@@ -128,6 +128,21 @@
     </div>
   </div>
 
+  <div class="p-field mb-3">
+    <div class="flex align-items-center gap-2">
+      <p-checkbox
+        inputId="isInternalTransfer"
+        [binary]="true"
+        [(ngModel)]="data.transaction.isInternalTransfer"
+        (onChange)="onInternalTransferChange()"
+      >
+      </p-checkbox>
+      <label for="isInternalTransfer" class="mb-0">
+        Transfert interne épargne (exclu des stats)
+      </label>
+    </div>
+  </div>
+
   <!-- Sous-catégorie -->
   <div class="p-field mb-3">
     <label for="subcategory" class="block mb-2">Sous-catégorie *</label>
