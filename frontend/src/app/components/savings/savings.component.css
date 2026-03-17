@@ -23,6 +23,12 @@
   gap: 0.35rem;
 }
 
+.movement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .target-budget-banner {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

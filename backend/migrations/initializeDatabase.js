@@ -185,6 +185,36 @@ const initializeDatabase = async () => {
     await runQuery(
       `UPDATE savings_wallets SET is_active = 1 WHERE is_active IS NULL;`
     ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN closed_target_amount REAL;`
+    ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN closed_allocated_amount REAL;`
+    ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN closed_remaining_amount REAL;`
+    ).catch(() => {});
+    await runQuery(`
+      UPDATE savings_wallets
+      SET
+        closed_target_amount = target_amount,
+        closed_allocated_amount = COALESCE((
+          SELECT SUM(swa.amount)
+          FROM savings_wallet_allocations swa
+          WHERE swa.wallet_id = savings_wallets.id
+        ), 0),
+        closed_remaining_amount = target_amount - COALESCE((
+          SELECT SUM(swa.amount)
+          FROM savings_wallet_allocations swa
+          WHERE swa.wallet_id = savings_wallets.id
+        ), 0)
+      WHERE is_active = 0
+        AND (
+          closed_target_amount IS NULL
+          OR closed_allocated_amount IS NULL
+          OR closed_remaining_amount IS NULL
+        );
+    `).catch(() => {});
     console.log('✓ Table "savings_wallets" vérifiée/créée.');
 
     await runQuery(`

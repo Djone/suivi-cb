@@ -8,6 +8,7 @@ import { AccountService } from '../../services/account.service';
 import { TransactionService } from '../../services/transaction.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
+import { ViewportService } from '../../services/viewport.service';
 
 // Models
 import { Transaction } from '../../models/transaction.model';
@@ -97,6 +98,7 @@ interface AccountBalance {
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  isMobile = false;
   transactions: Transaction[] = [];
   recurringTransactions: RecurringTransaction[] = [];
   accounts: Account[] = [];
@@ -132,11 +134,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     private recurringTransactionService: RecurringTransactionService,
     private accountService: AccountService,
     private subCategoryService: SubCategoryService,
+    private viewportService: ViewportService,
     private router: Router,
     private dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.viewportService.mobile$.subscribe((isMobile) => {
+        this.isMobile = isMobile;
+      }),
+    );
+
     // Charger les sous-catégories EN PREMIER
     this.subscriptions.add(
       this.subCategoryService.subCategories$.subscribe({
@@ -850,6 +859,27 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.router.navigate(['/transactions-list', accountId]);
   }
 
+  getAccountInitials(account: Account): string {
+    const parts = (account.name || '')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (!parts.length) {
+      return 'CB';
+    }
+
+    return parts.map((part) => part[0].toUpperCase()).join('');
+  }
+
+  getAccountCardStyle(account: Account): Record<string, string> {
+    const accent = account.color || '#667eea';
+    return {
+      '--account-accent': accent,
+      '--account-accent-soft': `${accent}22`,
+    };
+  }
+
   toggleSchedules(accountId: number | undefined): void {
     if (accountId !== undefined) {
       if (this.expandedSchedules.has(accountId)) {
@@ -1459,3 +1489,4 @@ export class HomeComponent implements OnInit, OnDestroy {
     return categories.reduce((sum, cat) => sum + cat.total, 0);
   }
 }
+

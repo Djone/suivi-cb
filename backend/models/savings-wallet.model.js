@@ -58,7 +58,14 @@ const SavingsWallet = {
     const whereClause = includeClosed ? '' : 'WHERE is_active = 1';
     const rows = await dbAll(
       `
-      SELECT id, name, target_amount AS target_amount, is_active AS is_active
+      SELECT
+        id,
+        name,
+        target_amount AS target_amount,
+        is_active AS is_active,
+        closed_target_amount AS closed_target_amount,
+        closed_allocated_amount AS closed_allocated_amount,
+        closed_remaining_amount AS closed_remaining_amount
       FROM savings_wallets
       ${whereClause}
       ORDER BY name ASC
@@ -69,6 +76,16 @@ const SavingsWallet = {
       name: row.name,
       targetAmount: Number(row.target_amount),
       isActive: Number(row.is_active) === 1,
+      closedTargetAmount:
+        row.closed_target_amount === null ? null : Number(row.closed_target_amount),
+      closedAllocatedAmount:
+        row.closed_allocated_amount === null
+          ? null
+          : Number(row.closed_allocated_amount),
+      closedRemainingAmount:
+        row.closed_remaining_amount === null
+          ? null
+          : Number(row.closed_remaining_amount),
     }));
   },
 
@@ -124,6 +141,9 @@ const SavingsWallet = {
         w.name,
         w.target_amount AS target_amount,
         w.is_active AS is_active,
+        w.closed_target_amount AS closed_target_amount,
+        w.closed_allocated_amount AS closed_allocated_amount,
+        w.closed_remaining_amount AS closed_remaining_amount,
         COALESCE(
           SUM(
             CASE
@@ -145,16 +165,27 @@ const SavingsWallet = {
 
     const summaryRows = await dbAll(query, params);
     return summaryRows.map((row) => {
-      const targetAmount = Number(row.target_amount ?? 0);
-      const allocatedAmount = Number(row.allocated_amount ?? 0);
-      const remainingAmount = targetAmount - allocatedAmount;
+      const isActive = Number(row.is_active) === 1;
+      const targetAmount = Number(
+        isActive ? row.target_amount ?? 0 : row.closed_target_amount ?? row.target_amount ?? 0,
+      );
+      const allocatedAmount = Number(
+        isActive
+          ? row.allocated_amount ?? 0
+          : row.closed_allocated_amount ?? row.allocated_amount ?? 0,
+      );
+      const remainingAmount = Number(
+        isActive
+          ? targetAmount - allocatedAmount
+          : row.closed_remaining_amount ?? targetAmount - allocatedAmount,
+      );
       return {
         id: Number(row.id),
         name: row.name,
         targetAmount,
         allocatedAmount,
         remainingAmount,
-        isActive: Number(row.is_active) === 1,
+        isActive,
         progressRate:
           targetAmount > 0
             ? Math.min((allocatedAmount / targetAmount) * 100, 100)
@@ -256,7 +287,23 @@ const SavingsWallet = {
   closeWallet: async (id) => {
     const query = `
       UPDATE savings_wallets
-      SET is_active = 0
+      SET
+        is_active = 0,
+        closed_target_amount = target_amount,
+        closed_allocated_amount = COALESCE((
+          SELECT SUM(swa.amount)
+          FROM savings_wallet_allocations swa
+          JOIN transactions t ON t.id = swa.transaction_id
+          WHERE swa.wallet_id = savings_wallets.id
+            AND t.is_internal_transfer = 1
+        ), 0),
+        closed_remaining_amount = target_amount - COALESCE((
+          SELECT SUM(swa.amount)
+          FROM savings_wallet_allocations swa
+          JOIN transactions t ON t.id = swa.transaction_id
+          WHERE swa.wallet_id = savings_wallets.id
+            AND t.is_internal_transfer = 1
+        ), 0)
       WHERE id = ?
     `;
     const result = await dbRun(query, [id]);

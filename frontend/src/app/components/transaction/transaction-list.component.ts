@@ -1,4 +1,4 @@
-﻿// frontend/src/app/components/transaction-list/transaction-list.component.ts
+// frontend/src/app/components/transaction-list/transaction-list.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MessageService } from 'primeng/api';
@@ -21,6 +21,7 @@ import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { FilterManagerService } from '../../services/filter-manager.service';
+import { ViewportService } from '../../services/viewport.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { EditTransactionDialogComponent } from '../edit-transaction-dialog/edit-transaction-dialog.component';
 import { Transaction } from '../../models/transaction.model';
@@ -77,6 +78,7 @@ type InternalTransferFilter = 'all' | 'only' | 'exclude';
   ],
 })
 export class TransactionListComponent implements OnInit, OnDestroy {
+  isMobile = false;
   accountId: number | null = null;
   account: Account | null = null;
   accounts: Account[] = [];
@@ -172,9 +174,16 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     private dialogService: DialogService,
     private messageService: MessageService,
     private route: ActivatedRoute,
+    private viewportService: ViewportService,
   ) {}
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.viewportService.mobile$.subscribe((isMobile) => {
+        this.isMobile = isMobile;
+      }),
+    );
+
     // Récupérer l'accountId depuis les paramètres de route
     this.route.params.subscribe((params) => {
       if (params['accountId']) {
@@ -815,7 +824,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       endIndex,
     );
 
-    // Garder aussi la pagination simple pour compatibilitÃƒÂ©
+    // Garder aussi la pagination simple pour compatibilité
     const startIndexTx = (this.currentPage - 1) * this.pageSize;
     const endIndexTx = startIndexTx + this.pageSize;
     this.paginatedTransactions = this.filteredTransactions.slice(
@@ -942,7 +951,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     this.accountService.accounts$.subscribe((accounts) => {
       this.account = accounts.find((a) => a.id === this.accountId) || null;
-      console.log('TRANSACTION LIST : Compte chargÃƒÂ©:', this.account);
+      console.log('TRANSACTION LIST : Compte chargé:', this.account);
       this.loadRecurringTransactions();
     });
   }
@@ -1311,7 +1320,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return flowId === 2 ? -Math.abs(amount) : Math.abs(amount);
   }
 
-  // Basculer l'affichage des ÃƒÂ©chÃƒÂ©ances
+  // Basculer l'affichage des échéances
   toggleRecurring(): void {
     this.showRecurring = !this.showRecurring;
   }
@@ -1777,3 +1786,4 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }, 0);
   }
 }
+

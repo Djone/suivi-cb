@@ -105,6 +105,12 @@
             >
               {{ progress.isActive ? 'Actif' : 'Cloture' }}
             </span>
+            <span
+              *ngIf="progress.isActive && progress.remainingAmount <= 0"
+              class="wallet-state wallet-state-active"
+            >
+              Objectif atteint
+            </span>
           </td>
           <td>
             <div class="wallet-actions">
@@ -131,7 +137,7 @@
                 icon="pi pi-trash"
                 class="p-button-text p-button-danger"
                 label="Supprimer"
-                (click)="deleteWallet(progress)"
+                (click)="requestDeleteWallet(progress)"
               ></button>
             </div>
           </td>
@@ -328,16 +334,36 @@
             </div>
           </td>
           <td>
-            <button
-              *ngIf="movement.signedAmount > 0"
-              pButton
-              type="button"
-              icon="pi pi-sliders-h"
-              class="p-button-text"
-              label="Repartir"
-              [disabled]="!canAllocateMovement(movement)"
-              (click)="openAllocationDialog(movement)"
-            ></button>
+            <div class="movement-actions">
+              <button
+                *ngIf="movement.signedAmount > 0"
+                pButton
+                type="button"
+                icon="pi pi-sliders-h"
+                class="p-button-text"
+                label="Repartir"
+                [disabled]="!canAllocateMovement(movement)"
+                (click)="openAllocationDialog(movement)"
+              ></button>
+              <button
+                *ngIf="isStandaloneInternalMovement(movement)"
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text"
+                label="Modifier"
+                (click)="openEditManualMovementDialog(movement)"
+              ></button>
+              <button
+                *ngIf="isStandaloneInternalMovement(movement)"
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger"
+                label="Supprimer"
+                (click)="deleteManualMovement(movement)"
+              ></button>
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -349,6 +375,37 @@
     </p-table>
   </p-card>
 </div>
+
+<p-dialog
+  [header]="getWalletConfirmationTitle()"
+  [(visible)]="walletConfirmationDialogVisible"
+  [modal]="true"
+  [closable]="true"
+  [dismissableMask]="true"
+  (onHide)="closeWalletConfirmationDialog()"
+  [style]="{ width: '430px' }"
+>
+  <div class="modal-content" *ngIf="pendingWallet">
+    <p>{{ getWalletConfirmationMessage() }}</p>
+
+    <div class="modal-actions">
+      <button
+        pButton
+        class="p-button-secondary"
+        type="button"
+        label="Annuler"
+        (click)="closeWalletConfirmationDialog()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="pendingWalletAction === 'delete' ? 'Supprimer' : 'Clore'"
+        [class]="pendingWalletAction === 'delete' ? 'p-button-danger' : ''"
+        (click)="confirmWalletAction()"
+      ></button>
+    </div>
+  </div>
+</p-dialog>
 
 <p-dialog
   [header]="walletDialogMode === 'edit' ? 'Modifier le portefeuille' : 'Nouveau portefeuille fictif'"
@@ -408,7 +465,7 @@
 </p-dialog>
 
 <p-dialog
-  header="Depot / retrait interne"
+  [header]="getManualMovementDialogTitle()"
   [(visible)]="manualMovementDialogVisible"
   [modal]="true"
   [closable]="true"
@@ -424,6 +481,7 @@
         [(ngModel)]="manualMovementType"
         optionLabel="label"
         optionValue="value"
+        [disabled]="isManualMovementTypeLocked()"
       ></p-listbox>
     </div>
 
@@ -509,6 +567,24 @@
     </div>
 
     <div class="allocation-overview">
+      <div
+        class="allocation-overview-card"
+        [class.is-warning]="getRemainingToAllocate() > 0"
+        [class.is-danger]="getRemainingToAllocate() < 0"
+      >
+        <span class="allocation-overview-label">Marge theorique</span>
+        <strong>
+          {{
+            (getRemainingToAllocate() >= 0
+              ? getRemainingToAllocate()
+              : getRemainingToAllocateOverage()
+            ) | currency: 'EUR':'symbol':'1.2-2':'fr'
+          }}
+        </strong>
+        <span class="allocation-overview-note" *ngIf="getRemainingToAllocate() < 0">
+          Ecart theorique de {{ getRemainingToAllocateOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+        </span>
+      </div>
       <div class="allocation-overview-card">
         <span class="allocation-overview-label">Reparti</span>
         <strong>{{ getAllocationTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
@@ -543,7 +619,7 @@
       </div>
       <div class="allocation-progress-caption">
         <ng-container *ngIf="getAllocationRemaining() >= 0; else allocationOverflowCaption">
-          Ajustez les montants jusqu'a atteindre exactement le total du transfert.
+          Vous pouvez repartir tout ou partie du transfert. Le reste non affecte peut etre conserve.
         </ng-container>
         <ng-template #allocationOverflowCaption>
           Le montant reparti depasse le total du transfert interne. Reduisez une ou plusieurs enveloppes.
@@ -579,6 +655,12 @@
               <div class="allocation-wallet-hint">
                 {{ getAllocationSharePercent(getDraftDisplayAmount(row.amount)) | number: '1.0-0' }} % du transfert
               </div>
+              <div class="allocation-wallet-hint" *ngIf="isWalletFrozenForAllocation(row.walletId)">
+                Objectif atteint
+              </div>
+              <div class="allocation-wallet-hint">
+                Reste sur l'enveloppe : {{ getWalletRemainingAmount(row.walletId) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              </div>
             </div>
             <div class="allocation-wallet-amount">
               {{ getDraftDisplayAmount(row.amount) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
@@ -600,15 +682,19 @@
                 type="button"
                 class="p-button-text p-button-sm allocation-inline-action"
                 label="Tout affecter"
+                [disabled]="isWalletFrozenForAllocation(row.walletId) || getWalletInputCapacity(row.walletId) <= 0"
                 (click)="allocateAllToWallet(row.walletId)"
               ></button>
             </div>
             <p-inputNumber
               [(ngModel)]="row.amount"
+              (ngModelChange)="onAllocationAmountChange(row.walletId, $event)"
               mode="currency"
               currency="EUR"
               locale="fr-FR"
               [min]="0"
+              [max]="getWalletInputCapacity(row.walletId)"
+              [disabled]="isWalletFrozenForAllocation(row.walletId) || getWalletInputCapacity(row.walletId) <= 0"
               [showButtons]="false"
               placeholder="0,00 EUR"
             ></p-inputNumber>
@@ -665,7 +751,7 @@
         type="button"
         label="Enregistrer"
         icon="pi pi-save"
-        [disabled]="getAllocationRemaining() !== 0"
+        [disabled]="getAllocationRemaining() < 0"
         (click)="saveAllocation()"
       ></button>
     </div>
