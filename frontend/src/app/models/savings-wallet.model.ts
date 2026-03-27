@@ -3,6 +3,7 @@ export interface SavingsWallet {
   name: string;
   targetAmount: number;
   isActive: boolean;
+  currentAllocatedAmount?: number;
 }
 
 export interface SavingsWalletAllocation {

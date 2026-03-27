@@ -22,7 +22,6 @@ import { Transaction } from '../../models/transaction.model';
 import { Account } from '../../models/account.model';
 import {
   SavingsWallet,
-  SavingsWalletAllocationRow,
   SavingsWalletProgress,
 } from '../../models/savings-wallet.model';
 import { SubCategory } from '../../models/sub-category.model';
@@ -38,8 +37,6 @@ interface SavingsMovement {
   categoryLabel: string;
   subCategoryLabel: string;
   signedAmount: number;
-  allocations: SavingsWalletAllocationRow[];
-  allocatedAmount: number;
 }
 
 interface SavingsTypeStat {
@@ -63,7 +60,7 @@ interface MovementAllocationDraft {
 }
 
 type SavingsFlowFilter = 'all' | 'incoming' | 'outgoing';
-type WalletFilterValue = number | 'unassigned' | null;
+type WalletFilterValue = null;
 type WalletDialogMode = 'create' | 'edit';
 type ManualMovementType = 'deposit' | 'withdrawal';
 type WalletConfirmationAction = 'close' | 'delete';
@@ -96,7 +93,6 @@ export class SavingsComponent implements OnInit, OnDestroy {
   private transactions: Transaction[] = [];
   private accounts: Account[] = [];
   private baseMovements: SavingsMovement[] = [];
-  private allocationsByTransaction = new Map<number, SavingsWalletAllocationRow[]>();
   private allocationInitialAmountByWallet = new Map<number, number>();
   private walletNameById = new Map<number, string>();
   private allWallets: SavingsWallet[] = [];
@@ -203,10 +199,8 @@ export class SavingsComponent implements OnInit, OnDestroy {
       },
     },
   };
-  selectedAllocationMovement: SavingsMovement | null = null;
   allocationDraft: MovementAllocationDraft[] = [];
   allocationTotalToDistribute = 0;
-  allocationBudgetLimit = 0;
   walletFilterOptions: Array<{ label: string; value: WalletFilterValue }> = [];
 
   constructor(
@@ -500,22 +494,6 @@ export class SavingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.editingManualMovement?.allocations.length) {
-      const currentType =
-        this.editingManualMovement.signedAmount >= 0 ? 'deposit' : 'withdrawal';
-      if (this.manualMovementType !== currentType) {
-        this.manualMovementError =
-          "Impossible de changer le type d'un mouvement deja reparti.";
-        return;
-      }
-
-      if (amount + 0.0001 < this.editingManualMovement.allocatedAmount) {
-        this.manualMovementError =
-          'Le montant ne peut pas etre inferieur au total deja reparti.';
-        return;
-      }
-    }
-
     const payload = {
       description: label,
       amount,
@@ -566,12 +544,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
     this.walletActionError = null;
 
-    const hasAllocations = movement.allocations.length > 0;
-    const confirmed = window.confirm(
-      hasAllocations
-        ? `Supprimer "${movement.description}" ? Les repartitions associees seront aussi supprimees.`
-        : `Supprimer "${movement.description}" ?`,
-    );
+    const confirmed = window.confirm(`Supprimer "${movement.description}" ?`);
 
     if (!confirmed) {
       return;
@@ -598,79 +571,56 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   isManualMovementTypeLocked(): boolean {
-    return Boolean(this.editingManualMovement?.allocations.length);
+    return false;
   }
 
-  openAllocationDialog(movement: SavingsMovement): void {
-    if (!movement.id) {
-      return;
-    }
-
-    const assignableAmount = this.getAssignableAmount(movement);
-    if (assignableAmount <= 0) {
-      this.allocationDialogError =
-        'Ce mouvement de transfert interne ne peut pas etre reparti.';
-      return;
-    }
-
-    const existingAllocations = new Map<number, number>(
-      movement.allocations.map((allocation) => [allocation.walletId, allocation.amount]),
+  openAllocationDialog(): void {
+    this.allocationInitialAmountByWallet = new Map(
+      this.walletProgress
+        .filter((wallet) => wallet.isActive)
+        .map((wallet) => [wallet.id, this.roundAmount(wallet.allocatedAmount || 0)]),
     );
-    this.allocationInitialAmountByWallet = new Map(existingAllocations);
-    const activeWalletIds = new Set(this.wallets.map((wallet) => wallet.id));
-
-    this.lockedAllocationDraft = [];
-
     this.allocationDraft = this.sortAllocationDraft(
       this.wallets.map((wallet) => ({
         walletId: wallet.id,
         walletName: wallet.name,
-        amount: existingAllocations.has(wallet.id)
-          ? Number(existingAllocations.get(wallet.id) || 0)
-          : null,
+        amount: this.toDraftAmount(
+          this.allocationInitialAmountByWallet.get(wallet.id) || 0,
+        ),
       })),
     );
 
-    this.allocationBudgetLimit = this.getAllocationBudgetLimit(movement);
-    this.allocationTotalToDistribute = this.roundAmount(assignableAmount);
+    this.lockedAllocationDraft = this.sortAllocationDraft(
+      this.walletProgress
+        .filter((wallet) => !wallet.isActive && (wallet.allocatedAmount || 0) > 0)
+        .map((wallet) => ({
+          walletId: wallet.id,
+          walletName: wallet.name,
+          amount: this.roundAmount(wallet.allocatedAmount || 0),
+        })),
+    );
+
+    this.allocationTotalToDistribute = this.getAllocationRemaining();
     this.allocationDialogError = null;
-    this.selectedAllocationMovement = movement;
     this.allocationDialogVisible = true;
   }
 
   closeAllocationDialog(): void {
     this.allocationDialogVisible = false;
-    this.selectedAllocationMovement = null;
     this.allocationDialogError = null;
     this.allocationDraft = [];
     this.lockedAllocationDraft = [];
     this.allocationInitialAmountByWallet = new Map();
     this.allocationTotalToDistribute = 0;
-    this.allocationBudgetLimit = 0;
   }
 
   saveAllocation(): void {
-    if (!this.selectedAllocationMovement || !this.selectedAllocationMovement.id) {
-      return;
-    }
-
     const activeAllocations = this.allocationDraft
       .filter((entry) => (entry.amount || 0) > 0)
       .map((entry) => ({
         walletId: entry.walletId,
         amount: this.roundAmount(entry.amount || 0),
       }));
-    const lockedAllocations = this.lockedAllocationDraft
-      .filter((entry) => (entry.amount || 0) > 0)
-      .map((entry) => ({
-        walletId: entry.walletId,
-        amount: this.roundAmount(entry.amount || 0),
-      }));
-    const normalizedAllocations = [...lockedAllocations, ...activeAllocations];
-
-    const total = this.roundAmount(
-      normalizedAllocations.reduce((sum, allocation) => sum + allocation.amount, 0),
-    );
     const exceededWallet = activeAllocations.find(
       (allocation) => allocation.amount - this.getWalletAllocationCapacity(allocation.walletId) > 0.0001,
     );
@@ -679,23 +629,13 @@ export class SavingsComponent implements OnInit, OnDestroy {
         `Le montant reparti pour ${this.getWalletName(exceededWallet.walletId)} depasse le reste disponible de cette enveloppe.`;
       return;
     }
-    if (total - this.allocationBudgetLimit > 0.0001) {
-      this.allocationDialogError =
-        "Le total reparti depasse la marge theorique disponible pour l'epargne interne.";
-      return;
-    }
-    if (total - this.allocationTotalToDistribute > 0.0001) {
-      this.allocationDialogError =
-        'Le total reparti depasse le montant de la transaction.';
-      return;
-    }
 
     this.savingsWalletService
-      .setTransactionAllocations(this.selectedAllocationMovement.id, normalizedAllocations)
+      .setGlobalAllocations(activeAllocations)
       .subscribe({
         next: () => {
           this.closeAllocationDialog();
-          this.refreshView();
+          this.loadWallets();
         },
         error: () => {
           this.allocationDialogError =
@@ -705,61 +645,61 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   clearAllocation(): void {
-    if (!this.selectedAllocationMovement || !this.selectedAllocationMovement.id) {
-      return;
-    }
-
-    this.savingsWalletService
-      .setTransactionAllocations(this.selectedAllocationMovement.id, [])
-      .subscribe({
-        next: () => {
-          this.closeAllocationDialog();
-          this.refreshView();
-        },
-        error: () => {
-          this.allocationDialogError =
-            "Erreur lors de l'annulation de la repartition.";
-        },
-      });
+    this.allocationDraft = this.sortAllocationDraft(
+      this.wallets.map((wallet) => ({
+        walletId: wallet.id,
+        walletName: wallet.name,
+        amount: null,
+      })),
+    );
+    this.allocationDialogError = null;
   }
 
   allocateAllToWallet(walletId: number): void {
-    const distributableAmount = this.roundAmount(
-      this.allocationBudgetLimit - this.getLockedAllocationTotal(),
-    );
-    const walletCapacity = this.getWalletAllocationCapacity(walletId);
+    const distributableAmount = this.getAllocationDistributableAmount();
+    if (distributableAmount <= 0) {
+      this.allocationDialogError = null;
+      return;
+    }
+
     this.allocationDraft = this.allocationDraft.map((entry) => ({
       ...entry,
-      amount:
+      amount: this.toDraftAmount(
         entry.walletId === walletId
-          ? this.toDraftAmount(Math.min(Math.max(distributableAmount, 0), walletCapacity))
-          : null,
+          ? Math.min(
+              this.getDraftDisplayAmount(entry.amount) + distributableAmount,
+              this.getWalletAllocationCapacity(entry.walletId),
+            )
+          : this.getDraftDisplayAmount(entry.amount),
+      ),
     }));
     this.allocationDialogError = null;
   }
 
   splitAllocationEqually(): void {
-    const distributableAmount = this.roundAmount(
-      this.allocationBudgetLimit - this.getLockedAllocationTotal(),
-    );
+    const distributableAmount = this.getAllocationDistributableAmount();
     const eligibleDraft = this.allocationDraft.filter(
       (entry) => !this.isWalletFrozenForAllocation(entry.walletId),
     );
 
     if (eligibleDraft.length <= 0 || distributableAmount <= 0) {
-      this.allocationDraft = this.allocationDraft.map((entry) => ({
-        ...entry,
-        amount: null,
-      }));
       this.allocationDialogError = null;
       return;
     }
 
-    const allocations = new Map<number, number>();
+    const allocations = new Map<number, number>(
+      this.allocationDraft.map((entry) => [
+        entry.walletId,
+        this.getDraftDisplayAmount(entry.amount),
+      ]),
+    );
     const capacities = new Map<number, number>(
       eligibleDraft.map((entry) => [
         entry.walletId,
-        this.getWalletAllocationCapacity(entry.walletId),
+        this.roundAmount(
+          this.getWalletAllocationCapacity(entry.walletId) -
+            this.getDraftDisplayAmount(entry.amount),
+        ),
       ]),
     );
     let remaining = distributableAmount;
@@ -838,7 +778,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   getAllocationRemaining(): number {
-    return this.roundAmount(this.allocationTotalToDistribute - this.getAllocationTotal());
+    return this.roundAmount(this.netAmount - this.getAllocationTotal());
   }
 
   getAllocationOverage(): number {
@@ -856,10 +796,11 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   getAllocationSharePercent(amount: number): number {
-    if (this.allocationTotalToDistribute <= 0) {
+    const total = this.getAllocationTotal();
+    if (total <= 0) {
       return 0;
     }
-    return this.getProgressWidth((amount / this.allocationTotalToDistribute) * 100);
+    return this.getProgressWidth((amount / total) * 100);
   }
 
   getDraftDisplayAmount(amount: number | null): number {
@@ -876,21 +817,11 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
   getWalletAllocationCapacity(walletId: number): number {
     const progress = this.walletProgress.find((item) => item.id === walletId && item.isActive);
-    const initialAmount = this.roundAmount(this.allocationInitialAmountByWallet.get(walletId) || 0);
-    const baseRemaining = this.roundAmount(progress?.remainingAmount || 0);
-    return this.roundAmount(Math.max(baseRemaining + initialAmount, 0));
+    return this.roundAmount(Math.max(progress?.targetAmount || 0, 0));
   }
 
   getWalletInputCapacity(walletId: number): number {
-    const walletCapacity = this.getWalletAllocationCapacity(walletId);
-    const currentAmount = this.getDraftDisplayAmount(
-      this.allocationDraft.find((entry) => entry.walletId === walletId)?.amount ?? null,
-    );
-    const totalWithoutCurrent = this.roundAmount(this.getAllocationTotal() - currentAmount);
-    const budgetCapacity = this.roundAmount(
-      Math.max(this.allocationBudgetLimit - totalWithoutCurrent, 0),
-    );
-    return this.roundAmount(Math.min(walletCapacity, budgetCapacity));
+    return this.getWalletAllocationCapacity(walletId);
   }
 
   isWalletGoalReached(walletId: number): boolean {
@@ -900,30 +831,6 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
   isWalletFrozenForAllocation(walletId: number): boolean {
     return this.isWalletGoalReached(walletId);
-  }
-
-  getAllocationLabel(movement: SavingsMovement): string {
-    if (!movement.allocations.length) {
-      return 'Aucune repartition';
-    }
-    return movement.allocations
-      .map((allocation) => {
-        const name = this.getWalletName(allocation.walletId);
-        return `${name} : ${this.formatCurrency(allocation.amount)}`;
-      })
-      .join(' / ');
-  }
-
-  getMovementAssignableAmount(movement: SavingsMovement): number {
-    return this.getAssignableAmount(movement);
-  }
-
-  getMovementRemainingAmount(movement: SavingsMovement): number {
-    return this.roundAmount(this.getAssignableAmount(movement) - movement.allocatedAmount);
-  }
-
-  canAllocateMovement(movement: SavingsMovement): boolean {
-    return movement.signedAmount > 0;
   }
 
   getProgressWidth(progressRate: number): number {
@@ -948,7 +855,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
   getAllocatedBudgetTotal(): number {
     return this.roundAmount(
       this.walletProgress.reduce(
-        (sum, wallet) => sum + (wallet.isActive ? wallet.allocatedAmount || 0 : 0),
+        (sum, wallet) => sum + (wallet.allocatedAmount || 0),
         0,
       ),
     );
@@ -981,20 +888,12 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
             if (
               this.selectedWallet !== null &&
-              this.selectedWallet !== 'unassigned' &&
               !wallets.some((wallet) => wallet.id === this.selectedWallet)
             ) {
               this.selectedWallet = null;
             }
 
-            this.walletFilterOptions = [
-              { label: 'Tous les portefeuilles', value: null },
-              { label: 'Non repartis', value: 'unassigned' },
-              ...this.wallets.map((wallet) => ({
-                label: wallet.name,
-                value: wallet.id,
-              })),
-            ];
+            this.walletFilterOptions = [{ label: 'Tous les portefeuilles', value: null }];
             this.refreshView();
           },
           error: (err) => {
@@ -1114,7 +1013,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.loadAllocationsForBaseMovements();
+    this.applyDisplayFilters();
     this.loadWalletProgressSummary();
   }
 
@@ -1177,8 +1076,6 @@ export class SavingsComponent implements OnInit, OnDestroy {
       categoryLabel,
       subCategoryLabel,
       signedAmount,
-      allocations: [],
-      allocatedAmount: 0,
     };
   }
 
@@ -1209,59 +1106,8 @@ export class SavingsComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadAllocationsForBaseMovements(): void {
-    const transactionIds = this.baseMovements
-      .map((movement) => movement.id)
-      .filter((id) => Number.isFinite(id));
-
-    if (!transactionIds.length) {
-      this.allocationsByTransaction = new Map();
-      this.applyDisplayFilters();
-      return;
-    }
-
-    this.subscriptions.add(
-      this.savingsWalletService
-        .getAllocationsForTransactions(transactionIds)
-        .subscribe({
-          next: (allocations) => {
-            this.allocationsByTransaction = this.buildAllocationsMap(allocations);
-            this.applyDisplayFilters();
-          },
-          error: (err) => {
-            console.error('Erreur lors du chargement des repartitions:', err);
-            this.allocationsByTransaction = new Map();
-            this.applyDisplayFilters();
-          },
-        }),
-    );
-  }
-
-  private buildAllocationsMap(
-    allocations: SavingsWalletAllocationRow[],
-  ): Map<number, SavingsWalletAllocationRow[]> {
-    const map = new Map<number, SavingsWalletAllocationRow[]>();
-    allocations.forEach((allocation) => {
-      const current = map.get(allocation.transactionId) || [];
-      current.push(allocation);
-      map.set(allocation.transactionId, current);
-    });
-    return map;
-  }
-
   private applyDisplayFilters(): void {
-    const withAllocations = this.baseMovements.map((movement) => {
-      const allocations = (this.allocationsByTransaction.get(movement.id) || []).filter(
-        (allocation) => this.isWalletStillActive(allocation.walletId),
-      );
-      return {
-        ...movement,
-        allocations,
-        allocatedAmount: this.sumAllocations(allocations),
-      };
-    });
-
-    const filtered = withAllocations
+    const filtered = this.baseMovements
       .filter((movement) => this.matchesFlowFilter(movement))
       .filter((movement) => this.matchesWalletFilter(movement));
 
@@ -1345,15 +1191,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   private matchesWalletFilter(movement: SavingsMovement): boolean {
-    if (this.selectedWallet === null) {
-      return true;
-    }
-    if (this.selectedWallet === 'unassigned') {
-      return !movement.allocatedAmount;
-    }
-    return movement.allocations.some(
-      (allocation) => allocation.walletId === this.selectedWallet,
-    );
+    return this.selectedWallet === null;
   }
 
   private buildBreakdowns(): void {
@@ -1413,20 +1251,8 @@ export class SavingsComponent implements OnInit, OnDestroy {
     };
   }
 
-  private getAssignableAmount(movement: SavingsMovement): number {
-    return this.roundAmount(Math.abs(movement.signedAmount));
-  }
-
-  private sumAllocations(allocations: SavingsWalletAllocationRow[]): number {
-    return allocations.reduce((sum, allocation) => sum + (allocation.amount || 0), 0);
-  }
-
   private getWalletName(walletId: number): string {
     return this.walletNameById.get(walletId) || `Portefeuille ${walletId}`;
-  }
-
-  private isWalletStillActive(walletId: number): boolean {
-    return this.allWallets.some((wallet) => wallet.id === walletId && wallet.isActive);
   }
 
   private isWalletProgressFrozen(wallet: SavingsWalletProgress): boolean {
@@ -1459,20 +1285,13 @@ export class SavingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private getAllocationBudgetLimit(movement: SavingsMovement): number {
-    const theoreticalRemaining = this.getRemainingToAllocate();
-    const currentAllocated = this.roundAmount(movement.allocatedAmount || 0);
-    return this.roundAmount(
-      Math.max(
-        0,
-        Math.min(this.getAssignableAmount(movement), currentAllocated + theoreticalRemaining),
-      ),
-    );
-  }
-
   private toDraftAmount(value: number): number | null {
     const roundedValue = this.roundAmount(value);
     return roundedValue > 0 ? roundedValue : null;
+  }
+
+  private getAllocationDistributableAmount(): number {
+    return this.roundAmount(Math.max(this.getAllocationRemaining(), 0));
   }
 
   private normalizeLabel(value: string): string {

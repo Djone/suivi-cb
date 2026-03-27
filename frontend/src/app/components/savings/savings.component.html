@@ -30,6 +30,12 @@
       ></p-message>
     </div>
 
+    <div class="target-budget-warning" *ngIf="getRemainingToAllocate() < 0">
+      Le montant mis de cote depasse actuellement le total de l'epargne de
+      {{ getRemainingToAllocateOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}.
+      Un retrait non prevu a probablement reduit l'epargne disponible.
+    </div>
+
     <div
       class="target-budget-banner"
       [class.is-danger]="getTargetBudgetRemaining() < 0"
@@ -59,6 +65,18 @@
 
     <div class="target-budget-warning" *ngIf="getTargetBudgetRemaining() < 0">
       Les objectifs depassent le net des mouvements internes observes. Cela reste autorise.
+    </div>
+
+    <div class="wallet-allocation-toolbar">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-sliders-h"
+        class="p-button-outlined"
+        label="Repartir"
+        [disabled]="wallets.length === 0"
+        (click)="openAllocationDialog()"
+      ></button>
     </div>
 
     <p-table [value]="walletProgress" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]">
@@ -203,18 +221,6 @@
         ></p-dropdown>
       </div>
 
-      <div class="filter-item">
-        <label>Portefeuille</label>
-        <p-dropdown
-          [options]="walletFilterOptions"
-          [(ngModel)]="selectedWallet"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="applyFilters()"
-          [style]="{ width: '100%' }"
-        ></p-dropdown>
-      </div>
-
       <div class="filter-item actions">
         <button
           pButton
@@ -303,7 +309,6 @@
           <th>Categorie</th>
           <th>Sous-categorie</th>
           <th class="text-right">Montant</th>
-          <th>Repartition</th>
           <th>Actions</th>
         </tr>
       </ng-template>
@@ -322,29 +327,7 @@
             </p-tag>
           </td>
           <td>
-            <div class="allocation-cell" *ngIf="movement.signedAmount > 0 && movement.allocations.length > 0">
-              <div>{{ getAllocationLabel(movement) }}</div>
-              <div class="allocation-metrics">
-                Reparti {{ movement.allocatedAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
-                sur {{ getMovementAssignableAmount(movement) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
-              </div>
-              <div class="allocation-metrics">
-                Reste a repartir : {{ getMovementRemainingAmount(movement) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
-              </div>
-            </div>
-          </td>
-          <td>
             <div class="movement-actions">
-              <button
-                *ngIf="movement.signedAmount > 0"
-                pButton
-                type="button"
-                icon="pi pi-sliders-h"
-                class="p-button-text"
-                label="Repartir"
-                [disabled]="!canAllocateMovement(movement)"
-                (click)="openAllocationDialog(movement)"
-              ></button>
               <button
                 *ngIf="isStandaloneInternalMovement(movement)"
                 pButton
@@ -369,7 +352,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8">Aucun mouvement epargne pour les filtres selectionnes.</td>
+          <td colspan="7">Aucun mouvement epargne pour les filtres selectionnes.</td>
         </tr>
       </ng-template>
     </p-table>
@@ -542,7 +525,7 @@
 </p-dialog>
 
 <p-dialog
-  header="Repartir le transfert interne"
+  header="Repartir l'epargne"
   [(visible)]="allocationDialogVisible"
   [modal]="true"
   [closable]="true"
@@ -550,41 +533,22 @@
   (onHide)="closeAllocationDialog()"
   [style]="{ width: '540px' }"
 >
-  <div class="modal-content" *ngIf="selectedAllocationMovement">
+  <div class="modal-content">
     <div class="allocation-hero">
       <div class="allocation-hero-copy">
-        <div class="allocation-kicker">Transfert interne</div>
-        <h3 class="allocation-title">{{ selectedAllocationMovement.description || 'Sans libelle' }}</h3>
+        <div class="allocation-kicker">Allocation globale</div>
+        <h3 class="allocation-title">Repartition des montants mis de cote</h3>
         <div class="allocation-meta">
-          <span>{{ selectedAllocationMovement.date | date: 'dd/MM/yyyy' }}</span>
-          <span>{{ selectedAllocationMovement.accountName }}</span>
+          <span>Basee sur le total net de l'epargne</span>
         </div>
       </div>
       <div class="allocation-hero-amount">
         <span class="allocation-hero-label">Montant a repartir</span>
-        <strong>{{ allocationTotalToDistribute | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
+        <strong>{{ getRemainingToAllocate() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
       </div>
     </div>
 
     <div class="allocation-overview">
-      <div
-        class="allocation-overview-card"
-        [class.is-warning]="getRemainingToAllocate() > 0"
-        [class.is-danger]="getRemainingToAllocate() < 0"
-      >
-        <span class="allocation-overview-label">Marge theorique</span>
-        <strong>
-          {{
-            (getRemainingToAllocate() >= 0
-              ? getRemainingToAllocate()
-              : getRemainingToAllocateOverage()
-            ) | currency: 'EUR':'symbol':'1.2-2':'fr'
-          }}
-        </strong>
-        <span class="allocation-overview-note" *ngIf="getRemainingToAllocate() < 0">
-          Ecart theorique de {{ getRemainingToAllocateOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
-        </span>
-      </div>
       <div class="allocation-overview-card">
         <span class="allocation-overview-label">Reparti</span>
         <strong>{{ getAllocationTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
@@ -594,17 +558,11 @@
         [class.is-warning]="getAllocationRemaining() > 0"
         [class.is-danger]="getAllocationRemaining() < 0"
       >
-        <span class="allocation-overview-label">Reste</span>
+        <span class="allocation-overview-label">Ecart</span>
         <strong>{{ getAllocationRemaining() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
         <span class="allocation-overview-note" *ngIf="getAllocationRemaining() < 0">
-          Depassement de {{ getAllocationOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
-        </span>
-      </div>
-      <div class="allocation-overview-card allocation-overview-card-progress">
-        <span class="allocation-overview-label">Avancement</span>
-        <strong>{{ getAllocationSharePercent(getAllocationTotal()) | number: '1.0-0' }} %</strong>
-        <span class="allocation-overview-note" *ngIf="getAllocationRemaining() < 0">
-          Le total reparti depasse le montant du transfert.
+          Le montant mis de cote depasse l'epargne disponible de
+          {{ getAllocationOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}.
         </span>
       </div>
     </div>
@@ -619,10 +577,10 @@
       </div>
       <div class="allocation-progress-caption">
         <ng-container *ngIf="getAllocationRemaining() >= 0; else allocationOverflowCaption">
-          Vous pouvez repartir tout ou partie du transfert. Le reste non affecte peut etre conserve.
+          Ajustez librement la repartition globale entre les portefeuilles actifs.
         </ng-container>
         <ng-template #allocationOverflowCaption>
-          Le montant reparti depasse le total du transfert interne. Reduisez une ou plusieurs enveloppes.
+          Le montant mis de cote depasse le total de l'epargne. Ajustez une ou plusieurs enveloppes.
         </ng-template>
       </div>
     </div>
@@ -731,11 +689,10 @@
 
     <div class="modal-actions">
       <button
-        *ngIf="selectedAllocationMovement && selectedAllocationMovement.allocations.length > 0"
         pButton
         type="button"
         class="p-button-danger p-button-text"
-        label="Annuler la repartition"
+        label="Reinitialiser"
         icon="pi pi-undo"
         (click)="clearAllocation()"
       ></button>
@@ -751,7 +708,6 @@
         type="button"
         label="Enregistrer"
         icon="pi pi-save"
-        [disabled]="getAllocationRemaining() < 0"
         (click)="saveAllocation()"
       ></button>
     </div>

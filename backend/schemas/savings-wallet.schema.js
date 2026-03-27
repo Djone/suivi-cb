@@ -27,9 +27,21 @@ const savingsWalletAllocationBatchSchema = Joi.object({
   transaction_ids: Joi.array().items(Joi.number().integer().min(1)).required(),
 });
 
+const savingsWalletGlobalAllocationSchema = Joi.object({
+  allocations: Joi.array()
+    .items(
+      Joi.object({
+        wallet_id: Joi.number().integer().required(),
+        amount: Joi.number().min(0).required(),
+      }),
+    )
+    .required(),
+});
+
 module.exports = {
   savingsWalletSchema,
   savingsWalletUpdateSchema,
   savingsWalletAllocationSchema,
   savingsWalletAllocationBatchSchema,
+  savingsWalletGlobalAllocationSchema,
 };

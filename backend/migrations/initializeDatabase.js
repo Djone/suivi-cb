@@ -194,20 +194,26 @@ const initializeDatabase = async () => {
     await runQuery(
       `ALTER TABLE savings_wallets ADD COLUMN closed_remaining_amount REAL;`
     ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN current_allocated_amount REAL NOT NULL DEFAULT 0;`
+    ).catch(() => {});
+    await runQuery(
+      `UPDATE savings_wallets
+       SET current_allocated_amount = COALESCE((
+         SELECT SUM(swa.amount)
+         FROM savings_wallet_allocations swa
+         JOIN transactions t ON t.id = swa.transaction_id
+         WHERE swa.wallet_id = savings_wallets.id
+           AND t.is_internal_transfer = 1
+       ), 0)
+       WHERE current_allocated_amount IS NULL OR current_allocated_amount = 0;`
+    ).catch(() => {});
     await runQuery(`
       UPDATE savings_wallets
       SET
         closed_target_amount = target_amount,
-        closed_allocated_amount = COALESCE((
-          SELECT SUM(swa.amount)
-          FROM savings_wallet_allocations swa
-          WHERE swa.wallet_id = savings_wallets.id
-        ), 0),
-        closed_remaining_amount = target_amount - COALESCE((
-          SELECT SUM(swa.amount)
-          FROM savings_wallet_allocations swa
-          WHERE swa.wallet_id = savings_wallets.id
-        ), 0)
+        closed_allocated_amount = COALESCE(current_allocated_amount, 0),
+        closed_remaining_amount = target_amount - COALESCE(current_allocated_amount, 0)
       WHERE is_active = 0
         AND (
           closed_target_amount IS NULL

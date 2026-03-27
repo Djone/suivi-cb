@@ -141,6 +141,20 @@ exports.getAllocationsForTransactions = async (req, res) => {
   }
 };
 
+exports.getGlobalAllocations = async (req, res) => {
+  try {
+    const includeClosed = parseBoolean(req.query.include_closed);
+    const allocations = await SavingsWallet.getGlobalAllocations({ includeClosed });
+    res.status(200).json(allocations);
+  } catch (err) {
+    console.error(
+      'Erreur lors de la récupération des allocations globales:',
+      err,
+    );
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
+  }
+};
+
 exports.setTransactionAllocations = async (req, res) => {
   try {
     const { transaction_id, allocations = [] } = req.body;
@@ -202,6 +216,38 @@ exports.setTransactionAllocations = async (req, res) => {
     res
       .status(500)
       .json({ error: "Erreur interne du serveur lors de l'enregistrement." });
+  }
+};
+
+exports.setGlobalAllocations = async (req, res) => {
+  try {
+    const { allocations = [] } = req.body;
+
+    const normalizedAllocations = Array.isArray(allocations)
+      ? allocations
+          .map((allocation) => ({
+            walletId: parseNumber(allocation.wallet_id),
+            amount: parseNumber(allocation.amount),
+          }))
+          .filter(
+            (allocation) =>
+              allocation.walletId !== null &&
+              allocation.amount !== null &&
+              allocation.amount >= 0,
+          )
+      : [];
+
+    await SavingsWallet.setGlobalAllocations(normalizedAllocations);
+    res.status(200).json({ message: 'Répartition globale enregistrée.' });
+  } catch (err) {
+    console.error("Erreur lors de l'enregistrement de la répartition globale:", err);
+    if (err.code === 'SQLITE_CONSTRAINT') {
+      return res.status(400).json({
+        error:
+          "Une allocation référence un portefeuille invalide ou une règle d'intégrité a été violée.",
+      });
+    }
+    res.status(500).json({ error: "Erreur interne du serveur lors de l'enregistrement." });
   }
 };
 

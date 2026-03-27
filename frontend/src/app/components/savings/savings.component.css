@@ -23,6 +23,12 @@
   gap: 0.35rem;
 }
 
+.wallet-allocation-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 1rem;
+}
+
 .movement-actions {
   display: flex;
   flex-wrap: wrap;

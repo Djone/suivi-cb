@@ -22,6 +22,12 @@ const dbRun = (query, params = []) =>
     });
   });
 
+const normalizeAllocatedAmount = (allocatedAmount, targetAmount) =>
+  Math.max(Math.min(Number(allocatedAmount ?? 0), Number(targetAmount ?? 0)), 0);
+
+const normalizeRemainingAmount = (targetAmount, allocatedAmount) =>
+  Math.max(Number(targetAmount ?? 0) - Number(allocatedAmount ?? 0), 0);
+
 const buildFilters = (filters = {}) => {
   const conditions = [];
   const params = [];
@@ -63,6 +69,7 @@ const SavingsWallet = {
         name,
         target_amount AS target_amount,
         is_active AS is_active,
+        current_allocated_amount AS current_allocated_amount,
         closed_target_amount AS closed_target_amount,
         closed_allocated_amount AS closed_allocated_amount,
         closed_remaining_amount AS closed_remaining_amount
@@ -76,6 +83,7 @@ const SavingsWallet = {
       name: row.name,
       targetAmount: Number(row.target_amount),
       isActive: Number(row.is_active) === 1,
+      currentAllocatedAmount: Number(row.current_allocated_amount ?? 0),
       closedTargetAmount:
         row.closed_target_amount === null ? null : Number(row.closed_target_amount),
       closedAllocatedAmount:
@@ -107,6 +115,10 @@ const SavingsWallet = {
 
     if (targetAmount !== undefined) {
       fields.push('target_amount = ?');
+      params.push(targetAmount);
+      fields.push(
+        'current_allocated_amount = MIN(MAX(COALESCE(current_allocated_amount, 0), 0), ?)',
+      );
       params.push(targetAmount);
     }
 
@@ -144,41 +156,35 @@ const SavingsWallet = {
         w.closed_target_amount AS closed_target_amount,
         w.closed_allocated_amount AS closed_allocated_amount,
         w.closed_remaining_amount AS closed_remaining_amount,
-        COALESCE(
-          SUM(
-            CASE
-              WHEN t.is_internal_transfer = 1
-                AND ${conditions.length ? conditions.join(' AND ') : '1 = 1'}
-              THEN swa.amount
-              ELSE 0
-            END
-          ),
-          0
-        ) AS allocated_amount
+        COALESCE(w.current_allocated_amount, 0) AS allocated_amount
       FROM savings_wallets w
-      LEFT JOIN savings_wallet_allocations swa ON swa.wallet_id = w.id
-      LEFT JOIN transactions t ON t.id = swa.transaction_id
       ${walletCondition}
-      GROUP BY w.id, w.name, w.target_amount, w.is_active
       ORDER BY w.name ASC
     `;
 
-    const summaryRows = await dbAll(query, params);
+    const summaryRows = await dbAll(query, conditions.length ? params : []);
     return summaryRows.map((row) => {
       const isActive = Number(row.is_active) === 1;
       const targetAmount = Number(
         isActive ? row.target_amount ?? 0 : row.closed_target_amount ?? row.target_amount ?? 0,
       );
-      const allocatedAmount = Number(
+      const rawAllocatedAmount = Number(
         isActive
           ? row.allocated_amount ?? 0
           : row.closed_allocated_amount ?? row.allocated_amount ?? 0,
       );
-      const remainingAmount = Number(
-        isActive
-          ? targetAmount - allocatedAmount
-          : row.closed_remaining_amount ?? targetAmount - allocatedAmount,
-      );
+      const allocatedAmount = isActive
+        ? normalizeAllocatedAmount(rawAllocatedAmount, targetAmount)
+        : Math.max(rawAllocatedAmount, 0);
+      const remainingAmount = isActive
+        ? normalizeRemainingAmount(targetAmount, allocatedAmount)
+        : Math.max(
+            Number(
+              row.closed_remaining_amount ??
+                normalizeRemainingAmount(targetAmount, allocatedAmount),
+            ),
+            0,
+          );
       return {
         id: Number(row.id),
         name: row.name,
@@ -211,6 +217,28 @@ const SavingsWallet = {
       transactionId: Number(row.transaction_id),
       walletId: Number(row.wallet_id),
       amount: Number(row.amount),
+    }));
+  },
+
+  getGlobalAllocations: async ({ includeClosed = false } = {}) => {
+    const whereClause = includeClosed ? '' : 'WHERE is_active = 1';
+    const rows = await dbAll(
+      `
+      SELECT
+        id AS wallet_id,
+        CASE
+          WHEN is_active = 1 THEN COALESCE(current_allocated_amount, 0)
+          ELSE COALESCE(closed_allocated_amount, 0)
+        END AS amount
+      FROM savings_wallets
+      ${whereClause}
+      ORDER BY id ASC
+      `,
+    );
+
+    return rows.map((row) => ({
+      walletId: Number(row.wallet_id),
+      amount: Math.max(Number(row.amount ?? 0), 0),
     }));
   },
 
@@ -284,26 +312,66 @@ const SavingsWallet = {
     }
   },
 
+  setGlobalAllocations: async (allocations = []) => {
+    const normalized = allocations
+      .map((allocation) => ({
+        walletId: Number(allocation.walletId),
+        amount: Number(allocation.amount),
+      }))
+      .filter(
+        (allocation) =>
+          Number.isFinite(allocation.walletId) &&
+          Number.isFinite(allocation.amount) &&
+          allocation.amount >= 0,
+      );
+
+    const deduped = new Map();
+    normalized.forEach((allocation) => {
+      deduped.set(allocation.walletId, allocation.amount);
+    });
+
+    await dbRun('BEGIN IMMEDIATE TRANSACTION');
+    try {
+      await dbRun(
+        `
+        UPDATE savings_wallets
+        SET current_allocated_amount = 0
+        WHERE is_active = 1
+        `,
+      );
+
+      for (const [walletId, amount] of deduped.entries()) {
+        await dbRun(
+          `
+          UPDATE savings_wallets
+          SET current_allocated_amount = ?
+          WHERE id = ?
+            AND is_active = 1
+          `,
+          [amount, walletId],
+        );
+      }
+
+      await dbRun('COMMIT');
+      return;
+    } catch (err) {
+      await dbRun('ROLLBACK').catch(() => {});
+      throw err;
+    }
+  },
+
   closeWallet: async (id) => {
     const query = `
       UPDATE savings_wallets
       SET
         is_active = 0,
         closed_target_amount = target_amount,
-        closed_allocated_amount = COALESCE((
-          SELECT SUM(swa.amount)
-          FROM savings_wallet_allocations swa
-          JOIN transactions t ON t.id = swa.transaction_id
-          WHERE swa.wallet_id = savings_wallets.id
-            AND t.is_internal_transfer = 1
-        ), 0),
-        closed_remaining_amount = target_amount - COALESCE((
-          SELECT SUM(swa.amount)
-          FROM savings_wallet_allocations swa
-          JOIN transactions t ON t.id = swa.transaction_id
-          WHERE swa.wallet_id = savings_wallets.id
-            AND t.is_internal_transfer = 1
-        ), 0)
+        closed_allocated_amount = MIN(MAX(COALESCE(current_allocated_amount, 0), 0), target_amount),
+        closed_remaining_amount = MAX(
+          target_amount - MIN(MAX(COALESCE(current_allocated_amount, 0), 0), target_amount),
+          0
+        ),
+        current_allocated_amount = 0
       WHERE id = ?
     `;
     const result = await dbRun(query, [id]);

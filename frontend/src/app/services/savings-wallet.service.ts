@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import * as humps from 'humps';
 import {
   SavingsWallet,
+  SavingsWalletAllocation,
   SavingsWalletAllocationRow,
   SavingsWalletProgress,
 } from '../models/savings-wallet.model';
@@ -241,5 +242,50 @@ export class SavingsWalletService {
           throw err;
         }),
       );
+  }
+
+  getGlobalAllocations(includeClosed = true): Observable<SavingsWalletAllocation[]> {
+    let params = new HttpParams();
+    if (includeClosed) {
+      params = params.set('include_closed', 'true');
+    }
+
+    return this.http
+      .get<SavingsWalletAllocation[]>(`${this.apiUrl}/allocations/global`, { params })
+      .pipe(
+        map((allocations) =>
+          allocations.map((allocation) =>
+            humps.camelizeKeys(allocation) as SavingsWalletAllocation,
+          ),
+        ),
+        catchError((err) => {
+          console.error(
+            'SAVINGS WALLET SERVICE : Erreur lors du chargement allocations globales:',
+            err,
+          );
+          throw err;
+        }),
+      );
+  }
+
+  setGlobalAllocations(
+    allocations: Array<{ walletId: number; amount: number }>,
+  ): Observable<void> {
+    const payload = humps.decamelizeKeys({
+      allocations: allocations.map((allocation) => ({
+        wallet_id: allocation.walletId,
+        amount: allocation.amount,
+      })),
+    });
+
+    return this.http.post<void>(`${this.apiUrl}/allocations/global`, payload).pipe(
+      catchError((err) => {
+        console.error(
+          'SAVINGS WALLET SERVICE : Erreur lors de la sauvegarde globale allocations:',
+          err,
+        );
+        throw err;
+      }),
+    );
   }
 }
