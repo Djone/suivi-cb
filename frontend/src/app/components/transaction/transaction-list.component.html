@@ -1,21 +1,27 @@
-<div class="transaction-list" [ngStyle]="getAccentVars()">
+<div
+  class="transaction-list"
+  [class.transaction-list--mobile]="isMobile"
+  [ngStyle]="getAccentVars()"
+>
   <div class="list-container">
-    <!-- En-tÃªte avec titre et bouton -->
     <div class="list-header">
       <div class="header-content">
-        <h2 *ngIf="account">{{ account["name"] }}</h2>
-        <h2 *ngIf="!account">Toutes les transactions</h2>
+        <div class="header-top">
+          <div class="header-title-block">
+            <div class="header-kicker" *ngIf="isMobile">Compte</div>
+            <h2 *ngIf="account">{{ account["name"] }}</h2>
+            <h2 *ngIf="!account">Toutes les transactions</h2>
+          </div>
 
-        <!-- Affichage du bouton "Nouvelle transaction" -->
-        <p-button
-          label="Nouvelle transaction"
-          icon="pi pi-plus"
-          (onClick)="createTransaction()"
-          styleClass="p-button-success"
-        >
-        </p-button>
+          <p-button
+            label="Nouvelle transaction"
+            icon="pi pi-plus"
+            (onClick)="createTransaction()"
+            styleClass="p-button-success"
+          >
+          </p-button>
+        </div>
 
-        <!-- Affichage des soldes (seulement si compte spécifique) -->
         <div class="balance-display" *ngIf="accountId">
           <div class="balance-item current">
             <div class="balance-label">Solde actuel</div>
@@ -44,8 +50,7 @@
           </div>
         </div>
 
-        <!-- Répartition 50/30/20 (basée sur le salaire du mois courant) -->
-        <div class="break503020-container" *ngIf="accountId">
+        <div class="break503020-container" *ngIf="accountId && !isMobile">
           <div class="break503020-list">
             <div
               class="break-row"
@@ -94,7 +99,7 @@
             </div>
           </div>
         </div>
-        <div class="recurring-summary" *ngIf="accountId">
+        <div class="recurring-summary" *ngIf="accountId && !isMobile">
           <div class="summary-item">
             <div class="summary-label">Revenus prévus</div>
             <div class="summary-amount positive">
@@ -142,13 +147,13 @@
         <div
           class="credit-insight"
           [class.credit-insight-joint]="isJointAccountView()"
-          *ngIf="isCurrentAccountView() || isJointAccountView()"
+          *ngIf="!isMobile && (isCurrentAccountView() || isJointAccountView())"
         >
           <div class="credit-insight-head">
             <span class="credit-insight-title">
               {{
                 isJointAccountView()
-                  ? "Montant à deduire en attente"
+                  ? "Montant à déduire en attente"
                   : "Avance sur le compte joint"
               }}
             </span>
@@ -172,10 +177,9 @@
       </div>
     </div>
 
-    <!-- Bouton pour afficher/masquer les échéances (si compte spécifique) -->
     <div
       class="recurring-toggle"
-      *ngIf="accountId && pendingSchedules.length > 0"
+      *ngIf="!isMobile && accountId && pendingSchedules.length > 0"
     >
       <p-button
         [label]="
@@ -190,8 +194,7 @@
       </p-button>
     </div>
 
-    <!-- Liste des échéances récurrentes -->
-    <div class="recurring-list" *ngIf="showRecurring">
+    <div class="recurring-list" *ngIf="!isMobile && showRecurring">
       <ng-container
         *ngIf="pendingSchedules.length > 0; else noPendingSchedules"
       >
@@ -251,7 +254,7 @@
                 severity="help"
                 styleClass="p-button-text p-button-success"
                 [style]="{ 'margin-left': '0.5rem' }"
-                (onClick)="markRecurringAsPaid(schedule.recurringTransaction)"
+                (onClick)="markRecurringAsPaid(schedule)"
                 pTooltip="Valider"
                 tooltipPosition="top"
               ></p-button>
@@ -267,9 +270,10 @@
       </ng-template>
     </div>
 
-    <!-- Contrôles -->
-    <div class="list-controls p-3 surface-card border-round-lg shadow-1">
-      <!-- Ligne de filtres -->
+    <div
+      class="list-controls p-3 surface-card border-round-lg shadow-1"
+      *ngIf="!isMobile"
+    >
       <div class="filters-row flex flex-wrap gap-3">
         <!-- Filtre par date -->
         <p-inputGroup class="flex-1 min-w-[250px]">
@@ -345,6 +349,17 @@
         >
         </p-dropdown>
 
+        <p-dropdown
+          class="flex-1 min-w-[260px]"
+          [options]="internalTransferFilterOptions"
+          [(ngModel)]="filters.internalTransfer"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Filtrer transferts internes"
+          (onChange)="applyFilter()"
+        >
+        </p-dropdown>
+
         <!-- Filtre par montant -->
         <p-inputGroup class="flex-1 min-w-[150px]">
           <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
@@ -362,11 +377,9 @@
         </p-inputGroup>
       </div>
 
-      <!-- Ligne des contrôles -->
       <div
         class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3"
       >
-        <!-- Groupes par page -->
         <div class="flex align-items-center gap-2">
           <span class="font-medium">Groupes par page :</span>
           <p-dropdown
@@ -379,7 +392,6 @@
           ></p-dropdown>
         </div>
 
-        <!-- Tri -->
         <div>
           <button
             pButton
@@ -392,14 +404,28 @@
           ></button>
         </div>
 
-        <!-- Info résultats -->
         <div class="results-info font-semibold text-color-secondary">
           {{ filteredTransactions.length }} transaction(s)
         </div>
       </div>
     </div>
 
-    <!-- Transactions groupées par date -->
+    <div class="mobile-results-bar" *ngIf="isMobile">
+      <div class="mobile-results-bar__item">
+        <span>Groupes</span>
+        <strong>{{ groupedTransactions.length }}</strong>
+      </div>
+      <div class="mobile-results-bar__item" *ngIf="accountId">
+        <span>Solde</span>
+        <strong
+          [class.positive]="currentBalance >= 0"
+          [class.negative]="currentBalance < 0"
+        >
+          {{ currentBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </strong>
+      </div>
+    </div>
+
     <div class="grouped-transactions">
       <div
         *ngFor="let group of paginatedGroupedTransactions"
@@ -444,6 +470,12 @@
                       class="advance-joint-badge"
                     >
                       Avance compte joint
+                    </span>
+                    <span
+                      *ngIf="isInternalTransfer(transaction)"
+                      class="internal-transfer-badge"
+                    >
+                      Transfert interne
                     </span>
                   </div>
                   <div class="subcategory-text">
@@ -508,9 +540,10 @@
         [first]="(currentPage - 1) * pageSize"
         (onPageChange)="onPageChange($event)"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} à  {last} sur {totalRecords} groupes"
+        currentPageReportTemplate="{first} à {last} sur {totalRecords} groupes"
       >
       </p-paginator>
     </div>
   </div>
 </div>
+

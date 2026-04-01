@@ -17,6 +17,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
+import { CheckboxModule } from 'primeng/checkbox';
 
 interface CategoryStat {
   categoryLabel: string;
@@ -55,7 +56,8 @@ interface MonthlyCategoryRow {
     DropdownModule,
     ButtonModule,
     TableModule,
-    TabViewModule
+    TabViewModule,
+    CheckboxModule
   ],
   templateUrl: './statistics.component.html',
   styleUrls: ['./statistics.component.css']
@@ -72,6 +74,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   selectedAccount: number | null = null;
   selectedYear: number = new Date().getFullYear();
   selectedMonth: number | null = null;
+  includeInternalTransfers: boolean = false;
   availableYears: number[] = [];
 
   // Options pour les dropdowns
@@ -293,6 +296,10 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
   getFilteredTransactions(): Transaction[] {
     return this.transactions.filter(t => {
+      if (!this.includeInternalTransfers && this.isInternalTransfer(t)) {
+        return false;
+      }
+
       // Filtre par compte
       if (this.selectedAccount !== null) {
         const tAccountId = typeof t.accountId === 'string' ? parseInt(t.accountId) : t.accountId;
@@ -402,6 +409,9 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
     // Filtrer par année et compte seulement
     const yearTransactions = this.transactions.filter(t => {
+      if (!this.includeInternalTransfers && this.isInternalTransfer(t)) {
+        return false;
+      }
       if (this.selectedAccount !== null) {
         const tAccountId = typeof t.accountId === 'string' ? parseInt(t.accountId) : t.accountId;
         if (tAccountId !== this.selectedAccount) return false;
@@ -456,6 +466,9 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
     // Ajouter les transactions avant l'année sélectionnée
     const transactionsBeforeYear = this.transactions.filter(t => {
+      if (!this.includeInternalTransfers && this.isInternalTransfer(t)) {
+        return false;
+      }
       if (this.selectedAccount !== null) {
         const tAccountId = typeof t.accountId === 'string' ? parseInt(t.accountId) : t.accountId;
         if (tAccountId !== this.selectedAccount) return false;
@@ -537,10 +550,13 @@ export class StatisticsComponent implements OnInit, OnDestroy {
     // Filtrer par compte si sélectionné
     const accountTransactions = this.selectedAccount !== null
       ? this.transactions.filter(t => {
+          if (!this.includeInternalTransfers && this.isInternalTransfer(t)) return false;
           const tAccountId = typeof t.accountId === 'string' ? parseInt(t.accountId) : t.accountId;
           return tAccountId === this.selectedAccount;
         })
-      : this.transactions;
+      : this.transactions.filter((t) =>
+          this.includeInternalTransfers ? true : !this.isInternalTransfer(t),
+        );
 
     // Grouper par année et catégorie
     accountTransactions.forEach(t => {
@@ -615,6 +631,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
   calculateMonthlyCategoryTables(): void {
     const transactionsForYear = this.transactions.filter(t => {
+      if (!this.includeInternalTransfers && this.isInternalTransfer(t)) return false;
       if (!t.date) return false;
       const tYear = new Date(t.date).getFullYear();
       if (tYear !== this.selectedYear) return false;
@@ -697,5 +714,16 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
   toggleIncomeRow(label: string): void {
     this.incomeExpanded = { ...this.incomeExpanded, [label]: !this.incomeExpanded[label] };
+  }
+
+  private isInternalTransfer(transaction: Transaction): boolean {
+    const raw = transaction.isInternalTransfer;
+    if (typeof raw === 'boolean') return raw;
+    if (typeof raw === 'number') return raw === 1;
+    if (typeof raw === 'string') {
+      const normalized = raw.trim().toLowerCase();
+      return normalized === '1' || normalized === 'true';
+    }
+    return false;
   }
 }

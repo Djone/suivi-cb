@@ -8,6 +8,7 @@ import { AccountService } from '../../services/account.service';
 import { TransactionService } from '../../services/transaction.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
+import { ViewportService } from '../../services/viewport.service';
 
 // Models
 import { Transaction } from '../../models/transaction.model';
@@ -97,6 +98,7 @@ interface AccountBalance {
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  isMobile = false;
   transactions: Transaction[] = [];
   recurringTransactions: RecurringTransaction[] = [];
   accounts: Account[] = [];
@@ -132,11 +134,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     private recurringTransactionService: RecurringTransactionService,
     private accountService: AccountService,
     private subCategoryService: SubCategoryService,
+    private viewportService: ViewportService,
     private router: Router,
     private dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.viewportService.mobile$.subscribe((isMobile) => {
+        this.isMobile = isMobile;
+      }),
+    );
+
     // Charger les sous-catégories EN PREMIER
     this.subscriptions.add(
       this.subCategoryService.subCategories$.subscribe({
@@ -277,24 +286,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     return initialBalance + totalTransactions;
   }
 
-  isRecurringRealized(
+  private isRecurringRealized(
     recurring: RecurringTransaction,
     nextDueDate: Date,
   ): boolean {
-    // Simplification : on vérifie si une transaction correspondante existe pour le mois de l'échéance, peu importe le jour.
-    const targetMonth = nextDueDate.getMonth();
-    const targetYear = nextDueDate.getFullYear();
+    const start = new Date(nextDueDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(nextDueDate);
+    end.setHours(23, 59, 59, 999);
 
-    // On cherche une transaction qui correspond à l'échéance et qui a été effectuée durant le même mois et la même année.
     return this.transactions.some((t) => {
-      if (t.recurringTransactionId !== recurring.id) {
+      if (t.recurringTransactionId !== recurring.id || !t.date) {
         return false;
       }
-      const transactionDate = new Date(t.date!);
-      return (
-        transactionDate.getMonth() === targetMonth &&
-        transactionDate.getFullYear() === targetYear
-      );
+      const transactionDate = new Date(t.date);
+      return transactionDate >= start && transactionDate <= end;
     });
   }
 
@@ -500,18 +506,80 @@ export class HomeComponent implements OnInit, OnDestroy {
         return 1;
     }
   }
+
+  private buildSchedulesForMonth(
+    recurringTransactions: RecurringTransaction[],
+    year: number,
+    month: number,
+  ): { recurring: RecurringTransaction; dueDate: Date }[] {
+    const schedules: { recurring: RecurringTransaction; dueDate: Date }[] = [];
+    const normalizedMonth = ((month % 12) + 12) % 12;
+    const yearOffset = Math.floor(month / 12);
+    const effectiveYear = year + yearOffset;
+
+    recurringTransactions.forEach((recurring) => {
+      const dayOfMonth =
+        typeof recurring.dayOfMonth === 'string'
+          ? parseInt(recurring.dayOfMonth, 10)
+          : recurring.dayOfMonth || 0;
+      const frequency = recurring.frequency || 'monthly';
+      const activeMonths = Array.isArray(recurring.activeMonths)
+        ? new Set(
+            (recurring.activeMonths as number[]).filter(
+              (value) => typeof value === 'number' && value >= 1 && value <= 12,
+            ),
+          )
+        : null;
+      const isInstallment = recurring.recurrenceKind === 'installment';
+
+      if (!this.shouldApplyRecurring(frequency, normalizedMonth)) {
+        return;
+      }
+
+      if (frequency === 'weekly') {
+        const first = new Date(effectiveYear, normalizedMonth, 1);
+        const last = new Date(effectiveYear, normalizedMonth + 1, 0);
+        const targetDow = dayOfMonth % 7;
+
+        for (let day = first.getDate(); day <= last.getDate(); day++) {
+          const dueDate = new Date(effectiveYear, normalizedMonth, day);
+          if (dueDate.getDay() !== targetDow) {
+            continue;
+          }
+          if (activeMonths && !activeMonths.has(dueDate.getMonth() + 1)) {
+            continue;
+          }
+          if (isInstallment && !this.isInstallmentDateValid(recurring, dueDate)) {
+            continue;
+          }
+          schedules.push({ recurring, dueDate });
+        }
+        return;
+      }
+
+      if (activeMonths && !activeMonths.has(normalizedMonth + 1)) {
+        return;
+      }
+
+      const targetDay = dayOfMonth > 0 ? dayOfMonth : 1;
+      const dueDate = new Date(effectiveYear, normalizedMonth, targetDay);
+      if (isInstallment && !this.isInstallmentDateValid(recurring, dueDate)) {
+        return;
+      }
+      schedules.push({ recurring, dueDate });
+    });
+
+    return schedules;
+  }
+
   getUpcomingSchedules(
     accountId: number,
     anticipate: boolean = true,
   ): UpcomingSchedule[] {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Pour comparer les dates sans l'heure
-    let anticipateNextMonth = false;
-
-    if (anticipate) {
-      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      anticipateNextMonth = endOfMonth.getDate() - today.getDate() <= 5;
-    }
+    today.setHours(0, 0, 0, 0);
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
 
     const accountRecurring = this.recurringTransactions.filter((rt) => {
       const rtAccountId =
@@ -521,118 +589,57 @@ export class HomeComponent implements OnInit, OnDestroy {
       return rtAccountId === accountId && rt.isActive === 1;
     });
 
-    const schedules: UpcomingSchedule[] = [];
+    const currentMonthSchedules = this.buildSchedulesForMonth(
+      accountRecurring,
+      currentYear,
+      currentMonth,
+    )
+      .filter(({ recurring, dueDate }) => !this.isRecurringRealized(recurring, dueDate))
+      .map(({ recurring, dueDate }) =>
+        this.createSchedule(recurring, dueDate, today),
+      );
 
-    accountRecurring.forEach((recurring) => {
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-
-      // @ts-ignore - Assuming 'frequency' property will exist on the model
-      const frequency = recurring.frequency || 'monthly';
-      const dayOfMonth =
-        typeof recurring.dayOfMonth === 'string'
-          ? parseInt(recurring.dayOfMonth)
-          : recurring.dayOfMonth || 0;
-
-      // Garde-fous communs
-      const activeMonths = Array.isArray(recurring.activeMonths)
-        ? new Set(
-            (recurring.activeMonths as number[]).filter(
-              (m) => m >= 1 && m <= 12,
-            ),
+    const nextMonthSchedules: UpcomingSchedule[] = [];
+    if (anticipate && today.getDate() >= 25) {
+      const nextMonth = (currentMonth + 1) % 12;
+      const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+      nextMonthSchedules.push(
+        ...this.buildSchedulesForMonth(accountRecurring, nextYear, nextMonth)
+          .filter(
+            ({ recurring, dueDate }) =>
+              dueDate.getDate() <= 5 &&
+              !this.isRecurringRealized(recurring, dueDate),
           )
-        : null;
-      const isInstallment = recurring.recurrenceKind === 'installment';
+          .map(({ recurring, dueDate }) =>
+            this.createSchedule(recurring, dueDate, today),
+          ),
+      );
+    }
 
-      // Boucle pour vérifier le mois en cours et le mois suivant (si anticipation)
-      for (
-        let monthOffset = 0;
-        monthOffset <= (anticipateNextMonth ? 1 : 0);
-        monthOffset++
-      ) {
-        const targetMonth = currentMonth + monthOffset;
-        const targetYear = currentYear + Math.floor(targetMonth / 12);
-        const normalizedMonth = targetMonth % 12;
-
-        // Vérifier si la fréquence s'applique à ce mois
-        if (!this.shouldApplyRecurring(frequency, normalizedMonth)) {
-          continue;
-        }
-
-        if (frequency === 'weekly') {
-          // Pour les échéances hebdos, on calcule toutes les occurrences du mois
-          const firstDay = new Date(targetYear, normalizedMonth, 1);
-          const lastDay = new Date(targetYear, normalizedMonth + 1, 0);
-
-          for (let day = firstDay.getDate(); day <= lastDay.getDate(); day++) {
-            const testDate = new Date(targetYear, normalizedMonth, day);
-            const targetDayOfWeekJS = dayOfMonth % 7; // 1-6 -> 1-6, 7 -> 0
-            if (testDate.getDay() === targetDayOfWeekJS) {
-              // On ajoute l'échéance si elle n'est pas réalisée
-              const isRealized = this.isRecurringRealized(recurring, testDate);
-              const isCurrentMonth = monthOffset === 0;
-              // Vérifications avancées
-              if (
-                isInstallment &&
-                !this.isInstallmentDateValid(recurring, testDate)
-              ) {
-                continue;
-              }
-              if (activeMonths && !activeMonths.has(testDate.getMonth() + 1)) {
-                continue;
-              }
-
-              if (!isRealized && isCurrentMonth) {
-                this.addSchedule(schedules, recurring, testDate, today);
-              }
-            }
-          }
-        } else {
-          // Pour toutes les autres fréquences basées sur le jour du mois
-          const dueDate = new Date(targetYear, normalizedMonth, dayOfMonth);
-          const isRealized = this.isRecurringRealized(recurring, dueDate);
-          const isPast = dueDate < today;
-          const isCurrentMonth = monthOffset === 0;
-          // Vérifications avancées
-          if (
-            isInstallment &&
-            !this.isInstallmentDateValid(recurring, dueDate)
-          ) {
-            continue;
-          }
-          if (activeMonths && !activeMonths.has(normalizedMonth + 1)) {
-            continue;
-          }
-
-          if (!isRealized && (!isPast || isCurrentMonth)) {
-            this.addSchedule(schedules, recurring, dueDate, today);
-          }
-        }
-      }
-    });
-
-    return schedules.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    return [...currentMonthSchedules, ...nextMonthSchedules].sort(
+      (a, b) => a.dueDate.getTime() - b.dueDate.getTime(),
+    );
   }
-  private addSchedule(
-    schedules: UpcomingSchedule[],
+
+  private createSchedule(
     recurring: RecurringTransaction,
     dueDate: Date,
     today: Date,
-  ): void {
+  ): UpcomingSchedule {
     const amount =
       typeof recurring.amount === 'string'
         ? parseFloat(recurring.amount)
         : recurring.amount || 0;
     const signedAmount =
       recurring.financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
-    schedules.push({
+    return {
       recurringTransaction: recurring,
       dueDate,
       amount: signedAmount,
-      isOverdue: dueDate < today, // Une échéance est en retard si sa date est strictement avant aujourd'hui
+      isOverdue: dueDate < today,
       subCategoryLabel:
         this.subCategories.get(recurring.subCategoryId!) || 'N/A',
-    });
+    };
   }
 
   getExpensesByCategory(accountId: number): CategoryTotal[] {
@@ -834,7 +841,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       const tx: Transaction = {
         description: schedule.recurringTransaction.label,
-        date: new Date(),
+        date: new Date(schedule.dueDate),
         amount: Math.abs(schedule.amount),
         accountId: accountId,
         financialFlowId: schedule.recurringTransaction.financialFlowId,
@@ -848,6 +855,27 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   navigateToTransactions(accountId: number): void {
     this.router.navigate(['/transactions-list', accountId]);
+  }
+
+  getAccountInitials(account: Account): string {
+    const parts = (account.name || '')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (!parts.length) {
+      return 'CB';
+    }
+
+    return parts.map((part) => part[0].toUpperCase()).join('');
+  }
+
+  getAccountCardStyle(account: Account): Record<string, string> {
+    const accent = account.color || '#667eea';
+    return {
+      '--account-accent': accent,
+      '--account-accent-soft': `${accent}22`,
+    };
   }
 
   toggleSchedules(accountId: number | undefined): void {
@@ -1459,3 +1487,4 @@ export class HomeComponent implements OnInit, OnDestroy {
     return categories.reduce((sum, cat) => sum + cat.total, 0);
   }
 }
+

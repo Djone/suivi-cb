@@ -5,6 +5,7 @@ import { TransactionListComponent } from './components/transaction/transaction-l
 import { CategoryListComponent } from './components/category/category-list.component';
 import { RecurringTransactionListComponent } from './components/recurring-transaction/recurring-transaction-list.component';
 import { StatisticsComponent } from './components/statistics/statistics.component';
+import { SavingsComponent } from './components/savings/savings.component';
 import { ReleaseNotesComponent } from './components/release-notes/release-notes.component';
 import { ReleaseProcessComponent } from './components/release-process/release-process.component';
 import { environment } from '../environments/environment';
@@ -51,6 +52,7 @@ const childRoutes: Routes = [
       ),
   },
   { path: 'statistics', component: StatisticsComponent },
+  { path: 'savings', component: SavingsComponent },
   { path: 'release-notes', component: ReleaseNotesComponent },
   { path: 'release-process', component: ReleaseProcessComponent },
 ];

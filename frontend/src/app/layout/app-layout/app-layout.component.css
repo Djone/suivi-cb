@@ -10,21 +10,25 @@
   background-color: #f8f9fa;
 }
 
+.layout-main-container--mobile {
+  background:
+    radial-gradient(circle at top, rgba(102, 126, 234, 0.08), transparent 35%),
+    #f8f9fa;
+}
+
 .layout-main {
   padding: 2rem;
   min-height: calc(100vh - 70px);
 }
 
-/* Desktop: décaler le contenu pour la sidebar */
 @media screen and (min-width: 961px) {
   .layout-main-container {
     margin-left: 280px;
   }
 }
 
-/* Mobile: pas de décalage (sidebar en overlay) */
 @media screen and (max-width: 960px) {
   .layout-main {
-    padding: 1rem;
+    padding: 0.85rem;
   }
 }

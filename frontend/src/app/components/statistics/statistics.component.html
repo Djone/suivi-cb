@@ -39,11 +39,28 @@
         </div>
 
         <div class="filter-item">
+          <label>Transferts internes</label>
+          <div class="internal-transfer-filter">
+            <p-checkbox
+              inputId="includeInternalTransfers"
+              [binary]="true"
+              [(ngModel)]="includeInternalTransfers"
+              (onChange)="applyFilters()"
+            >
+            </p-checkbox>
+            <label for="includeInternalTransfers">Inclure dans les stats</label>
+          </div>
+        </div>
+
+        <div class="filter-item">
           <p-button
             label="Réinitialiser"
             icon="pi pi-refresh"
             (onClick)="
-              selectedAccount = null; selectedMonth = null; applyFilters()
+              selectedAccount = null;
+              selectedMonth = null;
+              includeInternalTransfers = false;
+              applyFilters()
             "
             styleClass="p-button-outlined"
           >

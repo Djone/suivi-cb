@@ -5,7 +5,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     title: '[Ticket 4.1] Tableau de salaires : frontend',
     description: ['[ ] Integrer la logique frontend'],
     status: 'in-progress',
-    targetVersion: '1.4.0',
+    targetVersion: '1.5.0',
     priority: 'medium',
   },
   {
@@ -25,9 +25,19 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
   {
     title: '[Ticket 9] Transactions : Recurrences hebdomadaires',
     description: [
-      '[ ] Correction du calcul des transactions recurrentes hebdomadaires',
+      '[X] Correction du calcul des transactions recurrentes hebdomadaires',
     ],
-    status: 'in-progress',
+    status: 'done',
+    targetVersion: '1.4.0',
+    priority: 'medium',
+  },
+  {
+    title: '[Ticket 11] Epargne : Transfert interne',
+    description: [
+      '[X] Créer une page dédiée pour les transferts internes entre comptes d’épargne',
+      '[X] Intégrer la création de portefeuilles d’épargne dans cette page',
+    ],
+    status: 'done',
     targetVersion: '1.4.0',
     priority: 'medium',
   },

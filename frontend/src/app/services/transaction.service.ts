@@ -80,7 +80,11 @@ export class TransactionService {
 
   // Ajouter une getTransactions
   addTransaction(transaction: Transaction): Observable<void> {
-    const snakeCaseTransaction = humps.decamelizeKeys(transaction); // Convertit les clés en snake_case
+    const payload = { ...transaction } as Partial<Transaction>;
+    if (payload.id === null || typeof payload.id === 'undefined') {
+      delete payload.id;
+    }
+    const snakeCaseTransaction = humps.decamelizeKeys(payload); // Convertit les clés en snake_case
 
     return this.http.post<void>(this.apiUrl, snakeCaseTransaction).pipe(
       tap(() => {

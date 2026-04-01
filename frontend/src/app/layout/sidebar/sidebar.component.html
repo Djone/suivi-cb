@@ -4,128 +4,161 @@
 >
   <div class="sidebar-content">
     <nav class="menu">
-      <!-- Dashboard -->
-      <a
-        routerLink="/home"
-        routerLinkActive="active"
-        class="menu-item"
-        (click)="onMenuItemClick()"
-      >
-        <i class="pi pi-home"></i>
-        <span>Dashboard</span>
-      </a>
-
-      <!-- Statistiques -->
-      <a
-        routerLink="/statistics"
-        routerLinkActive="active"
-        class="menu-item"
-        (click)="onMenuItemClick()"
-      >
-        <i class="pi pi-chart-bar"></i>
-        <span>Statistiques</span>
-      </a>
-
-      <a
-        routerLink="/impots"
-        routerLinkActive="active"
-        class="menu-item"
-        (click)="onMenuItemClick()"
-      >
-        <i class="pi pi-percentage"></i>
-        <span>Impôts</span>
-      </a>
-
-      <!-- Catégories -->
-      <div class="menu-group">
-        <div class="menu-item-header" (click)="toggleSection('operations')">
-          <div class="menu-item-icon-label">
-            <i class="pi pi-tags"></i>
-            <span>Opérations</span>
-          </div>
-          <i
-            class="pi"
-            [class.pi-chevron-down]="!expandedSections['operations']"
-            [class.pi-chevron-up]="expandedSections['operations']"
-          ></i>
-        </div>
-        <div
-          class="menu-submenu"
-          [class.expanded]="expandedSections['operations']"
-        >
-          <a
-            routerLink="/transactions-list"
-            routerLinkActive="active"
-            class="menu-subitem"
-            (click)="onMenuItemClick()"
-          >
-            <i class="pi pi-list"></i>
-            <span>Transactions</span>
-          </a>
-          <a
-            routerLink="/couple-split"
-            routerLinkActive="active"
-            class="menu-subitem"
-            (click)="onMenuItemClick()"
-          >
-            <i class="pi pi-users"></i>
-            <span>Répartition couple</span>
-          </a>
-          <a
-            routerLink="/recurring-transactions"
-            routerLinkActive="active"
-            class="menu-subitem"
-            (click)="onMenuItemClick()"
-          >
-            <i class="pi pi-sync"></i>
-            <span>Récurrentes</span>
-          </a>
-          <a
-            routerLink="/salary-tracker"
-            routerLinkActive="active"
-            class="menu-subitem"
-            (click)="onMenuItemClick()"
-          >
-            <i class="pi pi-chart-line"></i>
-            <span>Salaires & stats</span>
-          </a>
-          <a
-            routerLink="/category"
-            routerLinkActive="active"
-            class="menu-subitem"
-            (click)="onMenuItemClick()"
-          >
-            <i class="pi pi-tag"></i>
-            <span>Catégories</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Récurrentes -->
-
-      <div class="dev-only-block" *ngIf="isDevBuild">
-        <div class="dev-badge">DEV</div>
+      <ng-container *ngIf="isMobile; else desktopMenu">
         <a
-          routerLink="/todo-dev"
+          routerLink="/home"
           routerLinkActive="active"
-          class="menu-item dev-link"
+          class="menu-item"
           (click)="onMenuItemClick()"
         >
-          <i class="pi pi-clipboard"></i>
-          <span>TODO {{ appVersion }}</span>
+          <i class="pi pi-home"></i>
+          <span>Accueil</span>
         </a>
-        <small class="dev-hint"
-          >Uniquement disponible côté développement.</small
+
+        <div class="mobile-menu-section">
+          <p class="mobile-menu-section__label">Comptes</p>
+          <a
+            *ngFor="let account of accounts"
+            [routerLink]="['/transactions-list', account.id]"
+            routerLinkActive="active"
+            class="menu-item menu-item--account"
+            (click)="onMenuItemClick()"
+          >
+            <i class="pi pi-wallet"></i>
+            <span>{{ account.name }}</span>
+          </a>
+        </div>
+      </ng-container>
+
+      <ng-template #desktopMenu>
+        <a
+          routerLink="/home"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="onMenuItemClick()"
         >
-      </div>
+          <i class="pi pi-home"></i>
+          <span>Dashboard</span>
+        </a>
+
+        <a
+          routerLink="/statistics"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="onMenuItemClick()"
+        >
+          <i class="pi pi-chart-bar"></i>
+          <span>Statistiques</span>
+        </a>
+
+        <a
+          routerLink="/savings"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="onMenuItemClick()"
+        >
+          <i class="pi pi-wallet"></i>
+          <span>Épargne</span>
+        </a>
+
+        <a
+          routerLink="/impots"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="onMenuItemClick()"
+        >
+          <i class="pi pi-percentage"></i>
+          <span>Impôts</span>
+        </a>
+
+        <div class="menu-group">
+          <div class="menu-item-header" (click)="toggleSection('operations')">
+            <div class="menu-item-icon-label">
+              <i class="pi pi-tags"></i>
+              <span>Opérations</span>
+            </div>
+            <i
+              class="pi"
+              [class.pi-chevron-down]="!expandedSections['operations']"
+              [class.pi-chevron-up]="expandedSections['operations']"
+            ></i>
+          </div>
+          <div
+            class="menu-submenu"
+            [class.expanded]="expandedSections['operations']"
+          >
+            <a
+              routerLink="/transactions-list"
+              routerLinkActive="active"
+              class="menu-subitem"
+              (click)="onMenuItemClick()"
+            >
+              <i class="pi pi-list"></i>
+              <span>Transactions</span>
+            </a>
+            <a
+              routerLink="/couple-split"
+              routerLinkActive="active"
+              class="menu-subitem"
+              (click)="onMenuItemClick()"
+            >
+              <i class="pi pi-users"></i>
+              <span>Répartition couple</span>
+            </a>
+            <a
+              routerLink="/recurring-transactions"
+              routerLinkActive="active"
+              class="menu-subitem"
+              (click)="onMenuItemClick()"
+            >
+              <i class="pi pi-sync"></i>
+              <span>Récurrentes</span>
+            </a>
+            <a
+              routerLink="/salary-tracker"
+              routerLinkActive="active"
+              class="menu-subitem"
+              (click)="onMenuItemClick()"
+            >
+              <i class="pi pi-chart-line"></i>
+              <span>Salaires & stats</span>
+            </a>
+            <a
+              routerLink="/category"
+              routerLinkActive="active"
+              class="menu-subitem"
+              (click)="onMenuItemClick()"
+            >
+              <i class="pi pi-tag"></i>
+              <span>Catégories</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="dev-only-block" *ngIf="isDevBuild">
+          <div class="dev-badge">DEV</div>
+          <a
+            routerLink="/todo-dev"
+            routerLinkActive="active"
+            class="menu-item dev-link"
+            (click)="onMenuItemClick()"
+          >
+            <i class="pi pi-clipboard"></i>
+            <span>TODO {{ appVersion }}</span>
+          </a>
+          <small class="dev-hint">
+            Uniquement disponible côté développement.
+          </small>
+        </div>
+      </ng-template>
     </nav>
   </div>
 
-  <!-- Bloc à ajouter en bas du menu -->
   <div class="version-footer">
     <div class="version-line">
       <small>Version {{ appVersion }}</small>
       <a
+        *ngIf="!isMobile"
         routerLink="/release-notes"
         class="release-notes-link"
         (click)="onMenuItemClick()"

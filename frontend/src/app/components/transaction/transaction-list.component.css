@@ -4,6 +4,10 @@
   margin: 0 auto;
 }
 
+.transaction-list--mobile {
+  padding: 0;
+}
+
 h1, h2 {
   color: #343a40;
   margin-bottom: 20px;
@@ -34,6 +38,27 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.header-kicker {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.82;
 }
 
 .list-header h2 {
@@ -498,6 +523,37 @@ h3 {
   white-space: nowrap;
 }
 
+.mobile-results-bar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.mobile-results-bar__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.mobile-results-bar__item span {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.mobile-results-bar__item strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
 
 .grouped-transactions {
   padding: 1rem;
@@ -585,6 +641,19 @@ h3 {
   color: #0f766e;
   background: #ccfbf1;
   border: 1px solid #99f6e4;
+}
+
+.internal-transfer-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9a3412;
+  background: #ffedd5;
+  border: 1px solid #fed7aa;
 }
 
 .transaction-item:hover {
@@ -759,10 +828,15 @@ h3 {
 
 
 @media (max-width: 768px) {
+  .transaction-list {
+    max-width: none;
+  }
+
   .list-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
+    padding: 1rem;
   }
 
   .balance-display {
@@ -776,6 +850,15 @@ h3 {
 
   .balance-amount {
     font-size: 1.5rem;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-top .p-button {
+    width: 100%;
   }
 
   .filters-row {
@@ -802,4 +885,20 @@ h3 {
     gap: 0.5rem;
     align-items: flex-start;
   }
+
+  .grouped-transactions {
+    padding: 0.75rem;
+  }
+
+  .transaction-item {
+    align-items: flex-start;
+  }
+
+  .transaction-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
 }
+

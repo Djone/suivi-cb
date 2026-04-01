@@ -1,4 +1,4 @@
-﻿// frontend/src/app/components/transaction-list/transaction-list.component.ts
+// frontend/src/app/components/transaction-list/transaction-list.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MessageService } from 'primeng/api';
@@ -21,6 +21,7 @@ import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { FilterManagerService } from '../../services/filter-manager.service';
+import { ViewportService } from '../../services/viewport.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { EditTransactionDialogComponent } from '../edit-transaction-dialog/edit-transaction-dialog.component';
 import { Transaction } from '../../models/transaction.model';
@@ -52,6 +53,7 @@ interface UpcomingScheduleLite {
 }
 
 type AdvanceJointFilter = 'all' | 'only' | 'exclude';
+type InternalTransferFilter = 'all' | 'only' | 'exclude';
 
 @Component({
   selector: 'app-transaction-list',
@@ -76,6 +78,7 @@ type AdvanceJointFilter = 'all' | 'only' | 'exclude';
   ],
 })
 export class TransactionListComponent implements OnInit, OnDestroy {
+  isMobile = false;
   accountId: number | null = null;
   account: Account | null = null;
   accounts: Account[] = [];
@@ -121,6 +124,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     categoryIds: [] as number[],
     subCategoryIds: [] as number[],
     advanceJoint: 'all' as AdvanceJointFilter,
+    internalTransfer: 'all' as InternalTransferFilter,
   };
   advanceJointFilterOptions = [
     { label: 'Toutes les transactions', value: 'all' as AdvanceJointFilter },
@@ -129,6 +133,17 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       value: 'only' as AdvanceJointFilter,
     },
     { label: 'Hors avances compte joint', value: 'exclude' as AdvanceJointFilter },
+  ];
+  internalTransferFilterOptions = [
+    { label: 'Tous les mouvements', value: 'all' as InternalTransferFilter },
+    {
+      label: 'Transferts internes uniquement',
+      value: 'only' as InternalTransferFilter,
+    },
+    {
+      label: 'Hors transferts internes',
+      value: 'exclude' as InternalTransferFilter,
+    },
   ];
   advanceJointTotal = 0;
   advanceJointCount = 0;
@@ -159,9 +174,16 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     private dialogService: DialogService,
     private messageService: MessageService,
     private route: ActivatedRoute,
+    private viewportService: ViewportService,
   ) {}
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.viewportService.mobile$.subscribe((isMobile) => {
+        this.isMobile = isMobile;
+      }),
+    );
+
     // Récupérer l'accountId depuis les paramètres de route
     this.route.params.subscribe((params) => {
       if (params['accountId']) {
@@ -268,12 +290,28 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.transactionService.loadTransactions();
   }
 
+  private toNumber(value: unknown): number | null {
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = parseInt(value, 10);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  }
+
   private refreshSubCategoryIndex(list: SubCategory[]): void {
     this.subCategoryIndex.clear();
     list.forEach((sc) => {
-      if (typeof sc.id === 'number') {
-        this.subCategoryIndex.set(sc.id, sc);
-      }
+      const subCategoryId = this.toNumber(sc.id);
+      const categoryId = this.toNumber(sc.categoryId);
+      if (subCategoryId === null || categoryId === null) return;
+      this.subCategoryIndex.set(subCategoryId, {
+        ...sc,
+        id: subCategoryId,
+        categoryId,
+      });
     });
   }
 
@@ -318,12 +356,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   private getSubCategoryById(
     subCategoryId: number | string | null | undefined,
   ): SubCategory | null {
-    if (subCategoryId === null || subCategoryId === undefined) return null;
-    const id =
-      typeof subCategoryId === 'string'
-        ? parseInt(subCategoryId, 10)
-        : subCategoryId;
-    if (Number.isNaN(id)) {
+    const id = this.toNumber(subCategoryId);
+    if (id === null) {
       return null;
     }
     return this.subCategoryIndex.get(id) || null;
@@ -383,6 +417,13 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           : this.filters.advanceJoint === 'only'
             ? isAdvanceJoint
             : !isAdvanceJoint;
+      const isInternalTransfer = this.isInternalTransfer(transaction);
+      const matchInternalTransfer =
+        this.filters.internalTransfer === 'all'
+          ? true
+          : this.filters.internalTransfer === 'only'
+            ? isInternalTransfer
+            : !isInternalTransfer;
 
       return (
         matchDate &&
@@ -390,7 +431,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         matchAmount &&
         matchCategory &&
         matchSubCategory &&
-        matchAdvanceJoint
+        matchAdvanceJoint &&
+        matchInternalTransfer
       );
     });
 
@@ -675,12 +717,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     if (!subCategoryId) return 'N/A';
 
     const subCategory = this.getSubCategoryById(subCategoryId);
-    const normalizedId =
-      typeof subCategoryId === 'string'
-        ? parseInt(subCategoryId, 10)
-        : subCategoryId;
+    const normalizedId = this.toNumber(subCategoryId);
 
-    if (!subCategory && this.subCategories.length > 0) {
+    if (!subCategory && normalizedId !== null && this.subCategories.length > 0) {
       console.log(
         `TRANSACTION LIST : Sous-categorie ${normalizedId} non trouvee. Sous-categories disponibles:`,
         this.subCategories.map((sc) => sc.id),
@@ -694,6 +733,21 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   isAdvanceToJointAccount(transaction: Transaction): boolean {
     const raw = transaction.advanceToJointAccount;
+    if (typeof raw === 'boolean') {
+      return raw;
+    }
+    if (typeof raw === 'number') {
+      return raw === 1;
+    }
+    if (typeof raw === 'string') {
+      const normalized = raw.trim().toLowerCase();
+      return normalized === '1' || normalized === 'true';
+    }
+    return false;
+  }
+
+  isInternalTransfer(transaction: Transaction): boolean {
+    const raw = transaction.isInternalTransfer;
     if (typeof raw === 'boolean') {
       return raw;
     }
@@ -779,7 +833,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       endIndex,
     );
 
-    // Garder aussi la pagination simple pour compatibilitÃƒÂ©
+    // Garder aussi la pagination simple pour compatibilité
     const startIndexTx = (this.currentPage - 1) * this.pageSize;
     const endIndexTx = startIndexTx + this.pageSize;
     this.paginatedTransactions = this.filteredTransactions.slice(
@@ -801,9 +855,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       // Enrichir la transaction avec le label de sous-catégorie et le montant numérique
       // Enrichir la transaction avec le label de sous-categorie et le montant numerique
       const subCategory = this.getSubCategoryById(transaction.subCategoryId);
+      const rawSubCategoryLabel =
+        this.toDisplayValue((transaction as any)['subCategoryLabel']) ||
+        this.toDisplayValue((transaction as any)['subcategoryLabel']);
       const subCategoryLabel = subCategory
         ? `${subCategory.categoryLabel} - ${subCategory.label}`
-        : 'Non categorise';
+        : rawSubCategoryLabel || 'Non categorise';
 
       const enrichedTransaction: TransactionWithLabel = {
         ...transaction,
@@ -833,6 +890,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
 
     return result;
+  }
+
+  private toDisplayValue(value: unknown): string {
+    return typeof value === 'string' && value.trim() !== '' ? value.trim() : '';
   }
 
   formatDate(dateString: string): string {
@@ -906,7 +967,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     this.accountService.accounts$.subscribe((accounts) => {
       this.account = accounts.find((a) => a.id === this.accountId) || null;
-      console.log('TRANSACTION LIST : Compte chargÃƒÂ©:', this.account);
+      console.log('TRANSACTION LIST : Compte chargé:', this.account);
       this.loadRecurringTransactions();
     });
   }
@@ -1043,14 +1104,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       rec,
       currentYear,
       currentMonth,
-    ).filter((d) => !this.isRecurringRealized(d.rt.id!));
+    ).filter((d) => !this.isScheduleRealized(d.rt, d.date));
 
     const nextStartDue: { rt: RecurringTransaction; date: Date }[] = [];
     if (today.getDate() >= 25) {
       const nextMonth = (currentMonth + 1) % 12;
       const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       const next = this.buildSchedulesForMonth(rec, nextYear, nextMonth).filter(
-        (d) => d.date.getDate() <= 5 && !this.isRecurringRealized(d.rt.id!),
+        (d) => d.date.getDate() <= 5 && !this.isScheduleRealized(d.rt, d.date),
       );
       nextStartDue.push(...next);
     }
@@ -1265,6 +1326,13 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
   }
 
+  private isScheduleRealized(
+    recurring: RecurringTransaction,
+    dueDate: Date,
+  ): boolean {
+    return this.isRecurringRealizedByExactDate(recurring, dueDate);
+  }
+
   private getSignedAmountFromRecurring(rt: RecurringTransaction): number {
     const amount =
       typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
@@ -1275,15 +1343,16 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return flowId === 2 ? -Math.abs(amount) : Math.abs(amount);
   }
 
-  // Basculer l'affichage des ÃƒÂ©chÃƒÂ©ances
+  // Basculer l'affichage des échéances
   toggleRecurring(): void {
     this.showRecurring = !this.showRecurring;
   }
 
-  markRecurringAsPaid(recurring: RecurringTransaction): void {
+  markRecurringAsPaid(schedule: UpcomingScheduleLite): void {
     if (!this.accountId) {
       return;
     }
+    const recurring = schedule.recurringTransaction;
     const rawAmount =
       typeof recurring.amount === 'string'
         ? parseFloat(recurring.amount)
@@ -1303,7 +1372,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (!confirmed) return;
       const tx: Transaction = {
         description: recurring.label,
-        date: new Date(),
+        date: new Date(schedule.dueDate),
         amount: Math.abs(rawAmount),
         accountId: this.accountId!,
         financialFlowId: recurring.financialFlowId,
@@ -1450,6 +1519,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           financialFlowId: defaultFinancialFlowId,
           subCategoryId: null,
           advanceToJointAccount: false,
+          isInternalTransfer: false,
         },
         isNew: true,
       },
@@ -1578,6 +1648,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         financialFlowId: transaction.financialFlowId,
         recurringTransactionId: null,
         advanceToJointAccount: false,
+        isInternalTransfer: false,
       } as Transaction;
 
       this.transactionService
@@ -1739,3 +1810,4 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }, 0);
   }
 }
+
