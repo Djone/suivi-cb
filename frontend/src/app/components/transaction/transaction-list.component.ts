@@ -1104,14 +1104,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       rec,
       currentYear,
       currentMonth,
-    ).filter((d) => !this.isRecurringRealized(d.rt.id!));
+    ).filter((d) => !this.isScheduleRealized(d.rt, d.date));
 
     const nextStartDue: { rt: RecurringTransaction; date: Date }[] = [];
     if (today.getDate() >= 25) {
       const nextMonth = (currentMonth + 1) % 12;
       const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       const next = this.buildSchedulesForMonth(rec, nextYear, nextMonth).filter(
-        (d) => d.date.getDate() <= 5 && !this.isRecurringRealized(d.rt.id!),
+        (d) => d.date.getDate() <= 5 && !this.isScheduleRealized(d.rt, d.date),
       );
       nextStartDue.push(...next);
     }
@@ -1326,6 +1326,13 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
   }
 
+  private isScheduleRealized(
+    recurring: RecurringTransaction,
+    dueDate: Date,
+  ): boolean {
+    return this.isRecurringRealizedByExactDate(recurring, dueDate);
+  }
+
   private getSignedAmountFromRecurring(rt: RecurringTransaction): number {
     const amount =
       typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
@@ -1341,10 +1348,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.showRecurring = !this.showRecurring;
   }
 
-  markRecurringAsPaid(recurring: RecurringTransaction): void {
+  markRecurringAsPaid(schedule: UpcomingScheduleLite): void {
     if (!this.accountId) {
       return;
     }
+    const recurring = schedule.recurringTransaction;
     const rawAmount =
       typeof recurring.amount === 'string'
         ? parseFloat(recurring.amount)
@@ -1364,7 +1372,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (!confirmed) return;
       const tx: Transaction = {
         description: recurring.label,
-        date: new Date(),
+        date: new Date(schedule.dueDate),
         amount: Math.abs(rawAmount),
         accountId: this.accountId!,
         financialFlowId: recurring.financialFlowId,
