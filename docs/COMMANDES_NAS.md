@@ -6,7 +6,7 @@ Ce document regroupe toutes les commandes utiles pour gérer l'application sur l
 
 ```bash
 # Connexion SSH standard
-ssh admin@192.168.1.100 -p 22
+ssh admin@192.168.1.113 -p 22
 
 Saisir le mot de passa
 
