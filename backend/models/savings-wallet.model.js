@@ -28,6 +28,9 @@ const normalizeAllocatedAmount = (allocatedAmount, targetAmount) =>
 const normalizeRemainingAmount = (targetAmount, allocatedAmount) =>
   Math.max(Number(targetAmount ?? 0) - Number(allocatedAmount ?? 0), 0);
 
+const toRoundedAmount = (value) =>
+  Math.round(Number(value ?? 0) * 100) / 100;
+
 const buildFilters = (filters = {}) => {
   const conditions = [];
   const params = [];
@@ -56,6 +59,100 @@ const buildFilters = (filters = {}) => {
   }
 
   return { conditions, params };
+};
+
+const getAvailableSavingsTotal = async (filters = {}) => {
+  const { conditions, params } = buildFilters(filters);
+  const whereParts = ['t.is_internal_transfer = 1', ...conditions];
+  const row = await dbAll(
+    `
+      SELECT
+        COALESCE(
+          SUM(CASE WHEN t.financial_flow_id = 1 THEN -t.amount ELSE t.amount END),
+          0
+        ) AS net_amount
+      FROM transactions t
+      WHERE ${whereParts.join(' AND ')}
+    `,
+    params,
+  );
+
+  return Math.max(toRoundedAmount(row[0]?.net_amount ?? 0), 0);
+};
+
+const buildWalletSummary = (row, allocatedAmountOverride) => {
+  const isActive = Number(row.is_active) === 1;
+  const targetAmount = Number(
+    isActive ? row.target_amount ?? 0 : row.closed_target_amount ?? row.target_amount ?? 0,
+  );
+  const rawAllocatedAmount = Number(
+    allocatedAmountOverride ??
+      (isActive
+        ? row.allocated_amount ?? 0
+        : row.closed_allocated_amount ?? row.allocated_amount ?? 0),
+  );
+  const allocatedAmount = isActive
+    ? normalizeAllocatedAmount(rawAllocatedAmount, targetAmount)
+    : Math.max(rawAllocatedAmount, 0);
+  const remainingAmount = isActive
+    ? normalizeRemainingAmount(targetAmount, allocatedAmount)
+    : Math.max(
+        Number(
+          row.closed_remaining_amount ??
+            normalizeRemainingAmount(targetAmount, allocatedAmount),
+        ),
+        0,
+      );
+
+  return {
+    id: Number(row.id),
+    name: row.name,
+    targetAmount,
+    allocatedAmount: toRoundedAmount(allocatedAmount),
+    remainingAmount: toRoundedAmount(remainingAmount),
+    isActive,
+    progressRate:
+      targetAmount > 0 ? Math.min((allocatedAmount / targetAmount) * 100, 100) : 0,
+  };
+};
+
+const clampActiveWalletSummariesToAvailable = (rows, availableSavingsTotal) => {
+  const summaries = rows.map((row) => buildWalletSummary(row));
+  const closedAllocatedTotal = summaries
+    .filter((wallet) => !wallet.isActive)
+    .reduce((sum, wallet) => sum + wallet.allocatedAmount, 0);
+
+  let remainingActiveBudget = Math.max(
+    toRoundedAmount(availableSavingsTotal) - toRoundedAmount(closedAllocatedTotal),
+    0,
+  );
+
+  return summaries.map((wallet) => {
+    if (!wallet.isActive) {
+      return wallet;
+    }
+
+    const boundedAllocatedAmount = Math.min(
+      wallet.allocatedAmount,
+      remainingActiveBudget,
+    );
+    remainingActiveBudget = Math.max(
+      toRoundedAmount(remainingActiveBudget - boundedAllocatedAmount),
+      0,
+    );
+
+    return {
+      ...wallet,
+      allocatedAmount: toRoundedAmount(boundedAllocatedAmount),
+      remainingAmount: toRoundedAmount(
+        normalizeRemainingAmount(wallet.targetAmount, boundedAllocatedAmount),
+      ),
+      progressRate:
+        wallet.targetAmount > 0
+          ? Math.min((boundedAllocatedAmount / wallet.targetAmount) * 100, 100)
+          : 0,
+    };
+  });
 };
 
 const SavingsWallet = {
@@ -144,7 +241,6 @@ const SavingsWallet = {
   },
 
   getAllocationSummary: async (filters = {}) => {
-    const { conditions, params } = buildFilters(filters);
     const includeClosed = filters.includeClosed === true;
     const walletCondition = includeClosed ? '' : 'WHERE w.is_active = 1';
     const query = `
@@ -162,42 +258,15 @@ const SavingsWallet = {
       ORDER BY w.name ASC
     `;
 
-    const summaryRows = await dbAll(query, conditions.length ? params : []);
-    return summaryRows.map((row) => {
-      const isActive = Number(row.is_active) === 1;
-      const targetAmount = Number(
-        isActive ? row.target_amount ?? 0 : row.closed_target_amount ?? row.target_amount ?? 0,
-      );
-      const rawAllocatedAmount = Number(
-        isActive
-          ? row.allocated_amount ?? 0
-          : row.closed_allocated_amount ?? row.allocated_amount ?? 0,
-      );
-      const allocatedAmount = isActive
-        ? normalizeAllocatedAmount(rawAllocatedAmount, targetAmount)
-        : Math.max(rawAllocatedAmount, 0);
-      const remainingAmount = isActive
-        ? normalizeRemainingAmount(targetAmount, allocatedAmount)
-        : Math.max(
-            Number(
-              row.closed_remaining_amount ??
-                normalizeRemainingAmount(targetAmount, allocatedAmount),
-            ),
-            0,
-          );
-      return {
-        id: Number(row.id),
-        name: row.name,
-        targetAmount,
-        allocatedAmount,
-        remainingAmount,
-        isActive,
-        progressRate:
-          targetAmount > 0
-            ? Math.min((allocatedAmount / targetAmount) * 100, 100)
-            : 0,
-      };
-    });
+    const [summaryRows, availableSavingsTotal] = await Promise.all([
+      dbAll(query),
+      getAvailableSavingsTotal(filters),
+    ]);
+
+    return clampActiveWalletSummariesToAvailable(
+      summaryRows,
+      availableSavingsTotal,
+    );
   },
 
   getAllocationsByTransaction: async (transactionId) => {
@@ -330,6 +399,52 @@ const SavingsWallet = {
       deduped.set(allocation.walletId, allocation.amount);
     });
 
+    const availableSavingsTotal = await getAvailableSavingsTotal();
+    const walletRows = await dbAll(
+      `
+      SELECT
+        id,
+        name,
+        target_amount,
+        is_active,
+        closed_target_amount,
+        closed_allocated_amount,
+        closed_remaining_amount,
+        current_allocated_amount AS allocated_amount
+      FROM savings_wallets
+      ORDER BY name ASC
+      `,
+    );
+    const closedAllocatedTotal = walletRows
+      .map((row) => buildWalletSummary(row))
+      .filter((wallet) => !wallet.isActive)
+      .reduce((sum, wallet) => sum + wallet.allocatedAmount, 0);
+    let remainingActiveBudget = Math.max(
+      toRoundedAmount(availableSavingsTotal) - toRoundedAmount(closedAllocatedTotal),
+      0,
+    );
+    const boundedAllocations = new Map();
+
+    walletRows.forEach((row) => {
+      if (Number(row.is_active) !== 1) {
+        return;
+      }
+
+      const walletId = Number(row.id);
+      const requestedAmount = Number(deduped.get(walletId) ?? 0);
+      const walletCapacity = normalizeAllocatedAmount(
+        requestedAmount,
+        Number(row.target_amount ?? 0),
+      );
+      const boundedAmount = Math.min(walletCapacity, remainingActiveBudget);
+
+      boundedAllocations.set(walletId, toRoundedAmount(boundedAmount));
+      remainingActiveBudget = Math.max(
+        toRoundedAmount(remainingActiveBudget - boundedAmount),
+        0,
+      );
+    });
+
     await dbRun('BEGIN IMMEDIATE TRANSACTION');
     try {
       await dbRun(
@@ -340,7 +455,7 @@ const SavingsWallet = {
         `,
       );
 
-      for (const [walletId, amount] of deduped.entries()) {
+      for (const [walletId, amount] of boundedAllocations.entries()) {
         await dbRun(
           `
           UPDATE savings_wallets

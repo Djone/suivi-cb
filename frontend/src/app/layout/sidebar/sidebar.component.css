@@ -18,7 +18,7 @@
 }
 
 .sidebar-content {
-  padding: 1rem 0;
+  padding: 1rem 0 5.5rem;
 }
 
 .menu {
@@ -275,6 +275,10 @@
 @media screen and (max-width: 960px) {
   .layout-sidebar {
     width: 280px;
+  }
+
+  .sidebar-content {
+    padding-bottom: 1rem;
   }
 
   .version-footer {

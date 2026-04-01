@@ -29,6 +29,11 @@ describe('SavingsWallet Model', () => {
   describe('getAllocationSummary', () => {
     it("borne l'allocation active entre 0 et l'objectif et remet l'excedent dans le reste a repartir", async () => {
       db.all.mockImplementation((query, params, callback) => {
+        if (query.includes('FROM transactions t')) {
+          callback(null, [{ net_amount: 160 }]);
+          return;
+        }
+
         callback(null, [
           {
             id: 7,
@@ -54,6 +59,61 @@ describe('SavingsWallet Model', () => {
           remainingAmount: 0,
           isActive: true,
           progressRate: 100,
+        },
+      ]);
+    });
+
+    it("ecrete les allocations actives quand le total alloue depasse l'epargne disponible", async () => {
+      db.all.mockImplementation((query, params, callback) => {
+        if (query.includes('FROM transactions t')) {
+          callback(null, [{ net_amount: 258.39 }]);
+          return;
+        }
+
+        callback(null, [
+          {
+            id: 1,
+            name: 'Coussin',
+            target_amount: 200,
+            is_active: 1,
+            closed_target_amount: null,
+            closed_allocated_amount: null,
+            closed_remaining_amount: null,
+            allocated_amount: 200,
+          },
+          {
+            id: 2,
+            name: 'Vacances',
+            target_amount: 200,
+            is_active: 1,
+            closed_target_amount: null,
+            closed_allocated_amount: null,
+            closed_remaining_amount: null,
+            allocated_amount: 150,
+          },
+        ]);
+      });
+
+      const summary = await SavingsWallet.getAllocationSummary({ includeClosed: true });
+
+      expect(summary).toEqual([
+        {
+          id: 1,
+          name: 'Coussin',
+          targetAmount: 200,
+          allocatedAmount: 200,
+          remainingAmount: 0,
+          isActive: true,
+          progressRate: 100,
+        },
+        {
+          id: 2,
+          name: 'Vacances',
+          targetAmount: 200,
+          allocatedAmount: 58.39,
+          remainingAmount: 141.61,
+          isActive: true,
+          progressRate: 29.195,
         },
       ]);
     });

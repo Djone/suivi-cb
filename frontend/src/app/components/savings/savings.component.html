@@ -30,41 +30,37 @@
       ></p-message>
     </div>
 
-    <div class="target-budget-warning" *ngIf="getRemainingToAllocate() < 0">
-      Le montant mis de cote depasse actuellement le total de l'epargne de
-      {{ getRemainingToAllocateOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}.
-      Un retrait non prevu a probablement reduit l'epargne disponible.
-    </div>
-
     <div
       class="target-budget-banner"
       [class.is-danger]="getTargetBudgetRemaining() < 0"
       [class.is-success]="getTargetBudgetRemaining() >= 0"
     >
       <div class="target-budget-main">
-        <div class="target-budget-label">Net des mouvements internes epargne</div>
+        <div class="target-budget-label">Epargne disponible</div>
         <div class="target-budget-value">
-          {{ netAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          {{ netAmount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
         </div>
       </div>
       <div class="target-budget-main">
-        <div class="target-budget-label">Objectifs cumules des portefeuilles actifs</div>
+        <div class="target-budget-label">Montant total des objectifs</div>
         <div class="target-budget-value">
-          {{ getActiveWalletTargetTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          {{
+            getActiveWalletTargetTotal()
+              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}
         </div>
       </div>
       <div class="target-budget-status">
-        <div class="target-budget-status-label">
-          {{ getRemainingToAllocate() >= 0 ? 'Marge theorique' : 'Ecart theorique' }}
-        </div>
+        <div class="target-budget-status-label">Reste à répartir</div>
         <div class="target-budget-status-value">
-          {{ (getRemainingToAllocate() >= 0 ? getRemainingToAllocate() : getRemainingToAllocateOverage()) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          {{
+            (getRemainingToAllocate() >= 0
+              ? getRemainingToAllocate()
+              : getRemainingToAllocateOverage()
+            ) | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}
         </div>
       </div>
-    </div>
-
-    <div class="target-budget-warning" *ngIf="getTargetBudgetRemaining() < 0">
-      Les objectifs depassent le net des mouvements internes observes. Cela reste autorise.
     </div>
 
     <div class="wallet-allocation-toolbar">
@@ -79,7 +75,12 @@
       ></button>
     </div>
 
-    <p-table [value]="walletProgress" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]">
+    <p-table
+      [value]="walletProgress"
+      [paginator]="true"
+      [rows]="5"
+      [rowsPerPageOptions]="[5, 10, 20]"
+    >
       <ng-template pTemplate="caption">
         <strong>Recapitulatif par portefeuille</strong>
       </ng-template>
@@ -98,16 +99,25 @@
         <tr [class.wallet-closed]="!progress.isActive">
           <td>{{ progress.name }}</td>
           <td class="text-right">
-            {{ progress.targetAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+            {{
+              progress.targetAmount
+                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
           </td>
           <td class="text-right">
-            {{ progress.allocatedAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+            {{
+              progress.allocatedAmount
+                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
           </td>
           <td class="text-right">
-            {{ progress.remainingAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+            {{
+              progress.remainingAmount
+                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
           </td>
           <td class="text-right">
-            {{ progress.progressRate | number: '1.0-1' }} %
+            {{ progress.progressRate | number: "1.0-1" }} %
             <div class="wallet-progress-track">
               <div
                 class="wallet-progress-fill"
@@ -121,7 +131,7 @@
               [class.wallet-state-active]="progress.isActive"
               [class.wallet-state-closed]="!progress.isActive"
             >
-              {{ progress.isActive ? 'Actif' : 'Cloture' }}
+              {{ progress.isActive ? "Actif" : "Cloture" }}
             </span>
             <span
               *ngIf="progress.isActive && progress.remainingAmount <= 0"
@@ -137,7 +147,6 @@
                 type="button"
                 icon="pi pi-pencil"
                 class="p-button-text"
-                label="Modifier"
                 (click)="openEditWalletDialog(progress)"
               ></button>
               <button
@@ -146,7 +155,6 @@
                 type="button"
                 icon="pi pi-lock"
                 class="p-button-text"
-                label="Clore"
                 (click)="closeWalletById(progress.id)"
               ></button>
               <button
@@ -154,7 +162,6 @@
                 type="button"
                 icon="pi pi-trash"
                 class="p-button-text p-button-danger"
-                label="Supprimer"
                 (click)="requestDeleteWallet(progress)"
               ></button>
             </div>
@@ -171,7 +178,8 @@
 
   <p-card header="Mouvements de transfert interne">
     <div class="movements-scope-note">
-      Tous les mouvements internes sont listes ici. En revanche, l'agregat par compte epargne exclut les comptes courants et joints.
+      Tous les mouvements internes sont listes ici. En revanche, l'agregat par
+      compte epargne exclut les comptes courants et joints.
     </div>
 
     <div class="filters-grid">
@@ -236,21 +244,30 @@
     <div class="summary-grid">
       <div class="summary-card incoming">
         <div class="summary-label">Entrees sur epargne</div>
-        <div class="summary-value">{{ totalIncoming | currency: 'EUR':'symbol':'1.2-2':'fr' }}</div>
+        <div class="summary-value">
+          {{ totalIncoming | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </div>
       </div>
       <div class="summary-card outgoing">
         <div class="summary-label">Sorties depuis epargne</div>
-        <div class="summary-value">{{ totalOutgoing | currency: 'EUR':'symbol':'1.2-2':'fr' }}</div>
+        <div class="summary-value">
+          {{ totalOutgoing | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </div>
       </div>
       <div class="summary-card net" [class.negative]="netAmount < 0">
         <div class="summary-label">Net epargne</div>
-        <div class="summary-value">{{ netAmount | currency: 'EUR':'symbol':'1.2-2':'fr' }}</div>
+        <div class="summary-value">
+          {{ netAmount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </div>
       </div>
     </div>
 
     <div class="stats-grid">
       <p-card header="Repartition par type d'epargne">
-        <div class="chart-container" *ngIf="savingsByType.length > 0; else noTypeData">
+        <div
+          class="chart-container"
+          *ngIf="savingsByType.length > 0; else noTypeData"
+        >
           <p-chart
             type="bar"
             [data]="savingsTypeChartData"
@@ -258,7 +275,9 @@
           ></p-chart>
         </div>
         <ng-template #noTypeData>
-          <div class="empty-block">Aucun type d'epargne a afficher pour ce filtre.</div>
+          <div class="empty-block">
+            Aucun type d'epargne a afficher pour ce filtre.
+          </div>
         </ng-template>
       </p-card>
 
@@ -276,13 +295,17 @@
             <tr>
               <td>{{ row.accountName }}</td>
               <td class="text-right amount-positive">
-                {{ row.incoming | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+                {{ row.incoming | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
               </td>
               <td class="text-right amount-negative">
-                {{ row.outgoing | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+                {{ row.outgoing | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
               </td>
-              <td class="text-right" [class.amount-positive]="row.net >= 0" [class.amount-negative]="row.net < 0">
-                {{ row.net | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              <td
+                class="text-right"
+                [class.amount-positive]="row.net >= 0"
+                [class.amount-negative]="row.net < 0"
+              >
+                {{ row.net | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
               </td>
             </tr>
           </ng-template>
@@ -314,7 +337,7 @@
       </ng-template>
       <ng-template pTemplate="body" let-movement>
         <tr>
-          <td>{{ movement.date | date: 'dd/MM/yyyy' }}</td>
+          <td>{{ movement.date | date: "dd/MM/yyyy" }}</td>
           <td>{{ movement.description }}</td>
           <td>{{ movement.accountName }}</td>
           <td>{{ movement.categoryLabel }}</td>
@@ -322,7 +345,10 @@
           <td class="text-right">
             <p-tag
               [severity]="movement.signedAmount < 0 ? 'danger' : 'success'"
-              [value]="(movement.signedAmount | currency: 'EUR':'symbol':'1.2-2':'fr') || ''"
+              [value]="
+                (movement.signedAmount
+                  | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
+              "
             >
             </p-tag>
           </td>
@@ -334,7 +360,6 @@
                 type="button"
                 icon="pi pi-pencil"
                 class="p-button-text"
-                label="Modifier"
                 (click)="openEditManualMovementDialog(movement)"
               ></button>
               <button
@@ -343,7 +368,6 @@
                 type="button"
                 icon="pi pi-trash"
                 class="p-button-text p-button-danger"
-                label="Supprimer"
                 (click)="deleteManualMovement(movement)"
               ></button>
             </div>
@@ -352,7 +376,9 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7">Aucun mouvement epargne pour les filtres selectionnes.</td>
+          <td colspan="7">
+            Aucun mouvement epargne pour les filtres selectionnes.
+          </td>
         </tr>
       </ng-template>
     </p-table>
@@ -391,7 +417,11 @@
 </p-dialog>
 
 <p-dialog
-  [header]="walletDialogMode === 'edit' ? 'Modifier le portefeuille' : 'Nouveau portefeuille fictif'"
+  [header]="
+    walletDialogMode === 'edit'
+      ? 'Modifier le portefeuille'
+      : 'Nouveau portefeuille fictif'
+  "
   [(visible)]="walletCreationDialogVisible"
   [modal]="true"
   [closable]="true"
@@ -544,14 +574,18 @@
       </div>
       <div class="allocation-hero-amount">
         <span class="allocation-hero-label">Montant a repartir</span>
-        <strong>{{ getRemainingToAllocate() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
+        <strong>{{
+          getRemainingToAllocate() | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
       </div>
     </div>
 
     <div class="allocation-overview">
       <div class="allocation-overview-card">
         <span class="allocation-overview-label">Reparti</span>
-        <strong>{{ getAllocationTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
+        <strong>{{
+          getAllocationTotal() | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
       </div>
       <div
         class="allocation-overview-card"
@@ -559,15 +593,26 @@
         [class.is-danger]="getAllocationRemaining() < 0"
       >
         <span class="allocation-overview-label">Ecart</span>
-        <strong>{{ getAllocationRemaining() | currency: 'EUR':'symbol':'1.2-2':'fr' }}</strong>
-        <span class="allocation-overview-note" *ngIf="getAllocationRemaining() < 0">
+        <strong>{{
+          getAllocationRemaining() | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
+        <span
+          class="allocation-overview-note"
+          *ngIf="getAllocationRemaining() < 0"
+        >
           Le montant mis de cote depasse l'epargne disponible de
-          {{ getAllocationOverage() | currency: 'EUR':'symbol':'1.2-2':'fr' }}.
+          {{
+            getAllocationOverage()
+              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}.
         </span>
       </div>
     </div>
 
-    <div class="allocation-progress-panel" [class.is-danger]="getAllocationRemaining() < 0">
+    <div
+      class="allocation-progress-panel"
+      [class.is-danger]="getAllocationRemaining() < 0"
+    >
       <div class="allocation-progress-track">
         <div
           class="allocation-progress-fill"
@@ -576,24 +621,38 @@
         ></div>
       </div>
       <div class="allocation-progress-caption">
-        <ng-container *ngIf="getAllocationRemaining() >= 0; else allocationOverflowCaption">
-          Ajustez librement la repartition globale entre les portefeuilles actifs.
+        <ng-container
+          *ngIf="getAllocationRemaining() >= 0; else allocationOverflowCaption"
+        >
+          Ajustez librement la repartition globale entre les portefeuilles
+          actifs.
         </ng-container>
         <ng-template #allocationOverflowCaption>
-          Le montant mis de cote depasse le total de l'epargne. Ajustez une ou plusieurs enveloppes.
+          Le montant mis de cote depasse le total de l'epargne. Ajustez une ou
+          plusieurs enveloppes.
         </ng-template>
       </div>
     </div>
 
-    <p-message *ngIf="allocationDialogError" severity="warn" [text]="allocationDialogError" class="modal-message"></p-message>
+    <p-message
+      *ngIf="allocationDialogError"
+      severity="warn"
+      [text]="allocationDialogError"
+      class="modal-message"
+    ></p-message>
 
     <div class="allocation-section">
       <div class="allocation-section-header">
         <div>
           <div class="allocation-section-title">Portefeuilles actifs</div>
-          <div class="allocation-section-subtitle">Repartition libre sur les enveloppes en cours.</div>
+          <div class="allocation-section-subtitle">
+            Repartition libre sur les enveloppes en cours.
+          </div>
         </div>
-        <div class="allocation-quick-actions" *ngIf="allocationDraft.length > 0">
+        <div
+          class="allocation-quick-actions"
+          *ngIf="allocationDraft.length > 0"
+        >
           <button
             pButton
             type="button"
@@ -611,24 +670,40 @@
             <div>
               <div class="allocation-wallet-name">{{ row.walletName }}</div>
               <div class="allocation-wallet-hint">
-                {{ getAllocationSharePercent(getDraftDisplayAmount(row.amount)) | number: '1.0-0' }} % du transfert
+                {{
+                  getAllocationSharePercent(getDraftDisplayAmount(row.amount))
+                    | number: "1.0-0"
+                }}
+                % du transfert
               </div>
-              <div class="allocation-wallet-hint" *ngIf="isWalletFrozenForAllocation(row.walletId)">
+              <div
+                class="allocation-wallet-hint"
+                *ngIf="isWalletFrozenForAllocation(row.walletId)"
+              >
                 Objectif atteint
               </div>
               <div class="allocation-wallet-hint">
-                Reste sur l'enveloppe : {{ getWalletRemainingAmount(row.walletId) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+                Reste sur l'enveloppe :
+                {{
+                  getWalletRemainingAmount(row.walletId)
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
               </div>
             </div>
             <div class="allocation-wallet-amount">
-              {{ getDraftDisplayAmount(row.amount) | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+              {{
+                getDraftDisplayAmount(row.amount)
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
             </div>
           </div>
 
           <div class="allocation-wallet-bar">
             <div
               class="allocation-wallet-bar-fill"
-              [style.width.%]="getAllocationSharePercent(getDraftDisplayAmount(row.amount))"
+              [style.width.%]="
+                getAllocationSharePercent(getDraftDisplayAmount(row.amount))
+              "
             ></div>
           </div>
 
@@ -640,7 +715,10 @@
                 type="button"
                 class="p-button-text p-button-sm allocation-inline-action"
                 label="Tout affecter"
-                [disabled]="isWalletFrozenForAllocation(row.walletId) || getWalletInputCapacity(row.walletId) <= 0"
+                [disabled]="
+                  isWalletFrozenForAllocation(row.walletId) ||
+                  getWalletInputCapacity(row.walletId) <= 0
+                "
                 (click)="allocateAllToWallet(row.walletId)"
               ></button>
             </div>
@@ -652,7 +730,10 @@
               locale="fr-FR"
               [min]="0"
               [max]="getWalletInputCapacity(row.walletId)"
-              [disabled]="isWalletFrozenForAllocation(row.walletId) || getWalletInputCapacity(row.walletId) <= 0"
+              [disabled]="
+                isWalletFrozenForAllocation(row.walletId) ||
+                getWalletInputCapacity(row.walletId) <= 0
+              "
               [showButtons]="false"
               placeholder="0,00 EUR"
             ></p-inputNumber>
@@ -661,27 +742,38 @@
       </div>
     </div>
 
-    <div class="allocation-section allocation-section-locked" *ngIf="lockedAllocationDraft.length > 0">
+    <div
+      class="allocation-section allocation-section-locked"
+      *ngIf="lockedAllocationDraft.length > 0"
+    >
       <div class="allocation-section-header">
         <div>
-          <div class="allocation-section-title">Portefeuilles clotures conserves</div>
+          <div class="allocation-section-title">
+            Portefeuilles clotures conserves
+          </div>
           <div class="allocation-section-subtitle">
             Ces montants restent rattaches a des portefeuilles deja clotures.
           </div>
         </div>
         <div class="allocation-locked-total">
-          {{ getLockedAllocationTotal() | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+          {{
+            getLockedAllocationTotal()
+              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}
         </div>
       </div>
 
       <div class="allocation-locked-list">
-        <div class="allocation-locked-item" *ngFor="let row of lockedAllocationDraft">
+        <div
+          class="allocation-locked-item"
+          *ngFor="let row of lockedAllocationDraft"
+        >
           <div>
             <div class="allocation-wallet-name">{{ row.walletName }}</div>
             <div class="allocation-wallet-hint">Portefeuille cloture</div>
           </div>
           <div class="allocation-wallet-amount">
-            {{ row.amount | currency: 'EUR':'symbol':'1.2-2':'fr' }}
+            {{ row.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
           </div>
         </div>
       </div>

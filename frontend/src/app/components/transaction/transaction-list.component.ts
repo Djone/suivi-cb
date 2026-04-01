@@ -290,12 +290,28 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.transactionService.loadTransactions();
   }
 
+  private toNumber(value: unknown): number | null {
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = parseInt(value, 10);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  }
+
   private refreshSubCategoryIndex(list: SubCategory[]): void {
     this.subCategoryIndex.clear();
     list.forEach((sc) => {
-      if (typeof sc.id === 'number') {
-        this.subCategoryIndex.set(sc.id, sc);
-      }
+      const subCategoryId = this.toNumber(sc.id);
+      const categoryId = this.toNumber(sc.categoryId);
+      if (subCategoryId === null || categoryId === null) return;
+      this.subCategoryIndex.set(subCategoryId, {
+        ...sc,
+        id: subCategoryId,
+        categoryId,
+      });
     });
   }
 
@@ -340,12 +356,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   private getSubCategoryById(
     subCategoryId: number | string | null | undefined,
   ): SubCategory | null {
-    if (subCategoryId === null || subCategoryId === undefined) return null;
-    const id =
-      typeof subCategoryId === 'string'
-        ? parseInt(subCategoryId, 10)
-        : subCategoryId;
-    if (Number.isNaN(id)) {
+    const id = this.toNumber(subCategoryId);
+    if (id === null) {
       return null;
     }
     return this.subCategoryIndex.get(id) || null;
@@ -705,12 +717,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     if (!subCategoryId) return 'N/A';
 
     const subCategory = this.getSubCategoryById(subCategoryId);
-    const normalizedId =
-      typeof subCategoryId === 'string'
-        ? parseInt(subCategoryId, 10)
-        : subCategoryId;
+    const normalizedId = this.toNumber(subCategoryId);
 
-    if (!subCategory && this.subCategories.length > 0) {
+    if (!subCategory && normalizedId !== null && this.subCategories.length > 0) {
       console.log(
         `TRANSACTION LIST : Sous-categorie ${normalizedId} non trouvee. Sous-categories disponibles:`,
         this.subCategories.map((sc) => sc.id),
@@ -846,9 +855,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       // Enrichir la transaction avec le label de sous-catégorie et le montant numérique
       // Enrichir la transaction avec le label de sous-categorie et le montant numerique
       const subCategory = this.getSubCategoryById(transaction.subCategoryId);
+      const rawSubCategoryLabel =
+        this.toDisplayValue((transaction as any)['subCategoryLabel']) ||
+        this.toDisplayValue((transaction as any)['subcategoryLabel']);
       const subCategoryLabel = subCategory
         ? `${subCategory.categoryLabel} - ${subCategory.label}`
-        : 'Non categorise';
+        : rawSubCategoryLabel || 'Non categorise';
 
       const enrichedTransaction: TransactionWithLabel = {
         ...transaction,
@@ -878,6 +890,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
 
     return result;
+  }
+
+  private toDisplayValue(value: unknown): string {
+    return typeof value === 'string' && value.trim() !== '' ? value.trim() : '';
   }
 
   formatDate(dateString: string): string {
