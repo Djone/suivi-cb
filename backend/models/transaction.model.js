@@ -156,7 +156,7 @@ const Transaction = {
     }
 
     if (fields.length === 0) {
-      throw new Error('Aucun champ Ã  mettre Ã  jour.');
+      throw new Error('Aucun champ à mettre à jour.');
     }
 
     const query = `
@@ -168,7 +168,7 @@ const Transaction = {
     console.log(`[DB_WRITE_DEBUG] Update operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, params);
     if (!result.changes) {
-      throw new Error('Aucune transaction trouvÃ©e avec cet ID.');
+      throw new Error('Aucune transaction trouvée avec cet ID.');
     }
     return { id: Number(targetId), changes: result.changes };
   },
@@ -182,7 +182,7 @@ const Transaction = {
     console.log(`[DB_WRITE_DEBUG] Delete operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, [id]);
     if (!result.changes) {
-      throw new Error('Aucune transaction trouvÃ©e avec cet ID.');
+      throw new Error('Aucune transaction trouvée avec cet ID.');
     }
     return undefined;
   },
