@@ -92,44 +92,74 @@ rollback() {
   exit 1
 }
 
-echo "[1/7] Creating database backup..."
+detect_untracked_pull_conflicts() {
+  local remote_ref="origin/$GIT_BRANCH"
+  local conflicts=""
+
+  while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    if git cat-file -e "$remote_ref:$file" 2>/dev/null; then
+      conflicts="${conflicts}${file}\n"
+    fi
+  done <<EOF
+$(git ls-files --others --exclude-standard)
+EOF
+
+  if [ -n "$conflicts" ]; then
+    echo "ERROR: Untracked files would be overwritten by git pull:"
+    printf "%b" "$conflicts"
+    echo "Move, delete, or add these files before running the update."
+    return 1
+  fi
+
+  return 0
+}
+
+echo "[0/8] Fetching remote changes and checking git conflicts..."
+git fetch origin "$GIT_BRANCH" || {
+  echo "ERROR: Unable to fetch origin/$GIT_BRANCH"
+  exit 1
+}
+detect_untracked_pull_conflicts || exit 1
+
+echo "[1/8] Creating database backup..."
 mkdir -p "$BACKUP_DIR"
 cp "$APP_DIR/data/database.db" "$BACKUP_FILE" || rollback "backup"
 echo "-> Backup created: $BACKUP_FILE"
 
-echo "[2/7] Stopping docker services..."
+echo "[2/8] Stopping docker services..."
 if [ "$TARGET_SERVICE" = "all" ]; then
   sudo docker-compose down || rollback "docker stop"
 else
   sudo docker-compose stop "$TARGET_SERVICE" || rollback "docker stop $TARGET_SERVICE"
 fi
 
-echo "[3/7] Pulling latest code from git..."
+echo "[3/8] Pulling latest code from git..."
 git pull origin "$GIT_BRANCH" || rollback "git pull"
 
-echo "[4/7] Building docker images..."
+echo "[4/8] Building docker images..."
 if [ "$TARGET_SERVICE" = "all" ]; then
   sudo docker-compose build --no-cache || rollback "docker build"
 else
   sudo docker-compose build --no-cache "$TARGET_SERVICE" || rollback "docker build $TARGET_SERVICE"
 fi
 
-echo "[5/7] Starting containers..."
+echo "[5/8] Starting containers..."
 if [ "$TARGET_SERVICE" = "all" ]; then
   sudo docker-compose up -d || rollback "docker start"
 else
   sudo docker-compose up -d --no-deps --build --force-recreate "$TARGET_SERVICE" || rollback "docker start $TARGET_SERVICE"
 fi
 
-echo "[6/7] Health check (wait 15s)..."
+echo "[6/8] Health check (wait 15s)..."
 sleep 15
 if ! curl -fsS http://localhost:3001/api/accounts/active >/dev/null; then
   rollback "api health check"
 fi
 echo "-> API is responding."
 
-echo "[7/7] Cleaning old docker images..."
+echo "[7/8] Cleaning old docker images..."
 sudo docker image prune -f
 
-echo "=== Update completed successfully ==="
+echo "[8/8] Update completed successfully."
 echo "Current version: $(git describe --tags --always --dirty)"

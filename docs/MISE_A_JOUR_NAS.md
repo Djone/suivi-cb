@@ -74,10 +74,10 @@ git branch
 git fetch origin
 
 # Voir les changements disponibles
-git log HEAD..origin/main --oneline
+git log HEAD..origin/master --oneline
 
 # Mettre à jour le code
-git pull origin main
+git pull origin master
 
 # Ou pour une version spécifique
 git checkout v1.1.0  # Remplacer par le tag de version
@@ -373,7 +373,7 @@ sudo docker-compose stop || rollback
 
 # Mise à jour
 echo "3. Récupération de la nouvelle version..."
-git pull origin main || rollback
+git pull origin master || rollback
 
 # Rebuild
 echo "4. Reconstruction des images..."

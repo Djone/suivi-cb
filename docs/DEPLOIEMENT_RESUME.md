@@ -192,7 +192,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 cp data/database.db backups/database_before_update_$DATE.db
 
 # Récupérer les modifications
-git pull origin main
+git pull origin master
 
 # Rebuild et redémarrer
 sudo docker-compose down

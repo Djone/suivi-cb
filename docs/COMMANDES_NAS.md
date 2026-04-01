@@ -403,10 +403,10 @@ git log -5 --oneline
 
 # Récupérer les modifications
 git fetch origin
-git log HEAD..origin/main --oneline
+git log HEAD..origin/master --oneline
 
 # Mettre à jour
-git pull origin main
+git pull origin master
 
 # Ou une version spécifique
 git checkout v1.1.0
@@ -425,7 +425,7 @@ cp data/database.db backups/database_before_update_$DATE.db
 sudo docker-compose stop
 
 # 3. Récupérer le nouveau code
-git pull origin main
+git pull origin master
 
 # 4. Rebuild
 sudo docker-compose build --no-cache
@@ -436,6 +436,42 @@ sudo docker-compose up -d
 # 6. Vérification
 sudo docker-compose logs -f
 ```
+
+### Conflit `git pull` sur fichier non suivi
+
+Si `git pull` échoue avec un message du type:
+
+```bash
+error: The following untracked working tree files would be overwritten by merge:
+        scripts/update.sh
+```
+
+cela signifie qu'un fichier existe localement sur le NAS sans être suivi par Git,
+alors que ce même chemin est maintenant versionné dans le dépôt distant.
+
+Correction immédiate:
+
+```bash
+cd /volume1/docker/suivi-cb
+
+# Sauvegarder le fichier local
+mv scripts/update.sh scripts/update.sh.local-backup
+
+# Récupérer la version Git
+git pull origin master
+
+# Comparer si besoin
+diff -u scripts/update.sh.local-backup scripts/update.sh
+```
+
+Si le backup local ne sert plus:
+
+```bash
+rm scripts/update.sh.local-backup
+```
+
+Le script `scripts/update.sh` du dépôt détecte maintenant ce type de conflit
+avant d'arrêter Docker.
 
 ## Dépannage
 
@@ -579,7 +615,7 @@ cp data/database.db backups/database_before_update_$DATE.db
 
 # Update code
 echo "2. Update code..."
-git pull origin main
+git pull origin master
 
 # Rebuild
 echo "3. Rebuild..."

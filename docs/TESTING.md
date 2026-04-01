@@ -355,9 +355,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
 
 jobs:
   backend:

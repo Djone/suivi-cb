@@ -35,11 +35,11 @@ Utilisez cette checklist pour vous assurer de ne rien oublier lors du déploieme
 ## Phase 2: Préparation du code
 
 ### En local (sur votre ordinateur)
-- [ ] Code à jour sur la branche main: `git status`
+- [ ] Code à jour sur la branche master: `git status`
 - [ ] Tests passent: `npm test`
 - [ ] Pas de fichiers sensibles dans le commit
 - [ ] Version taguée si nécessaire: `git tag v1.0.0`
-- [ ] Code poussé sur Git: `git push origin main`
+- [ ] Code poussé sur Git: `git push origin master`
 
 ### Variables d'environnement
 - [ ] Pas de fichier `.env` avec des secrets dans le code

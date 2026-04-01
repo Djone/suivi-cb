@@ -299,7 +299,7 @@ Si un fichier est manquant après le déploiement:
 ls -la /volume1/docker/suivi-cb/
 
 # Re-synchroniser depuis Git
-git pull origin main
+git pull origin master
 ```
 
 ## Checklist de vérification
@@ -317,7 +317,7 @@ Après avoir créé tous les fichiers, vérifiez:
 
 1. **Vérifiez** que tous les fichiers sont présents
 2. **Commitez** dans Git: `git add . && git commit -m "Add deployment documentation and Docker files"`
-3. **Poussez** sur le dépôt: `git push origin main`
+3. **Poussez** sur le dépôt: `git push origin master`
 4. **Commencez** le déploiement avec [README_DEPLOIEMENT.md](./README_DEPLOIEMENT.md)
 
 ## Résumé des commandes Git
@@ -333,7 +333,7 @@ git add .
 git commit -m "Add deployment documentation and Docker configuration"
 
 # Pousser sur le dépôt
-git push origin main
+git push origin master
 
 # Créer un tag de version
 git tag -a v1.0.0 -m "Version 1.0.0 - Ready for deployment"
