@@ -262,20 +262,20 @@ npm test -- --code-coverage
 
 ✨ **Nouvelles fonctionnalités**
 
-Transactions / Recurrences hebdomadaires : Correction du calcul des transactions recurrentes hebdomadaires
-Epargne : Créer une page dédiée pour les transferts internes entre comptes d’épargne
-Epargne : Intégrer la création de portefeuilles d’épargne dans cette page
+- Transactions / Recurrences hebdomadaires : Correction du calcul des transactions recurrentes hebdomadaires
+- Epargne : Créer une page dédiée pour les transferts internes entre comptes d’épargne
+- Epargne : Intégrer la création de portefeuilles d’épargne dans cette page
 
 
 ### Version 1.3.0 (2026-03-02)
 
 ✨ **Nouvelles fonctionnalités**
 
-Nouvelle transaction : Ajouter la fonctionnalite d'ajout de sous-categories directement dans la liste deroulante des categories
-Nouvelle transaction : Textebox montant - Avoir la meme coherence que celle de Nouvelle recurrence
-Nouvelle transaction : liste déroulante catégorie - Avoir la meme coherence que celle de Nouvelle recurrence
-Nouvelle transaction : Rendre une autocompletion intelligente pour la textbox "Description
-Nouvelle transaction : Avoir la possibilité de taguer une transaction du compte courant comme "Avance compte joint" : attribuer une couleur differente dans le tableau de transactions; lui associer une icone "tick" cliquable dans la liste des transactions; quand on clique sur cette icone, la transaction est automatiquement déversée dans le compte joint et la transaction du compte courant est supprimée
+- Nouvelle transaction : Ajouter la fonctionnalite d'ajout de sous-categories directement dans la liste deroulante des categories
+- Nouvelle transaction : Textebox montant - Avoir la meme coherence que celle de Nouvelle recurrence
+- Nouvelle transaction : liste déroulante catégorie - Avoir la meme coherence que celle de Nouvelle recurrence
+- Nouvelle transaction : Rendre une autocompletion intelligente pour la textbox "Description
+- Nouvelle transaction : Avoir la possibilité de taguer une transaction du compte courant comme "Avance compte joint" : attribuer une couleur differente dans le tableau de transactions; lui associer une icone "tick" cliquable dans la liste des transactions; quand on clique sur cette icone, la transaction est automatiquement déversée dans le compte joint et la transaction du compte courant est supprimée
 
 ### Version 1.2.0 (2025-12-01)
 
