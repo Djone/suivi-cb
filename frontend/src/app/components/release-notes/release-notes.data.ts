@@ -7,10 +7,34 @@ export interface ReleaseNotesSection {
 
 export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
   {
+    version: '1.4.0',
+    items: [
+      {
+        title: 'Transactions : Recurrences hebdomadaires',
+        description: [
+          '[X] Correction du calcul des transactions recurrentes hebdomadaires',
+        ],
+        status: 'done',
+        targetVersion: '1.4.0',
+        priority: 'medium',
+      },
+      {
+        title: 'Epargne : Transfert interne',
+        description: [
+          '[X] Créer une page dédiée pour les transferts internes entre comptes d’épargne',
+          '[X] Intégrer la création de portefeuilles d’épargne dans cette page',
+        ],
+        status: 'done',
+        targetVersion: '1.4.0',
+        priority: 'medium',
+      },
+    ],
+  },
+  {
     version: '1.3.0',
     items: [
       {
-        title: '[Ticket 10] Ameliorations UI/UX',
+        title: 'Ameliorations UI/UX',
         description: [
           "[X] Modal Nouvelle transaction : Ajouter la fonctionnalite d'ajout de sous-categories directement dans la liste deroulante des categories",
           '[X] Modal Nouvelle transaction : Textebox montant - Avoir la meme coherence que celle de Nouvelle recurrence',
@@ -29,7 +53,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
     items: [
       {
         title:
-          '[Ticket 1] Sous-catégories : Supprimer la partie dédiée dans le menu opérations',
+          'Sous-catégories : Supprimer la partie dédiée dans le menu opérations',
         description: [
           '[X] Supprimer le lien dans le menu latéral',
           '[X] Supprimer les fichiers associés (composant, service, modèle, données de test)',
@@ -39,7 +63,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         priority: 'medium',
       },
       {
-        title: '[Ticket 2.1] Data : Import des anciennes transactions ',
+        title: 'Data : Import des anciennes transactions ',
         description: [
           "[X] Créer un fichier d'import avec les données 2022",
           "[X] Créer un fichier d'import avec les données 2023",
@@ -51,7 +75,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         priority: 'high',
       },
       {
-        title: '[Ticket 2.2] Data : MAJ des données',
+        title: 'Data : MAJ des données',
         description: [
           "[X] Intégrer l'historique des modifications de catégories et sous-catégories",
           "[X] Vérifier l'intégrité des données après import",
@@ -61,7 +85,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         priority: 'high',
       },
       {
-        title: '[Ticket 3] Compte Joint : répartition par couple',
+        title: 'Compte Joint : répartition par couple',
         description: [
           '[X] Calcul de la répartition 1/3 - 2/3 ou 50/50 en fonction du salaire',
           '[X] Créer une interface front pour gérer cette répartition',
@@ -71,14 +95,14 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         priority: 'medium',
       },
       {
-        title: '[Ticket 3] Compte Joint - répartition par couple : Backend',
+        title: 'Compte Joint - répartition par couple : Backend',
         description: ['[X] Intégrer la logique backend'],
         status: 'done',
         targetVersion: '1.2.0',
         priority: 'medium',
       },
       {
-        title: '[Ticket 5] Liste des transactions',
+        title: 'Liste des transactions',
         description: [
           '[X] Rajouter un filtre sur les catégories et sous-catégories',
         ],
@@ -87,7 +111,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         priority: 'medium',
       },
       {
-        title: '[Ticket 6] Release notes automatisées',
+        title: 'Release notes automatisées',
         description: [
           "[X] Garder l'historique des modifications dans un fichier dédié",
         ],
@@ -96,7 +120,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         priority: 'high',
       },
       {
-        title: '[Ticket 8] Stats : visualisation des données',
+        title: 'Stats : visualisation des données',
         description: [
           '[X] Amélioration de la visualisation des données statistiques par mois et par catégorie / sous-catégorie',
         ],
