@@ -262,6 +262,11 @@ npm test -- --code-coverage
 
 ✨ **Nouvelles fonctionnalités**
 
+Transactions / Recurrences hebdomadaires : Correction du calcul des transactions recurrentes hebdomadaires
+Epargne : Créer une page dédiée pour les transferts internes entre comptes d’épargne
+Epargne : Intégrer la création de portefeuilles d’épargne dans cette page
+
+
 ### Version 1.3.0 (2026-03-02)
 
 ✨ **Nouvelles fonctionnalités**
