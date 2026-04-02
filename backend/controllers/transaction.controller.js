@@ -8,6 +8,19 @@
 
 const Transaction = require('../models/transaction.model');
 
+function formatDateForStorage(rawValue) {
+  const date = new Date(rawValue);
+  if (Number.isNaN(date.getTime())) {
+    return rawValue;
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+
 exports.getAllTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.getAll(req.query);
@@ -23,8 +36,7 @@ exports.addTransaction = async (req, res) => {
     const newTransaction = req.body;
 
     if (newTransaction.date) {
-      const date = new Date(newTransaction.date);
-      newTransaction.date = date.toLocaleDateString('en-CA');
+      newTransaction.date = formatDateForStorage(newTransaction.date);
     }
 
     const result = await Transaction.add(newTransaction);
@@ -54,8 +66,7 @@ exports.updateTransaction = async (req, res) => {
     const fieldsToUpdate = req.body;
 
     if (fieldsToUpdate.date) {
-      const date = new Date(fieldsToUpdate.date);
-      fieldsToUpdate.date = date.toLocaleDateString('en-CA');
+      fieldsToUpdate.date = formatDateForStorage(fieldsToUpdate.date);
     }
 
     if (!id) {
@@ -88,9 +99,13 @@ exports.deleteTransactionById = async (req, res) => {
     res.status(200).json({ message: 'Transaction supprimee avec succes.' });
   } catch (err) {
     console.error('Erreur lors de la suppression de la transaction :', err.message);
-    if (err.message === 'Aucune transaction trouvée avec cet ID.') {
+    if (
+      err.message === 'Aucune transaction trouvee avec cet ID.' ||
+      err.message === 'Aucune transaction trouvÃ©e avec cet ID.'
+    ) {
       return res.status(404).json({ error: err.message });
     }
     res.status(500).json({ error: 'Erreur lors de la suppression de la transaction.' });
   }
 };
+

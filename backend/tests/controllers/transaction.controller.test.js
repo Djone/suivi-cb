@@ -78,6 +78,9 @@ describe('Transaction Controller', () => {
 
       await transactionController.addTransaction(req, res);
 
+      expect(Transaction.add).toHaveBeenCalledWith(
+        expect.objectContaining({ date: '2024-01-01' }),
+      );
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Transaction ajoutee avec succes',
@@ -110,6 +113,7 @@ describe('Transaction Controller', () => {
     it('devrait mettre a jour une transaction avec code 200', async () => {
       req.params.id = '1';
       req.body = {
+        date: '2024-01-02T10:30:00.000Z',
         description: 'Updated description',
         amount: 150,
       };
@@ -118,6 +122,10 @@ describe('Transaction Controller', () => {
 
       await transactionController.updateTransaction(req, res);
 
+      expect(Transaction.update).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({ date: '2024-01-02' }),
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Transaction mise a jour avec succes.',
@@ -171,12 +179,13 @@ describe('Transaction Controller', () => {
     it('devrait retourner 404 si la transaction n\'existe pas', async () => {
       req.params.id = '999';
 
-      Transaction.deleteById.mockRejectedValue(new Error('Aucune transaction trouvée avec cet ID.'));
+      Transaction.deleteById.mockRejectedValue(new Error('Aucune transaction trouvee avec cet ID.'));
 
       await transactionController.deleteTransactionById(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Aucune transaction trouvée avec cet ID.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Aucune transaction trouvee avec cet ID.' });
     });
   });
 });
+

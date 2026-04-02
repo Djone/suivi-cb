@@ -1315,14 +1315,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     recurring: RecurringTransaction,
     date: Date,
   ): boolean {
-    const start = new Date(date);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
+    const targetDateKey = this.toDateKey(date);
     return this.transactions.some((t) => {
-      if (t.recurringTransactionId !== recurring.id || !t.date) return false;
-      const d = new Date(t.date);
-      return d >= start && d <= end;
+      const txRecurringId =
+        typeof t.recurringTransactionId === 'string'
+          ? parseInt(t.recurringTransactionId, 10)
+          : t.recurringTransactionId;
+      if (txRecurringId !== recurring.id || !t.date) return false;
+      return this.toDateKey(t.date) === targetDateKey;
     });
   }
 
@@ -1330,7 +1330,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     recurring: RecurringTransaction,
     dueDate: Date,
   ): boolean {
-    return this.isRecurringRealizedByExactDate(recurring, dueDate);
+    if (this.isRecurringRealizedByExactDate(recurring, dueDate)) {
+      return true;
+    }
+
+    const today = this.getLocalDateOnly(new Date());
+    return this.isSamePeriod(recurring, dueDate, today)
+      ? this.isRecurringRealizedByExactDate(recurring, today)
+      : false;
   }
 
   private getSignedAmountFromRecurring(rt: RecurringTransaction): number {
@@ -1370,9 +1377,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     dialogRef.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) return;
+      const today = this.getLocalDateOnly(new Date());
       const tx: Transaction = {
         description: recurring.label,
-        date: new Date(schedule.dueDate),
+        date: today,
         amount: Math.abs(rawAmount),
         accountId: this.accountId!,
         financialFlowId: recurring.financialFlowId,
@@ -1394,9 +1402,13 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     // The only source of truth is the existence of a linked transaction for the current month.
     const isRealized = this.transactions.some((t) => {
+      const txRecurringId =
+        typeof t.recurringTransactionId === 'string'
+          ? parseInt(t.recurringTransactionId, 10)
+          : t.recurringTransactionId;
       const transDate = new Date(t.date || '');
       return (
-        t.recurringTransactionId === recurringId &&
+        txRecurringId === recurringId &&
         transDate.getMonth() === currentMonth &&
         transDate.getFullYear() === currentYear
       );
@@ -1409,6 +1421,61 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }
 
     return isRealized;
+  }
+
+  private getLocalDateOnly(value: Date): Date {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  private toDateKey(value: Date | string): string {
+    if (value instanceof Date) {
+      const normalized = this.getLocalDateOnly(value);
+      return `${normalized.getFullYear()}-${String(normalized.getMonth() + 1).padStart(2, '0')}-${String(normalized.getDate()).padStart(2, '0')}`;
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) {
+        return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+      }
+
+      const parsed = new Date(trimmed);
+      if (!Number.isNaN(parsed.getTime())) {
+        return this.toDateKey(parsed);
+      }
+    }
+
+    return '';
+  }
+
+  private isSamePeriod(
+    recurring: RecurringTransaction,
+    referenceDate: Date,
+    candidateDate: Date,
+  ): boolean {
+    const normalizedReference = this.getLocalDateOnly(referenceDate);
+    const normalizedCandidate = this.getLocalDateOnly(candidateDate);
+
+    if (recurring.frequency === 'weekly') {
+      const startOfWeek = (value: Date): Date => {
+        const clone = this.getLocalDateOnly(value);
+        const day = clone.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        clone.setDate(clone.getDate() + diff);
+        return clone;
+      };
+
+      return (
+        this.toDateKey(startOfWeek(normalizedReference)) ===
+        this.toDateKey(startOfWeek(normalizedCandidate))
+      );
+    }
+
+    return (
+      normalizedReference.getMonth() === normalizedCandidate.getMonth() &&
+      normalizedReference.getFullYear() === normalizedCandidate.getFullYear()
+    );
   }
 
   // Obtenir le libellé du jour pour une échéance
@@ -1810,4 +1877,3 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }, 0);
   }
 }
-
