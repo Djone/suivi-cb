@@ -5,7 +5,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     title: '[Ticket 4.1] Tableau de salaires : frontend',
     description: ['[ ] Integrer la logique frontend'],
     status: 'in-progress',
-    targetVersion: '1.5.0',
+    targetVersion: '1.4.5',
     priority: 'medium',
   },
   {
@@ -19,7 +19,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     title: '[Ticket 7] Impots : frontend',
     description: ['[ ] Integrer la logique frontend'],
     status: 'todo',
-    targetVersion: '1.5.0',
+    targetVersion: '1.4.5',
     priority: 'high',
   },
 ];
