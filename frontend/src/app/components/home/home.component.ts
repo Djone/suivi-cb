@@ -286,21 +286,87 @@ export class HomeComponent implements OnInit, OnDestroy {
     return initialBalance + totalTransactions;
   }
 
+  private getRecurringTransactionId(
+    value: unknown,
+  ): number | null {
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = parseInt(value, 10);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  }
+
+  private getLocalDateOnly(value: Date): Date {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  private toDateKey(value: Date | string): string {
+    if (value instanceof Date) {
+      const normalized = this.getLocalDateOnly(value);
+      return `${normalized.getFullYear()}-${String(normalized.getMonth() + 1).padStart(2, '0')}-${String(normalized.getDate()).padStart(2, '0')}`;
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) {
+        return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+      }
+
+      const parsed = new Date(trimmed);
+      if (!Number.isNaN(parsed.getTime())) {
+        return this.toDateKey(parsed);
+      }
+    }
+
+    return '';
+  }
+
+  private isSamePeriod(
+    recurring: RecurringTransaction,
+    referenceDate: Date,
+    candidateDate: Date,
+  ): boolean {
+    const normalizedReference = this.getLocalDateOnly(referenceDate);
+    const normalizedCandidate = this.getLocalDateOnly(candidateDate);
+
+    if (recurring.frequency === 'weekly') {
+      const startOfWeek = (value: Date): Date => {
+        const clone = this.getLocalDateOnly(value);
+        const day = clone.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        clone.setDate(clone.getDate() + diff);
+        return clone;
+      };
+
+      return (
+        this.toDateKey(startOfWeek(normalizedReference)) ===
+        this.toDateKey(startOfWeek(normalizedCandidate))
+      );
+    }
+
+    return (
+      normalizedReference.getMonth() === normalizedCandidate.getMonth() &&
+      normalizedReference.getFullYear() === normalizedCandidate.getFullYear()
+    );
+  }
+
   private isRecurringRealized(
     recurring: RecurringTransaction,
     nextDueDate: Date,
   ): boolean {
-    const start = new Date(nextDueDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(nextDueDate);
-    end.setHours(23, 59, 59, 999);
-
     return this.transactions.some((t) => {
-      if (t.recurringTransactionId !== recurring.id || !t.date) {
+      const txRecurringId = this.getRecurringTransactionId(
+        t.recurringTransactionId,
+      );
+      if (txRecurringId !== recurring.id || !t.date) {
         return false;
       }
-      const transactionDate = new Date(t.date);
-      return transactionDate >= start && transactionDate <= end;
+      const transactionDate = this.getLocalDateOnly(new Date(t.date));
+      return this.isSamePeriod(recurring, nextDueDate, transactionDate);
     });
   }
 
@@ -1465,10 +1531,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       return null;
     }
     const completed = this.transactions.filter((tx) => {
-      const txRecurringId =
-        typeof tx.recurringTransactionId === 'string'
-          ? parseInt(tx.recurringTransactionId, 10)
-          : tx.recurringTransactionId || null;
+      const txRecurringId = this.getRecurringTransactionId(
+        tx.recurringTransactionId,
+      );
       return txRecurringId === recurring.id;
     }).length;
     const boundedCompleted = Math.min(completed, total);
@@ -1487,4 +1552,3 @@ export class HomeComponent implements OnInit, OnDestroy {
     return categories.reduce((sum, cat) => sum + cat.total, 0);
   }
 }
-

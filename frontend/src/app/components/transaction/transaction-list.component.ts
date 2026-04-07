@@ -301,6 +301,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  private getRecurringTransactionId(
+    value: Transaction['recurringTransactionId'],
+  ): number | null {
+    return this.toNumber(value);
+  }
+
   private refreshSubCategoryIndex(list: SubCategory[]): void {
     this.subCategoryIndex.clear();
     list.forEach((sc) => {
@@ -501,8 +507,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     // Total réalisé dans le mois (transactions liées)
     this.recurringRealizedThisMonth = this.transactions.reduce((sum, t) => {
-      if (!t.recurringTransactionId) return sum;
-      if (!recurringIds.has(t.recurringTransactionId)) return sum;
+      const txRecurringId = this.getRecurringTransactionId(
+        t.recurringTransactionId,
+      );
+      if (txRecurringId === null) return sum;
+      if (!recurringIds.has(txRecurringId)) return sum;
       const d = new Date(t.date || '');
       if (d.getMonth() !== currentMonth || d.getFullYear() !== currentYear)
         return sum;
@@ -558,9 +567,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     // Dépenses réalisées ce mois (liées à une échéance)
     this.realizedExpensesThisMonth = this.transactions.reduce((sum, t) => {
+      const txRecurringId = this.getRecurringTransactionId(
+        t.recurringTransactionId,
+      );
       if (
-        !t.recurringTransactionId ||
-        !recurringIdSet.has(t.recurringTransactionId)
+        txRecurringId === null ||
+        !recurringIdSet.has(txRecurringId)
       )
         return sum;
       const transDate = new Date(t.date || '');
@@ -1317,12 +1329,28 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   ): boolean {
     const targetDateKey = this.toDateKey(date);
     return this.transactions.some((t) => {
-      const txRecurringId =
-        typeof t.recurringTransactionId === 'string'
-          ? parseInt(t.recurringTransactionId, 10)
-          : t.recurringTransactionId;
+      const txRecurringId = this.getRecurringTransactionId(
+        t.recurringTransactionId,
+      );
       if (txRecurringId !== recurring.id || !t.date) return false;
       return this.toDateKey(t.date) === targetDateKey;
+    });
+  }
+
+  private isRecurringRealizedInPeriod(
+    recurring: RecurringTransaction,
+    dueDate: Date,
+  ): boolean {
+    return this.transactions.some((t) => {
+      const txRecurringId = this.getRecurringTransactionId(
+        t.recurringTransactionId,
+      );
+      if (txRecurringId !== recurring.id || !t.date) {
+        return false;
+      }
+
+      const transactionDate = this.getLocalDateOnly(new Date(t.date));
+      return this.isSamePeriod(recurring, dueDate, transactionDate);
     });
   }
 
@@ -1330,14 +1358,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     recurring: RecurringTransaction,
     dueDate: Date,
   ): boolean {
-    if (this.isRecurringRealizedByExactDate(recurring, dueDate)) {
-      return true;
-    }
-
-    const today = this.getLocalDateOnly(new Date());
-    return this.isSamePeriod(recurring, dueDate, today)
-      ? this.isRecurringRealizedByExactDate(recurring, today)
-      : false;
+    return this.isRecurringRealizedInPeriod(recurring, dueDate);
   }
 
   private getSignedAmountFromRecurring(rt: RecurringTransaction): number {
@@ -1402,10 +1423,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     // The only source of truth is the existence of a linked transaction for the current month.
     const isRealized = this.transactions.some((t) => {
-      const txRecurringId =
-        typeof t.recurringTransactionId === 'string'
-          ? parseInt(t.recurringTransactionId, 10)
-          : t.recurringTransactionId;
+      const txRecurringId = this.getRecurringTransactionId(
+        t.recurringTransactionId,
+      );
       const transDate = new Date(t.date || '');
       return (
         txRecurringId === recurringId &&
@@ -1556,10 +1576,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return null;
     }
     const completed = this.transactions.filter((t) => {
-      const txRecurringId =
-        typeof t.recurringTransactionId === 'string'
-          ? parseInt(t.recurringTransactionId, 10)
-          : t.recurringTransactionId || null;
+      const txRecurringId = this.getRecurringTransactionId(
+        t.recurringTransactionId,
+      );
       return txRecurringId === recurring.id;
     }).length;
     const boundedCompleted = Math.min(completed, total);
