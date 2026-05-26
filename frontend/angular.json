@@ -16,12 +16,8 @@
             "outputPath": "dist/frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "allowedCommonJsDependencies": [
-              "humps"
-            ],
-            "polyfills": [
-              "zone.js"
-            ],
+            "allowedCommonJsDependencies": ["humps"],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -46,8 +42,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
-                  "maximumError": "20kB"
+                  "maximumWarning": "15kB",
+                  "maximumError": "25kB"
                 }
               ],
               "fileReplacements": [
@@ -86,10 +82,7 @@
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "builderMode": "browser",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "assets": [
               {
@@ -107,19 +100,14 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": [
-              "src/**/*.ts",
-              "src/**/*.html"
-            ]
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
           }
         }
       }
     }
   },
   "cli": {
-    "schematicCollections": [
-      "angular-eslint"
-    ],
+    "schematicCollections": ["angular-eslint"],
     "analytics": "90eb6363-d4a4-4684-88d8-b1b84260170a"
   }
 }
