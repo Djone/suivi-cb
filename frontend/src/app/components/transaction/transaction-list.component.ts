@@ -132,7 +132,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       label: 'Avances compte joint uniquement',
       value: 'only' as AdvanceJointFilter,
     },
-    { label: 'Hors avances compte joint', value: 'exclude' as AdvanceJointFilter },
+    {
+      label: 'Hors avances compte joint',
+      value: 'exclude' as AdvanceJointFilter,
+    },
   ];
   internalTransferFilterOptions = [
     { label: 'Tous les mouvements', value: 'all' as InternalTransferFilter },
@@ -570,10 +573,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       const txRecurringId = this.getRecurringTransactionId(
         t.recurringTransactionId,
       );
-      if (
-        txRecurringId === null ||
-        !recurringIdSet.has(txRecurringId)
-      )
+      if (txRecurringId === null || !recurringIdSet.has(txRecurringId))
         return sum;
       const transDate = new Date(t.date || '');
       if (
@@ -731,7 +731,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const subCategory = this.getSubCategoryById(subCategoryId);
     const normalizedId = this.toNumber(subCategoryId);
 
-    if (!subCategory && normalizedId !== null && this.subCategories.length > 0) {
+    if (
+      !subCategory &&
+      normalizedId !== null &&
+      this.subCategories.length > 0
+    ) {
       console.log(
         `TRANSACTION LIST : Sous-categorie ${normalizedId} non trouvee. Sous-categories disponibles:`,
         this.subCategories.map((sc) => sc.id),
@@ -1705,7 +1709,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Compte joint introuvable',
-        detail: 'Impossible de trouver le compte joint pour réaliser le transfert.',
+        detail:
+          'Impossible de trouver le compte joint pour réaliser le transfert.',
       });
       return;
     }
@@ -1740,7 +1745,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       this.transactionService
         .addTransaction(mirroredTransaction)
         .pipe(
-          switchMap(() => this.transactionService.deleteTransaction(transaction.id!)),
+          switchMap(() =>
+            this.transactionService.deleteTransaction(transaction.id!),
+          ),
         )
         .subscribe({
           next: () => {
