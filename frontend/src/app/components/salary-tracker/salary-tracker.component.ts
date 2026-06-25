@@ -121,6 +121,52 @@ export class SalaryTrackerComponent implements AfterViewInit {
   tenureStart = new Date('2019-01-20');
   tenureEnd: Date | null = null;
 
+  // Locale français pour PrimeNG p-calendar
+  frLocale = {
+    firstDayOfWeek: 1,
+    dayNames: [
+      'dimanche',
+      'lundi',
+      'mardi',
+      'mercredi',
+      'jeudi',
+      'vendredi',
+      'samedi',
+    ],
+    dayNamesShort: ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'],
+    dayNamesMin: ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'],
+    monthNames: [
+      'janvier',
+      'février',
+      'mars',
+      'avril',
+      'mai',
+      'juin',
+      'juillet',
+      'août',
+      'septembre',
+      'octobre',
+      'novembre',
+      'décembre',
+    ],
+    monthNamesShort: [
+      'janv.',
+      'févr.',
+      'mars',
+      'avr.',
+      'mai',
+      'juin',
+      'juil.',
+      'août',
+      'sept.',
+      'oct.',
+      'nov.',
+      'déc.',
+    ],
+    today: "Aujourd'hui",
+    clear: 'Effacer',
+  };
+
   visibleModal = false;
   formModel: Partial<SalaryEntry> = {};
   editingId: number | null = null;
@@ -147,7 +193,9 @@ export class SalaryTrackerComponent implements AfterViewInit {
     const last = this.entries.at(0);
     const prev = this.entries.at(1);
     const evol =
-      last && prev && prev.net > 0 ? ((last.net - prev.net) / prev.net) * 100 : 0;
+      last && prev && prev.net > 0
+        ? ((last.net - prev.net) / prev.net) * 100
+        : 0;
 
     return [
       {
@@ -324,6 +372,3 @@ export class SalaryTrackerComponent implements AfterViewInit {
     };
   }
 }
-
-
-

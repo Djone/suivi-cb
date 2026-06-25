@@ -4,7 +4,8 @@
       <p class="eyebrow">Suivi salaires</p>
       <h2>Évolution, moyenne, simulation</h2>
       <p class="muted">
-        Centralisez vos feuilles de paie pour suivre l'historique, l'ancienneté et préparer vos simulations d'impôts.
+        Centralisez vos feuilles de paie pour suivre l'historique, l'ancienneté
+        et préparer vos simulations d'impôts.
       </p>
     </div>
     <div class="header-actions">
@@ -17,7 +18,13 @@
         placeholder="Filtrer par ETS"
         appendTo="body"
       ></p-dropdown>
-      <button pButton type="button" label="Ajouter / éditer" icon="pi pi-plus" (click)="openModal()"></button>
+      <button
+        pButton
+        type="button"
+        label="Ajouter / éditer"
+        icon="pi pi-plus"
+        (click)="openModal()"
+      ></button>
     </div>
   </div>
 
@@ -25,8 +32,12 @@
     <p-card *ngFor="let card of cards" class="kpi-card">
       <p class="kpi-label">{{ card.label }}</p>
       <div class="kpi-value">
-        <span *ngIf="card.suffix === '%'">{{ card.value | number: '1.1-1' }}%</span>
-        <span *ngIf="card.suffix === '€'">{{ card.value | currency: 'EUR':'symbol':'1.0-0':'fr' }}</span>
+        <span *ngIf="card.suffix === '%'"
+          >{{ card.value | number: "1.1-1" }}%</span
+        >
+        <span *ngIf="card.suffix === '€'">{{
+          card.value | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+        }}</span>
         <span *ngIf="!card.suffix">{{ card.value }}</span>
       </div>
     </p-card>
@@ -51,11 +62,21 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="month">Date <p-sortIcon field="month"></p-sortIcon></th>
-            <th pSortableColumn="company">ETS <p-sortIcon field="company"></p-sortIcon></th>
-            <th pSortableColumn="net">Revenu net <p-sortIcon field="net"></p-sortIcon></th>
-            <th pSortableColumn="netTaxable">Net imposable <p-sortIcon field="netTaxable"></p-sortIcon></th>
-            <th pSortableColumn="pas">PAS <p-sortIcon field="pas"></p-sortIcon></th>
+            <th pSortableColumn="month">
+              Date <p-sortIcon field="month"></p-sortIcon>
+            </th>
+            <th pSortableColumn="company">
+              ETS <p-sortIcon field="company"></p-sortIcon>
+            </th>
+            <th pSortableColumn="net">
+              Revenu net <p-sortIcon field="net"></p-sortIcon>
+            </th>
+            <th pSortableColumn="netTaxable">
+              Net imposable <p-sortIcon field="netTaxable"></p-sortIcon>
+            </th>
+            <th pSortableColumn="pas">
+              PAS <p-sortIcon field="pas"></p-sortIcon>
+            </th>
             <th pSortableColumn="rounding">Arrondi</th>
             <th>Commentaire</th>
             <th style="width: 110px"></th>
@@ -63,20 +84,31 @@
         </ng-template>
         <ng-template pTemplate="body" let-row>
           <tr>
-            <td>{{ row.month | date: 'MMM yyyy' }}</td>
+            <td>{{ row.month | date: "MMM yyyy" }}</td>
             <td>
               <div class="tag-cell">
                 <p-tag [value]="row.ets" severity="info"></p-tag>
                 <span class="muted">{{ row.company }}</span>
               </div>
             </td>
-            <td>{{ row.net | currency: 'EUR':'symbol':'1.0-0':'fr' }}</td>
-            <td>{{ row.netTaxable | currency: 'EUR':'symbol':'1.0-0':'fr' }}</td>
-            <td>{{ row.pas | currency: 'EUR':'symbol':'1.0-0':'fr' }}</td>
-            <td>{{ row.rounding || 0 | currency: 'EUR':'symbol':'1.0-0':'fr' }}</td>
+            <td>{{ row.net | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}</td>
+            <td>
+              {{ row.netTaxable | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
+            </td>
+            <td>{{ row.pas | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}</td>
+            <td>
+              {{
+                row.rounding || 0 | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+              }}
+            </td>
             <td class="muted">{{ row.comment }}</td>
             <td class="actions">
-              <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="openModal(row)"></button>
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm"
+                (click)="openModal(row)"
+              ></button>
               <button
                 pButton
                 icon="pi pi-trash"
@@ -101,7 +133,13 @@
     <div class="form-grid">
       <div class="field">
         <label>Mois / Année</label>
-        <p-calendar [(ngModel)]="formModel.month" view="month" dateFormat="mm/yy" appendTo="body"></p-calendar>
+        <p-calendar
+          [(ngModel)]="formModel.month"
+          view="month"
+          dateFormat="mm/yy"
+          appendTo="body"
+          [locale]="frLocale"
+        ></p-calendar>
       </div>
       <div class="field">
         <label>ETS</label>
@@ -119,7 +157,12 @@
       </div>
       <div class="field">
         <label>Revenu net</label>
-        <p-inputNumber [(ngModel)]="formModel.net" mode="currency" currency="EUR" locale="fr-FR"></p-inputNumber>
+        <p-inputNumber
+          [(ngModel)]="formModel.net"
+          mode="currency"
+          currency="EUR"
+          locale="fr-FR"
+        ></p-inputNumber>
       </div>
       <div class="field">
         <label>Revenu net imposable</label>
@@ -132,7 +175,12 @@
       </div>
       <div class="field">
         <label>PAS (prélèvement à la source)</label>
-        <p-inputNumber [(ngModel)]="formModel.pas" mode="currency" currency="EUR" locale="fr-FR"></p-inputNumber>
+        <p-inputNumber
+          [(ngModel)]="formModel.pas"
+          mode="currency"
+          currency="EUR"
+          locale="fr-FR"
+        ></p-inputNumber>
       </div>
       <div class="field">
         <label>Arrondi salaire</label>
@@ -145,7 +193,12 @@
       </div>
       <div class="field">
         <label>Prime / Bonus</label>
-        <p-inputNumber [(ngModel)]="formModel.bonus" mode="currency" currency="EUR" locale="fr-FR"></p-inputNumber>
+        <p-inputNumber
+          [(ngModel)]="formModel.bonus"
+          mode="currency"
+          currency="EUR"
+          locale="fr-FR"
+        ></p-inputNumber>
       </div>
       <div class="field full">
         <label>Commentaire</label>
@@ -153,16 +206,36 @@
       </div>
       <div class="field full">
         <label>Date d'entrée (ancienneté)</label>
-        <p-calendar [(ngModel)]="tenureStart" dateFormat="dd/mm/yy" appendTo="body"></p-calendar>
+        <p-calendar
+          [(ngModel)]="tenureStart"
+          dateFormat="dd/mm/yy"
+          appendTo="body"
+          [locale]="frLocale"
+        ></p-calendar>
       </div>
       <div class="field full">
         <label>Dons annuels (pour simulation impôts)</label>
-        <p-inputNumber [(ngModel)]="formModel.donations" mode="currency" currency="EUR" locale="fr-FR"></p-inputNumber>
+        <p-inputNumber
+          [(ngModel)]="formModel.donations"
+          mode="currency"
+          currency="EUR"
+          locale="fr-FR"
+        ></p-inputNumber>
       </div>
     </div>
     <ng-template pTemplate="footer">
-      <button pButton label="Annuler" class="p-button-text" (click)="visibleModal = false"></button>
-      <button pButton label="Enregistrer" icon="pi pi-check" (click)="saveEntry()"></button>
+      <button
+        pButton
+        label="Annuler"
+        class="p-button-text"
+        (click)="visibleModal = false"
+      ></button>
+      <button
+        pButton
+        label="Enregistrer"
+        icon="pi pi-check"
+        (click)="saveEntry()"
+      ></button>
     </ng-template>
   </p-dialog>
 </div>

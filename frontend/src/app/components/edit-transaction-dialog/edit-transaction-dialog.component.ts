@@ -60,6 +60,52 @@ export class EditTransactionDialogComponent implements OnInit {
   dialogTitle = 'Editer la transaction';
   isNew = false;
 
+  // Locale français pour PrimeNG p-calendar
+  frLocale = {
+    firstDayOfWeek: 1,
+    dayNames: [
+      'dimanche',
+      'lundi',
+      'mardi',
+      'mercredi',
+      'jeudi',
+      'vendredi',
+      'samedi',
+    ],
+    dayNamesShort: ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'],
+    dayNamesMin: ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'],
+    monthNames: [
+      'janvier',
+      'février',
+      'mars',
+      'avril',
+      'mai',
+      'juin',
+      'juillet',
+      'août',
+      'septembre',
+      'octobre',
+      'novembre',
+      'décembre',
+    ],
+    monthNamesShort: [
+      'janv.',
+      'févr.',
+      'mars',
+      'avr.',
+      'mai',
+      'juin',
+      'juil.',
+      'août',
+      'sept.',
+      'oct.',
+      'nov.',
+      'déc.',
+    ],
+    today: "Aujourd'hui",
+    clear: 'Effacer',
+  };
+
   // Listes pour les dropdowns
   accounts: Account[] = [];
   financialFlowList = FINANCIAL_FLOW_LIST;
@@ -505,7 +551,9 @@ export class EditTransactionDialogComponent implements OnInit {
 
   private trySelectSavingsTransferSubCategory(): void {
     const match = this.activeSubCategories.find((subCategory) => {
-      const categoryLabel = this.normalizeLabel(subCategory.categoryLabel || '');
+      const categoryLabel = this.normalizeLabel(
+        subCategory.categoryLabel || '',
+      );
       const label = this.normalizeLabel(subCategory.label || '');
       return categoryLabel === 'epargne' && label === 'transfert interne';
     });
