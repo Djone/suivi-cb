@@ -9,7 +9,17 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     ],
     status: 'in-progress',
     targetVersion: '1.4.5',
-    priority: 'medium',
+    priority: 'high',
+  },
+  {
+    title: '[Ticket 10] Epargne',
+    description: [
+      "[ ] Epargne : Ajouter une épargne 'urgences' en plus de celle 'porefeuille' - Ajouter des tabs pour naviguer entre les deux épargnes",
+      '[ ] Epargne : ',
+    ],
+    status: 'in-progress',
+    targetVersion: '1.4.5',
+    priority: 'high',
   },
   {
     title: '[Ticket 9] Bug fix : frontend',
@@ -24,7 +34,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
   {
     title: '[Ticket 4.1] Tableau de salaires : frontend',
     description: ['[ ] Integrer la logique frontend'],
-    status: 'in-progress',
+    status: 'todo',
     targetVersion: '1.4.5',
     priority: 'medium',
   },
