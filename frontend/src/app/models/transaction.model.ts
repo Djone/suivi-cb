@@ -10,5 +10,6 @@ export interface Transaction {
   recurringTransactionId?: number | null;
   advanceToJointAccount?: boolean | number | string | null;
   isInternalTransfer?: boolean | number | string | null;
+  savingAccountId?: number | null;
   [key: string]: any;
 }

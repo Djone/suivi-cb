@@ -1,0 +1,86 @@
+<section class="savings-dashboard">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Epargne multi-banques</span>
+      <h1>Comptes d'epargne</h1>
+      <p>Liquidites disponibles, objectifs et placements de long terme.</p>
+    </div>
+    <div class="wealth-total">
+      <span>Patrimoine suivi</span>
+      <strong>{{ totalWealth | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong>
+    </div>
+  </header>
+
+  <p-message *ngIf="loadError" severity="error" text="Impossible de charger les comptes d'epargne."></p-message>
+  <div class="loading" *ngIf="loading">Chargement...</div>
+
+  <ng-container *ngIf="!loading && !loadError">
+    <div class="overview-strip">
+      <div class="overview-item">
+        <span class="overview-icon is-liquid"><i class="pi pi-bolt"></i></span>
+        <div><span>Disponible</span><strong>{{ availableSavings | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
+      </div>
+      <div class="overview-item">
+        <span class="overview-icon is-long-term"><i class="pi pi-chart-line"></i></span>
+        <div><span>Long terme</span><strong>{{ longTermSavings | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
+      </div>
+      <div class="overview-item">
+        <span class="overview-icon" [class.is-alert]="alertCount > 0"><i class="pi" [class.pi-check]="alertCount === 0" [class.pi-exclamation-triangle]="alertCount > 0"></i></span>
+        <div><span>Seuils</span><strong>{{ alertCount === 0 ? 'Tous respectes' : alertCount + ' alerte(s)' }}</strong></div>
+      </div>
+    </div>
+
+    <section class="account-section" *ngIf="liquidAccounts.length">
+      <div class="section-heading">
+        <div><span class="section-kicker">Court et moyen terme</span><h2>Epargne disponible</h2></div>
+        <span class="section-count">{{ liquidAccounts.length }} comptes</span>
+      </div>
+      <div class="account-grid">
+        <a class="account-tile" *ngFor="let account of liquidAccounts" [class.is-alert]="isBelowMinimum(account)" [routerLink]="['/account-saving', account.id]" [attr.aria-label]="'Ouvrir ' + account.name">
+          <div class="tile-top">
+            <span class="account-icon"><img [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" /></span>
+            <span class="liquidity-badge"><i class="pi pi-clock"></i>{{ liquidityLabel(account.liquidityLevel) }}</span>
+          </div>
+          <div class="account-title"><span>{{ account.bankName }}</span><h3>{{ account.name }}</h3><p>{{ roleLabel(account.role) }}</p></div>
+          <div class="balance-block"><span>Solde actuel</span><strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
+          <div class="objective" *ngIf="account.targetBalance != null; else noObjective">
+            <div><span>Objectif {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
+            <div class="progress-track"><div class="progress-fill" [style.width.%]="progress(account)"></div></div>
+          </div>
+          <ng-template #noObjective><div class="objective is-empty"><span>Aucun objectif defini</span></div></ng-template>
+          <div class="tile-footer">
+            <span class="status is-warning" *ngIf="isBelowMinimum(account)"><i class="pi pi-exclamation-circle"></i>Sous le seuil</span>
+            <span class="status is-ok" *ngIf="!isBelowMinimum(account)"><i class="pi pi-check-circle"></i>Situation normale</span>
+            <span class="open-button"><i class="pi pi-arrow-right"></i></span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="account-section" *ngIf="longTermAccounts.length">
+      <div class="section-heading">
+        <div><span class="section-kicker">Patrimoine</span><h2>Placements long terme</h2></div>
+        <span class="section-count">{{ longTermAccounts.length }} comptes</span>
+      </div>
+      <div class="account-grid">
+        <a class="account-tile long-term" *ngFor="let account of longTermAccounts" [routerLink]="['/account-saving', account.id]" [attr.aria-label]="'Ouvrir ' + account.name">
+          <div class="tile-top">
+            <span class="account-icon"><img [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" /></span>
+            <span class="liquidity-badge"><i class="pi pi-lock"></i>{{ liquidityLabel(account.liquidityLevel) }}</span>
+          </div>
+          <div class="account-title"><span>{{ account.bankName }}</span><h3>{{ account.name }}</h3><p>{{ roleLabel(account.role) }}</p></div>
+          <div class="balance-block"><span>Valorisation actuelle</span><strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
+          <div class="objective" *ngIf="account.targetBalance != null; else longNoObjective">
+            <div><span>Objectif {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
+            <div class="progress-track"><div class="progress-fill" [style.width.%]="progress(account)"></div></div>
+          </div>
+          <ng-template #longNoObjective><div class="objective is-empty"><span>Suivi de valorisation</span></div></ng-template>
+          <div class="tile-footer">
+            <span class="status"><i class="pi pi-chart-line"></i>Inclus au patrimoine</span>
+            <span class="open-button"><i class="pi pi-arrow-right"></i></span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </ng-container>
+</section>

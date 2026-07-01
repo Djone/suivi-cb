@@ -1610,6 +1610,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           subCategoryId: null,
           advanceToJointAccount: false,
           isInternalTransfer: false,
+          savingAccountId: null,
         },
         isNew: true,
       },

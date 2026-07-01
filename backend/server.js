@@ -12,6 +12,7 @@ const accountRoutes = require('./routes/account.routes');
 const coupleSplitRoutes = require('./routes/couple-split.routes');
 const releaseRoutes = require('./routes/release.routes');
 const savingsWalletRoutes = require('./routes/savings-wallet.routes');
+const savingAccountRoutes = require('./routes/saving-account.routes');
 
 const app = express();
 const PORT_BACK = process.env.PORT_BACK || 3000;
@@ -37,6 +38,7 @@ const startServer = async () => {
     app.use('/api/couple-split', coupleSplitRoutes);
     app.use('/api/release', releaseRoutes);
     app.use('/api/savings-wallets', savingsWalletRoutes);
+    app.use('/api/saving-accounts', savingAccountRoutes);
 
     // 3. Démarrer le serveur Express
     app.listen(PORT_BACK, () => {

@@ -1,0 +1,56 @@
+<div class="account-saving-shell">
+  <a pButton routerLink="/savings" icon="pi pi-arrow-left" label="Comptes d'epargne" class="p-button-text back-link"></a>
+
+  <div class="loading" *ngIf="loading">Chargement...</div>
+  <p-message *ngIf="loadError" severity="error" text="Ce compte d'epargne n'existe pas."></p-message>
+
+  <app-savings *ngIf="account?.providerKey === 'plum'"></app-savings>
+
+  <section class="revolut-detail" *ngIf="account && account.providerKey !== 'plum'">
+    <header class="detail-header">
+      <div>
+        <span class="bank-name">{{ account.bankName }}</span>
+        <h1>{{ account.name }}</h1>
+        <p>{{ accountDescription }}</p>
+      </div>
+      <div class="balance">
+        <span>Solde actuel</span>
+        <strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong>
+      </div>
+    </header>
+
+    <p-message *ngIf="belowMinimum" severity="warn" text="Le solde est inferieur au seuil minimum."></p-message>
+    <p-message *ngIf="saved" severity="success" text="Les donnees du compte ont ete enregistrees."></p-message>
+    <p-message *ngIf="saveError" severity="error" text="Impossible d'enregistrer les modifications."></p-message>
+
+    <div class="progress-panel">
+      <div class="progress-heading">
+        <div><span>Progression vers l'objectif</span><strong>{{ progress | number: '1.0-0' }} %</strong></div>
+        <span>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }} / {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" [style.width.%]="progress"></div></div>
+    </div>
+
+    <form class="account-form" (ngSubmit)="save()">
+      <div class="form-field">
+        <label for="currentBalance">Solde de depart / ajustement</label>
+        <p-inputNumber inputId="currentBalance" [(ngModel)]="account.baseBalance" name="currentBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber>
+      </div>
+      <div class="form-field">
+        <label for="targetBalance">Solde cible</label>
+        <p-inputNumber inputId="targetBalance" [(ngModel)]="account.targetBalance" name="targetBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber>
+      </div>
+      <div class="form-field">
+        <label for="minimumBalance">Seuil minimum</label>
+        <p-inputNumber inputId="minimumBalance" [(ngModel)]="account.minimumBalance" name="minimumBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber>
+      </div>
+      <div class="settings">
+        <label><input type="checkbox" [(ngModel)]="account.includeInDailyBudget" name="includeInDailyBudget" /> Inclus dans le budget quotidien</label>
+        <label><input type="checkbox" [(ngModel)]="account.includeInWealth" name="includeInWealth" /> Inclus dans le patrimoine</label>
+      </div>
+      <div class="form-actions">
+        <button pButton type="submit" icon="pi pi-save" label="Enregistrer"></button>
+      </div>
+    </form>
+  </section>
+</div>

@@ -144,6 +144,30 @@
     </div>
   </div>
 
+  <div class="p-field mb-3" *ngIf="data.transaction.isInternalTransfer">
+    <label for="savingAccount" class="block mb-2">
+      Compte d'épargne suivi (optionnel)
+    </label>
+    <p-dropdown
+      id="savingAccount"
+      [options]="trackedSavingAccounts"
+      [(ngModel)]="data.transaction.savingAccountId"
+      optionLabel="bankName"
+      optionValue="id"
+      placeholder="PLUM ou sélectionner un compte"
+      [showClear]="true"
+      [style]="{ width: '100%' }"
+      [appendTo]="'body'"
+    >
+      <ng-template let-account pTemplate="item">
+        <div>
+          {{ account.bankName }}
+          <small>({{ account.name }})</small>
+        </div>
+      </ng-template>
+    </p-dropdown>
+  </div>
+
   <!-- Sous-catégorie -->
   <div class="p-field mb-3">
     <label for="subcategory" class="block mb-2">Sous-catégorie *</label>
