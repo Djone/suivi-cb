@@ -2,10 +2,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { RecurringTransaction } from '../models/recurring-transaction.model';
 import * as humps from 'humps';
 import { environment } from '../../environments/environment';
+
+export interface RecurringOccurrenceException {
+  recurringId: number;
+  occurrenceDate: string;
+  amount: number | null;
+  isSkipped: number | boolean;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +26,31 @@ export class RecurringTransactionService {
   recurringTransactions$ = this.recurringTransactionsSubject.asObservable();
 
   constructor(private http: HttpClient) {}
+
+  getOccurrenceExceptions(accountId: number): Observable<RecurringOccurrenceException[]> {
+    return this.http
+      .get<Record<string, unknown>[]>(`${this.apiUrl}/occurrence-exceptions`, {
+        params: { accountId },
+      })
+      .pipe(
+        map((rows) =>
+          rows.map(
+            (row) =>
+              humps.camelizeKeys(row) as unknown as RecurringOccurrenceException,
+          ),
+        ),
+      );
+  }
+
+  saveOccurrenceException(
+    recurringId: number,
+    exception: Pick<RecurringOccurrenceException, 'occurrenceDate' | 'amount' | 'isSkipped'>,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/${recurringId}/occurrence-exception`,
+      exception,
+    );
+  }
 
   // Récupérer toutes les transactions récurrentes
   getRecurringTransactions(): Observable<RecurringTransaction[]> {

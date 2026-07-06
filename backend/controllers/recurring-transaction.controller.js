@@ -1,6 +1,35 @@
 // backend/controllers/recurring-transaction.controller.js
 const RecurringTransaction = require("../models/recurring-transaction.model");
 const RecurringHistory = require("../models/recurring-transaction-history.model");
+const RecurringOccurrenceException = require('../models/recurring-occurrence-exception.model');
+
+exports.getOccurrenceExceptions = async (req, res) => {
+  try {
+    const accountId = req.query.accountId ? Number(req.query.accountId) : null;
+    res.status(200).json(await RecurringOccurrenceException.getAll(accountId));
+  } catch (err) {
+    console.error('Erreur lors de la lecture des exceptions:', err);
+    res.status(500).json({ error: 'Erreur lors de la lecture des exceptions.' });
+  }
+};
+
+exports.upsertOccurrenceException = async (req, res) => {
+  const recurringId = Number(req.params.id);
+  const { occurrenceDate, amount = null, isSkipped = false } = req.body || {};
+  if (!recurringId || typeof occurrenceDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) {
+    return res.status(400).json({ error: 'Occurrence invalide.' });
+  }
+  if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+    return res.status(400).json({ error: 'Montant invalide.' });
+  }
+  try {
+    await RecurringOccurrenceException.upsert({ recurringId, occurrenceDate, amount, isSkipped });
+    res.status(200).json({ message: 'Exception enregistrée.' });
+  } catch (err) {
+    console.error("Erreur lors de l'enregistrement de l'exception:", err);
+    res.status(500).json({ error: "Erreur lors de l'enregistrement de l'exception." });
+  }
+};
 
 exports.getAllRecurringTransactions = async (req, res) => {
   try {

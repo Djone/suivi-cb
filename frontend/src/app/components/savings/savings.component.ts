@@ -128,8 +128,56 @@ export class SavingsComponent implements OnInit, OnDestroy {
     { label: 'Retrait', value: 'withdrawal' as ManualMovementType },
   ];
 
+  // Locale français pour PrimeNG p-calendar
+  frLocale = {
+    firstDayOfWeek: 1,
+    dayNames: [
+      'dimanche',
+      'lundi',
+      'mardi',
+      'mercredi',
+      'jeudi',
+      'vendredi',
+      'samedi',
+    ],
+    dayNamesShort: ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'],
+    dayNamesMin: ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'],
+    monthNames: [
+      'janvier',
+      'février',
+      'mars',
+      'avril',
+      'mai',
+      'juin',
+      'juillet',
+      'août',
+      'septembre',
+      'octobre',
+      'novembre',
+      'décembre',
+    ],
+    monthNamesShort: [
+      'janv.',
+      'févr.',
+      'mars',
+      'avr.',
+      'mai',
+      'juin',
+      'juil.',
+      'août',
+      'sept.',
+      'oct.',
+      'nov.',
+      'déc.',
+    ],
+    today: "Aujourd'hui",
+    clear: 'Effacer',
+  };
+
   private internalTransferAccountId: number | null = null;
-  private internalTransferSubCategoryIds: Partial<Record<ManualMovementType, number>> = {};
+  private internalTransferSubCategoryIds: Partial<
+    Record<ManualMovementType, number>
+  > = {};
   private creatingInternalTransferAccount = false;
 
   availableYears: number[] = [];
@@ -448,8 +496,11 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
     this.manualMovementError = null;
     this.editingManualMovement = movement;
-    this.manualMovementType = movement.signedAmount >= 0 ? 'deposit' : 'withdrawal';
-    this.manualMovementDate = movement.date ? new Date(movement.date) : new Date();
+    this.manualMovementType =
+      movement.signedAmount >= 0 ? 'deposit' : 'withdrawal';
+    this.manualMovementDate = movement.date
+      ? new Date(movement.date)
+      : new Date();
     this.manualMovementLabel = movement.description || '';
     this.manualMovementAmount = Math.abs(movement.signedAmount || 0);
     this.manualMovementDialogVisible = true;
@@ -471,7 +522,8 @@ export class SavingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const subCategoryId = this.internalTransferSubCategoryIds[this.manualMovementType];
+    const subCategoryId =
+      this.internalTransferSubCategoryIds[this.manualMovementType];
     if (!subCategoryId) {
       this.manualMovementError =
         'Sous-categorie "Transfert interne" introuvable.';
@@ -489,7 +541,10 @@ export class SavingsComponent implements OnInit, OnDestroy {
     }
 
     const financialFlowId = this.manualMovementType === 'deposit' ? 2 : 1;
-    if (!this.manualMovementDate || Number.isNaN(this.manualMovementDate.getTime())) {
+    if (
+      !this.manualMovementDate ||
+      Number.isNaN(this.manualMovementDate.getTime())
+    ) {
       this.manualMovementError = 'Date invalide.';
       return;
     }
@@ -515,7 +570,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
           },
           error: () => {
             this.manualMovementError =
-              "Erreur lors de la modification du mouvement.";
+              'Erreur lors de la modification du mouvement.';
           },
         });
       return;
@@ -578,7 +633,10 @@ export class SavingsComponent implements OnInit, OnDestroy {
     this.allocationInitialAmountByWallet = new Map(
       this.walletProgress
         .filter((wallet) => wallet.isActive)
-        .map((wallet) => [wallet.id, this.roundAmount(wallet.allocatedAmount || 0)]),
+        .map((wallet) => [
+          wallet.id,
+          this.roundAmount(wallet.allocatedAmount || 0),
+        ]),
     );
     this.allocationDraft = this.sortAllocationDraft(
       this.wallets.map((wallet) => ({
@@ -592,7 +650,9 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
     this.lockedAllocationDraft = this.sortAllocationDraft(
       this.walletProgress
-        .filter((wallet) => !wallet.isActive && (wallet.allocatedAmount || 0) > 0)
+        .filter(
+          (wallet) => !wallet.isActive && (wallet.allocatedAmount || 0) > 0,
+        )
         .map((wallet) => ({
           walletId: wallet.id,
           walletName: wallet.name,
@@ -622,11 +682,13 @@ export class SavingsComponent implements OnInit, OnDestroy {
         amount: this.roundAmount(entry.amount || 0),
       }));
     const exceededWallet = activeAllocations.find(
-      (allocation) => allocation.amount - this.getWalletAllocationCapacity(allocation.walletId) > 0.0001,
+      (allocation) =>
+        allocation.amount -
+          this.getWalletAllocationCapacity(allocation.walletId) >
+        0.0001,
     );
     if (exceededWallet) {
-      this.allocationDialogError =
-        `Le montant reparti pour ${this.getWalletName(exceededWallet.walletId)} depasse le reste disponible de cette enveloppe.`;
+      this.allocationDialogError = `Le montant reparti pour ${this.getWalletName(exceededWallet.walletId)} depasse le reste disponible de cette enveloppe.`;
       return;
     }
 
@@ -750,13 +812,18 @@ export class SavingsComponent implements OnInit, OnDestroy {
     this.allocationDialogError = null;
   }
 
-  onAllocationAmountChange(walletId: number, value: number | null | undefined): void {
+  onAllocationAmountChange(
+    walletId: number,
+    value: number | null | undefined,
+  ): void {
     const normalizedValue = this.roundAmount(Number(value || 0));
     const clampedValue = Math.min(
       Math.max(normalizedValue, 0),
       this.getWalletInputCapacity(walletId),
     );
-    const entry = this.allocationDraft.find((item) => item.walletId === walletId);
+    const entry = this.allocationDraft.find(
+      (item) => item.walletId === walletId,
+    );
     if (!entry) {
       return;
     }
@@ -810,13 +877,16 @@ export class SavingsComponent implements OnInit, OnDestroy {
   getWalletRemainingAmount(walletId: number): number {
     const capacity = this.getWalletAllocationCapacity(walletId);
     const currentAmount = this.getDraftDisplayAmount(
-      this.allocationDraft.find((entry) => entry.walletId === walletId)?.amount ?? null,
+      this.allocationDraft.find((entry) => entry.walletId === walletId)
+        ?.amount ?? null,
     );
     return this.roundAmount(Math.max(capacity - currentAmount, 0));
   }
 
   getWalletAllocationCapacity(walletId: number): number {
-    const progress = this.walletProgress.find((item) => item.id === walletId && item.isActive);
+    const progress = this.walletProgress.find(
+      (item) => item.id === walletId && item.isActive,
+    );
     return this.roundAmount(Math.max(progress?.targetAmount || 0, 0));
   }
 
@@ -825,7 +895,9 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   isWalletGoalReached(walletId: number): boolean {
-    const progress = this.walletProgress.find((item) => item.id === walletId && item.isActive);
+    const progress = this.walletProgress.find(
+      (item) => item.id === walletId && item.isActive,
+    );
     return progress ? this.isWalletProgressFrozen(progress) : false;
   }
 
@@ -876,30 +948,32 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
   private loadWallets(): void {
     this.subscriptions.add(
-      this.savingsWalletService
-        .getWallets({ includeClosed: true })
-        .subscribe({
-          next: (wallets) => {
-            this.allWallets = wallets;
-            this.wallets = this.sortActiveWallets(wallets.filter((wallet) => wallet.isActive));
-            this.walletNameById = new Map(
-              wallets.map((wallet) => [wallet.id, wallet.name]),
-            );
+      this.savingsWalletService.getWallets({ includeClosed: true }).subscribe({
+        next: (wallets) => {
+          this.allWallets = wallets;
+          this.wallets = this.sortActiveWallets(
+            wallets.filter((wallet) => wallet.isActive),
+          );
+          this.walletNameById = new Map(
+            wallets.map((wallet) => [wallet.id, wallet.name]),
+          );
 
-            if (
-              this.selectedWallet !== null &&
-              !wallets.some((wallet) => wallet.id === this.selectedWallet)
-            ) {
-              this.selectedWallet = null;
-            }
+          if (
+            this.selectedWallet !== null &&
+            !wallets.some((wallet) => wallet.id === this.selectedWallet)
+          ) {
+            this.selectedWallet = null;
+          }
 
-            this.walletFilterOptions = [{ label: 'Tous les portefeuilles', value: null }];
-            this.refreshView();
-          },
-          error: (err) => {
-            console.error('Erreur lors du chargement des portefeuilles:', err);
-          },
-        }),
+          this.walletFilterOptions = [
+            { label: 'Tous les portefeuilles', value: null },
+          ];
+          this.refreshView();
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement des portefeuilles:', err);
+        },
+      }),
     );
   }
 
@@ -1022,12 +1096,19 @@ export class SavingsComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    if (this.toNumber(transaction.savingAccountId) !== null) {
+      return false;
+    }
+
     const date = transaction.date ? new Date(transaction.date) : null;
     if (!date || Number.isNaN(date.getTime())) {
       return false;
     }
 
-    if (this.selectedYear !== null && date.getFullYear() !== this.selectedYear) {
+    if (
+      this.selectedYear !== null &&
+      date.getFullYear() !== this.selectedYear
+    ) {
       return false;
     }
 
@@ -1049,7 +1130,8 @@ export class SavingsComponent implements OnInit, OnDestroy {
     const date = transaction.date ? new Date(transaction.date) : null;
     const accountId = this.toNumber(transaction.accountId);
     const subCategoryLabel =
-      this.toDisplayValue((transaction as any)['subCategoryLabel']) || 'Transfert interne';
+      this.toDisplayValue((transaction as any)['subCategoryLabel']) ||
+      'Transfert interne';
     const categoryLabel =
       this.toDisplayValue((transaction as any)['categoryLabel']) || 'Epargne';
     const signedAmount = this.toSignedAmount(
@@ -1079,7 +1161,10 @@ export class SavingsComponent implements OnInit, OnDestroy {
     };
   }
 
-  private toSignedAmount(financialFlowId: number | null, amount: number): number {
+  private toSignedAmount(
+    financialFlowId: number | null,
+    amount: number,
+  ): number {
     if (financialFlowId === null) {
       return amount;
     }
@@ -1132,10 +1217,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
   private extractAvailableYears(): void {
     const years = new Set<number>();
     this.transactions.forEach((transaction) => {
-      if (
-        !this.isInternalTransfer(transaction) ||
-        !transaction.date
-      ) {
+      if (!this.isInternalTransfer(transaction) || !transaction.date) {
         return;
       }
       const date = new Date(transaction.date);
@@ -1175,9 +1257,13 @@ export class SavingsComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    const account = this.accounts.find((item) => item.id === normalizedAccountId);
+    const account = this.accounts.find(
+      (item) => item.id === normalizedAccountId,
+    );
     const normalizedName = this.normalizeLabel(account?.name || '');
-    return normalizedName.includes('courant') || normalizedName.includes('joint');
+    return (
+      normalizedName.includes('courant') || normalizedName.includes('joint')
+    );
   }
 
   private matchesFlowFilter(movement: SavingsMovement): boolean {
@@ -1201,7 +1287,8 @@ export class SavingsComponent implements OnInit, OnDestroy {
     this.movements.forEach((movement) => {
       const typeLabel = movement.subCategoryLabel || 'Non classe';
       const incoming = movement.signedAmount > 0 ? movement.signedAmount : 0;
-      const outgoing = movement.signedAmount < 0 ? Math.abs(movement.signedAmount) : 0;
+      const outgoing =
+        movement.signedAmount < 0 ? Math.abs(movement.signedAmount) : 0;
       const net = movement.signedAmount;
 
       const typeStat = byType.get(typeLabel) ?? {
@@ -1231,8 +1318,12 @@ export class SavingsComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.savingsByType = Array.from(byType.values()).sort((a, b) => b.net - a.net);
-    this.savingsByAccount = Array.from(byAccount.values()).sort((a, b) => b.net - a.net);
+    this.savingsByType = Array.from(byType.values()).sort(
+      (a, b) => b.net - a.net,
+    );
+    this.savingsByAccount = Array.from(byAccount.values()).sort(
+      (a, b) => b.net - a.net,
+    );
 
     this.savingsTypeChartData = {
       labels: this.savingsByType.map((item) => item.typeLabel),
@@ -1259,7 +1350,9 @@ export class SavingsComponent implements OnInit, OnDestroy {
     return this.roundAmount(wallet.remainingAmount || 0) <= 0;
   }
 
-  private sortWalletProgress(summary: SavingsWalletProgress[]): SavingsWalletProgress[] {
+  private sortWalletProgress(
+    summary: SavingsWalletProgress[],
+  ): SavingsWalletProgress[] {
     return [...summary].sort((left, right) => {
       if (left.isActive !== right.isActive) {
         return left.isActive ? -1 : 1;
@@ -1274,7 +1367,9 @@ export class SavingsComponent implements OnInit, OnDestroy {
     );
   }
 
-  private sortAllocationDraft(draft: MovementAllocationDraft[]): MovementAllocationDraft[] {
+  private sortAllocationDraft(
+    draft: MovementAllocationDraft[],
+  ): MovementAllocationDraft[] {
     return [...draft].sort((left, right) => {
       const leftReached = this.isWalletGoalReached(left.walletId);
       const rightReached = this.isWalletGoalReached(right.walletId);

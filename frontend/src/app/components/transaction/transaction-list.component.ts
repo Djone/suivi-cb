@@ -19,7 +19,10 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { TransactionService } from '../../services/transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
-import { RecurringTransactionService } from '../../services/recurring-transaction.service';
+import {
+  RecurringOccurrenceException,
+  RecurringTransactionService,
+} from '../../services/recurring-transaction.service';
 import { FilterManagerService } from '../../services/filter-manager.service';
 import { ViewportService } from '../../services/viewport.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -94,6 +97,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   categoryOptions: { label: string; value: number }[] = [];
   recurringTransactions: RecurringTransaction[] = [];
   pendingSchedules: UpcomingScheduleLite[] = [];
+  occurrenceExceptions = new Map<string, RecurringOccurrenceException>();
   sortedRecurringTransactions: RecurringTransaction[] = [];
   currentBalance: number = 0;
   forecastedBalance: number = 0;
@@ -132,7 +136,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       label: 'Avances compte joint uniquement',
       value: 'only' as AdvanceJointFilter,
     },
-    { label: 'Hors avances compte joint', value: 'exclude' as AdvanceJointFilter },
+    {
+      label: 'Hors avances compte joint',
+      value: 'exclude' as AdvanceJointFilter,
+    },
   ];
   internalTransferFilterOptions = [
     { label: 'Tous les mouvements', value: 'all' as InternalTransferFilter },
@@ -247,6 +254,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           }
           this.updateAdvanceJointGlobalMetrics();
           this.applyFiltersAndSort();
+          if (this.recurringTransactions.length > 0) {
+            this.calculateRecurringMonthTotals();
+          }
         },
         error: (err) =>
           console.error(
@@ -570,10 +580,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       const txRecurringId = this.getRecurringTransactionId(
         t.recurringTransactionId,
       );
-      if (
-        txRecurringId === null ||
-        !recurringIdSet.has(txRecurringId)
-      )
+      if (txRecurringId === null || !recurringIdSet.has(txRecurringId))
         return sum;
       const transDate = new Date(t.date || '');
       if (
@@ -673,10 +680,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     };
   }
 
-  clearDateFilter(): void {
-    this.filters.dateRange = null;
+  onDateRangeChange(dateRange: Date[] | null): void {
+    this.filters.dateRange = dateRange;
     this.applyFilter();
   }
+
   onCategoryFilterChange(): void {
     if (this.filters.categoryIds.length === 0) {
       this.filters.subCategoryIds = [];
@@ -731,7 +739,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const subCategory = this.getSubCategoryById(subCategoryId);
     const normalizedId = this.toNumber(subCategoryId);
 
-    if (!subCategory && normalizedId !== null && this.subCategories.length > 0) {
+    if (
+      !subCategory &&
+      normalizedId !== null &&
+      this.subCategories.length > 0
+    ) {
       console.log(
         `TRANSACTION LIST : Sous-categorie ${normalizedId} non trouvee. Sous-categories disponibles:`,
         this.subCategories.map((sc) => sc.id),
@@ -859,7 +871,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     // Grouper par date et enrichir avec les labels
     transactions.forEach((transaction) => {
-      const dateKey = new Date(transaction.date!).toISOString().split('T')[0];
+      const dateKey = this.toDateKey(transaction.date!);
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
       }
@@ -987,6 +999,18 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   // Charger les échéances récurrentes du compte
   loadRecurringTransactions(): void {
     if (!this.accountId) return;
+
+    this.recurringTransactionService
+      .getOccurrenceExceptions(this.accountId)
+      .subscribe((exceptions) => {
+        this.occurrenceExceptions = new Map(
+          exceptions.map((exception) => [
+            `${exception.recurringId}:${exception.occurrenceDate}`,
+            exception,
+          ]),
+        );
+        this.calculateRecurringMonthTotals();
+      });
 
     this.subscriptions.add(
       this.recurringTransactionService.recurringTransactions$.subscribe({
@@ -1116,37 +1140,41 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       rec,
       currentYear,
       currentMonth,
-    ).filter((d) => !this.isScheduleRealized(d.rt, d.date));
+    ).filter((d) =>
+      !this.isScheduleRealized(d.rt, d.date) && !this.isOccurrenceSkipped(d.rt, d.date),
+    );
 
     const nextStartDue: { rt: RecurringTransaction; date: Date }[] = [];
     if (today.getDate() >= 25) {
       const nextMonth = (currentMonth + 1) % 12;
       const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       const next = this.buildSchedulesForMonth(rec, nextYear, nextMonth).filter(
-        (d) => d.date.getDate() <= 5 && !this.isScheduleRealized(d.rt, d.date),
+        (d) => d.date.getDate() <= 5 &&
+          !this.isScheduleRealized(d.rt, d.date) &&
+          !this.isOccurrenceSkipped(d.rt, d.date),
       );
       nextStartDue.push(...next);
     }
 
     const sumCurrent = currentMonthDue.reduce(
-      (s, d) => s + this.getSignedAmountFromRecurring(d.rt),
+      (s, d) => s + this.getOccurrenceAmount(d.rt, d.date),
       0,
     );
     const sumNext = nextStartDue.reduce(
-      (s, d) => s + this.getSignedAmountFromRecurring(d.rt),
+      (s, d) => s + this.getOccurrenceAmount(d.rt, d.date),
       0,
     );
 
     this.pendingSchedules = [
       ...currentMonthDue.map((entry) => ({
         recurringTransaction: entry.rt,
-        amount: this.getSignedAmountFromRecurring(entry.rt),
+        amount: this.getOccurrenceAmount(entry.rt, entry.date),
         dueDate: entry.date,
         isOverdue: entry.date < today,
       })),
       ...nextStartDue.map((entry) => ({
         recurringTransaction: entry.rt,
-        amount: this.getSignedAmountFromRecurring(entry.rt),
+        amount: this.getOccurrenceAmount(entry.rt, entry.date),
         dueDate: entry.date,
         isOverdue: false,
       })),
@@ -1358,7 +1386,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     recurring: RecurringTransaction,
     dueDate: Date,
   ): boolean {
-    return this.isRecurringRealizedInPeriod(recurring, dueDate);
+    return this.isRecurringRealizedByExactDate(recurring, dueDate);
   }
 
   private getSignedAmountFromRecurring(rt: RecurringTransaction): number {
@@ -1371,6 +1399,83 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return flowId === 2 ? -Math.abs(amount) : Math.abs(amount);
   }
 
+  private getOccurrenceException(
+    recurring: RecurringTransaction,
+    dueDate: Date,
+  ): RecurringOccurrenceException | undefined {
+    return this.occurrenceExceptions.get(`${recurring.id}:${this.toDateKey(dueDate)}`);
+  }
+
+  private isOccurrenceSkipped(recurring: RecurringTransaction, dueDate: Date): boolean {
+    return Boolean(this.getOccurrenceException(recurring, dueDate)?.isSkipped);
+  }
+
+  private getOccurrenceAmount(recurring: RecurringTransaction, dueDate: Date): number {
+    const override = this.getOccurrenceException(recurring, dueDate)?.amount;
+    if (override === null || override === undefined) {
+      return this.getSignedAmountFromRecurring(recurring);
+    }
+    return recurring.financialFlowId === 2 ? -Math.abs(override) : Math.abs(override);
+  }
+
+  editUpcomingOccurrence(schedule: UpcomingScheduleLite): void {
+    const enteredValue = window.prompt(
+      `Nouveau montant pour « ${schedule.recurringTransaction.label} » :`,
+      Math.abs(schedule.amount).toFixed(2),
+    );
+    if (enteredValue === null) return;
+    const amount = Number(enteredValue.replace(',', '.'));
+    if (!Number.isFinite(amount) || amount < 0) {
+      this.messageService.add({ severity: 'error', summary: 'Montant invalide' });
+      return;
+    }
+    this.saveOccurrenceException(schedule, amount, false);
+  }
+
+  skipUpcomingOccurrence(schedule: UpcomingScheduleLite): void {
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
+      width: '450px',
+      data: {
+        title: "Annuler cette échéance",
+        message: `Confirmer l’annulation exceptionnelle de « ${schedule.recurringTransaction.label} » le ${schedule.dueDate.toLocaleDateString('fr-FR')} ?`,
+        confirmText: 'Annuler cette échéance',
+        cancelText: 'Conserver',
+      },
+    });
+    dialogRef.onClose.subscribe((confirmed: boolean) => {
+      if (confirmed) this.saveOccurrenceException(schedule, null, true);
+    });
+  }
+
+  private saveOccurrenceException(
+    schedule: UpcomingScheduleLite,
+    amount: number | null,
+    isSkipped: boolean,
+  ): void {
+    this.recurringTransactionService
+      .saveOccurrenceException(schedule.recurringTransaction.id!, {
+        occurrenceDate: this.toDateKey(schedule.dueDate),
+        amount,
+        isSkipped,
+      })
+      .subscribe(() => this.loadOccurrenceExceptions());
+  }
+
+  private loadOccurrenceExceptions(): void {
+    if (!this.accountId) return;
+    this.recurringTransactionService
+      .getOccurrenceExceptions(this.accountId)
+      .subscribe((exceptions) => {
+        this.occurrenceExceptions = new Map(
+          exceptions.map((exception) => [
+            `${exception.recurringId}:${exception.occurrenceDate}`,
+            exception,
+          ]),
+        );
+        this.calculateRecurringMonthTotals();
+      });
+  }
+
   // Basculer l'affichage des échéances
   toggleRecurring(): void {
     this.showRecurring = !this.showRecurring;
@@ -1381,10 +1486,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return;
     }
     const recurring = schedule.recurringTransaction;
-    const rawAmount =
-      typeof recurring.amount === 'string'
-        ? parseFloat(recurring.amount)
-        : recurring.amount || 0;
+    const rawAmount = Math.abs(schedule.amount);
 
     const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
       width: '450px',
@@ -1398,10 +1500,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     dialogRef.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) return;
-      const today = this.getLocalDateOnly(new Date());
       const tx: Transaction = {
         description: recurring.label,
-        date: today,
+        date: this.toDateKey(schedule.dueDate),
         amount: Math.abs(rawAmount),
         accountId: this.accountId!,
         financialFlowId: recurring.financialFlowId,
@@ -1606,6 +1707,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           subCategoryId: null,
           advanceToJointAccount: false,
           isInternalTransfer: false,
+          savingAccountId: null,
         },
         isNew: true,
       },
@@ -1705,7 +1807,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Compte joint introuvable',
-        detail: 'Impossible de trouver le compte joint pour réaliser le transfert.',
+        detail:
+          'Impossible de trouver le compte joint pour réaliser le transfert.',
       });
       return;
     }
@@ -1740,7 +1843,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       this.transactionService
         .addTransaction(mirroredTransaction)
         .pipe(
-          switchMap(() => this.transactionService.deleteTransaction(transaction.id!)),
+          switchMap(() =>
+            this.transactionService.deleteTransaction(transaction.id!),
+          ),
         )
         .subscribe({
           next: () => {

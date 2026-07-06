@@ -91,6 +91,7 @@
       placeholder="Sélectionnez une date"
       styleClass="w-full"
       [appendTo]="'body'"
+      [locale]="frLocale"
     >
     </p-calendar>
   </div>
@@ -141,6 +142,30 @@
         Transfert interne épargne (exclu des stats)
       </label>
     </div>
+  </div>
+
+  <div class="p-field mb-3" *ngIf="data.transaction.isInternalTransfer">
+    <label for="savingAccount" class="block mb-2">
+      Compte d'épargne
+    </label>
+    <p-dropdown
+      id="savingAccount"
+      [options]="trackedSavingAccounts"
+      [(ngModel)]="selectedSavingAccountId"
+      optionLabel="bankName"
+      optionValue="id"
+      placeholder="Sélectionner un compte"
+      [showClear]="false"
+      [style]="{ width: '100%' }"
+      [appendTo]="'body'"
+    >
+      <ng-template let-account pTemplate="item">
+        <div>
+          {{ account.bankName }}
+          <small>({{ account.name }})</small>
+        </div>
+      </ng-template>
+    </p-dropdown>
   </div>
 
   <!-- Sous-catégorie -->

@@ -20,12 +20,14 @@ import { Transaction } from '../../models/transaction.model';
 import { SubCategory } from '../../models/sub-category.model';
 import { Category } from '../../models/category.model';
 import { Account } from '../../models/account.model';
+import { SavingAccount } from '../../models/saving-account.model';
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { AccountService } from '../../services/account.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
+import { SavingAccountService } from '../../services/saving-account.service';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit-sub-category-dialog.component';
 
@@ -60,8 +62,56 @@ export class EditTransactionDialogComponent implements OnInit {
   dialogTitle = 'Editer la transaction';
   isNew = false;
 
+  // Locale français pour PrimeNG p-calendar
+  frLocale = {
+    firstDayOfWeek: 1,
+    dayNames: [
+      'dimanche',
+      'lundi',
+      'mardi',
+      'mercredi',
+      'jeudi',
+      'vendredi',
+      'samedi',
+    ],
+    dayNamesShort: ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'],
+    dayNamesMin: ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'],
+    monthNames: [
+      'janvier',
+      'février',
+      'mars',
+      'avril',
+      'mai',
+      'juin',
+      'juillet',
+      'août',
+      'septembre',
+      'octobre',
+      'novembre',
+      'décembre',
+    ],
+    monthNamesShort: [
+      'janv.',
+      'févr.',
+      'mars',
+      'avr.',
+      'mai',
+      'juin',
+      'juil.',
+      'août',
+      'sept.',
+      'oct.',
+      'nov.',
+      'déc.',
+    ],
+    today: "Aujourd'hui",
+    clear: 'Effacer',
+  };
+
   // Listes pour les dropdowns
   accounts: Account[] = [];
+  trackedSavingAccounts: SavingAccount[] = [];
+  selectedSavingAccountId: number | null = null;
   financialFlowList = FINANCIAL_FLOW_LIST;
   allRecurringTransactions: RecurringTransaction[] = [];
   filteredRecurringTransactions: RecurringTransaction[] = [];
@@ -78,6 +128,7 @@ export class EditTransactionDialogComponent implements OnInit {
     private recurringTransactionService: RecurringTransactionService,
     private transactionService: TransactionService,
     private categoryService: CategoryService,
+    private savingAccountService: SavingAccountService,
     private dialogService: DialogService,
   ) {
     this.isNew = this.data.isNew || false;
@@ -94,6 +145,16 @@ export class EditTransactionDialogComponent implements OnInit {
       },
       error: (err) =>
         console.error('Erreur lors du chargement des comptes:', err),
+    });
+
+    this.savingAccountService.getAccounts().subscribe({
+      next: (accounts) => {
+        this.trackedSavingAccounts = accounts.map((account) =>
+          account.providerKey === 'plum' ? { ...account, id: 0 } : account,
+        );
+      },
+      error: (err) =>
+        console.error("Erreur lors du chargement des comptes d'epargne:", err),
     });
 
     // Charger les transactions récurrentes si c'est une nouvelle transaction
@@ -156,6 +217,9 @@ export class EditTransactionDialogComponent implements OnInit {
     this.data.transaction.isInternalTransfer = this.toBoolean(
       this.data.transaction.isInternalTransfer,
     );
+    this.selectedSavingAccountId = this.data.transaction.isInternalTransfer
+      ? this.toNumber(this.data.transaction.savingAccountId) ?? 0
+      : null;
 
     // Récupérer le financialFlowId (en snake_case ou camelCase)
     const financialFlowId =
@@ -234,9 +298,6 @@ export class EditTransactionDialogComponent implements OnInit {
           if (!exists) {
             this.selectedSubCategoryId = 0;
           }
-          if (this.toBoolean(this.data.transaction.isInternalTransfer)) {
-            this.trySelectSavingsTransferSubCategory();
-          }
         },
         error: (err) =>
           console.error('Erreur lors du chargement des sous-catégories:', err),
@@ -262,8 +323,11 @@ export class EditTransactionDialogComponent implements OnInit {
       this.data.transaction.isInternalTransfer,
     );
 
-    if (this.data.transaction.isInternalTransfer) {
-      this.trySelectSavingsTransferSubCategory();
+    if (!this.data.transaction.isInternalTransfer) {
+      this.data.transaction.savingAccountId = null;
+      this.selectedSavingAccountId = null;
+    } else if (this.selectedSavingAccountId === null) {
+      this.selectedSavingAccountId = 0;
     }
 
     this.onFieldChange();
@@ -360,6 +424,10 @@ export class EditTransactionDialogComponent implements OnInit {
       isInternalTransfer: this.toBoolean(
         this.data.transaction.isInternalTransfer,
       ),
+      savingAccountId:
+        this.selectedSavingAccountId && this.selectedSavingAccountId > 0
+          ? this.selectedSavingAccountId
+          : null,
     };
 
     this.ref.close(updatedTransaction);
@@ -501,27 +569,6 @@ export class EditTransactionDialogComponent implements OnInit {
       return normalized === '1' || normalized === 'true';
     }
     return false;
-  }
-
-  private trySelectSavingsTransferSubCategory(): void {
-    const match = this.activeSubCategories.find((subCategory) => {
-      const categoryLabel = this.normalizeLabel(subCategory.categoryLabel || '');
-      const label = this.normalizeLabel(subCategory.label || '');
-      return categoryLabel === 'epargne' && label === 'transfert interne';
-    });
-
-    if (match && typeof match.id === 'number') {
-      this.selectedSubCategoryId = match.id;
-      this.data.transaction.subCategoryId = match.id;
-    }
-  }
-
-  private normalizeLabel(value: string): string {
-    return (value || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toLowerCase();
   }
 
   openCreateSubCategory(event?: Event): void {

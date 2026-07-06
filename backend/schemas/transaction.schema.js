@@ -63,6 +63,12 @@ const transactionSchema = Joi.object({
       )
       .optional()
       .description('Indique si la transaction est un transfert interne epargne.'),
+    saving_account_id: Joi.number()
+      .integer()
+      .positive()
+      .allow(null)
+      .optional()
+      .description('Compte epargne destinataire ou source du transfert.'),
   });
 
 module.exports = { 

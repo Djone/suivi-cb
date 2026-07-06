@@ -7,6 +7,7 @@ const recurringTransactionController = require('../controllers/recurring-transac
 
 // Route pour obtenir toutes les transactions récurrentes
 router.get('/', recurringTransactionController.getAllRecurringTransactions);
+router.get('/occurrence-exceptions', recurringTransactionController.getOccurrenceExceptions);
 
 // Route pour ajouter une transaction récurrente
 router.post('/', validate(recurringTransactionSchema), recurringTransactionController.addRecurringTransaction);
@@ -19,10 +20,10 @@ router.delete('/:id', recurringTransactionController.deleteRecurringTransactionB
 
 // Route pour réactiver une transaction récurrente
 router.patch('/:id/reactivate', recurringTransactionController.reactivateRecurringTransaction);
+router.put('/:id/occurrence-exception', recurringTransactionController.upsertOccurrenceException);
 
 // Historique des montants d'une transaction r��currente
 router.get('/:id/history', recurringTransactionController.getHistoryForRecurringTransaction);
 router.post('/:id/history', recurringTransactionController.addHistoryEntryForRecurringTransaction);
 
 module.exports = router;
-

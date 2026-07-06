@@ -5,7 +5,6 @@ import { TransactionListComponent } from './components/transaction/transaction-l
 import { CategoryListComponent } from './components/category/category-list.component';
 import { RecurringTransactionListComponent } from './components/recurring-transaction/recurring-transaction-list.component';
 import { StatisticsComponent } from './components/statistics/statistics.component';
-import { SavingsComponent } from './components/savings/savings.component';
 import { ReleaseNotesComponent } from './components/release-notes/release-notes.component';
 import { ReleaseProcessComponent } from './components/release-process/release-process.component';
 import { environment } from '../environments/environment';
@@ -52,7 +51,28 @@ const childRoutes: Routes = [
       ),
   },
   { path: 'statistics', component: StatisticsComponent },
-  { path: 'savings', component: SavingsComponent },
+  {
+    path: 'savings',
+    loadComponent: () =>
+      import('./components/savings-dashboard/savings-dashboard.component').then(
+        (m) => m.SavingsDashboardComponent,
+      ),
+  },
+  {
+    path: 'account-saving/:id',
+    loadComponent: () =>
+      import('./components/account-saving/account-saving.component').then(
+        (m) => m.AccountSavingComponent,
+      ),
+    data: { prerender: false },
+  },
+  {
+    path: 'savings/settings',
+    loadComponent: () =>
+      import('./components/savings-settings/savings-settings.component').then(
+        (m) => m.SavingsSettingsComponent,
+      ),
+  },
   { path: 'release-notes', component: ReleaseNotesComponent },
   { path: 'release-process', component: ReleaseProcessComponent },
 ];

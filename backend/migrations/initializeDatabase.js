@@ -103,6 +103,12 @@ const initializeDatabase = async () => {
     await runQuery(
       `ALTER TABLE transactions ADD COLUMN is_internal_transfer INTEGER NOT NULL DEFAULT 0;`
     ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN saving_account_id INTEGER NULL;`
+    ).catch(() => {});
+    await runQuery(
+      `CREATE INDEX IF NOT EXISTS idx_transactions_saving_account_id ON transactions(saving_account_id);`,
+    );
     console.log('✓ Table "transactions" vérifiée/créée.');
 
     await runQuery(`
@@ -159,6 +165,23 @@ const initializeDatabase = async () => {
     );
 
     await runQuery(`
+      CREATE TABLE IF NOT EXISTS recurring_occurrence_exceptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        recurring_id INTEGER NOT NULL REFERENCES recurring_transactions(id) ON DELETE CASCADE,
+        occurrence_date DATE NOT NULL,
+        amount REAL NULL,
+        is_skipped INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(recurring_id, occurrence_date)
+      );
+    `);
+    await runQuery(`
+      CREATE INDEX IF NOT EXISTS idx_recurring_occurrence_date
+      ON recurring_occurrence_exceptions(recurring_id, occurrence_date);
+    `);
+
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS accounts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -169,6 +192,80 @@ const initializeDatabase = async () => {
       );
     `);
     console.log('✓ Table "accounts" vérifiée/créée.');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS saving_accounts (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        bank_name TEXT NOT NULL,
+        provider_key TEXT NOT NULL UNIQUE,
+        role TEXT NOT NULL,
+        liquidity_level TEXT NOT NULL DEFAULT 'instant',
+        current_balance REAL NOT NULL DEFAULT 0,
+        target_balance REAL,
+        minimum_balance REAL,
+        include_in_daily_budget INTEGER NOT NULL DEFAULT 0,
+        include_in_wealth INTEGER NOT NULL DEFAULT 1,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (1, 'PLUM', 'Plum', 'plum', 'leisure', 'instant', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (2, 'Fonds d''urgence', 'Revolut', 'revolut', 'emergency', 'instant', 0, 2000, 1500, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (3, 'Paiements en ligne / charges', 'Fortuneo', 'fortuneo', 'online_payment', 'instant', 0, NULL, NULL, 1, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (4, 'Livret A', 'CFCAL', 'cfcal', 'savings', 'day_1', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (5, 'Investissement long terme', 'Goodvest', 'goodvest', 'investment', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `UPDATE saving_accounts
+       SET name = 'Plan epargne retraite', provider_key = 'goodvest_per',
+           role = 'investment', liquidity_level = 'long_term', updated_at = CURRENT_TIMESTAMP
+       WHERE id = 5 AND provider_key = 'goodvest'`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (7, 'Assurance-vie', 'Goodvest', 'goodvest_life_insurance', 'investment', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (8, 'Assurance-vie enfant', 'Goodvest', 'goodvest_child_life_insurance', 'investment', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (6, 'Epargne salariale', 'CIC', 'cic', 'employee_savings', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    console.log('Table "saving_accounts" verifiee/creee.');
 
     await runQuery(`
       CREATE TABLE IF NOT EXISTS savings_wallets (
@@ -320,4 +417,3 @@ const initializeDatabase = async () => {
 };
 
 module.exports = initializeDatabase;
-
