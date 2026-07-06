@@ -62,6 +62,22 @@ export class TransactionService {
     });
   }
 
+  getTransactionsBySavingAccount(
+    savingAccountId: number,
+  ): Observable<Transaction[]> {
+    const params = new HttpParams().set(
+      'saving_account_id',
+      String(savingAccountId),
+    );
+    return this.http.get<Transaction[]>(this.apiUrl, { params }).pipe(
+      map((transactions) =>
+        transactions.map((transaction) =>
+          humps.camelizeKeys(transaction) as Transaction,
+        ),
+      ),
+    );
+  }
+
   // Méthode pour mettre à jour les filtres
   applyFilterTransactions<K extends keyof Transaction>(
     key: K,

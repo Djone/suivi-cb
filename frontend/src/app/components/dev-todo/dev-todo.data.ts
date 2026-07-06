@@ -4,21 +4,20 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
   {
     title: '[Ticket 8] Bug fix : frontend',
     description: [
-      "[ ] Echéances à venir : Supprimer les échéances à venir si elles n'auront pas lieu",
-      "[ ] Echéances à venir : Renseigner la date du jour quand l'échéance à venir a été validée",
+      "[X] Echéances à venir : Supprimer les échéances à venir si elles n'auront pas lieu",
+      "[X] Echéances à venir : Renseigner la date du jour quand l'échéance à venir a été validée",
     ],
-    status: 'in-progress',
-    targetVersion: '1.4.5',
+    status: 'done',
+    targetVersion: '1.5.0',
     priority: 'high',
   },
   {
     title: '[Ticket 10] Epargne',
     description: [
-      "[ ] Epargne : Ajouter une épargne 'urgences' en plus de celle 'porefeuille' - Ajouter des tabs pour naviguer entre les deux épargnes",
-      '[ ] Epargne : ',
+      "[X] Epargne : Ajouter une épargne 'urgences' en plus de celle 'porefeuille' - Ajouter des tabs pour naviguer entre les deux épargnes",
     ],
-    status: 'in-progress',
-    targetVersion: '1.4.5',
+    status: 'done',
+    targetVersion: '1.5.0',
     priority: 'high',
   },
   {

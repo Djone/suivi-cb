@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { SavingAccount, SavingAccountUpdate } from '../models/saving-account.model';
+import { SavingAccount, SavingAccountSettings, SavingAccountUpdate } from '../models/saving-account.model';
 
 @Injectable({ providedIn: 'root' })
 export class SavingAccountService {
@@ -26,6 +26,25 @@ export class SavingAccountService {
     return this.http.patch<SavingAccount>(`${this.apiUrl}/${id}`, value).pipe(
       map((account) => this.normalize(account)),
     );
+  }
+
+  createAccount(value: SavingAccountSettings): Observable<SavingAccount> {
+    return this.http.post<SavingAccount>(this.apiUrl, value).pipe(
+      map((account) => this.normalize(account)),
+    );
+  }
+
+  updateAccountSettings(
+    id: number,
+    value: SavingAccountSettings,
+  ): Observable<SavingAccount> {
+    return this.http.put<SavingAccount>(`${this.apiUrl}/${id}`, value).pipe(
+      map((account) => this.normalize(account)),
+    );
+  }
+
+  deleteAccount(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   private normalize(account: SavingAccount): SavingAccount {

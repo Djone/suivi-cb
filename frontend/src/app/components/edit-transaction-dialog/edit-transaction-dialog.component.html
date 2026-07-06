@@ -146,16 +146,16 @@
 
   <div class="p-field mb-3" *ngIf="data.transaction.isInternalTransfer">
     <label for="savingAccount" class="block mb-2">
-      Compte d'épargne suivi (optionnel)
+      Compte d'épargne
     </label>
     <p-dropdown
       id="savingAccount"
       [options]="trackedSavingAccounts"
-      [(ngModel)]="data.transaction.savingAccountId"
+      [(ngModel)]="selectedSavingAccountId"
       optionLabel="bankName"
       optionValue="id"
-      placeholder="PLUM ou sélectionner un compte"
-      [showClear]="true"
+      placeholder="Sélectionner un compte"
+      [showClear]="false"
       [style]="{ width: '100%' }"
       [appendTo]="'body'"
     >

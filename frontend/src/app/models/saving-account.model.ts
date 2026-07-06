@@ -30,3 +30,10 @@ export interface SavingAccountUpdate {
   includeInDailyBudget: boolean;
   includeInWealth: boolean;
 }
+
+export interface SavingAccountSettings extends SavingAccountUpdate {
+  name: string;
+  bankName: string;
+  role: SavingAccountRole;
+  liquidityLevel: LiquidityLevel;
+}

@@ -5,9 +5,12 @@
       <h1>Comptes d'epargne</h1>
       <p>Liquidites disponibles, objectifs et placements de long terme.</p>
     </div>
-    <div class="wealth-total">
-      <span>Patrimoine suivi</span>
-      <strong>{{ totalWealth | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong>
+    <div class="header-actions">
+      <div class="wealth-total">
+        <span>Patrimoine suivi</span>
+        <strong>{{ totalWealth | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong>
+      </div>
+      <a pButton routerLink="/savings/settings" icon="pi pi-cog" class="p-button-outlined" aria-label="Paramétrer les comptes"></a>
     </div>
   </header>
 
@@ -38,14 +41,17 @@
       <div class="account-grid">
         <a class="account-tile" *ngFor="let account of liquidAccounts" [class.is-alert]="isBelowMinimum(account)" [routerLink]="['/account-saving', account.id]" [attr.aria-label]="'Ouvrir ' + account.name">
           <div class="tile-top">
-            <span class="account-icon"><img [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" /></span>
+            <span class="account-icon">
+              <img *ngIf="hasBankLogo(account)" [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" />
+              <i *ngIf="!hasBankLogo(account)" class="pi pi-building-columns"></i>
+            </span>
             <span class="liquidity-badge"><i class="pi pi-clock"></i>{{ liquidityLabel(account.liquidityLevel) }}</span>
           </div>
           <div class="account-title"><span>{{ account.bankName }}</span><h3>{{ account.name }}</h3><p>{{ roleLabel(account.role) }}</p></div>
           <div class="balance-block"><span>Solde actuel</span><strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
           <div class="objective" *ngIf="account.targetBalance != null; else noObjective">
-            <div><span>Objectif {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
-            <div class="progress-track"><div class="progress-fill" [style.width.%]="progress(account)"></div></div>
+            <div><span>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }} sur {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
+            <p-progressBar [value]="progress(account)" [showValue]="false" styleClass="objective-progress"></p-progressBar>
           </div>
           <ng-template #noObjective><div class="objective is-empty"><span>Aucun objectif defini</span></div></ng-template>
           <div class="tile-footer">
@@ -65,14 +71,17 @@
       <div class="account-grid">
         <a class="account-tile long-term" *ngFor="let account of longTermAccounts" [routerLink]="['/account-saving', account.id]" [attr.aria-label]="'Ouvrir ' + account.name">
           <div class="tile-top">
-            <span class="account-icon"><img [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" /></span>
+            <span class="account-icon">
+              <img *ngIf="hasBankLogo(account)" [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" />
+              <i *ngIf="!hasBankLogo(account)" class="pi pi-building-columns"></i>
+            </span>
             <span class="liquidity-badge"><i class="pi pi-lock"></i>{{ liquidityLabel(account.liquidityLevel) }}</span>
           </div>
           <div class="account-title"><span>{{ account.bankName }}</span><h3>{{ account.name }}</h3><p>{{ roleLabel(account.role) }}</p></div>
           <div class="balance-block"><span>Valorisation actuelle</span><strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
           <div class="objective" *ngIf="account.targetBalance != null; else longNoObjective">
-            <div><span>Objectif {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
-            <div class="progress-track"><div class="progress-fill" [style.width.%]="progress(account)"></div></div>
+            <div><span>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }} sur {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
+            <p-progressBar [value]="progress(account)" [showValue]="false" styleClass="objective-progress"></p-progressBar>
           </div>
           <ng-template #longNoObjective><div class="objective is-empty"><span>Suivi de valorisation</span></div></ng-template>
           <div class="tile-footer">

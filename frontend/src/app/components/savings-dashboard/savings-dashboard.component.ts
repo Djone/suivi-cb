@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MessageModule } from 'primeng/message';
+import { ButtonModule } from 'primeng/button';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { SavingAccountService } from '../../services/saving-account.service';
 import { LiquidityLevel, SavingAccount, SavingAccountRole } from '../../models/saving-account.model';
 
 @Component({
   selector: 'app-savings-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MessageModule],
+  imports: [CommonModule, RouterLink, MessageModule, ButtonModule, ProgressBarModule],
   templateUrl: './savings-dashboard.component.html',
   styleUrl: './savings-dashboard.component.css',
 })
@@ -80,5 +82,11 @@ export class SavingsDashboardComponent implements OnInit {
       ? 'goodvest'
       : account.providerKey;
     return `/bank-logos/${logoKey}.png`;
+  }
+
+  hasBankLogo(account: SavingAccount): boolean {
+    return ['plum', 'revolut', 'fortuneo', 'cfcal', 'cic'].includes(
+      account.providerKey,
+    ) || account.providerKey.startsWith('goodvest');
   }
 }

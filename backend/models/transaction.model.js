@@ -37,6 +37,7 @@ const Transaction = {
       account_id: 't.account_id',
       financial_flow_id: 't.financial_flow_id',
       is_internal_transfer: 't.is_internal_transfer',
+      saving_account_id: 't.saving_account_id',
     };
 
     const conditions = [];

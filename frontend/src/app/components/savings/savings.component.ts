@@ -1096,6 +1096,10 @@ export class SavingsComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    if (this.toNumber(transaction.savingAccountId) !== null) {
+      return false;
+    }
+
     const date = transaction.date ? new Date(transaction.date) : null;
     if (!date || Number.isNaN(date.getTime())) {
       return false;

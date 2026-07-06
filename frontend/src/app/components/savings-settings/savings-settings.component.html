@@ -1,0 +1,66 @@
+<section class="settings-page">
+  <header class="page-header">
+    <div>
+      <a pButton routerLink="/savings" icon="pi pi-arrow-left" label="Tableau de bord" class="p-button-text back-link"></a>
+      <h1>Paramétrage des comptes d'épargne</h1>
+      <p>Banques, rôles, liquidité et règles d'intégration.</p>
+    </div>
+    <button pButton type="button" icon="pi pi-plus" label="Ajouter un compte" (click)="openCreate()"></button>
+  </header>
+
+  <p-message *ngIf="errorMessage" severity="error" [text]="errorMessage"></p-message>
+
+  <div class="settings-table">
+    <p-table [value]="accounts" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr><th>Banque</th><th>Compte</th><th>Rôle</th><th>Liquidité</th><th class="text-right">Solde</th><th>Budget</th><th>Patrimoine</th><th>Actions</th></tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-account>
+        <tr>
+          <td><strong>{{ account.bankName }}</strong></td>
+          <td>{{ account.name }}</td>
+          <td>{{ roleLabel(account.role) }}</td>
+          <td><p-tag severity="info" [value]="liquidityLabel(account.liquidityLevel)"></p-tag></td>
+          <td class="text-right">{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</td>
+          <td><i class="pi" [class.pi-check-circle]="account.includeInDailyBudget" [class.pi-minus-circle]="!account.includeInDailyBudget"></i></td>
+          <td><i class="pi" [class.pi-check-circle]="account.includeInWealth" [class.pi-minus-circle]="!account.includeInWealth"></i></td>
+          <td>
+            <div class="row-actions">
+              <button pButton type="button" icon="pi pi-pencil" class="p-button-text" aria-label="Modifier" (click)="openEdit(account)"></button>
+              <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger" aria-label="Supprimer" [disabled]="account.providerKey === 'plum'" (click)="requestDelete(account)"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</section>
+
+<p-dialog [header]="editingId === null ? 'Nouveau compte' : 'Modifier le compte'" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '620px', maxWidth: '95vw' }">
+  <div class="form-grid">
+    <div class="field"><label for="bankName">Banque</label><input id="bankName" pInputText [(ngModel)]="form.bankName" /></div>
+    <div class="field"><label for="name">Nom du compte</label><input id="name" pInputText [(ngModel)]="form.name" /></div>
+    <div class="field"><label for="role">Rôle</label><p-dropdown inputId="role" [options]="roleOptions" [(ngModel)]="form.role" optionLabel="label" optionValue="value" appendTo="body"></p-dropdown></div>
+    <div class="field"><label for="liquidity">Liquidité</label><p-dropdown inputId="liquidity" [options]="liquidityOptions" [(ngModel)]="form.liquidityLevel" optionLabel="label" optionValue="value" appendTo="body"></p-dropdown></div>
+    <div class="field"><label for="balance">Solde de départ</label><p-inputNumber inputId="balance" [(ngModel)]="form.currentBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber></div>
+    <div class="field"><label for="target">Solde cible</label><p-inputNumber inputId="target" [(ngModel)]="form.targetBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber></div>
+    <div class="field"><label for="minimum">Seuil minimum</label><p-inputNumber inputId="minimum" [(ngModel)]="form.minimumBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber></div>
+    <div class="checks">
+      <label><p-checkbox [(ngModel)]="form.includeInDailyBudget" [binary]="true"></p-checkbox> Inclus dans le budget quotidien</label>
+      <label><p-checkbox [(ngModel)]="form.includeInWealth" [binary]="true"></p-checkbox> Inclus dans le patrimoine</label>
+    </div>
+  </div>
+  <p-message *ngIf="errorMessage" severity="error" [text]="errorMessage"></p-message>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Annuler" class="p-button-text" (click)="dialogVisible = false"></button>
+    <button pButton type="button" icon="pi pi-save" label="Enregistrer" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Supprimer le compte" [(visible)]="deleteDialogVisible" [modal]="true" [style]="{ width: '430px' }">
+  <p>Le compte <strong>{{ pendingDelete?.bankName }} - {{ pendingDelete?.name }}</strong> sera retiré du tableau de bord. Son historique sera conservé.</p>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Annuler" class="p-button-text" (click)="deleteDialogVisible = false"></button>
+    <button pButton type="button" label="Supprimer" icon="pi pi-trash" class="p-button-danger" (click)="confirmDelete()"></button>
+  </ng-template>
+</p-dialog>

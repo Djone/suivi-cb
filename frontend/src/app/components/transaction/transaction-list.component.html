@@ -247,6 +247,24 @@
                 {{ schedule.dueDate | date: "dd/MM" }}
               </div>
               <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                (onClick)="editUpcomingOccurrence(schedule)"
+                pTooltip="Modifier uniquement cette échéance"
+                tooltipPosition="top"
+              ></p-button>
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (onClick)="skipUpcomingOccurrence(schedule)"
+                pTooltip="Annuler uniquement cette échéance"
+                tooltipPosition="top"
+              ></p-button>
+              <p-button
                 icon="pi pi-check"
                 [rounded]="true"
                 [text]="true"
@@ -274,107 +292,30 @@
       class="list-controls p-3 surface-card border-round-lg shadow-1"
       *ngIf="!isMobile"
     >
-      <div class="filters-row flex flex-wrap gap-3">
-        <!-- Filtre par date -->
-        <p-inputGroup class="flex-1 min-w-[250px]">
-          <p-inputGroupAddon><i class="pi pi-calendar"></i></p-inputGroupAddon>
-          <p-calendar
-            [(ngModel)]="filters.dateRange"
-            (onSelect)="applyFilter()"
-            (onClearClick)="clearDateFilter()"
-            selectionMode="range"
-            [readonlyInput]="true"
-            placeholder="Filtrer par date"
-            dateFormat="dd/mm/yy"
-            [showClear]="true"
-            styleClass="w-full"
-          ></p-calendar>
-        </p-inputGroup>
+      <div class="filters-layout">
+        <div class="filters-primary">
+          <p-inputGroup class="date-filter">
+            <p-inputGroupAddon><i class="pi pi-calendar"></i></p-inputGroupAddon>
+            <p-calendar [ngModel]="filters.dateRange" (ngModelChange)="onDateRangeChange($event)" selectionMode="range" [readonlyInput]="true" placeholder="Filtrer par date" dateFormat="dd/mm/yy" [showClear]="true" styleClass="w-full"></p-calendar>
+          </p-inputGroup>
 
-        <!-- Filtre par description -->
-        <p-inputGroup class="flex-1 min-w-[250px]">
-          <p-inputGroupAddon
-            ><i class="pi pi-align-left"></i
-          ></p-inputGroupAddon>
-          <input
-            pInputText
-            type="text"
-            [(ngModel)]="filters.description"
-            (input)="applyFilter()"
-            placeholder="Filtrer par description"
-            class="w-full"
-          />
-        </p-inputGroup>
+          <p-inputGroup class="description-filter">
+            <p-inputGroupAddon><i class="pi pi-align-left"></i></p-inputGroupAddon>
+            <input pInputText type="text" [(ngModel)]="filters.description" (input)="applyFilter()" placeholder="Filtrer par libellé" class="w-full" />
+          </p-inputGroup>
 
-        <!-- Filtre par categorie -->
-        <p-multiSelect
-          class="flex-1 min-w-[220px]"
-          [options]="categoryOptions"
-          [(ngModel)]="filters.categoryIds"
-          optionLabel="label"
-          optionValue="value"
-          display="chip"
-          [showClear]="true"
-          placeholder="Filtrer par categorie"
-          (onChange)="onCategoryFilterChange()"
-        >
-        </p-multiSelect>
+          <p-inputGroup class="amount-filter">
+            <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
+            <input pInputText type="number" min="0" step="0.01" [(ngModel)]="filters.amount" (input)="applyFilter()" (keypress)="allowOnlyNumbers($event)" placeholder="Filtrer par montant" class="w-full" />
+          </p-inputGroup>
+        </div>
 
-        <!-- Filtre par sous-categorie -->
-        <p-multiSelect
-          class="flex-1 min-w-[240px]"
-          [options]="filteredSubCategoryOptions"
-          [(ngModel)]="filters.subCategoryIds"
-          optionLabel="label"
-          optionValue="value"
-          display="chip"
-          [filter]="true"
-          [showClear]="true"
-          [virtualScroll]="true"
-          [virtualScrollItemSize]="40"
-          placeholder="Filtrer par sous-categorie"
-          (onChange)="applyFilter()"
-        >
-        </p-multiSelect>
-
-        <!-- Filtre avance compte joint -->
-        <p-dropdown
-          class="flex-1 min-w-[260px]"
-          [options]="advanceJointFilterOptions"
-          [(ngModel)]="filters.advanceJoint"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Filtrer avances compte joint"
-          (onChange)="applyFilter()"
-        >
-        </p-dropdown>
-
-        <p-dropdown
-          class="flex-1 min-w-[260px]"
-          [options]="internalTransferFilterOptions"
-          [(ngModel)]="filters.internalTransfer"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Filtrer transferts internes"
-          (onChange)="applyFilter()"
-        >
-        </p-dropdown>
-
-        <!-- Filtre par montant -->
-        <p-inputGroup class="flex-1 min-w-[150px]">
-          <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
-          <input
-            pInputText
-            type="number"
-            min="0"
-            step="0.01"
-            [(ngModel)]="filters.amount"
-            (input)="applyFilter()"
-            (keypress)="allowOnlyNumbers($event)"
-            placeholder="Filtrer par montant"
-            class="w-full"
-          />
-        </p-inputGroup>
+        <div class="filters-secondary">
+          <p-multiSelect [options]="categoryOptions" [(ngModel)]="filters.categoryIds" optionLabel="label" optionValue="value" display="chip" [showClear]="true" placeholder="Filtrer par catégorie" (onChange)="onCategoryFilterChange()"></p-multiSelect>
+          <p-multiSelect [options]="filteredSubCategoryOptions" [(ngModel)]="filters.subCategoryIds" optionLabel="label" optionValue="value" display="chip" [filter]="true" [showClear]="true" [virtualScroll]="true" [virtualScrollItemSize]="40" placeholder="Filtrer par sous-catégorie" (onChange)="applyFilter()"></p-multiSelect>
+          <p-dropdown [options]="advanceJointFilterOptions" [(ngModel)]="filters.advanceJoint" optionLabel="label" optionValue="value" placeholder="Filtrer avances compte joint" (onChange)="applyFilter()"></p-dropdown>
+          <p-dropdown [options]="internalTransferFilterOptions" [(ngModel)]="filters.internalTransfer" optionLabel="label" optionValue="value" placeholder="Filtrer transferts internes" (onChange)="applyFilter()"></p-dropdown>
+        </div>
       </div>
 
       <div
@@ -546,4 +487,3 @@
     </div>
   </div>
 </div>
-

@@ -9,6 +9,15 @@
 const Transaction = require('../models/transaction.model');
 
 function formatDateForStorage(rawValue) {
+  // A date-only value represents a calendar day, not an instant in time.
+  // Parsing it with Date would apply the server timezone and can shift it to D-1.
+  if (typeof rawValue === 'string') {
+    const dateOnlyMatch = rawValue.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+      return `${dateOnlyMatch[1]}-${dateOnlyMatch[2]}-${dateOnlyMatch[3]}`;
+    }
+  }
+
   const date = new Date(rawValue);
   if (Number.isNaN(date.getTime())) {
     return rawValue;

@@ -52,5 +52,59 @@
         <button pButton type="submit" icon="pi pi-save" label="Enregistrer"></button>
       </div>
     </form>
+
+    <section class="transactions-panel">
+      <div class="transactions-heading">
+        <div>
+          <span class="bank-name">Historique</span>
+          <h2>Mouvements liés à {{ account.bankName }}</h2>
+        </div>
+        <span class="transaction-count">{{ savingTransactions.length }} mouvement(s)</span>
+      </div>
+
+      <p-table
+        [value]="savingTransactions"
+        [paginator]="savingTransactions.length > 10"
+        [rows]="10"
+        responsiveLayout="scroll"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Compte d'origine</th>
+            <th>Type</th>
+            <th class="text-right">Impact sur le solde</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-transaction>
+          <tr>
+            <td>{{ transaction.date | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ transaction.description }}</td>
+            <td>{{ transaction.accountName || '-' }}</td>
+            <td>
+              <p-tag
+                [severity]="movementAmount(transaction) >= 0 ? 'success' : 'warn'"
+                [value]="movementLabel(transaction)"
+              ></p-tag>
+            </td>
+            <td
+              class="text-right movement-amount"
+              [class.is-positive]="movementAmount(transaction) >= 0"
+              [class.is-negative]="movementAmount(transaction) < 0"
+            >
+              {{ movementAmount(transaction) | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="empty-history">
+              Aucun mouvement lié à ce compte d'épargne.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
   </section>
 </div>

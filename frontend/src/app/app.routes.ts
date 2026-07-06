@@ -66,6 +66,13 @@ const childRoutes: Routes = [
       ),
     data: { prerender: false },
   },
+  {
+    path: 'savings/settings',
+    loadComponent: () =>
+      import('./components/savings-settings/savings-settings.component').then(
+        (m) => m.SavingsSettingsComponent,
+      ),
+  },
   { path: 'release-notes', component: ReleaseNotesComponent },
   { path: 'release-process', component: ReleaseProcessComponent },
 ];

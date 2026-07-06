@@ -10,7 +10,7 @@ const dbGet = (query, params = []) => new Promise((resolve, reject) => {
 const dbRun = (query, params = []) => new Promise((resolve, reject) => {
   db.run(query, params, function (err) {
     if (err) return reject(err);
-    resolve({ changes: this.changes });
+    resolve({ lastID: this.lastID, changes: this.changes });
   });
 });
 
@@ -62,6 +62,64 @@ const SavingAccount = {
        include_in_daily_budget = ?, include_in_wealth = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
       [account.currentBalance, account.targetBalance, account.minimumBalance,
         account.includeInDailyBudget ? 1 : 0, account.includeInWealth ? 1 : 0, id],
+    );
+    return result.changes > 0;
+  },
+  create: async (account) => {
+    const result = await dbRun(
+      `INSERT INTO saving_accounts
+       (name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      [
+        account.name,
+        account.bankName,
+        account.providerKey,
+        account.role,
+        account.liquidityLevel,
+        account.currentBalance,
+        account.targetBalance,
+        account.minimumBalance,
+        account.includeInDailyBudget ? 1 : 0,
+        account.includeInWealth ? 1 : 0,
+      ],
+    );
+    return result.lastID;
+  },
+  updateSettings: async (id, account) => {
+    const result = await dbRun(
+      `UPDATE saving_accounts
+       SET name = ?, bank_name = ?, role = ?, liquidity_level = ?,
+           current_balance = ?, target_balance = ?, minimum_balance = ?,
+           include_in_daily_budget = ?, include_in_wealth = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [
+        account.name,
+        account.bankName,
+        account.role,
+        account.liquidityLevel,
+        account.currentBalance,
+        account.targetBalance,
+        account.minimumBalance,
+        account.includeInDailyBudget ? 1 : 0,
+        account.includeInWealth ? 1 : 0,
+        id,
+      ],
+    );
+    return result.changes > 0;
+  },
+  deactivate: async (id) => {
+    const account = await SavingAccount.getById(id);
+    if (!account) return false;
+    if (account.providerKey === 'plum') {
+      const error = new Error('PLUM ne peut pas etre supprime.');
+      error.code = 'PROTECTED_ACCOUNT';
+      throw error;
+    }
+    const result = await dbRun(
+      `UPDATE saving_accounts SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [id],
     );
     return result.changes > 0;
   },

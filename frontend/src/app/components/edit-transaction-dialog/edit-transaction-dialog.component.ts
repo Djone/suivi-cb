@@ -111,6 +111,7 @@ export class EditTransactionDialogComponent implements OnInit {
   // Listes pour les dropdowns
   accounts: Account[] = [];
   trackedSavingAccounts: SavingAccount[] = [];
+  selectedSavingAccountId: number | null = null;
   financialFlowList = FINANCIAL_FLOW_LIST;
   allRecurringTransactions: RecurringTransaction[] = [];
   filteredRecurringTransactions: RecurringTransaction[] = [];
@@ -148,8 +149,8 @@ export class EditTransactionDialogComponent implements OnInit {
 
     this.savingAccountService.getAccounts().subscribe({
       next: (accounts) => {
-        this.trackedSavingAccounts = accounts.filter((account) =>
-          ['revolut', 'fortuneo'].includes(account.providerKey),
+        this.trackedSavingAccounts = accounts.map((account) =>
+          account.providerKey === 'plum' ? { ...account, id: 0 } : account,
         );
       },
       error: (err) =>
@@ -216,6 +217,9 @@ export class EditTransactionDialogComponent implements OnInit {
     this.data.transaction.isInternalTransfer = this.toBoolean(
       this.data.transaction.isInternalTransfer,
     );
+    this.selectedSavingAccountId = this.data.transaction.isInternalTransfer
+      ? this.toNumber(this.data.transaction.savingAccountId) ?? 0
+      : null;
 
     // Récupérer le financialFlowId (en snake_case ou camelCase)
     const financialFlowId =
@@ -321,6 +325,9 @@ export class EditTransactionDialogComponent implements OnInit {
 
     if (!this.data.transaction.isInternalTransfer) {
       this.data.transaction.savingAccountId = null;
+      this.selectedSavingAccountId = null;
+    } else if (this.selectedSavingAccountId === null) {
+      this.selectedSavingAccountId = 0;
     }
 
     this.onFieldChange();
@@ -417,7 +424,10 @@ export class EditTransactionDialogComponent implements OnInit {
       isInternalTransfer: this.toBoolean(
         this.data.transaction.isInternalTransfer,
       ),
-      savingAccountId: this.data.transaction.savingAccountId || null,
+      savingAccountId:
+        this.selectedSavingAccountId && this.selectedSavingAccountId > 0
+          ? this.selectedSavingAccountId
+          : null,
     };
 
     this.ref.close(updatedTransaction);

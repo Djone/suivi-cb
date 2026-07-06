@@ -436,10 +436,29 @@ h3 {
   border-bottom: 1px solid #e9ecef;
 }
 
-.filters-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+.filters-layout { display: grid; gap: .85rem; margin-bottom: 1rem; }
+.filters-primary {
+  display: grid;
+  grid-template-columns:
+    minmax(280px, 1.1fr)
+    minmax(400px, 1.7fr)
+    minmax(140px, 0.6fr);
+  gap: .85rem;
+}
+.filters-secondary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .85rem; }
+.filters-primary > *, .filters-secondary > * { width: 100%; min-width: 0; }
+
+.date-filter,
+.description-filter,
+.amount-filter {
+  width: 100%;
+}
+
+.date-filter p-calendar,
+.date-filter .p-calendar,
+.description-filter input {
+  width: 100%;
+  min-width: 0;
 }
 
 .filter-input {
@@ -861,9 +880,7 @@ h3 {
     width: 100%;
   }
 
-  .filters-row {
-    flex-direction: column;
-  }
+  .filters-primary, .filters-secondary { grid-template-columns: 1fr; }
 
   .controls-row {
     flex-direction: column;
@@ -901,4 +918,3 @@ h3 {
     flex-wrap: wrap;
   }
 }
-

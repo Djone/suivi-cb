@@ -6,14 +6,18 @@ import { Subscription, switchMap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageModule } from 'primeng/message';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
 import { SavingsComponent } from '../savings/savings.component';
 import { SavingAccount } from '../../models/saving-account.model';
 import { SavingAccountService } from '../../services/saving-account.service';
+import { TransactionService } from '../../services/transaction.service';
+import { Transaction } from '../../models/transaction.model';
 
 @Component({
   selector: 'app-account-saving',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputNumberModule, MessageModule, SavingsComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputNumberModule, MessageModule, TableModule, TagModule, SavingsComponent],
   templateUrl: './account-saving.component.html',
   styleUrl: './account-saving.component.css',
 })
@@ -23,16 +27,27 @@ export class AccountSavingComponent implements OnInit, OnDestroy {
   loadError = false;
   saveError = false;
   saved = false;
+  savingTransactions: Transaction[] = [];
   private readonly subscription = new Subscription();
 
-  constructor(private route: ActivatedRoute, private service: SavingAccountService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private service: SavingAccountService,
+    private transactionService: TransactionService,
+  ) {}
 
   ngOnInit(): void {
     this.subscription.add(
       this.route.paramMap.pipe(
         switchMap((params) => this.service.getAccount(Number(params.get('id')))),
       ).subscribe({
-        next: (account) => { this.account = account; this.loading = false; },
+        next: (account) => {
+          this.account = account;
+          this.loading = false;
+          if (account.providerKey !== 'plum') {
+            this.loadSavingTransactions(account.id);
+          }
+        },
         error: () => { this.loadError = true; this.loading = false; },
       }),
     );
@@ -60,6 +75,30 @@ export class AccountSavingComponent implements OnInit, OnDestroy {
       employee_savings: 'Epargne salariale destinee au moyen et long terme.',
       leisure: 'Epargne consacree aux loisirs et aux provisions.',
     })[this.account.role];
+  }
+
+  movementAmount(transaction: Transaction): number {
+    const amount = Number(transaction.amount) || 0;
+    return Number(transaction.financialFlowId) === 2 ? amount : -amount;
+  }
+
+  movementLabel(transaction: Transaction): string {
+    return Number(transaction.financialFlowId) === 2 ? 'Versement' : 'Retrait';
+  }
+
+  private loadSavingTransactions(accountId: number): void {
+    this.subscription.add(
+      this.transactionService
+        .getTransactionsBySavingAccount(accountId)
+        .subscribe({
+          next: (transactions) => {
+            this.savingTransactions = transactions;
+          },
+          error: () => {
+            this.savingTransactions = [];
+          },
+        }),
+    );
   }
 
   save(): void {

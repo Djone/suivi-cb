@@ -165,6 +165,23 @@ const initializeDatabase = async () => {
     );
 
     await runQuery(`
+      CREATE TABLE IF NOT EXISTS recurring_occurrence_exceptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        recurring_id INTEGER NOT NULL REFERENCES recurring_transactions(id) ON DELETE CASCADE,
+        occurrence_date DATE NOT NULL,
+        amount REAL NULL,
+        is_skipped INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(recurring_id, occurrence_date)
+      );
+    `);
+    await runQuery(`
+      CREATE INDEX IF NOT EXISTS idx_recurring_occurrence_date
+      ON recurring_occurrence_exceptions(recurring_id, occurrence_date);
+    `);
+
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS accounts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
