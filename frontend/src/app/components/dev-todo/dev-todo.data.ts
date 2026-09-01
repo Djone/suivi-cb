@@ -21,6 +21,16 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     priority: 'high',
   },
   {
+    title: '[Ticket 11] Echéances à venir : frontend',
+    description: [
+      "[X] Echéances à venir : amélioration du fonctionnement - Sélection multiple des échéances à venir les valider; annulation de la validation d'une échéance à venir",
+      "[X] Echéances à venir : amélioration du fonctionnement - Ajout d'une modale pour l'édition du montant de l'échéance à venir",
+    ],
+    status: 'done',
+    targetVersion: '1.5.0',
+    priority: 'high',
+  },
+  {
     title: '[Ticket 9] Bug fix : frontend',
     description: [
       '[ ] Transactions : revoir le design du formulaire de recherche de transactions',

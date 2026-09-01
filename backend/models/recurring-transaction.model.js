@@ -31,6 +31,7 @@ const RecurringTransaction = {
       "financial_flow_id",
       "frequency",
       "debit_503020",
+      "vehicle_id",
     ];
     const advancedColumns = [
       "start_month",

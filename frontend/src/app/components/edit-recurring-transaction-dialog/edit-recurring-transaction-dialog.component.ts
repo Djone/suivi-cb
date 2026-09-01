@@ -23,6 +23,8 @@ import { SubCategoryService } from '../../services/sub-category.service';
 import { FREQUENCY_LIST } from '../../utils/utils';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 import { DEBIT_503020_LIST } from '../../config/debit_503020';
+import { Vehicle } from '../../models/vehicle.model';
+import { VehicleService } from '../../services/vehicle.service';
 
 @Component({
   selector: 'app-edit-recurring-transaction-dialog',
@@ -76,6 +78,7 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
   allSubCategories: SubCategory[] = [];
   financialFlowList = FINANCIAL_FLOW_LIST;
   debit503020Options = DEBIT_503020_LIST;
+  vehicles: Vehicle[] = [];
 
   frequencies = FREQUENCY_LIST;
   isNew = false;
@@ -88,7 +91,8 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
     public config: DynamicDialogConfig,
     private subCategoryService: SubCategoryService,
     private accountService: AccountService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private vehicleService: VehicleService,
   ) {
     this.data = this.config.data;
     this.isNew = this.data.isNew || false;
@@ -101,6 +105,9 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
   }
 
   ngOnInit(): void {
+    this.vehicleService.loadVehicles().subscribe((vehicles) => {
+      this.vehicles = vehicles.filter((vehicle) => Number(vehicle.isActive) !== 0);
+    });
     this.loadCategories();
     this.loadAllSubCategories();
     if (this.data.transaction.financialFlowId) {
@@ -235,6 +242,7 @@ export class EditRecurringTransactionDialogComponent implements OnInit, OnDestro
       subCategoryId: this.data.transaction.subCategoryId,
       accountId: this.data.transaction.accountId,
       financialFlowId: this.data.transaction.financialFlowId,
+      vehicleId: this.data.transaction.vehicleId || null,
       activeMonths: this.stringifyActiveMonths(),
       recurrenceKind: this.data.transaction.recurrenceKind || null,
       // La règle 50/30/20 sera envoyée en snake_case par humps

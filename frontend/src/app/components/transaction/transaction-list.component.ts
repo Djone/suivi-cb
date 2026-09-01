@@ -27,6 +27,7 @@ import { FilterManagerService } from '../../services/filter-manager.service';
 import { ViewportService } from '../../services/viewport.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { EditTransactionDialogComponent } from '../edit-transaction-dialog/edit-transaction-dialog.component';
+import { OccurrenceAmountDialogComponent } from './occurrence-amount-dialog.component';
 import { Transaction } from '../../models/transaction.model';
 import { Account } from '../../models/account.model';
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
@@ -53,6 +54,12 @@ interface UpcomingScheduleLite {
   amount: number;
   dueDate: Date;
   isOverdue?: boolean;
+}
+
+interface UndoValidationState {
+  transactionIds: number[];
+  count: number;
+  isUndoing: boolean;
 }
 
 type AdvanceJointFilter = 'all' | 'only' | 'exclude';
@@ -97,6 +104,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   categoryOptions: { label: string; value: number }[] = [];
   recurringTransactions: RecurringTransaction[] = [];
   pendingSchedules: UpcomingScheduleLite[] = [];
+  selectedScheduleKeys = new Set<string>();
+  isBulkValidating = false;
+  undoValidation: UndoValidationState | null = null;
+  private undoValidationTimer: ReturnType<typeof setTimeout> | null = null;
   occurrenceExceptions = new Map<string, RecurringOccurrenceException>();
   sortedRecurringTransactions: RecurringTransaction[] = [];
   currentBalance: number = 0;
@@ -293,6 +304,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearUndoValidationTimer();
     this.subscriptions.unsubscribe();
   }
 
@@ -479,39 +491,23 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    // IDs des échéances récurrentes actives de ce compte
-    const recurringIds = new Set(
-      this.recurringTransactions
-        .filter((rt) => {
-          const rtAccountId =
-            typeof rt.accountId === 'string'
-              ? parseInt(rt.accountId)
-              : rt.accountId;
-          return rtAccountId === this.accountId && rt.isActive === 1;
-        })
-        .map((rt) => rt.id!),
+    const accountRecurring = this.recurringTransactions.filter((rt) => {
+      const rtAccountId =
+        typeof rt.accountId === 'string'
+          ? parseInt(rt.accountId, 10)
+          : rt.accountId;
+      return rtAccountId === this.accountId && rt.isActive === 1;
+    });
+    const recurringIds = new Set(accountRecurring.map((rt) => rt.id!));
+    const monthlySchedules = this.buildSchedulesForMonth(
+      accountRecurring,
+      currentYear,
+      currentMonth,
     );
 
-    // Total planifié du mois (une occurrence par échéance)
-    this.recurringTotalThisMonth = this.recurringTransactions.reduce(
-      (sum, rt) => {
-        const rtAccountId =
-          typeof rt.accountId === 'string'
-            ? parseInt(rt.accountId)
-            : rt.accountId;
-        if (rtAccountId !== this.accountId || rt.isActive !== 1) return sum;
-        const amount =
-          typeof rt.amount === 'string'
-            ? parseFloat(rt.amount)
-            : rt.amount || 0;
-        const flowId =
-          typeof rt.financialFlowId === 'string'
-            ? parseInt(rt.financialFlowId)
-            : rt.financialFlowId;
-        const signedAmount =
-          flowId === 2 ? -Math.abs(amount) : Math.abs(amount);
-        return sum + signedAmount;
-      },
+    // Même base que l'accueil : toutes les occurrences réellement prévues ce mois.
+    this.recurringTotalThisMonth = monthlySchedules.reduce(
+      (sum, { rt }) => sum + this.getSignedAmountFromRecurring(rt),
       0,
     );
 
@@ -522,7 +518,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       );
       if (txRecurringId === null) return sum;
       if (!recurringIds.has(txRecurringId)) return sum;
-      const d = new Date(t.date || '');
+      const d = new Date(t.recurringOccurrenceDate || t.date || '');
       if (d.getMonth() !== currentMonth || d.getFullYear() !== currentYear)
         return sum;
       const amount =
@@ -562,17 +558,30 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return rtAccountId === this.accountId && rt.isActive === 1;
     });
     const recurringIdSet = new Set(accountRecurring.map((r) => r.id!));
+    const monthlySchedules = this.buildSchedulesForMonth(
+      accountRecurring,
+      currentYear,
+      currentMonth,
+    );
 
-    this.expectedIncomeTotal = accountRecurring.reduce((sum, rt) => {
-      const amount =
-        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
-      return rt.financialFlowId === 1 ? sum + Math.abs(amount) : sum;
+    this.expectedIncomeTotal = monthlySchedules.reduce((sum, { rt }) => {
+      const flowId =
+        typeof rt.financialFlowId === 'string'
+          ? parseInt(rt.financialFlowId, 10)
+          : rt.financialFlowId;
+      return flowId === 1
+        ? sum + Math.abs(this.getSignedAmountFromRecurring(rt))
+        : sum;
     }, 0);
 
-    this.expectedExpensesTotal = accountRecurring.reduce((sum, rt) => {
-      const amount =
-        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
-      return rt.financialFlowId === 2 ? sum + Math.abs(amount) : sum;
+    this.expectedExpensesTotal = monthlySchedules.reduce((sum, { rt }) => {
+      const flowId =
+        typeof rt.financialFlowId === 'string'
+          ? parseInt(rt.financialFlowId, 10)
+          : rt.financialFlowId;
+      return flowId === 2
+        ? sum + Math.abs(this.getSignedAmountFromRecurring(rt))
+        : sum;
     }, 0);
 
     // Dépenses réalisées ce mois (liées à une échéance)
@@ -582,7 +591,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       );
       if (txRecurringId === null || !recurringIdSet.has(txRecurringId))
         return sum;
-      const transDate = new Date(t.date || '');
+      const transDate = new Date(t.recurringOccurrenceDate || t.date || '');
       if (
         transDate.getMonth() !== currentMonth ||
         transDate.getFullYear() !== currentYear
@@ -611,9 +620,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Répartition 50/30/20 basée sur le salaire (revenus prévus) du mois courant
+  // Répartition 50/30/20 calculée sur les occurrences du mois, comme l'accueil.
   get503020Breakdown() {
-    const salaryBase = this.expectedIncomeTotal || 0;
     const accountId = this.accountId;
     const buckets = DEBIT_503020_LIST.map((b) => ({
       id: b.id,
@@ -623,35 +631,46 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }));
     if (!accountId)
       return {
-        total: salaryBase,
+        total: 0,
         totalExpenses: 0,
         items: buckets,
-        remaining: salaryBase,
-        remainingPercent: 100,
+        remaining: 0,
+        remainingPercent: 0,
       };
 
-    const expenses = this.recurringTransactions.filter((rt) => {
+    const recurring = this.recurringTransactions.filter((rt) => {
       const rtAccountId =
         typeof rt.accountId === 'string'
-          ? parseInt(rt.accountId)
+          ? parseInt(rt.accountId, 10)
           : rt.accountId;
-      return (
-        rtAccountId === accountId &&
-        rt.isActive === 1 &&
-        rt.financialFlowId === 2
-      );
+      return rtAccountId === accountId && rt.isActive === 1;
     });
+    const now = new Date();
+    const schedules = this.buildSchedulesForMonth(
+      recurring,
+      now.getFullYear(),
+      now.getMonth(),
+    );
+    let salaryBase = 0;
+    let totalExpenses = 0;
 
-    expenses.forEach((rt) => {
-      const key = rt['debit503020'] ?? null;
-      if (!key) return;
+    schedules.forEach(({ rt }) => {
+      const flowId =
+        typeof rt.financialFlowId === 'string'
+          ? parseInt(rt.financialFlowId, 10)
+          : rt.financialFlowId;
+      const amount = Math.abs(this.getSignedAmountFromRecurring(rt));
+      if (flowId === 1) {
+        salaryBase += amount;
+        return;
+      }
+      if (flowId !== 2) return;
+
+      totalExpenses += amount;
+      const key = Number(rt.debit503020) || 0;
       const idx = buckets.findIndex((b) => b.id === key);
       if (idx >= 0) {
-        const amount =
-          typeof rt.amount === 'string'
-            ? parseFloat(rt.amount)
-            : rt.amount || 0;
-        buckets[idx].amount += Math.abs(amount);
+        buckets[idx].amount += amount;
       }
     });
 
@@ -660,15 +679,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         salaryBase > 0 ? Math.round((b.amount / salaryBase) * 100) : 0;
     });
 
-    const totalExpenses = expenses.reduce((sum, rt) => {
-      const amount =
-        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
-      return sum + Math.abs(amount);
-    }, 0);
-    const remaining = Math.max(salaryBase - totalExpenses, 0);
+    const remaining = salaryBase - totalExpenses;
     const remainingPercent =
       salaryBase > 0
-        ? Math.max(0, Math.round((remaining / salaryBase) * 100))
+        ? Math.round((remaining / salaryBase) * 100)
         : 0;
 
     return {
@@ -1179,6 +1193,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         isOverdue: false,
       })),
     ].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    this.retainPendingScheduleSelections();
 
     return sumCurrent + sumNext;
   }
@@ -1361,7 +1376,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         t.recurringTransactionId,
       );
       if (txRecurringId !== recurring.id || !t.date) return false;
-      return this.toDateKey(t.date) === targetDateKey;
+      const occurrenceDate = t.recurringOccurrenceDate || t.date;
+      return this.toDateKey(occurrenceDate) === targetDateKey;
     });
   }
 
@@ -1377,7 +1393,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         return false;
       }
 
-      const transactionDate = this.getLocalDateOnly(new Date(t.date));
+      const transactionDate = this.getLocalDateOnly(
+        new Date(t.recurringOccurrenceDate || t.date),
+      );
       return this.isSamePeriod(recurring, dueDate, transactionDate);
     });
   }
@@ -1419,17 +1437,27 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   editUpcomingOccurrence(schedule: UpcomingScheduleLite): void {
-    const enteredValue = window.prompt(
-      `Nouveau montant pour « ${schedule.recurringTransaction.label} » :`,
-      Math.abs(schedule.amount).toFixed(2),
+    const dialogRef = this.dialogService.open(
+      OccurrenceAmountDialogComponent,
+      {
+        header: "Modifier le montant de l'échéance",
+        width: '430px',
+        modal: true,
+        closable: true,
+        data: {
+          label: this.getRecurringDisplayLabel(
+            schedule.recurringTransaction,
+          ),
+          dueDate: schedule.dueDate,
+          amount: Math.abs(schedule.amount),
+        },
+      },
     );
-    if (enteredValue === null) return;
-    const amount = Number(enteredValue.replace(',', '.'));
-    if (!Number.isFinite(amount) || amount < 0) {
-      this.messageService.add({ severity: 'error', summary: 'Montant invalide' });
-      return;
-    }
-    this.saveOccurrenceException(schedule, amount, false);
+
+    dialogRef.onClose.subscribe((amount: number | null | undefined) => {
+      if (amount === null || amount === undefined) return;
+      this.saveOccurrenceException(schedule, amount, false);
+    });
   }
 
   skipUpcomingOccurrence(schedule: UpcomingScheduleLite): void {
@@ -1481,6 +1509,197 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.showRecurring = !this.showRecurring;
   }
 
+  getScheduleKey(schedule: UpcomingScheduleLite): string {
+    return `${schedule.recurringTransaction.id}:${this.toDateKey(schedule.dueDate)}`;
+  }
+
+  isScheduleSelected(schedule: UpcomingScheduleLite): boolean {
+    return this.selectedScheduleKeys.has(this.getScheduleKey(schedule));
+  }
+
+  toggleScheduleSelection(
+    schedule: UpcomingScheduleLite,
+    event: Event,
+  ): void {
+    const checkbox = event.target as HTMLInputElement;
+    const key = this.getScheduleKey(schedule);
+    if (checkbox.checked) {
+      this.selectedScheduleKeys.add(key);
+    } else {
+      this.selectedScheduleKeys.delete(key);
+    }
+  }
+
+  selectAllPendingSchedules(): void {
+    this.selectedScheduleKeys = new Set(
+      this.pendingSchedules.map((schedule) => this.getScheduleKey(schedule)),
+    );
+  }
+
+  clearScheduleSelection(): void {
+    this.selectedScheduleKeys.clear();
+  }
+
+  get selectedSchedules(): UpcomingScheduleLite[] {
+    return this.pendingSchedules.filter((schedule) =>
+      this.isScheduleSelected(schedule),
+    );
+  }
+
+  get selectedScheduleCount(): number {
+    return this.selectedSchedules.length;
+  }
+
+  get selectedScheduleTotal(): number {
+    return this.selectedSchedules.reduce(
+      (total, schedule) => total + schedule.amount,
+      0,
+    );
+  }
+
+  private retainPendingScheduleSelections(): void {
+    const pendingKeys = new Set(
+      this.pendingSchedules.map((schedule) => this.getScheduleKey(schedule)),
+    );
+    this.selectedScheduleKeys = new Set(
+      [...this.selectedScheduleKeys].filter((key) => pendingKeys.has(key)),
+    );
+  }
+
+  validateSelectedSchedules(): void {
+    if (
+      !this.accountId ||
+      this.selectedScheduleCount === 0 ||
+      this.isBulkValidating
+    ) {
+      return;
+    }
+
+    const schedules = this.selectedSchedules;
+    const validationDate = this.toDateKey(new Date());
+    const total = this.selectedScheduleTotal;
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
+      width: '480px',
+      data: {
+        title: 'Valider les échéances sélectionnées',
+        message: `Confirmer la création de ${schedules.length} transaction(s) à la date du jour pour un total de ${total.toFixed(2)} € ?`,
+        confirmText: 'Tout valider',
+        cancelText: 'Annuler',
+      },
+    });
+
+    dialogRef.onClose.subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+
+      const transactions = schedules.map((schedule) => {
+        const recurring = schedule.recurringTransaction;
+        return {
+          description: recurring.label,
+          date: validationDate,
+          amount: Math.abs(schedule.amount),
+          accountId: this.accountId!,
+          financialFlowId: recurring.financialFlowId,
+          subCategoryId: recurring.subCategoryId || null,
+          recurringTransactionId: recurring.id,
+          recurringOccurrenceDate: this.toDateKey(schedule.dueDate),
+          vehicleId: recurring.vehicleId || null,
+        } as Transaction;
+      });
+
+      this.isBulkValidating = true;
+      this.transactionService.addTransactions(transactions).subscribe({
+        next: (createdTransactions) => {
+          this.selectedScheduleKeys.clear();
+          this.isBulkValidating = false;
+          this.showUndoValidation(
+            createdTransactions.map((created) => created.id),
+            transactions.length,
+          );
+        },
+        error: () => {
+          this.isBulkValidating = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Validation impossible',
+            detail: "Certaines transactions n'ont pas pu être ajoutées.",
+          });
+        },
+      });
+    });
+  }
+
+  undoLastValidation(): void {
+    if (!this.undoValidation || this.undoValidation.isUndoing) return;
+
+    const state = this.undoValidation;
+    this.clearUndoValidationTimer();
+    this.undoValidation = { ...state, isUndoing: true };
+
+    this.transactionService
+      .deleteTransactions(state.transactionIds)
+      .subscribe({
+        next: () => {
+          this.dismissUndoValidation();
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Validation annulée',
+            detail: `${state.count} transaction(s) ont été supprimées.`,
+          });
+        },
+        error: () => {
+          this.undoValidation = { ...state, isUndoing: false };
+          this.startUndoValidationTimer();
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Annulation impossible',
+            detail: "La suppression du lot n'a pas pu être terminée.",
+          });
+        },
+      });
+  }
+
+  dismissUndoValidation(): void {
+    this.clearUndoValidationTimer();
+    this.undoValidation = null;
+  }
+
+  private showUndoValidation(transactionIds: number[], count: number): void {
+    const validIds = transactionIds.filter(
+      (id) => Number.isInteger(id) && id > 0,
+    );
+    if (validIds.length !== count) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Échéances validées',
+        detail: `${count} transaction(s) ont été ajoutées.`,
+      });
+      return;
+    }
+
+    this.clearUndoValidationTimer();
+    this.undoValidation = {
+      transactionIds: validIds,
+      count,
+      isUndoing: false,
+    };
+    this.startUndoValidationTimer();
+  }
+
+  private startUndoValidationTimer(): void {
+    this.clearUndoValidationTimer();
+    this.undoValidationTimer = setTimeout(
+      () => this.dismissUndoValidation(),
+      10_000,
+    );
+  }
+
+  private clearUndoValidationTimer(): void {
+    if (this.undoValidationTimer !== null) {
+      clearTimeout(this.undoValidationTimer);
+      this.undoValidationTimer = null;
+    }
+  }
+
   markRecurringAsPaid(schedule: UpcomingScheduleLite): void {
     if (!this.accountId) {
       return;
@@ -1502,16 +1721,18 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (!confirmed) return;
       const tx: Transaction = {
         description: recurring.label,
-        date: this.toDateKey(schedule.dueDate),
+        date: this.toDateKey(new Date()),
         amount: Math.abs(rawAmount),
         accountId: this.accountId!,
         financialFlowId: recurring.financialFlowId,
         subCategoryId: recurring.subCategoryId || null,
         recurringTransactionId: recurring.id,
+        recurringOccurrenceDate: this.toDateKey(schedule.dueDate),
+        vehicleId: recurring.vehicleId || null,
       } as any;
 
-      this.transactionService.addTransaction(tx).subscribe(() => {
-        this.loadTransactions();
+      this.transactionService.addTransaction(tx).subscribe((created) => {
+        this.showUndoValidation([created.id], 1);
       });
     });
   }
@@ -1527,7 +1748,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       const txRecurringId = this.getRecurringTransactionId(
         t.recurringTransactionId,
       );
-      const transDate = new Date(t.date || '');
+      const transDate = new Date(t.recurringOccurrenceDate || t.date || '');
       return (
         txRecurringId === recurringId &&
         transDate.getMonth() === currentMonth &&

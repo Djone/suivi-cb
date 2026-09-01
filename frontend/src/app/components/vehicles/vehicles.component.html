@@ -1,0 +1,379 @@
+<section class="vehicles-page">
+  <header class="vehicles-header">
+    <div>
+      <span class="eyebrow">Coût de mobilité</span>
+      <h1>Mes véhicules</h1>
+      <p>
+        Analyse des dépenses réellement affectées aux véhicules sur trois ans.
+      </p>
+    </div>
+    <button type="button" class="primary-button" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Ajouter un véhicule
+    </button>
+  </header>
+
+  <div class="vehicle-form" *ngIf="isFormOpen">
+    <div class="form-heading">
+      <strong>{{
+        form.id ? "Modifier le véhicule" : "Nouveau véhicule"
+      }}</strong
+      ><button type="button" (click)="isFormOpen = false">×</button>
+    </div>
+    <div class="form-grid">
+      <label>Nom *<input [(ngModel)]="form.name" placeholder="Polo" /></label>
+      <label
+        >Marque<input [(ngModel)]="form.brand" placeholder="Volkswagen"
+      /></label>
+      <label>Modèle<input [(ngModel)]="form.model" /></label>
+      <label
+        >Énergie<select [(ngModel)]="form.energyType">
+          <option *ngFor="let type of energyTypes" [value]="type.value">
+            {{ type.label }}
+          </option>
+        </select></label
+      >
+      <label
+        >Montant de l’acquisition (€)<input
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="form.purchasePrice"
+      /></label>
+      <label
+        >Distance annuelle (km)<input
+          type="number"
+          [(ngModel)]="form.annualDistance"
+      /></label>
+      <label
+        >Consommation / 100 km<input
+          type="number"
+          step="0.1"
+          [(ngModel)]="form.consumptionPer100"
+      /></label>
+      <label
+        >Prix énergie / litre ou kWh<input
+          type="number"
+          step="0.01"
+          [(ngModel)]="form.energyPrice"
+      /></label>
+    </div>
+    <p class="form-error" *ngIf="formError">{{ formError }}</p>
+    <div class="form-actions">
+      <button type="button" (click)="isFormOpen = false">Annuler</button
+      ><button
+        type="button"
+        class="primary-button"
+        [disabled]="isSaving || !form.name.trim()"
+        (click)="save()"
+      >
+        Enregistrer
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="!activeVehicles.length && !isFormOpen">
+    <i class="pi pi-car"></i><strong>Aucun véhicule suivi</strong>
+  </div>
+
+  <div class="vehicle-grid" *ngIf="activeVehicles.length">
+    <article class="vehicle-card" *ngFor="let vehicle of activeVehicles">
+      <div class="vehicle-card__top">
+        <div>
+          <span>{{ vehicle.brand || "Véhicule" }}</span>
+          <h2>{{ vehicle.name }}</h2>
+        </div>
+        <i class="pi pi-car"></i>
+      </div>
+      <dl class="vehicle-cost-breakdown">
+        <div>
+          <dt>Acquisition</dt>
+          <dd>
+            {{
+              vehicleCostSummary(vehicle).acquisition
+                | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+            }}
+          </dd>
+        </div>
+        <div>
+          <dt>Dépenses externes</dt>
+          <dd>
+            {{
+              vehicleCostSummary(vehicle).externalExpenses
+                | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+            }}
+          </dd>
+        </div>
+        <div class="vehicle-cost-total">
+          <dt>Coût total</dt>
+          <dd>
+            {{
+              vehicleCostSummary(vehicle).total
+                | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+            }}
+          </dd>
+        </div>
+      </dl>
+      <strong>{{ electricEstimate(vehicle) }}</strong>
+      <div class="card-actions">
+        <button (click)="edit(vehicle)">Modifier</button
+        ><button class="danger-link" (click)="archive(vehicle)">
+          Archiver
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <ng-container *ngIf="activeVehicles.length">
+    <div class="kpi-grid">
+      <div>
+        <span>Dépenses {{ selectedYear }}</span
+        ><strong>{{
+          currentYearTotal | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+        }}</strong>
+      </div>
+      <div>
+        <span>Moyenne mensuelle</span
+        ><strong>{{
+          currentMonthlyAverage | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+        }}</strong>
+      </div>
+    </div>
+
+    <section class="insights-panel">
+      <div class="section-title">
+        <i class="pi pi-lightbulb"></i>
+        <div>
+          <h2>Constats importants</h2>
+          <p>Comparaison avec les deux années précédentes.</p>
+        </div>
+      </div>
+      <ul>
+        <li *ngFor="let insight of insights">{{ insight }}</li>
+      </ul>
+    </section>
+
+    <section class="analysis-panel">
+      <div class="section-toolbar">
+        <div>
+          <h2>Dépenses mensuelles</h2>
+          <p>
+            Opérations bancaires et opérations ajoutées directement aux
+            véhicules.
+          </p>
+        </div>
+        <div class="analysis-actions">
+          <div class="year-switch">
+            <button
+              *ngFor="let year of years"
+              [class.active]="year === selectedYear"
+              (click)="selectedYear = year"
+            >
+              {{ year }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="primary-button"
+            (click)="openOperationForm()"
+          >
+            <i class="pi pi-plus"></i> Ajouter une opération
+          </button>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Véhicule</th>
+              <th *ngFor="let month of months">{{ month }}</th>
+              <th>Total</th>
+              <th>Moy./mois</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of yearRows">
+              <th>{{ row.vehicle.name }}</th>
+              <td *ngFor="let value of row.months">
+                {{ value | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
+              </td>
+              <td class="total">
+                {{ row.total | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
+              </td>
+              <td class="total">
+                {{
+                  row.monthlyAverage
+                    | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+                }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="subcategory-title">
+        Répartition mensuelle par sous-catégorie
+      </h3>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Véhicule</th>
+              <th>Sous-catégorie</th>
+              <th *ngFor="let month of months">{{ month }}</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of subCategoryYearRows">
+              <th>{{ row.vehicleName }}</th>
+              <th>{{ row.label }}</th>
+              <td *ngFor="let value of row.months">
+                {{ value | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
+              </td>
+              <td class="total">
+                {{ row.total | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
+              </td>
+            </tr>
+            <tr *ngIf="!subCategoryYearRows.length">
+              <td colspan="15" class="empty-table">
+                Aucune dépense pour cette année.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="manual-operations" *ngIf="manualOperationsForYear.length">
+        <h3>Opérations ajoutées hors comptes bancaires</h3>
+        <div
+          class="manual-operation"
+          *ngFor="let operation of manualOperationsForYear"
+        >
+          <span
+            ><strong>{{ operation.label }}</strong
+            ><small
+              >{{ operation.date | date: "dd/MM/yyyy" }} ·
+              {{ vehicleName(operation.vehicleId) }} ·
+              {{ operation.subCategoryLabel }}</small
+            ></span
+          >
+          <strong>{{
+            operation.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}</strong>
+          <button
+            type="button"
+            aria-label="Supprimer l’opération"
+            (click)="deleteOperation(operation)"
+          >
+            <i class="pi pi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="trend-panel">
+      <div class="section-toolbar">
+        <div>
+          <h2>Tendance sur 36 mois</h2>
+          <p>Évolution mensuelle des dépenses du véhicule sélectionné.</p>
+        </div>
+        <select [(ngModel)]="selectedVehicleId">
+          <option *ngFor="let vehicle of activeVehicles" [ngValue]="vehicle.id">
+            {{ vehicle.name }}
+          </option>
+        </select>
+      </div>
+      <svg
+        viewBox="0 0 600 160"
+        role="img"
+        [attr.aria-label]="'Courbe de dépenses de ' + selectedVehicle?.name"
+      >
+        <line x1="0" y1="150" x2="600" y2="150"></line>
+        <polyline [attr.points]="trendPolyline"></polyline>
+      </svg>
+      <div class="trend-axis">
+        <span>Il y a 36 mois</span><span>Aujourd’hui</span>
+      </div>
+    </section>
+  </ng-container>
+
+  <div
+    class="operation-modal-backdrop"
+    *ngIf="isOperationFormOpen"
+    (click)="isOperationFormOpen = false"
+  >
+    <section
+      class="operation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="operation-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="form-heading">
+        <div>
+          <span class="eyebrow">Hors comptes bancaires</span>
+          <h2 id="operation-modal-title">Ajouter une opération véhicule</h2>
+        </div>
+        <button
+          type="button"
+          aria-label="Fermer"
+          (click)="isOperationFormOpen = false"
+        >
+          ×
+        </button>
+      </div>
+      <div class="operation-form-grid">
+        <label
+          >Date *<input type="date" [(ngModel)]="operationForm.date"
+        /></label>
+        <label
+          >Libellé *<input
+            [(ngModel)]="operationForm.label"
+            placeholder="Révision, assurance…"
+        /></label>
+        <label
+          >Sous-catégorie *<select [(ngModel)]="operationForm.subCategoryId">
+            <option [ngValue]="null">Sélectionner</option>
+            <option
+              *ngFor="let subCategory of expenseSubCategories"
+              [ngValue]="subCategory.id"
+            >
+              {{ subCategory.label }} ({{ subCategory.categoryLabel }})
+            </option>
+          </select></label
+        >
+        <label
+          >Montant *<input
+            type="number"
+            min="0.01"
+            step="0.01"
+            [(ngModel)]="operationForm.amount"
+        /></label>
+        <label
+          >Véhicule *<select [(ngModel)]="operationForm.vehicleId">
+            <option [ngValue]="null">Sélectionner</option>
+            <option
+              *ngFor="let vehicle of activeVehicles"
+              [ngValue]="vehicle.id"
+            >
+              {{ vehicle.name }}
+            </option>
+          </select></label
+        >
+      </div>
+      <p class="form-error" *ngIf="operationError">{{ operationError }}</p>
+      <div class="form-actions">
+        <button type="button" (click)="isOperationFormOpen = false">
+          Annuler</button
+        ><button
+          type="button"
+          class="primary-button"
+          [disabled]="isOperationSaving"
+          (click)="saveOperation()"
+        >
+          Enregistrer l’opération
+        </button>
+      </div>
+    </section>
+  </div>
+</section>

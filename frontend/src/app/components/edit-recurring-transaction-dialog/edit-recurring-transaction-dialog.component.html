@@ -254,6 +254,21 @@
       </ng-template>
     </p-dropdown>
   </div>
+
+  <div class="field col-12">
+    <label for="vehicleId" class="block mb-2">Véhicule concerné</label>
+    <p-dropdown
+      id="vehicleId"
+      [options]="vehicles"
+      [(ngModel)]="data.transaction.vehicleId"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Aucun véhicule"
+      [showClear]="true"
+      styleClass="w-full"
+      [appendTo]="'body'"
+    ></p-dropdown>
+  </div>
 </div>
 
 <div class="flex justify-end gap-2 mt-4">

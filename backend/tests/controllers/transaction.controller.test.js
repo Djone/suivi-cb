@@ -72,6 +72,7 @@ describe('Transaction Controller', () => {
         sub_category_id: 1,
         account_id: 1,
         financial_flow_id: 1,
+        recurring_occurrence_date: '2024-01-15T10:30:00.000Z',
       };
 
       Transaction.add.mockResolvedValue({ id: 5 });
@@ -79,7 +80,10 @@ describe('Transaction Controller', () => {
       await transactionController.addTransaction(req, res);
 
       expect(Transaction.add).toHaveBeenCalledWith(
-        expect.objectContaining({ date: '2024-01-01' }),
+        expect.objectContaining({
+          date: '2024-01-01',
+          recurring_occurrence_date: '2024-01-15',
+        }),
       );
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({

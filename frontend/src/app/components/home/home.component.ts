@@ -15,6 +15,7 @@ import { Transaction } from '../../models/transaction.model';
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
 import { Account } from '../../models/account.model';
 import { DEBIT_503020_LIST } from '../../config/debit_503020';
+import { NotificationCenterService } from '../../services/notification-center.service';
 
 // PrimeNG Modules
 import { CardModule } from 'primeng/card';
@@ -22,7 +23,6 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { ChartModule } from 'primeng/chart';
 import { DynamicDialogModule, DialogService } from 'primeng/dynamicdialog';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
@@ -46,12 +46,23 @@ interface Debit503020Item {
   name: string;
   amount: number;
   percent: number;
+  details: Debit503020Detail[];
+}
+
+interface Debit503020Detail {
+  subCategoryId: number | null;
+  label: string;
+  amount: number;
+  occurrences: number;
 }
 
 interface Debit503020Breakdown {
   total: number;
+  incomeDetails: Debit503020Detail[];
   totalExpenses: number;
   items: Debit503020Item[];
+  unclassifiedAmount: number;
+  unclassifiedDetails: Debit503020Detail[];
   remaining: number;
   remainingPercent: number;
 }
@@ -61,6 +72,14 @@ interface DashboardNotification {
   text: string;
   tooltip?: string;
   type?: string;
+}
+
+interface BudgetTrendStat {
+  icon: string;
+  title: string;
+  value: string;
+  detail: string;
+  tone: 'positive' | 'negative' | 'neutral';
 }
 
 interface CoverageSummary {
@@ -91,7 +110,6 @@ interface AccountBalance {
     TagModule,
     ButtonModule,
     TooltipModule,
-    ChartModule,
     DynamicDialogModule,
   ],
   templateUrl: './home.component.html',
@@ -106,27 +124,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   activeAccountId: number | null = null;
   initialBalances: Map<number, number> = new Map();
   subCategories: Map<number, string> = new Map(); // Map subCategoryId -> label
+  subCategoryNames: Map<number, string> = new Map();
+  budgetTrendStatsByAccount = new Map<number, BudgetTrendStat[]>();
+  private breakdown503020ByAccount = new Map<number, Debit503020Breakdown>();
   private subscriptions = new Subscription();
   expandedSchedules: Set<number> = new Set(); // Track which account schedules are expanded
   expandedExpenses: Set<number> = new Set(); // Track which account expenses are expanded
   expandedIncomes: Set<number> = new Set(); // Track which account incomes are expanded
-  stackedBarOptions: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
-    scales: {
-      x: { beginAtZero: true },
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: (value: string | number) =>
-            `${Number(value).toLocaleString('fr-FR')} \u20AC`,
-        },
-      },
-    },
-  };
   private subCategoriesLoaded = false; // Flag pour savoir si les sous-catégories sont chargées
 
   constructor(
@@ -137,6 +141,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private viewportService: ViewportService,
     private router: Router,
     private dialogService: DialogService,
+    private notificationCenter: NotificationCenterService,
   ) {}
 
   ngOnInit(): void {
@@ -151,8 +156,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.subCategoryService.subCategories$.subscribe({
         next: (subCats) => {
           this.subCategories.clear(); // Vider avant de remplir
+          this.subCategoryNames.clear();
           subCats.forEach((sc) => {
             this.subCategories.set(sc.id!, `${sc.categoryLabel}`);
+            this.subCategoryNames.set(sc.id!, sc.label);
           });
           this.subCategoriesLoaded = true;
           this.calculateAllBalances();
@@ -210,7 +217,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       console.log('Waiting for subcategories to load...');
       return;
     }
-    if (!this.accounts.length) return;
+    if (!this.accounts.length) {
+      this.notificationCenter.setNotifications([]);
+      return;
+    }
+
+    this.breakdown503020ByAccount.clear();
 
     this.accountBalances = this.accounts.map((account) => {
       const accountId = account.id!;
@@ -246,6 +258,17 @@ export class HomeComponent implements OnInit, OnDestroy {
       };
     });
 
+    this.budgetTrendStatsByAccount.clear();
+    this.accountBalances.forEach((balance) => {
+      const accountId = balance.account.id;
+      if (typeof accountId === 'number') {
+        this.budgetTrendStatsByAccount.set(
+          accountId,
+          this.buildBudgetTrendStats(accountId),
+        );
+      }
+    });
+
     if (this.accountBalances.length === 0) {
       this.activeAccountId = null;
     } else if (
@@ -255,6 +278,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       const firstId = this.accountBalances[0]?.account?.id ?? null;
       this.activeAccountId = typeof firstId === 'number' ? firstId : null;
     }
+
+    this.publishHeaderNotifications();
 
     // Correction : Déplacer la logique de mise à jour de l'onglet actif ici
     if (
@@ -364,6 +389,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
       if (txRecurringId !== recurring.id || !t.date) {
         return false;
+      }
+      if (t.recurringOccurrenceDate) {
+        return (
+          this.toDateKey(new Date(t.recurringOccurrenceDate)) ===
+          this.toDateKey(nextDueDate)
+        );
       }
       const transactionDate = this.getLocalDateOnly(new Date(t.date));
       return this.isSamePeriod(recurring, nextDueDate, transactionDate);
@@ -907,12 +938,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       const tx: Transaction = {
         description: schedule.recurringTransaction.label,
-        date: new Date(schedule.dueDate),
+        date: this.toDateKey(new Date()),
         amount: Math.abs(schedule.amount),
         accountId: accountId,
         financialFlowId: schedule.recurringTransaction.financialFlowId,
         subCategoryId: schedule.recurringTransaction.subCategoryId || null,
         recurringTransactionId: schedule.recurringTransaction.id,
+        recurringOccurrenceDate: this.toDateKey(schedule.dueDate),
+        vehicleId: schedule.recurringTransaction.vehicleId || null,
       } as any;
 
       this.transactionService.addTransaction(tx).subscribe();
@@ -1058,35 +1091,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       notes.push({ severity: 'info', text: 'Aucun revenu re\u00E7u ce mois' });
     }
 
-    const totalExpenses = this.getTotalExpenses(
-      accountBalance.expensesByCategory,
-    );
-    const meaningfulExpenses = accountBalance.expensesByCategory.filter(
-      (cat) => this.normalizeLabel(cat.categoryLabel) !== 'autres',
-    );
-    if (totalExpenses > 0 && meaningfulExpenses.length > 0) {
-      const topExpense = meaningfulExpenses.sort(
-        (a, b) => b.total - a.total,
-      )[0];
-      const share = Math.min(topExpense.total, totalExpenses) / totalExpenses;
-      if (share > 0.3) {
-        notes.push({
-          severity: 'info',
-          text: `D\u00E9penses concentr\u00E9es: ${topExpense.categoryLabel} > ${(share * 100).toFixed(0)}%`,
-        });
-      }
-    }
-
     const today = new Date();
 
-    const expenseLabelsDebug = accountBalance.expensesByCategory.map((cat) => ({
-      label: cat.categoryLabel,
-      normalized: this.normalizeLabel(cat.categoryLabel),
-    }));
-    console.debug('HOME NOTIF – catégories dépenses', {
-      account: accountBalance.account.name,
-      labels: expenseLabelsDebug,
-    });
     const savingsCategory = accountBalance.expensesByCategory.find((cat) =>
       this.normalizeLabel(cat.categoryLabel).includes('eparg'),
     );
@@ -1188,13 +1194,22 @@ export class HomeComponent implements OnInit, OnDestroy {
     return notes;
   }
 
-  handleNotificationClick(
-    note: DashboardNotification | null | undefined,
-    accountId: number,
-  ): void {
-    if (note?.type === 'coverage') {
-      this.navigateToTransactions(accountId);
-    }
+  private publishHeaderNotifications(): void {
+    this.notificationCenter.setNotifications(
+      this.accountBalances.flatMap((accountBalance) => {
+        const accountId = accountBalance.account.id;
+        if (typeof accountId !== 'number') return [];
+
+        return this.getNotifications(accountBalance).map(
+          (notification, index) => ({
+            ...notification,
+            id: `${accountId}:${notification.type || notification.severity}:${notification.text}:${index}`,
+            accountId,
+            accountName: accountBalance.account.name,
+          }),
+        );
+      }),
+    );
   }
 
   getLastFiveTransactions(accountId: number): Transaction[] {
@@ -1261,10 +1276,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   getSubCategoryOnlyLabel(
     subCategoryId: number | string | null | undefined,
   ): string {
-    const full = this.getSubCategoryLabel(subCategoryId);
-    if (!full || full === '-') return full;
-    const idx = full.indexOf(' - ');
-    return idx >= 0 ? full.substring(idx + 3) : full;
+    if (subCategoryId === null || subCategoryId === undefined) return '-';
+    const id =
+      typeof subCategoryId === 'string'
+        ? parseInt(subCategoryId, 10)
+        : subCategoryId;
+    return this.subCategoryNames.get(id) ?? '-';
   }
 
   private buildSavingsTooltip(
@@ -1333,6 +1350,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   get503020Breakdown(accountId: number): Debit503020Breakdown {
+    const cached = this.breakdown503020ByAccount.get(accountId);
+    if (cached) return cached;
+
     const recurring = this.recurringTransactions.filter((rt) => {
       const rtAccountId =
         typeof rt.accountId === 'string'
@@ -1341,99 +1361,253 @@ export class HomeComponent implements OnInit, OnDestroy {
       return rtAccountId === accountId && rt.isActive === 1;
     });
 
-    const salaryBase = recurring.reduce((sum, rt) => {
-      if (rt.financialFlowId !== 1) {
-        return sum;
-      }
-      const amount =
-        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
-      return sum + Math.abs(amount);
-    }, 0);
-
-    const totalExpenses = recurring.reduce((sum, rt) => {
-      if (rt.financialFlowId !== 2) {
-        return sum;
-      }
-      const amount =
-        typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
-      return sum + Math.abs(amount);
-    }, 0);
+    const now = new Date();
+    const schedules = this.buildSchedulesForMonth(
+      recurring,
+      now.getFullYear(),
+      now.getMonth(),
+    );
 
     const items: Debit503020Item[] = DEBIT_503020_LIST.map((cfg) => ({
       id: cfg.id,
       name: cfg.name,
       amount: 0,
       percent: 0,
+      details: [],
     }));
+    const detailsByBucket = new Map<
+      number,
+      Map<string, Debit503020Detail>
+    >();
+    const unclassifiedBySubCategory = new Map<
+      string,
+      Debit503020Detail
+    >();
+    const incomeBySubCategory = new Map<string, Debit503020Detail>();
+    let salaryBase = 0;
+    let totalExpenses = 0;
+    let unclassifiedAmount = 0;
 
-    recurring.forEach((rt) => {
-      if (rt.financialFlowId !== 2) {
+    const addDetail = (
+      target: Map<string, Debit503020Detail>,
+      recurringTransaction: RecurringTransaction,
+      amount: number,
+    ) => {
+      const rawSubCategoryId = recurringTransaction.subCategoryId;
+      const subCategoryId =
+        typeof rawSubCategoryId === 'string'
+          ? parseInt(rawSubCategoryId, 10)
+          : rawSubCategoryId ?? null;
+      const key = subCategoryId === null ? 'none' : String(subCategoryId);
+      const current = target.get(key);
+      if (current) {
+        current.amount += amount;
+        current.occurrences += 1;
         return;
       }
-      const bucketId = (rt as any).debit503020 ?? null;
-      if (!bucketId) {
-        return;
-      }
-      const amount =
+      const subCategoryLabel = this.getSubCategoryOnlyLabel(subCategoryId);
+      target.set(key, {
+        subCategoryId,
+        label:
+          subCategoryLabel && subCategoryLabel !== '-'
+            ? subCategoryLabel
+            : 'Sans sous-catégorie',
+        amount,
+        occurrences: 1,
+      });
+    };
+
+    schedules.forEach(({ recurring: rt }) => {
+      const flowId =
+        typeof rt.financialFlowId === 'string'
+          ? parseInt(rt.financialFlowId, 10)
+          : rt.financialFlowId;
+      const rawAmount =
         typeof rt.amount === 'string' ? parseFloat(rt.amount) : rt.amount || 0;
-      const bucket = items.find((item) => item.id === bucketId);
-      if (bucket) {
-        bucket.amount += Math.abs(amount);
+      const amount = Math.abs(rawAmount);
+      if (flowId === 1) {
+        salaryBase += amount;
+        addDetail(incomeBySubCategory, rt, amount);
+        return;
       }
+      if (flowId !== 2) return;
+
+      totalExpenses += amount;
+      const bucketId = Number((rt as any).debit503020) || 0;
+      const bucket = items.find((item) => item.id === bucketId);
+      if (!bucket) {
+        unclassifiedAmount += amount;
+        addDetail(unclassifiedBySubCategory, rt, amount);
+        return;
+      }
+
+      bucket.amount += amount;
+      if (!detailsByBucket.has(bucket.id)) {
+        detailsByBucket.set(bucket.id, new Map());
+      }
+      addDetail(detailsByBucket.get(bucket.id)!, rt, amount);
     });
 
     items.forEach((item) => {
       item.percent =
         salaryBase > 0 ? Math.round((item.amount / salaryBase) * 100) : 0;
+      item.details = Array.from(
+        detailsByBucket.get(item.id)?.values() || [],
+      ).sort((a, b) => b.amount - a.amount);
     });
 
-    const remaining = Math.max(salaryBase - totalExpenses, 0);
+    const remaining = salaryBase - totalExpenses;
     const remainingPercent =
       salaryBase > 0
-        ? Math.max(0, Math.round((remaining / salaryBase) * 100))
+        ? Math.round((remaining / salaryBase) * 100)
         : 0;
 
-    return {
+    const breakdown = {
       total: salaryBase,
+      incomeDetails: Array.from(incomeBySubCategory.values()).sort(
+        (a, b) => b.amount - a.amount,
+      ),
       totalExpenses,
       items,
+      unclassifiedAmount,
+      unclassifiedDetails: Array.from(
+        unclassifiedBySubCategory.values(),
+      ).sort((a, b) => b.amount - a.amount),
       remaining,
       remainingPercent,
     };
+    this.breakdown503020ByAccount.set(accountId, breakdown);
+    return breakdown;
   }
 
-  getStackedBarData(accountId: number) {
-    const balance = this.accountBalances.find(
-      (ab) => ab.account.id === accountId,
-    );
-    if (!balance) {
-      return { labels: [], datasets: [] };
+  getBudgetTrendStats(accountId: number): BudgetTrendStat[] {
+    return this.budgetTrendStatsByAccount.get(accountId) || [];
+  }
+
+  private buildBudgetTrendStats(accountId: number): BudgetTrendStat[] {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const currentDay = today.getDate();
+    const currentExpenses = new Map<string, number>();
+    const historyExpenses = new Map<string, number>();
+    let currentExpenseTotal = 0;
+    let currentIncomeTotal = 0;
+
+    const historyMonths = Array.from({ length: 3 }, (_, index) => {
+      const date = new Date(currentYear, currentMonth - index - 1, 1);
+      return { month: date.getMonth(), year: date.getFullYear() };
+    });
+
+    this.transactions.forEach((transaction) => {
+      const transactionAccountId =
+        typeof transaction.accountId === 'string'
+          ? parseInt(transaction.accountId, 10)
+          : transaction.accountId;
+      if (transactionAccountId !== accountId || !transaction.date) return;
+
+      const date = new Date(transaction.date);
+      if (Number.isNaN(date.getTime()) || date.getDate() > currentDay) return;
+      const flowId =
+        typeof transaction.financialFlowId === 'string'
+          ? parseInt(transaction.financialFlowId, 10)
+          : transaction.financialFlowId;
+      const amount = this.getAmountNumber(transaction);
+      const rawLabel = this.getSubCategoryOnlyLabel(transaction.subCategoryId);
+      const label = rawLabel && rawLabel !== '-' ? rawLabel : 'Autres';
+      const isCurrentMonth =
+        date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+
+      if (isCurrentMonth) {
+        if (flowId === 1) currentIncomeTotal += amount;
+        if (flowId === 2) {
+          currentExpenseTotal += amount;
+          currentExpenses.set(label, (currentExpenses.get(label) || 0) + amount);
+        }
+        return;
+      }
+
+      if (
+        flowId === 2 &&
+        historyMonths.some(
+          (period) =>
+            period.month === date.getMonth() &&
+            period.year === date.getFullYear(),
+        )
+      ) {
+        historyExpenses.set(label, (historyExpenses.get(label) || 0) + amount);
+      }
+    });
+
+    const historyAverageTotal =
+      Array.from(historyExpenses.values()).reduce(
+        (sum, amount) => sum + amount,
+        0,
+      ) / 3;
+    const totalDelta = currentExpenseTotal - historyAverageTotal;
+    const totalDeltaPercent =
+      historyAverageTotal > 0
+        ? Math.round((totalDelta / historyAverageTotal) * 100)
+        : null;
+
+    const categoryChanges = new Set([
+      ...currentExpenses.keys(),
+      ...historyExpenses.keys(),
+    ]);
+    const changes = Array.from(categoryChanges).map((label) => {
+      const current = currentExpenses.get(label) || 0;
+      const average = (historyExpenses.get(label) || 0) / 3;
+      return { label, current, average, delta: current - average };
+    });
+    const increase = [...changes].sort((a, b) => b.delta - a.delta)[0];
+    const decrease = [...changes].sort((a, b) => a.delta - b.delta)[0];
+    const margin = currentIncomeTotal - currentExpenseTotal;
+
+    return [
+      {
+        icon: 'pi-wallet',
+        title: 'Dépenses à date',
+        value: this.formatEuroValue(currentExpenseTotal),
+        detail:
+          totalDeltaPercent === null
+            ? 'Historique insuffisant pour comparer'
+            : `${totalDeltaPercent >= 0 ? '+' : ''}${totalDeltaPercent}% vs moyenne des 3 mois précédents`,
+        tone: totalDelta > 0 ? 'negative' : totalDelta < 0 ? 'positive' : 'neutral',
+      },
+      this.buildCategoryTrendStat(increase, true),
+      this.buildCategoryTrendStat(decrease, false),
+      {
+        icon: margin >= 0 ? 'pi-arrow-up-right' : 'pi-arrow-down-right',
+        title: 'Marge réalisée du mois',
+        value: this.formatEuroValue(margin),
+        detail: `${this.formatEuroValue(currentIncomeTotal)} de revenus · ${this.formatEuroValue(currentExpenseTotal)} de dépenses`,
+        tone: margin >= 0 ? 'positive' : 'negative',
+      },
+    ];
+  }
+
+  private buildCategoryTrendStat(
+    change: { label: string; current: number; average: number; delta: number } | undefined,
+    isIncrease: boolean,
+  ): BudgetTrendStat {
+    const isMeaningful =
+      change && (isIncrease ? change.delta > 10 : change.delta < -10);
+    if (!isMeaningful || !change) {
+      return {
+        icon: isIncrease ? 'pi-arrow-up' : 'pi-arrow-down',
+        title: isIncrease ? 'Plus forte hausse' : 'Plus forte baisse',
+        value: 'Aucune variation',
+        detail: 'Pas de changement significatif à même date',
+        tone: 'neutral',
+      };
     }
 
-    const totalExpenses = Math.abs(
-      balance.expensesByCategory.reduce(
-        (sum, category) => sum + category.total,
-        0,
-      ),
-    );
-    const totalIncomes = Math.abs(
-      balance.incomesByCategory.reduce(
-        (sum, category) => sum + category.total,
-        0,
-      ),
-    );
-
     return {
-      labels: ['D\u00E9penses', 'Revenus'],
-      datasets: [
-        {
-          label: 'Montants',
-          backgroundColor: ['#ef4444', '#10b981'],
-          borderColor: ['#b91c1c', '#047857'],
-          borderWidth: 1,
-          data: [totalExpenses, totalIncomes],
-        },
-      ],
+      icon: isIncrease ? 'pi-arrow-up' : 'pi-arrow-down',
+      title: isIncrease ? 'Plus forte hausse' : 'Plus forte baisse',
+      value: change.label,
+      detail: `${isIncrease ? '+' : '-'}${this.formatEuroValue(Math.abs(change.delta))} · ${this.formatEuroValue(change.current)} vs ${this.formatEuroValue(change.average)} habituellement`,
+      tone: isIncrease ? 'negative' : 'positive',
     };
   }
 

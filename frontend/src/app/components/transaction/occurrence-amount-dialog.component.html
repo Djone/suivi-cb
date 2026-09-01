@@ -1,0 +1,47 @@
+<form class="occurrence-amount-dialog" (ngSubmit)="save()">
+  <div class="occurrence-context">
+    <i class="pi pi-calendar"></i>
+    <div>
+      <strong>{{ label }}</strong>
+      <span>Échéance du {{ dueDate | date: "dd MMMM yyyy" }}</span>
+    </div>
+  </div>
+
+  <label for="occurrenceAmount">Nouveau montant</label>
+  <p-inputNumber
+    inputId="occurrenceAmount"
+    name="occurrenceAmount"
+    [(ngModel)]="amount"
+    mode="currency"
+    currency="EUR"
+    locale="fr-FR"
+    [min]="0"
+    [minFractionDigits]="2"
+    [maxFractionDigits]="2"
+    [showButtons]="true"
+    [autofocus]="true"
+    styleClass="w-full"
+  ></p-inputNumber>
+
+  <small>
+    Ce montant s’appliquera uniquement à cette occurrence. La récurrence ne
+    sera pas modifiée.
+  </small>
+
+  <div class="occurrence-dialog-actions">
+    <p-button
+      type="button"
+      label="Annuler"
+      icon="pi pi-times"
+      [text]="true"
+      severity="secondary"
+      (onClick)="cancel()"
+    ></p-button>
+    <p-button
+      type="submit"
+      label="Enregistrer"
+      icon="pi pi-check"
+      [disabled]="isAmountInvalid"
+    ></p-button>
+  </div>
+</form>

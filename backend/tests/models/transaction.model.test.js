@@ -89,7 +89,9 @@ describe('Transaction Model', () => {
         description: 'Test transaction',
         sub_category_id: 1,
         account_id: 1,
-        financial_flow_id: 1
+        financial_flow_id: 1,
+        recurring_transaction_id: 7,
+        recurring_occurrence_date: '2024-01-15'
       };
 
       db.run.mockImplementation(function(query, values, callback) {
@@ -101,6 +103,8 @@ describe('Transaction Model', () => {
 
       expect(result).toEqual({ id: 5 });
       expect(db.run).toHaveBeenCalledTimes(1);
+      expect(db.run.mock.calls[0][0]).toContain('recurring_occurrence_date');
+      expect(db.run.mock.calls[0][1]).toContain('2024-01-15');
     });
 
     it('devrait gérer les erreurs lors de l\'ajout', async () => {

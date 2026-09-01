@@ -47,6 +47,11 @@ exports.addTransaction = async (req, res) => {
     if (newTransaction.date) {
       newTransaction.date = formatDateForStorage(newTransaction.date);
     }
+    if (newTransaction.recurring_occurrence_date) {
+      newTransaction.recurring_occurrence_date = formatDateForStorage(
+        newTransaction.recurring_occurrence_date,
+      );
+    }
 
     const result = await Transaction.add(newTransaction);
 
@@ -76,6 +81,11 @@ exports.updateTransaction = async (req, res) => {
 
     if (fieldsToUpdate.date) {
       fieldsToUpdate.date = formatDateForStorage(fieldsToUpdate.date);
+    }
+    if (fieldsToUpdate.recurring_occurrence_date) {
+      fieldsToUpdate.recurring_occurrence_date = formatDateForStorage(
+        fieldsToUpdate.recurring_occurrence_date,
+      );
     }
 
     if (!id) {
