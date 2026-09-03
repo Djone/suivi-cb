@@ -106,4 +106,53 @@ body {
   border: 0 !important;
   border-top: 0 !important;
 }
+/* Notification d'annulation après validation groupée des échéances. */
+.validation-undo {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: min(560px, calc(100vw - 2rem));
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.3);
+}
 
+.validation-undo__action,
+.validation-undo__close {
+  border: 0;
+  background: transparent;
+  color: #7dd3fc;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.validation-undo__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.validation-undo__close {
+  color: #cbd5e1;
+}
+
+.validation-undo button:disabled,
+.bulk-select-all:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+@media (max-width: 640px) {
+  .validation-undo {
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+  }
+}

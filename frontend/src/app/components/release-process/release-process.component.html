@@ -14,25 +14,149 @@
   </header>
 
   <section class="guide-panel">
-    <h2>Parcours recommandé</h2>
-    <ol>
+    <div class="guide-heading">
+      <div>
+        <p class="eyebrow">README intégré</p>
+        <h2>Mode opératoire d'une montée de version</h2>
+      </div>
+      <span class="guide-badge">À suivre dans l'ordre</span>
+    </div>
+
+    <ol class="release-checklist">
       <li>
-        <strong>1. dry-run</strong> pour vérifier (Git + tests) sans modifier la
-        release.
+        <strong>Finaliser</strong> et pousser la branche de développement.
       </li>
       <li>
-        <strong>2. prepare</strong> pour clôturer la version actuelle et
-        préparer la suivante.
+        <strong>dry-run</strong> pour contrôler Git et exécuter les tests.
       </li>
       <li>
-        <strong>3. deploy</strong> pour finaliser Git (merge vers
-        <code>master</code> + push).
+        <strong>prepare</strong> pour clôturer la version et créer le commit.
+      </li>
+      <li><strong>Construire et tester Docker</strong> sur le poste local.</li>
+      <li><strong>deploy</strong> pour fusionner, pousser et créer le tag.</li>
+      <li>
+        <strong>Créer la branche suivante</strong>, puis mettre à jour le NAS
+        plus tard.
       </li>
     </ol>
-    <p class="note-helper">
-      Option rapide: <strong>full</strong> = prepare + deploy en une seule
-      exécution.
-    </p>
+
+    <details class="release-guide-details">
+      <summary>Afficher le guide complet</summary>
+      <div class="release-guide-content">
+        <article>
+          <h3>1. Avant de commencer</h3>
+          <ul>
+            <li>
+              La branche à livrer doit contenir tous les commits et être
+              poussée.
+            </li>
+            <li><code>git status</code> doit indiquer un répertoire propre.</li>
+            <li>
+              Les tickets livrés doivent être <code>done</code> et cibler la
+              version stable.
+            </li>
+            <li>
+              Aucun secret, fichier <code>.env</code> ou fichier de base ne doit
+              être commité.
+            </li>
+          </ul>
+        </article>
+
+        <article>
+          <h3>2. Réglages recommandés</h3>
+          <div class="guide-options">
+            <div><strong>Version stable</strong><span>Ex. 1.6.0</span></div>
+            <div>
+              <strong>Prochaine version dev</strong><span>Ex. 1.7.0-dev</span>
+            </div>
+            <div><strong>Branche cible</strong><span>master</span></div>
+          </div>
+          <ul>
+            <li>
+              Les options <code>commit</code> et
+              <code>rollback-on-failure</code> sont présélectionnées : les
+              conserver activées.
+            </li>
+            <li>
+              Laisser <code>create-release-branch</code> décoché si la branche
+              dev existe déjà.
+            </li>
+            <li>
+              Laisser toutes les options avancées désactivées pour une release
+              normale.
+            </li>
+          </ul>
+          <p>
+            Lancer <strong>dry-run</strong>, contrôler le rapport, puis lancer
+            <strong>prepare</strong>. Cette seconde action archive les notes de
+            version, met à jour les numéros et crée le commit de préparation.
+          </p>
+        </article>
+
+        <article>
+          <h3>3. Validation Docker locale</h3>
+          <p>Démarrer Docker Desktop puis, depuis la racine du projet :</p>
+          <pre class="guide-command"><code>scripts\build-production.bat
+docker compose up -d
+docker compose ps
+docker compose logs --tail=100</code></pre>
+          <p>
+            Ouvrir <code>http://localhost:4200</code>, vérifier la version, les
+            pages modifiées et l'état des conteneurs. Le script de build ne
+            démarre pas les conteneurs à lui seul. Après validation :
+          </p>
+          <pre class="guide-command"><code>docker compose down</code></pre>
+        </article>
+
+        <article>
+          <h3>4. Publication Git</h3>
+          <p>
+            Lancer <strong>deploy</strong> et confirmer l'exécution réelle.
+            L'assistant actualise <code>master</code>, fusionne la branche
+            courante, pousse <code>master</code> et crée le tag stable. Il
+            n'installe rien sur le NAS.
+          </p>
+          <p>
+            La commande technique <strong>full</strong> n'est volontairement pas
+            affichée : elle ne laisse pas d'étape de validation Docker entre
+            <code>prepare</code> et <code>deploy</code>.
+          </p>
+        </article>
+
+        <article>
+          <h3>5. Développement suivant</h3>
+          <p>
+            Après la publication Git, repartir du <code>master</code> actualisé
+            :
+          </p>
+          <pre class="guide-command"><code>git switch master
+git pull --ff-only origin master
+git switch -c &lt;prochaine-version&gt;-dev
+git push -u origin &lt;prochaine-version&gt;-dev</code></pre>
+        </article>
+
+        <article>
+          <h3>6. Mise à jour du NAS, immédiate ou différée</h3>
+          <p>La release doit d'abord exister sur <code>origin/master</code>.</p>
+          <pre class="guide-command"><code>cd /volume1/docker/suivi-cb
+git status --short --branch
+GIT_BRANCH=master ./scripts/update.sh
+sudo docker-compose ps
+sudo docker-compose logs --tail=100</code></pre>
+          <p>
+            <code>update.sh</code> sauvegarde la base, récupère
+            <code>master</code>, reconstruit les images, redémarre les
+            conteneurs et teste l'API. En cas d'échec, il restaure le code et la
+            base précédents.
+          </p>
+        </article>
+
+        <p class="guide-source">
+          La version documentaire de ce guide est conservée dans
+          <code>frontend/src/app/components/release-process/README.md</code>.
+        </p>
+      </div>
+    </details>
   </section>
 
   <section class="automation-panel">
@@ -60,42 +184,93 @@
       </label>
     </div>
 
-    <h3>Options de vérification / déploiement</h3>
-    <div class="flag-grid">
+    <h3>Options recommandées</h3>
+    <div class="release-option-list">
       <label
-        ><input type="checkbox" [(ngModel)]="allowDirty" /> allow-dirty</label
+        class="release-option"
+        title="Crée automatiquement le commit contenant les numéros de version et les notes de release. À conserver activé."
       >
+        <span class="release-option-control">
+          <input type="checkbox" [(ngModel)]="commit" />
+          <strong>Créer le commit de préparation</strong>
+        </span>
+        <small>
+          Enregistre les versions et les notes de release. Recommandé pour que
+          <code>deploy</code> puisse fusionner une branche propre.
+        </small>
+      </label>
       <label
-        ><input type="checkbox" [(ngModel)]="skipMasterCheck" />
-        skip-master-check</label
+        class="release-option"
+        title="Restaure les fichiers de version et les notes de release si la préparation échoue. À conserver activé."
       >
-      <label
-        ><input type="checkbox" [(ngModel)]="skipTests" /> skip-tests</label
-      >
-      <label
-        ><input type="checkbox" [(ngModel)]="skipBuild" /> skip-build</label
-      >
-      <label
-        ><input type="checkbox" [(ngModel)]="execute" /> execute (actions
-        réelles)</label
-      >
+        <span class="release-option-control">
+          <input type="checkbox" [(ngModel)]="rollbackOnFailure" />
+          <strong>Restaurer automatiquement en cas d'échec</strong>
+        </span>
+        <small>
+          Revient à l'état précédant <code>prepare</code> si une étape échoue.
+        </small>
+      </label>
     </div>
 
-    <h3>Options Git (facultatif)</h3>
-    <div class="flag-grid">
-      <label
-        ><input type="checkbox" [(ngModel)]="createReleaseBranch" />
-        create-release-branch</label
-      >
-      <label><input type="checkbox" [(ngModel)]="commit" /> commit</label>
-      <label><input type="checkbox" [(ngModel)]="tag" /> tag (vX.Y.Z)</label>
-      <label
-        ><input type="checkbox" [(ngModel)]="rollbackOnFailure" />
-        rollback-on-failure</label
-      >
-    </div>
+    <details class="advanced-options">
+      <summary>Options avancées — à laisser désactivées normalement</summary>
+      <div class="release-option-list advanced-option-list">
+        <label
+          class="release-option release-option--warning"
+          title="Autorise la release même si des fichiers locaux ne sont pas commités. Risque d'oublier des changements."
+        >
+          <span class="release-option-control">
+            <input type="checkbox" [(ngModel)]="allowDirty" />
+            <strong>Autoriser un répertoire Git non propre</strong>
+          </span>
+          <small>
+            À utiliser exceptionnellement : des modifications locales peuvent ne
+            pas être incluses dans la release.
+          </small>
+        </label>
+        <label
+          class="release-option release-option--warning"
+          title="Ignore la comparaison avec la branche distante. Peut produire une release à partir d'un historique obsolète."
+        >
+          <span class="release-option-control">
+            <input type="checkbox" [(ngModel)]="skipMasterCheck" />
+            <strong>Ignorer le contrôle de synchronisation Git</strong>
+          </span>
+          <small>
+            Désactive la vérification de la branche cible avec
+            <code>origin</code>.
+          </small>
+        </label>
+        <label
+          class="release-option release-option--warning"
+          title="N'exécute pas les tests automatisés. À réserver au diagnostic du pipeline."
+        >
+          <span class="release-option-control">
+            <input type="checkbox" [(ngModel)]="skipTests" />
+            <strong>Ne pas exécuter les tests</strong>
+          </span>
+          <small>
+            Accélère l'exécution, mais retire le principal contrôle avant
+            production.
+          </small>
+        </label>
+        <label
+          class="release-option"
+          title="Crée une branche release dédiée avant le commit de préparation. Inutile lorsqu'une branche de version existe déjà."
+        >
+          <span class="release-option-control">
+            <input type="checkbox" [(ngModel)]="createReleaseBranch" />
+            <strong>Créer une branche de release dédiée</strong>
+          </span>
+          <small>
+            Facultatif. Ne pas activer si la branche à livrer existe déjà.
+          </small>
+        </label>
+      </div>
+    </details>
 
-    <div class="grid git-grid">
+    <div class="grid git-grid" *ngIf="createReleaseBranch">
       <label>
         Nom de branche release (optionnel)
         <input
@@ -141,14 +316,6 @@
       </button>
       <button
         type="button"
-        class="primary"
-        [disabled]="isRunning"
-        (click)="runFull()"
-      >
-        Lancer full
-      </button>
-      <button
-        type="button"
         class="ghost rollback-btn"
         [disabled]="isRunning"
         (click)="runRollback()"
@@ -166,9 +333,6 @@
       </p>
       <p>
         <strong>Commande deploy:</strong> <code>{{ deployCommand }}</code>
-      </p>
-      <p>
-        <strong>Commande full:</strong> <code>{{ fullCommand }}</code>
       </p>
     </div>
   </section>
@@ -211,55 +375,46 @@
   </section>
 
   <section class="notes-panel">
-    <h3>Notes (définitions simples)</h3>
+    <h3>Repères sur les actions</h3>
     <div class="notes-grid">
       <div class="note-card">
-        <h4>Modes d'exécution</h4>
-        <ul>
-          <li><strong>dry-run</strong>: vérifie sans modifier.</li>
-          <li><strong>prepare</strong>: met à jour les versions.</li>
-          <li>
-            <strong>deploy</strong>: valide, merge vers master et push (si
-            execute est coché).
-          </li>
-          <li><strong>full</strong>: prepare + finalisation Git.</li>
-        </ul>
-      </div>
-      <div class="note-card">
-        <h4>Options de contrôle</h4>
+        <h4>Vérifier et préparer</h4>
         <ul>
           <li>
-            <strong>allow-dirty</strong>: autorise les fichiers non commit.
+            <strong>dry-run</strong> contrôle Git et les tests sans rien
+            modifier.
           </li>
           <li>
-            <strong>skip-master-check</strong>: ignore le contrôle de synchro
-            master.
-          </li>
-          <li><strong>skip-tests</strong>: ignore les tests.</li>
-          <li><strong>skip-build</strong>: ignore le build pendant deploy.</li>
-          <li>
-            <strong>execute</strong>: lance les actions réelles (sinon
-            simulation).
+            <strong>prepare</strong> met à jour les versions et les notes, puis
+            crée le commit si l'option recommandée est active.
           </li>
         </ul>
       </div>
       <div class="note-card">
-        <h4>Git et rollback</h4>
+        <h4>Publier</h4>
         <ul>
           <li>
-            <strong>create-release-branch</strong>: crée une branche release.
+            <strong>deploy</strong> effectue toujours la publication réelle
+            après confirmation : fusion dans <code>master</code>, push et tag.
           </li>
           <li>
-            <strong>commit</strong>: commit automatique des fichiers de version.
+            Il ne déploie pas sur le NAS : cette opération reste assurée par
+            <code>update.sh</code>.
           </li>
-          <li><strong>tag</strong>: crée le tag <code>vX.Y.Z</code>.</li>
+        </ul>
+      </div>
+      <div class="note-card">
+        <h4>Options avancées</h4>
+        <ul>
           <li>
-            <strong>rollback-on-failure</strong>: restaure automatiquement en
-            cas d'erreur.
+            Elles servent uniquement à un dépannage ou à un workflow Git
+            particulier.
           </li>
           <li>
-            <strong>Rollback manuel</strong>: restaure depuis le dernier backup.
+            Chaque option possède une explication visible et une infobulle au
+            survol.
           </li>
+          <li>Les laisser désactivées dans le parcours normal.</li>
         </ul>
       </div>
     </div>

@@ -49,6 +49,11 @@ const transactionSchema = Joi.object({
       .allow(null)
       .optional()
       .description('L\'ID de l\'échéance récurrente liée (optionnel).'),
+    recurring_occurrence_date: Joi.date()
+      .iso()
+      .allow(null)
+      .optional()
+      .description('Date planifiee de l occurrence recurrente validee.'),
     advance_to_joint_account: Joi.alternatives()
       .try(
         Joi.boolean(),
@@ -69,6 +74,12 @@ const transactionSchema = Joi.object({
       .allow(null)
       .optional()
       .description('Compte epargne destinataire ou source du transfert.'),
+    vehicle_id: Joi.number()
+      .integer()
+      .positive()
+      .allow(null)
+      .optional()
+      .description('Vehicule rattache a la depense.'),
   });
 
 module.exports = { 

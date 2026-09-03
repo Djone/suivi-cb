@@ -62,41 +62,6 @@
               </div>
               <div class="break-percent">{{ it.percent }}%</div>
             </div>
-            <div class="break-row remaining">
-              <div class="break-label">Reste à vivre</div>
-              <div class="break-value">
-                {{
-                  get503020Breakdown().remaining
-                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
-              </div>
-              <div class="break-percent">
-                {{ get503020Breakdown().remainingPercent }}%
-              </div>
-            </div>
-          </div>
-          <div class="break503020-mini">
-            <div class="mini-bar">
-              <ng-container
-                *ngFor="let it of get503020Breakdown().items; let i = index"
-              >
-                <div
-                  class="mini-seg seg-{{ i }}"
-                  [ngStyle]="{ width: (it.percent || 0) + '%' }"
-                ></div>
-              </ng-container>
-            </div>
-            <div class="mini-legend">
-              <span class="legend-item"
-                ><span class="dot dot-0"></span> 50</span
-              >
-              <span class="legend-item"
-                ><span class="dot dot-1"></span> 30</span
-              >
-              <span class="legend-item"
-                ><span class="dot dot-2"></span> 20</span
-              >
-            </div>
           </div>
         </div>
         <div class="recurring-summary" *ngIf="accountId && !isMobile">
@@ -121,24 +86,15 @@
             </div>
           </div>
           <div class="summary-item">
-            <div class="summary-label">Dépenses restantes</div>
-            <div class="summary-amount negative">
-              -
-              {{
-                remainingExpensesThisMonth
-                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-              }}
-            </div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Prévisionnel (Fin du mois)</div>
+            <div class="summary-label">Reste à vivre</div>
             <div
               class="summary-amount"
-              [class.positive]="forecastedBalance >= 0"
-              [class.negative]="forecastedBalance < 0"
+              [class.positive]="get503020Breakdown().remaining >= 0"
+              [class.negative]="get503020Breakdown().remaining < 0"
             >
               {{
-                forecastedBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                get503020Breakdown().remaining
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
               }}
             </div>
           </div>
@@ -198,12 +154,80 @@
       <ng-container
         *ngIf="pendingSchedules.length > 0; else noPendingSchedules"
       >
+        <section
+          class="bulk-validation-card"
+          aria-labelledby="bulk-validation-title"
+        >
+          <div class="bulk-validation-summary">
+            <div>
+              <span id="bulk-validation-title" class="bulk-validation-title">
+                Validation en masse
+              </span>
+              <span class="bulk-validation-count">
+                {{ selectedScheduleCount }} transaction(s) sélectionnée(s)
+              </span>
+            </div>
+            <strong
+              class="bulk-validation-total"
+              [class.positive]="selectedScheduleTotal > 0"
+              [class.negative]="selectedScheduleTotal < 0"
+            >
+              {{
+                selectedScheduleTotal
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
+            </strong>
+          </div>
+          <div class="bulk-validation-actions">
+            <button
+              type="button"
+              class="bulk-select-all"
+              (click)="selectAllPendingSchedules()"
+              [disabled]="selectedScheduleCount === pendingSchedules.length"
+            >
+              Tout sélectionner
+            </button>
+            <button
+              type="button"
+              class="bulk-select-all"
+              (click)="clearScheduleSelection()"
+              [disabled]="selectedScheduleCount === 0"
+            >
+              Désélectionner tout
+            </button>
+            <div class="bulk-date-field">
+              <span>Date de validation</span>
+              <strong> Aujourd’hui, {{ now | date: "dd/MM/yyyy" }} </strong>
+            </div>
+            <p-button
+              label="Valider la sélection"
+              icon="pi pi-check-circle"
+              severity="success"
+              [loading]="isBulkValidating"
+              [disabled]="selectedScheduleCount === 0"
+              (onClick)="validateSelectedSchedules()"
+            ></p-button>
+          </div>
+        </section>
         <div class="recurring-items">
           <div
             *ngFor="let schedule of pendingSchedules"
             class="recurring-item"
             [class.overdue]="schedule.isOverdue"
+            [class.selected]="isScheduleSelected(schedule)"
           >
+            <label class="recurring-selection">
+              <input
+                type="checkbox"
+                [checked]="isScheduleSelected(schedule)"
+                (change)="toggleScheduleSelection(schedule, $event)"
+                [attr.aria-label]="
+                  'Sélectionner ' +
+                  getRecurringDisplayLabel(schedule.recurringTransaction)
+                "
+              />
+              <span class="selection-indicator" aria-hidden="true"></span>
+            </label>
             <div class="recurring-info flex items-center">
               <i class="pi pi-calendar mr-2"></i>
               <div class="recurring-details">
@@ -289,32 +313,127 @@
     </div>
 
     <div
+      *ngIf="undoValidation as undo"
+      class="validation-undo"
+      role="status"
+      aria-live="polite"
+    >
+      <span> {{ undo.count }} échéance(s) validée(s) à la date du jour. </span>
+      <button
+        type="button"
+        class="validation-undo__action"
+        [disabled]="undo.isUndoing"
+        (click)="undoLastValidation()"
+      >
+        <i
+          class="pi"
+          [ngClass]="undo.isUndoing ? 'pi-spin pi-spinner' : 'pi-undo'"
+        ></i>
+        {{ undo.isUndoing ? "Annulation…" : "Annuler" }}
+      </button>
+      <button
+        type="button"
+        class="validation-undo__close"
+        aria-label="Fermer"
+        [disabled]="undo.isUndoing"
+        (click)="dismissUndoValidation()"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div
       class="list-controls p-3 surface-card border-round-lg shadow-1"
       *ngIf="!isMobile"
     >
       <div class="filters-layout">
         <div class="filters-primary">
           <p-inputGroup class="date-filter">
-            <p-inputGroupAddon><i class="pi pi-calendar"></i></p-inputGroupAddon>
-            <p-calendar [ngModel]="filters.dateRange" (ngModelChange)="onDateRangeChange($event)" selectionMode="range" [readonlyInput]="true" placeholder="Filtrer par date" dateFormat="dd/mm/yy" [showClear]="true" styleClass="w-full"></p-calendar>
+            <p-inputGroupAddon
+              ><i class="pi pi-calendar"></i
+            ></p-inputGroupAddon>
+            <p-calendar
+              [ngModel]="filters.dateRange"
+              (ngModelChange)="onDateRangeChange($event)"
+              selectionMode="range"
+              [readonlyInput]="true"
+              placeholder="Filtrer par date"
+              dateFormat="dd/mm/yy"
+              [showClear]="true"
+              styleClass="w-full"
+            ></p-calendar>
           </p-inputGroup>
 
           <p-inputGroup class="description-filter">
-            <p-inputGroupAddon><i class="pi pi-align-left"></i></p-inputGroupAddon>
-            <input pInputText type="text" [(ngModel)]="filters.description" (input)="applyFilter()" placeholder="Filtrer par libellé" class="w-full" />
+            <p-inputGroupAddon
+              ><i class="pi pi-align-left"></i
+            ></p-inputGroupAddon>
+            <input
+              pInputText
+              type="text"
+              [(ngModel)]="filters.description"
+              (input)="applyFilter()"
+              placeholder="Filtrer par libellé"
+              class="w-full"
+            />
           </p-inputGroup>
 
           <p-inputGroup class="amount-filter">
             <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
-            <input pInputText type="number" min="0" step="0.01" [(ngModel)]="filters.amount" (input)="applyFilter()" (keypress)="allowOnlyNumbers($event)" placeholder="Filtrer par montant" class="w-full" />
+            <input
+              pInputText
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="filters.amount"
+              (input)="applyFilter()"
+              (keypress)="allowOnlyNumbers($event)"
+              placeholder="Filtrer par montant"
+              class="w-full"
+            />
           </p-inputGroup>
         </div>
 
         <div class="filters-secondary">
-          <p-multiSelect [options]="categoryOptions" [(ngModel)]="filters.categoryIds" optionLabel="label" optionValue="value" display="chip" [showClear]="true" placeholder="Filtrer par catégorie" (onChange)="onCategoryFilterChange()"></p-multiSelect>
-          <p-multiSelect [options]="filteredSubCategoryOptions" [(ngModel)]="filters.subCategoryIds" optionLabel="label" optionValue="value" display="chip" [filter]="true" [showClear]="true" [virtualScroll]="true" [virtualScrollItemSize]="40" placeholder="Filtrer par sous-catégorie" (onChange)="applyFilter()"></p-multiSelect>
-          <p-dropdown [options]="advanceJointFilterOptions" [(ngModel)]="filters.advanceJoint" optionLabel="label" optionValue="value" placeholder="Filtrer avances compte joint" (onChange)="applyFilter()"></p-dropdown>
-          <p-dropdown [options]="internalTransferFilterOptions" [(ngModel)]="filters.internalTransfer" optionLabel="label" optionValue="value" placeholder="Filtrer transferts internes" (onChange)="applyFilter()"></p-dropdown>
+          <p-multiSelect
+            [options]="categoryOptions"
+            [(ngModel)]="filters.categoryIds"
+            optionLabel="label"
+            optionValue="value"
+            display="chip"
+            [showClear]="true"
+            placeholder="Filtrer par catégorie"
+            (onChange)="onCategoryFilterChange()"
+          ></p-multiSelect>
+          <p-multiSelect
+            [options]="filteredSubCategoryOptions"
+            [(ngModel)]="filters.subCategoryIds"
+            optionLabel="label"
+            optionValue="value"
+            display="chip"
+            [filter]="true"
+            [showClear]="true"
+            [virtualScroll]="true"
+            [virtualScrollItemSize]="40"
+            placeholder="Filtrer par sous-catégorie"
+            (onChange)="applyFilter()"
+          ></p-multiSelect>
+          <p-dropdown
+            [options]="advanceJointFilterOptions"
+            [(ngModel)]="filters.advanceJoint"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Filtrer avances compte joint"
+            (onChange)="applyFilter()"
+          ></p-dropdown>
+          <p-dropdown
+            [options]="internalTransferFilterOptions"
+            [(ngModel)]="filters.internalTransfer"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Filtrer transferts internes"
+            (onChange)="applyFilter()"
+          ></p-dropdown>
         </div>
       </div>
 

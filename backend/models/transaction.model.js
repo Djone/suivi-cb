@@ -38,6 +38,7 @@ const Transaction = {
       financial_flow_id: 't.financial_flow_id',
       is_internal_transfer: 't.is_internal_transfer',
       saving_account_id: 't.saving_account_id',
+      vehicle_id: 't.vehicle_id',
     };
 
     const conditions = [];
@@ -72,9 +73,11 @@ const Transaction = {
         a.name as account_name,
         t.financial_flow_id,
         t.recurring_transaction_id,
+        t.recurring_occurrence_date,
         t.advance_to_joint_account,
         t.is_internal_transfer,
         t.saving_account_id
+        ,t.vehicle_id
       FROM transactions t
       LEFT JOIN subcategories sc ON t.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
@@ -94,8 +97,8 @@ const Transaction = {
   // Ajouter une nouvelle transaction
   add: async (transaction) => {
     const query = `
-      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id, advance_to_joint_account, is_internal_transfer, saving_account_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transactions (date, amount, description, sub_category_id, account_id, financial_flow_id, recurring_transaction_id, recurring_occurrence_date, advance_to_joint_account, is_internal_transfer, saving_account_id, vehicle_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [
       transaction.date,
@@ -105,9 +108,11 @@ const Transaction = {
       transaction.account_id,
       transaction.financial_flow_id,
       transaction.recurring_transaction_id,
+      transaction.recurring_occurrence_date || null,
       toDbBoolean(transaction.advance_to_joint_account),
       toDbBoolean(transaction.is_internal_transfer),
       transaction.saving_account_id || null,
+      transaction.vehicle_id || null,
     ];
     console.log(`[DB_WRITE_DEBUG] Add operation on DB: "${db.filename}" (Transaction)`);
     const result = await dbRun(query, params);
@@ -139,9 +144,12 @@ const Transaction = {
       'sub_category_id',
       'account_id',
       'financial_flow_id',
+      'recurring_transaction_id',
+      'recurring_occurrence_date',
       'advance_to_joint_account',
       'is_internal_transfer',
       'saving_account_id',
+      'vehicle_id',
     ];
 
     for (const key of allowed) {

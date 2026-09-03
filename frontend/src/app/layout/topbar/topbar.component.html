@@ -9,8 +9,86 @@
   </div>
 
   <div class="layout-topbar-menu">
-    <button class="user-button" type="button">
-      <i class="pi pi-user"></i>
-    </button>
+    <div
+      class="notification-center"
+      (mouseenter)="openNotifications()"
+      (mouseleave)="closeNotifications()"
+    >
+      <button
+        class="notification-button"
+        type="button"
+        aria-label="Afficher les notifications"
+        [attr.aria-expanded]="isNotificationsOpen"
+        (click)="toggleNotifications()"
+      >
+        <i class="pi pi-bell"></i>
+        <span
+          *ngIf="unread$ | async"
+          class="notification-unread-dot"
+          aria-label="Nouvelles notifications"
+        ></span>
+      </button>
+
+      <section
+        *ngIf="isNotificationsOpen"
+        class="notification-panel"
+        aria-label="Notifications"
+      >
+        <div class="notification-panel__header">
+          <strong>Notifications</strong>
+          <span *ngIf="notifications$ | async as notifications">
+            {{ notifications.length }}
+          </span>
+        </div>
+
+        <ng-container *ngIf="notifications$ | async as notifications">
+          <div
+            class="notification-panel__list"
+            *ngIf="notifications.length; else noNotifications"
+          >
+            <button
+              *ngFor="let notification of notifications"
+              type="button"
+              class="header-notification"
+              [class.header-notification--danger]="
+                notification.severity === 'danger'
+              "
+              [class.header-notification--warn]="
+                notification.severity === 'warn'
+              "
+              [class.header-notification--clickable]="
+                notification.type === 'coverage'
+              "
+              (click)="selectNotification(notification)"
+            >
+              <i
+                class="pi"
+                [ngClass]="
+                  notification.severity === 'danger'
+                    ? 'pi-exclamation-circle'
+                    : notification.severity === 'warn'
+                      ? 'pi-exclamation-triangle'
+                      : 'pi-info-circle'
+                "
+              ></i>
+              <span>
+                <small>{{ notification.accountName }}</small>
+                <strong>{{ notification.text }}</strong>
+                <em *ngIf="notification.tooltip">
+                  {{ notification.tooltip }}
+                </em>
+              </span>
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-template #noNotifications>
+          <div class="notification-panel__empty">
+            <i class="pi pi-check-circle"></i>
+            Aucune notification pour ce mois.
+          </div>
+        </ng-template>
+      </section>
+    </div>
   </div>
 </div>

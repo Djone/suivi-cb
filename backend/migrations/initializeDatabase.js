@@ -94,6 +94,7 @@ const initializeDatabase = async () => {
         account_id INTEGER NOT NULL,
         financial_flow_id INTEGER NOT NULL,
         recurring_transaction_id INTEGER NULL REFERENCES recurring_transactions(id) ON DELETE SET NULL,
+        recurring_occurrence_date DATE NULL,
         advance_to_joint_account INTEGER NOT NULL DEFAULT 0
       );
     `);
@@ -106,6 +107,16 @@ const initializeDatabase = async () => {
     await runQuery(
       `ALTER TABLE transactions ADD COLUMN saving_account_id INTEGER NULL;`
     ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN recurring_occurrence_date DATE NULL;`
+    ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN vehicle_id INTEGER NULL REFERENCES vehicles(id) ON DELETE SET NULL;`
+    ).catch(() => {});
+    await runQuery(
+      `CREATE INDEX IF NOT EXISTS idx_transactions_recurring_occurrence
+       ON transactions(recurring_transaction_id, recurring_occurrence_date);`,
+    );
     await runQuery(
       `CREATE INDEX IF NOT EXISTS idx_transactions_saving_account_id ON transactions(saving_account_id);`,
     );
@@ -160,9 +171,44 @@ const initializeDatabase = async () => {
     await runQuery(
       `ALTER TABLE recurring_transactions ADD COLUMN recurrence_kind TEXT NULL;`
     ).catch(() => {});
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN vehicle_id INTEGER NULL REFERENCES vehicles(id) ON DELETE SET NULL;`
+    ).catch(() => {});
     console.log(
       "-> Colonnes avancées sur recurring_transactions vérifiées/ajoutées."
     );
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS vehicles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        brand TEXT,
+        model TEXT,
+        energy_type TEXT NOT NULL DEFAULT 'gasoline',
+        registration TEXT,
+        acquisition_date DATE,
+        purchase_price REAL,
+        annual_distance REAL,
+        consumption_per_100 REAL,
+        energy_price REAL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(`CREATE INDEX IF NOT EXISTS idx_transactions_vehicle_id ON transactions(vehicle_id);`);
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS vehicle_operations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date DATE NOT NULL,
+        label TEXT NOT NULL,
+        amount REAL NOT NULL,
+        sub_category_id INTEGER NOT NULL REFERENCES subcategories(id),
+        vehicle_id INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(`CREATE INDEX IF NOT EXISTS idx_vehicle_operations_vehicle_date ON vehicle_operations(vehicle_id, date);`);
 
     await runQuery(`
       CREATE TABLE IF NOT EXISTS recurring_occurrence_exceptions (

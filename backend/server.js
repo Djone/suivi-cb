@@ -13,6 +13,11 @@ const coupleSplitRoutes = require('./routes/couple-split.routes');
 const releaseRoutes = require('./routes/release.routes');
 const savingsWalletRoutes = require('./routes/savings-wallet.routes');
 const savingAccountRoutes = require('./routes/saving-account.routes');
+const vehicleRoutes = require('./routes/vehicle.routes');
+const {
+  isReleaseProcessEnabled,
+  requireLocalReleaseAccess,
+} = require('./middlewares/release-access.middleware');
 
 const app = express();
 const PORT_BACK = process.env.PORT_BACK || 3000;
@@ -36,9 +41,12 @@ const startServer = async () => {
     app.use('/api/recurring-transactions', recurringTransactionRoutes);
     app.use('/api/accounts', accountRoutes);
     app.use('/api/couple-split', coupleSplitRoutes);
-    app.use('/api/release', releaseRoutes);
+    if (isReleaseProcessEnabled()) {
+      app.use('/api/release', requireLocalReleaseAccess, releaseRoutes);
+    }
     app.use('/api/savings-wallets', savingsWalletRoutes);
     app.use('/api/saving-accounts', savingAccountRoutes);
+    app.use('/api/vehicles', vehicleRoutes);
 
     // 3. Démarrer le serveur Express
     app.listen(PORT_BACK, () => {

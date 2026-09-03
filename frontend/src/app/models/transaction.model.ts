@@ -8,8 +8,10 @@ export interface Transaction {
   accountId: number | null;
   financialFlowId: number | null;
   recurringTransactionId?: number | null;
+  recurringOccurrenceDate?: Date | string | null;
   advanceToJointAccount?: boolean | number | string | null;
   isInternalTransfer?: boolean | number | string | null;
   savingAccountId?: number | null;
+  vehicleId?: number | null;
   [key: string]: any;
 }

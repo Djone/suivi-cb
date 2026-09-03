@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { archiveReleaseNotes } = require('./release-notes-archive');
 
 const ROOT = path.resolve(__dirname, '..');
 const REPORT_DIR = path.join(ROOT, 'data', 'release');
@@ -10,6 +11,24 @@ const ENV_PROD_FILE = path.join(ROOT, 'frontend', 'src', 'environments', 'enviro
 const ROOT_PACKAGE_FILE = path.join(ROOT, 'package.json');
 const VERSION_FILE = path.join(ROOT, 'frontend', 'src', 'app', 'version.ts');
 const GEN_VERSION_FILE = path.join(ROOT, 'scripts', 'gen-version.js');
+const DEV_TODO_FILE = path.join(
+  ROOT,
+  'frontend',
+  'src',
+  'app',
+  'components',
+  'dev-todo',
+  'dev-todo.data.ts',
+);
+const RELEASE_NOTES_FILE = path.join(
+  ROOT,
+  'frontend',
+  'src',
+  'app',
+  'components',
+  'release-notes',
+  'release-notes.data.ts',
+);
 
 const SEMVER_STABLE = /^\d+\.\d+\.\d+$/;
 const SEMVER_DEV = /^\d+\.\d+\.\d+-dev(?:\.\d+)?$/;
@@ -20,6 +39,8 @@ const VERSION_FILES = [
   ENV_DEV_FILE,
   ENV_PROD_FILE,
   VERSION_FILE,
+  DEV_TODO_FILE,
+  RELEASE_NOTES_FILE,
 ];
 
 function parseArgs(argv) {
@@ -411,6 +432,37 @@ function prepareVersions(report, options) {
   });
 }
 
+function archiveStableReleaseNotes(report, options) {
+  const start = Date.now();
+  try {
+    const result = archiveReleaseNotes({
+      devTodoFile: DEV_TODO_FILE,
+      releaseNotesFile: RELEASE_NOTES_FILE,
+      stableVersion: options.stable,
+    });
+
+    if (result.archived === 0) {
+      skipStep(
+        report,
+        'archive-release-notes',
+        `no completed tickets found for ${options.stable}`,
+      );
+      return;
+    }
+
+    passStep(report, 'archive-release-notes', start, {
+      stableVersion: options.stable,
+      archived: result.archived,
+      added: result.added,
+      updated: result.updated,
+      duplicatesRemoved: result.duplicatesRemoved,
+    });
+  } catch (error) {
+    failStep(report, 'archive-release-notes', start, error);
+    throw error;
+  }
+}
+
 function gitPrepare(report, options) {
   let start = Date.now();
   const details = {};
@@ -648,6 +700,7 @@ function run() {
       preflight(report, options);
       verify(report, options);
       report.backupPath = createVersionBackup(options);
+      archiveStableReleaseNotes(report, options);
       prepareVersions(report, options);
       gitPrepare(report, options);
     } else if (command === 'deploy') {
@@ -672,6 +725,7 @@ function run() {
       preflight(report, options);
       verify(report, options);
       report.backupPath = createVersionBackup(options);
+      archiveStableReleaseNotes(report, options);
       prepareVersions(report, options);
       gitPrepare(report, options);
       finalizeForDeployment(report, options);

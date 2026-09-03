@@ -11,6 +11,7 @@ export interface RecurringTransaction {
   isActive?: number;
   createdAt?: Date;
   debit503020: number | null; // 1=Charges fixes, 2=Loisir, 3=Epargne
+  vehicleId?: number | null;
   // Champs optionnels pour récurrences avancées
   startMonth?: number | null;
   occurrences?: number | null;

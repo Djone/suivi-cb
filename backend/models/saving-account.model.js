@@ -30,9 +30,7 @@ const selectQuery = `
     sa.is_active,
     sa.created_at,
     sa.updated_at,
-    CASE WHEN sa.provider_key = 'plum' THEN COALESCE((
-      SELECT SUM(current_allocated_amount) FROM savings_wallets WHERE is_active = 1
-    ), 0) ELSE sa.current_balance + COALESCE((
+    sa.current_balance + COALESCE((
       SELECT SUM(
         CASE
           WHEN t.financial_flow_id = 2 THEN t.amount
@@ -41,9 +39,12 @@ const selectQuery = `
         END
       )
       FROM transactions t
-      WHERE t.saving_account_id = sa.id
-        AND t.is_internal_transfer = 1
-    ), 0) END AS current_balance
+      WHERE t.is_internal_transfer = 1
+        AND (
+          t.saving_account_id = sa.id
+          OR (sa.provider_key = 'plum' AND t.saving_account_id IS NULL)
+        )
+    ), 0) AS current_balance
   FROM saving_accounts sa
 `;
 

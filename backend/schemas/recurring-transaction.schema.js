@@ -94,6 +94,8 @@ const recurringTransactionSchema = Joi.object({
       "L'ID du type débit de la répartition 50/30/20 (1=Charges fixes, 2=Loisir, 3=Epargne)"
     ),
 
+  vehicle_id: Joi.number().integer().positive().allow(null).optional(),
+
   // Version 1.1.0
   // Pour les transactions récurrentes à durée limitée
   start_month: Joi.number()

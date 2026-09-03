@@ -30,6 +30,8 @@ import { CategoryService } from '../../services/category.service';
 import { SavingAccountService } from '../../services/saving-account.service';
 import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 import { EditSubCategoryDialogComponent } from '../edit-sub-category-dialog/edit-sub-category-dialog.component';
+import { Vehicle } from '../../models/vehicle.model';
+import { VehicleService } from '../../services/vehicle.service';
 
 @Component({
   selector: 'app-edit-transaction-dialog',
@@ -115,6 +117,7 @@ export class EditTransactionDialogComponent implements OnInit {
   financialFlowList = FINANCIAL_FLOW_LIST;
   allRecurringTransactions: RecurringTransaction[] = [];
   filteredRecurringTransactions: RecurringTransaction[] = [];
+  vehicles: Vehicle[] = [];
 
   get data() {
     return this.config.data;
@@ -130,6 +133,7 @@ export class EditTransactionDialogComponent implements OnInit {
     private categoryService: CategoryService,
     private savingAccountService: SavingAccountService,
     private dialogService: DialogService,
+    private vehicleService: VehicleService,
   ) {
     this.isNew = this.data.isNew || false;
     this.dialogTitle = this.isNew
@@ -138,6 +142,9 @@ export class EditTransactionDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.vehicleService.loadVehicles().subscribe((vehicles) => {
+      this.vehicles = vehicles.filter((vehicle) => Number(vehicle.isActive) !== 0);
+    });
     // Charger les comptes
     this.accountService.accounts$.subscribe({
       next: (accounts) => {
@@ -265,6 +272,7 @@ export class EditTransactionDialogComponent implements OnInit {
     this.data.transaction.financialFlowId = selectedRecurring.financialFlowId;
     this.data.transaction.subCategoryId = selectedRecurring.subCategoryId;
     this.data.transaction.recurringTransactionId = selectedRecurring.id;
+    this.data.transaction.vehicleId = selectedRecurring.vehicleId || null;
 
     // Mettre à jour le champ de sous-catégorie
     this.selectedSubCategoryId = selectedRecurring.subCategoryId || 0;
@@ -418,6 +426,8 @@ export class EditTransactionDialogComponent implements OnInit {
         this.data.transaction['financial_flow_id'],
       subCategoryId: this.selectedSubCategoryId,
       recurringTransactionId: this.data.transaction.recurringTransactionId,
+      recurringOccurrenceDate:
+        this.data.transaction.recurringOccurrenceDate || null,
       advanceToJointAccount: this.toBoolean(
         this.data.transaction.advanceToJointAccount,
       ),
@@ -428,6 +438,7 @@ export class EditTransactionDialogComponent implements OnInit {
         this.selectedSavingAccountId && this.selectedSavingAccountId > 0
           ? this.selectedSavingAccountId
           : null,
+      vehicleId: this.data.transaction.vehicleId || null,
     };
 
     this.ref.close(updatedTransaction);

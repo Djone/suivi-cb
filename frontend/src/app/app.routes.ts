@@ -59,6 +59,13 @@ const childRoutes: Routes = [
       ),
   },
   {
+    path: 'vehicles',
+    loadComponent: () =>
+      import('./components/vehicles/vehicles.component').then(
+        (m) => m.VehiclesComponent,
+      ),
+  },
+  {
     path: 'account-saving/:id',
     loadComponent: () =>
       import('./components/account-saving/account-saving.component').then(

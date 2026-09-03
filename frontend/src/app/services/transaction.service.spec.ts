@@ -116,6 +116,78 @@ describe('TransactionService', () => {
     });
   });
 
+  describe('addTransactions', () => {
+    it('devrait ajouter le lot puis recharger les transactions une seule fois', (done) => {
+      const loadSpy = spyOn(service, 'loadTransactions').and.stub();
+      const transactions: Transaction[] = [
+        {
+          id: null,
+          description: 'Echeance 1',
+          amount: 25,
+          date: '2024-01-15',
+          accountId: 1,
+          financialFlowId: 2,
+          subCategoryId: 3,
+          recurringTransactionId: 10,
+          recurringOccurrenceDate: '2024-01-10',
+        },
+        {
+          id: null,
+          description: 'Echeance 2',
+          amount: 40,
+          date: '2024-01-15',
+          accountId: 1,
+          financialFlowId: 2,
+          subCategoryId: 4,
+          recurringTransactionId: 11,
+          recurringOccurrenceDate: '2024-01-20',
+        },
+      ];
+
+      service.addTransactions(transactions).subscribe((responses) => {
+        expect(responses.length).toBe(2);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        done();
+      });
+
+      const requests = httpMock.match(
+        'http://localhost:3000/api/transactions',
+      );
+      expect(requests.length).toBe(2);
+      expect(requests[0].request.method).toBe('POST');
+      expect(requests[0].request.body.account_id).toBe(1);
+      expect(requests[0].request.body.recurring_transaction_id).toBe(10);
+      expect(requests[0].request.body.recurring_occurrence_date).toBe(
+        '2024-01-10',
+      );
+      expect(requests[1].request.body.recurring_transaction_id).toBe(11);
+      requests.forEach((request, index) => request.flush({ id: index + 1 }));
+    });
+  });
+
+  describe('deleteTransactions', () => {
+    it('devrait supprimer le lot puis recharger une seule fois', (done) => {
+      const loadSpy = spyOn(service, 'loadTransactions').and.stub();
+
+      service.deleteTransactions([12, 13]).subscribe((responses) => {
+        expect(responses.length).toBe(2);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        done();
+      });
+
+      const firstRequest = httpMock.expectOne(
+        'http://localhost:3000/api/transactions/12',
+      );
+      const secondRequest = httpMock.expectOne(
+        'http://localhost:3000/api/transactions/13',
+      );
+      expect(firstRequest.request.method).toBe('DELETE');
+      expect(secondRequest.request.method).toBe('DELETE');
+      firstRequest.flush({ message: 'deleted' });
+      secondRequest.flush({ message: 'deleted' });
+    });
+  });
+
   describe('updateTransaction', () => {
     it('devrait mettre a jour une transaction', (done) => {
       spyOn(service, 'loadTransactions').and.stub();

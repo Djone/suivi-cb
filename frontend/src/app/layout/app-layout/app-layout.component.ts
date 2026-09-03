@@ -63,6 +63,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
       currentPath === '/' ||
       currentPath === '/home' ||
       currentPath === '/transactions-list' ||
+      currentPath === '/vehicles' ||
       /^\/transactions-list\/\d+$/.test(currentPath);
 
     if (!isAllowed) {

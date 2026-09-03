@@ -96,7 +96,7 @@
       </div>
 
       <ng-container *ngIf="getActiveAccountBalance() as accountBalance">
-        <div class="row-2cols">
+        <div class="home-summary-row">
           <div class="col">
             <div
               class="balances-card"
@@ -104,7 +104,9 @@
             >
               <div class="balances-inline">
                 <div class="balance-inline-item">
-                  <span class="label"><i class="pi pi-euro mr-1"></i>Actuel</span>
+                  <span class="label"
+                    ><i class="pi pi-euro mr-1"></i>Actuel</span
+                  >
                   <span
                     class="value"
                     [class.positive]="accountBalance.currentBalance >= 0"
@@ -157,16 +159,119 @@
                 "
               >
                 <div class="break503020-list">
-                  <div class="break-row" *ngFor="let it of items">
-                    <div class="break-label">{{ it.name }}</div>
-                    <div class="break-value">
-                      {{
-                        it.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                      }}
+                  <div class="break-group break-income">
+                    <div class="break-row">
+                      <div class="break-label">Revenus</div>
+                      <div class="break-value">
+                        {{
+                          get503020Breakdown(accountBalance.account.id!).total
+                            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                        }}
+                      </div>
+                      <div class="break-percent">Base</div>
                     </div>
-                    <div class="break-percent">{{ it.percent }}%</div>
+                    <div class="break-details">
+                      <div
+                        class="break-detail-row"
+                        *ngFor="
+                          let detail of get503020Breakdown(
+                            accountBalance.account.id!
+                          ).incomeDetails
+                        "
+                      >
+                        <span>
+                          {{ detail.label }}
+                          <small *ngIf="detail.occurrences > 1">
+                            × {{ detail.occurrences }} occurrences
+                          </small>
+                        </span>
+                        <strong>
+                          {{
+                            detail.amount
+                              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                          }}
+                        </strong>
+                      </div>
+                    </div>
                   </div>
-                  <div class="break-row remaining">
+                  <div
+                    class="break-group break-expense"
+                    *ngFor="let it of items"
+                  >
+                    <div class="break-row">
+                      <div class="break-label">{{ it.name }}</div>
+                      <div class="break-value">
+                        {{
+                          it.amount
+                            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                        }}
+                      </div>
+                      <div class="break-percent">{{ it.percent }}%</div>
+                    </div>
+                    <div class="break-details" *ngIf="it.details.length">
+                      <div
+                        class="break-detail-row"
+                        *ngFor="let detail of it.details"
+                      >
+                        <span>
+                          {{ detail.label }}
+                          <small *ngIf="detail.occurrences > 1">
+                            × {{ detail.occurrences }} occurrences
+                          </small>
+                        </span>
+                        <strong>
+                          {{
+                            detail.amount
+                              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                          }}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="break-group break-unclassified"
+                    *ngIf="
+                      get503020Breakdown(accountBalance.account.id!)
+                        .unclassifiedAmount > 0
+                    "
+                  >
+                    <div class="break-row">
+                      <div class="break-label">À classer</div>
+                      <div class="break-value">
+                        {{
+                          get503020Breakdown(accountBalance.account.id!)
+                            .unclassifiedAmount
+                            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                        }}
+                      </div>
+                      <div class="break-percent">—</div>
+                    </div>
+                    <div class="break-details">
+                      <div
+                        class="break-detail-row"
+                        *ngFor="
+                          let detail of get503020Breakdown(
+                            accountBalance.account.id!
+                          ).unclassifiedDetails
+                        "
+                      >
+                        <span>{{ detail.label }}</span>
+                        <strong>
+                          {{
+                            detail.amount
+                              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                          }}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="break-row remaining"
+                    [class.negative-remaining]="
+                      get503020Breakdown(accountBalance.account.id!).remaining <
+                      0
+                    "
+                  >
                     <div class="break-label">Reste à vivre</div>
                     <div class="break-value">
                       {{
@@ -182,66 +287,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="break503020-mini">
-                  <div class="mini-bar">
-                    <ng-container *ngFor="let it of items; let i = index">
-                      <div
-                        class="mini-seg seg-{{ i }}"
-                        [ngStyle]="{ width: (it.percent || 0) + '%' }"
-                      ></div>
-                    </ng-container>
-                  </div>
-                  <div class="mini-legend">
-                    <span class="legend-item"
-                      ><span class="dot dot-0"></span> 50</span
-                    >
-                    <span class="legend-item"
-                      ><span class="dot dot-1"></span> 30</span
-                    >
-                    <span class="legend-item"
-                      ><span class="dot dot-2"></span> 20</span
-                    >
-                  </div>
-                </div>
               </div>
-            </div>
-          </div>
-
-          <div class="col">
-            <div class="notifications-card">
-              <div class="section-header">
-                <i class="pi pi-bell"></i>
-                <h3>Notifications</h3>
-              </div>
-              <div *ngIf="getNotifications(accountBalance).length; else noNotes">
-                <div class="notifications-list">
-                  <div
-                    *ngFor="let n of getNotifications(accountBalance)"
-                    class="notification-item"
-                  >
-                    <p-tag
-                      [severity]="n.severity"
-                      [pTooltip]="n.tooltip"
-                      tooltipPosition="top"
-                      [tooltipStyleClass]="
-                        n.tooltip ? 'notification-tooltip' : undefined
-                      "
-                      (click)="
-                        handleNotificationClick(n, accountBalance.account.id!)
-                      "
-                      [style.cursor]="'pointer'"
-                    >
-                      {{ n.text }}
-                    </p-tag>
-                  </div>
-                </div>
-              </div>
-              <ng-template #noNotes>
-                <div class="no-data">
-                  <i class="pi pi-check-circle"></i> Aucune notification pour ce
-                  mois.
-                </div>
-              </ng-template>
             </div>
           </div>
         </div>
@@ -309,11 +355,15 @@
                 <ng-template pTemplate="body" let-s>
                   <tr>
                     <td>
-                      {{ getRecurringLabelWithCountdown(s.recurringTransaction) }}
+                      {{
+                        getRecurringLabelWithCountdown(s.recurringTransaction)
+                      }}
                     </td>
                     <td>
                       {{
-                        getSubCategoryLabel(s.recurringTransaction.subCategoryId)
+                        getSubCategoryLabel(
+                          s.recurringTransaction.subCategoryId
+                        )
                       }}
                     </td>
                     <td class="text-right">
@@ -345,18 +395,33 @@
             </div>
           </div>
         </div>
-
-        <div class="section">
+        <!---->
+        <!-- <div class="section">
           <div class="section-header">
-            <i class="pi pi-chart-bar"></i>
-            <h3>Répartition du mois (totaux)</h3>
+            <i class="pi pi-chart-line"></i>
+            <h3>Tendances du budget</h3>
           </div>
-          <p-chart
-            type="bar"
-            [data]="getStackedBarData(accountBalance.account.id!)"
-            [options]="stackedBarOptions"
-          ></p-chart>
-        </div>
+          <p class="trend-intro">
+            Comparaison du mois en cours avec les trois mois précédents, au
+            même nombre de jours.
+          </p>
+          <div class="budget-trends">
+            <article
+              *ngFor="let stat of getBudgetTrendStats(accountBalance.account.id!)"
+              class="trend-card"
+              [ngClass]="'trend-card--' + stat.tone"
+            >
+              <div class="trend-card__icon">
+                <i class="pi" [ngClass]="stat.icon"></i>
+              </div>
+              <div class="trend-card__content">
+                <span>{{ stat.title }}</span>
+                <strong>{{ stat.value }}</strong>
+                <small>{{ stat.detail }}</small>
+              </div>
+            </article>
+          </div>
+        </div> -->
       </ng-container>
     </ng-container>
   </ng-template>
