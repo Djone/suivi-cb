@@ -59,6 +59,104 @@
   padding-left: 1.2rem;
 }
 
+.guide-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.guide-heading .eyebrow {
+  margin: 0 0 0.35rem;
+}
+
+.guide-badge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  color: #166534;
+  background: #dcfce7;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.release-checklist {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.release-guide-details {
+  margin-top: 1rem;
+  border-top: 1px solid var(--surface-200);
+  padding-top: 0.85rem;
+}
+
+.release-guide-details summary {
+  cursor: pointer;
+  color: var(--primary-color, #2563eb);
+  font-weight: 700;
+}
+
+.release-guide-content {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.release-guide-content article {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--surface-200);
+  border-radius: 10px;
+  background: var(--surface-50);
+}
+
+.release-guide-content h3,
+.release-guide-content p {
+  margin-top: 0;
+}
+
+.release-guide-content p:last-child,
+.release-guide-content ul:last-child {
+  margin-bottom: 0;
+}
+
+.release-guide-content li + li {
+  margin-top: 0.3rem;
+}
+
+.guide-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.guide-options div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem;
+  border-radius: 8px;
+  background: var(--surface-card);
+}
+
+.guide-options span {
+  color: var(--surface-600);
+}
+
+.guide-command {
+  margin: 0.6rem 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.guide-source {
+  color: var(--surface-600);
+  font-size: 0.88rem;
+}
+
 .note-helper {
   margin: 0.55rem 0 0;
   color: var(--surface-700);
@@ -88,6 +186,61 @@
 .flag-grid label {
   flex-direction: row;
   align-items: center;
+}
+
+.release-option-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.release-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.8rem;
+  border: 1px solid var(--surface-300);
+  border-radius: 10px;
+  background: var(--surface-50);
+  cursor: help;
+}
+
+.release-option-control {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.release-option-control input {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+}
+
+.release-option small {
+  color: var(--surface-600);
+  line-height: 1.4;
+}
+
+.release-option--warning {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.advanced-options {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border: 1px solid var(--surface-300);
+  border-radius: 10px;
+}
+
+.advanced-options summary {
+  cursor: pointer;
+  color: var(--surface-700);
+  font-weight: 700;
+}
+
+.advanced-option-list {
+  margin-top: 0.8rem;
 }
 
 .git-grid {
@@ -341,13 +494,15 @@
 }
 
 .command-block code {
-  font-family: Consolas, 'Courier New', monospace;
+  font-family: Consolas, "Courier New", monospace;
 }
 
 @media (max-width: 900px) {
   .grid,
   .flag-grid,
   .git-grid,
+  .guide-options,
+  .release-option-list,
   .notes-grid {
     grid-template-columns: 1fr;
   }
@@ -355,5 +510,9 @@
   .process-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .guide-heading {
+    flex-direction: column;
   }
 }

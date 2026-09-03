@@ -45,14 +45,11 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public allowDirty = false;
   public skipMasterCheck = false;
   public skipTests = false;
-  public skipBuild = false;
-  public execute = false;
 
   public createReleaseBranch = false;
   public releaseBranch = '';
   public branchPrefix = 'release/';
-  public commit = false;
-  public tag = false;
+  public commit = true;
   public rollbackOnFailure = true;
 
   public isRunning = false;
@@ -121,32 +118,13 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       ? ` --release-branch=${this.releaseBranch.trim()}`
       : '';
     const commitCmd = this.commit ? ' --commit' : '';
-    const tagCmd = this.tag ? ' --tag' : '';
     const rollbackCmd = this.rollbackOnFailure ? ' --rollback-on-failure' : '';
 
-    return `npm run release:prepare -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${branchCmd}${releaseBranch}${commitCmd}${tagCmd}${rollbackCmd}`;
+    return `npm run release:prepare -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${branchCmd}${releaseBranch}${commitCmd}${rollbackCmd}`;
   }
 
   get deployCommand(): string {
-    const executeFlag = this.execute ? ' --execute' : '';
-    const skipBuild = this.skipBuild ? ' --skip-build' : '';
-    return `npm run release:deploy -- --branch=${this.branch}${executeFlag}${skipBuild}`;
-  }
-
-  get fullCommand(): string {
-    const next = this.nextDevVersion.trim() || '<next-dev-version>';
-    const executeFlag = this.execute ? ' --execute' : '';
-    const branchCmd = this.createReleaseBranch
-      ? ` --create-release-branch --branch-prefix=${this.branchPrefix}`
-      : '';
-    const releaseBranch = this.releaseBranch.trim()
-      ? ` --release-branch=${this.releaseBranch.trim()}`
-      : '';
-    const commitCmd = this.commit ? ' --commit' : '';
-    const tagCmd = this.tag ? ' --tag' : '';
-    const rollbackCmd = this.rollbackOnFailure ? ' --rollback-on-failure' : '';
-
-    return `npm run release:full -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${executeFlag}${branchCmd}${releaseBranch}${commitCmd}${tagCmd}${rollbackCmd}`;
+    return `npm run release:deploy -- --branch=${this.branch} --execute`;
   }
 
   runDryRun(): void {
@@ -161,20 +139,13 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   }
 
   runDeploy(): void {
-    // "Deploy" button performs the real Git finalization (merge + push).
-    this.execute = true;
     this.runCommand('deploy');
   }
 
-  runFull(): void {
-    if (!this.validatePrepareInputs()) {
-      return;
-    }
-    this.runCommand('full');
-  }
-
   runRollback(): void {
-    if (!confirm('Confirmer le rollback vers le dernier backup de versions ?')) {
+    if (
+      !confirm('Confirmer le rollback vers le dernier backup de versions ?')
+    ) {
       return;
     }
     this.runCommand('rollback');
@@ -188,14 +159,11 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.allowDirty = false;
     this.skipMasterCheck = false;
     this.skipTests = false;
-    this.skipBuild = false;
-    this.execute = false;
 
     this.createReleaseBranch = false;
     this.releaseBranch = '';
     this.branchPrefix = 'release/';
-    this.commit = false;
-    this.tag = false;
+    this.commit = true;
     this.rollbackOnFailure = true;
 
     this.errorMessage = '';
@@ -266,7 +234,10 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
 
     if (Array.isArray(report.steps)) {
       const failedStep = report.steps.find(
-        (step) => step?.status === 'failed' && typeof step.error === 'string' && step.error.trim(),
+        (step) =>
+          step?.status === 'failed' &&
+          typeof step.error === 'string' &&
+          step.error.trim(),
       );
       if (failedStep?.error) {
         return failedStep.error.replace(/\u001b\[[0-9;]*m/g, '').trim();
@@ -297,7 +268,9 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
       navigator.clipboard
         .writeText(reportError)
-        .then(() => this.setCopyFeedback('Erreur copiee dans le presse-papiers.'))
+        .then(() =>
+          this.setCopyFeedback('Erreur copiee dans le presse-papiers.'),
+        )
         .catch(() => this.copyWithFallback(reportError));
       return;
     }
@@ -343,6 +316,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.backendMessage = '';
 
+    const execute = command === 'deploy';
     const payload: ReleaseRunRequest = {
       command,
       stable: this.stableVersion.trim() || undefined,
@@ -351,17 +325,20 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       allowDirty: this.allowDirty,
       skipMasterCheck: this.skipMasterCheck,
       skipTests: this.skipTests,
-      skipBuild: this.skipBuild,
-      execute: this.execute,
+      skipBuild: false,
+      execute,
       createReleaseBranch: this.createReleaseBranch,
       releaseBranch: this.releaseBranch.trim() || undefined,
       branchPrefix: this.branchPrefix.trim() || 'release/',
       commit: this.commit,
-      tag: this.tag,
+      tag: false,
       rollbackOnFailure: this.rollbackOnFailure,
     };
 
-    if (this.execute && !confirm('Confirmer l’exécution réelle (pas en simulation) ?')) {
+    if (
+      execute &&
+      !confirm('Confirmer l’exécution réelle (pas en simulation) ?')
+    ) {
       return;
     }
 
@@ -374,7 +351,8 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.errorMessage =
-          error?.error?.message ?? 'Erreur lors du lancement de la commande release.';
+          error?.error?.message ??
+          'Erreur lors du lancement de la commande release.';
       },
     });
   }
@@ -420,4 +398,3 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     return true;
   }
 }
-
