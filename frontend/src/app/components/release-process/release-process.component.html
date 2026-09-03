@@ -163,12 +163,17 @@ sudo docker-compose logs --tail=100</code></pre>
     <h2>Actions exécutables</h2>
     <div class="grid">
       <label>
-        Version stable
+        Version stable (pour <code>prepare</code>)
         <input
           class="text-input"
           [(ngModel)]="stableVersion"
           placeholder="1.3.0"
         />
+        <small>
+          <code>deploy</code> utilise automatiquement la version portée par la
+          branche source, même si l'application locale affiche déjà la version
+          de développement suivante.
+        </small>
       </label>
       <label>
         Prochaine version dev

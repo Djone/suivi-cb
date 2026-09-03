@@ -591,13 +591,16 @@ function gitMergeToMaster(report) {
 }
 
 function resolveStableVersionForTag(options, sourceBranch) {
-  if (options.stable && SEMVER_STABLE.test(options.stable)) {
-    return options.stable;
-  }
-
-  const fromBranch = (sourceBranch || '').match(/^(\d+\.\d+\.\d+)-dev(?:\.\d+)?$/);
+  // The source branch is authoritative: prepare switches the local
+  // development version to the next cycle, so a reloaded UI may otherwise
+  // submit that next version during deploy.
+  const fromBranch = (sourceBranch || '').match(/(?:^|\/)(\d+\.\d+\.\d+)(?:-dev(?:\.\d+)?)?$/);
   if (fromBranch) {
     return fromBranch[1];
+  }
+
+  if (options.stable && SEMVER_STABLE.test(options.stable)) {
+    return options.stable;
   }
 
   return '';
@@ -786,4 +789,10 @@ function run() {
   }
 }
 
-run();
+if (require.main === module) {
+  run();
+}
+
+module.exports = {
+  resolveStableVersionForTag,
+};
