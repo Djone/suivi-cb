@@ -104,7 +104,9 @@
             >
               <div class="balances-inline">
                 <div class="balance-inline-item">
-                  <span class="label"><i class="pi pi-euro mr-1"></i>Actuel</span>
+                  <span class="label"
+                    ><i class="pi pi-euro mr-1"></i>Actuel</span
+                  >
                   <span
                     class="value"
                     [class.positive]="accountBalance.currentBalance >= 0"
@@ -288,7 +290,6 @@
               </div>
             </div>
           </div>
-
         </div>
 
         <div class="row-2cols">
@@ -354,11 +355,15 @@
                 <ng-template pTemplate="body" let-s>
                   <tr>
                     <td>
-                      {{ getRecurringLabelWithCountdown(s.recurringTransaction) }}
+                      {{
+                        getRecurringLabelWithCountdown(s.recurringTransaction)
+                      }}
                     </td>
                     <td>
                       {{
-                        getSubCategoryLabel(s.recurringTransaction.subCategoryId)
+                        getSubCategoryLabel(
+                          s.recurringTransaction.subCategoryId
+                        )
                       }}
                     </td>
                     <td class="text-right">
@@ -390,8 +395,8 @@
             </div>
           </div>
         </div>
-
-        <div class="section">
+        <!---->
+        <!-- <div class="section">
           <div class="section-header">
             <i class="pi pi-chart-line"></i>
             <h3>Tendances du budget</h3>
@@ -416,7 +421,7 @@
               </div>
             </article>
           </div>
-        </div>
+        </div> -->
       </ng-container>
     </ng-container>
   </ng-template>

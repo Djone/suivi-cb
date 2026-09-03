@@ -7,6 +7,30 @@ export interface ReleaseNotesSection {
 
 export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
   {
+    version: '1.5.0',
+    items: [
+      {
+        title: '[Ticket 8] Bug fix : frontend',
+        description: [
+          "[X] Echéances à venir : Supprimer les échéances à venir si elles n'auront pas lieu",
+          "[X] Echéances à venir : Renseigner la date du jour quand l'échéance à venir a été validée",
+        ],
+        status: 'done',
+        targetVersion: '1.5.0',
+        priority: 'high',
+      },
+      {
+        title: '[Ticket 10] Epargne',
+        description: [
+          "[X] Epargne : Ajouter une épargne 'urgences' en plus de celle 'portefeuille' - Ajouter des tabs pour naviguer entre les deux épargnes",
+        ],
+        status: 'done',
+        targetVersion: '1.5.0',
+        priority: 'high',
+      },
+    ],
+  },
+  {
     version: '1.4.0',
     items: [
       {
