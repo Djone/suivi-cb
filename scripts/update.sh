@@ -68,6 +68,19 @@ if [ "$MODE" = "db" ]; then
   exit 0
 fi
 
+CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD || true)"
+if [ "$CURRENT_BRANCH" != "$GIT_BRANCH" ]; then
+  echo "ERROR: Expected Git branch '$GIT_BRANCH', current branch is '${CURRENT_BRANCH:-detached HEAD}'."
+  echo "Checkout '$GIT_BRANCH' and retry the update."
+  exit 1
+fi
+
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "ERROR: Tracked files contain uncommitted changes."
+  echo "Commit or restore them before running the update."
+  exit 1
+fi
+
 echo "Running full update mode (git pull + rebuild)..."
 OLD_COMMIT="$(git rev-parse HEAD)"
 
@@ -75,8 +88,9 @@ rollback() {
   local step="$1"
   echo "ERROR during '$step'. Starting rollback..."
 
-  echo "1) Restoring previous code version: $OLD_COMMIT"
-  git checkout "$OLD_COMMIT" --force
+  echo "1) Restoring branch $GIT_BRANCH to previous code version: $OLD_COMMIT"
+  git checkout "$GIT_BRANCH" --force
+  git reset --hard "$OLD_COMMIT"
 
   echo "2) Restoring database backup if available"
   if [ -f "$BACKUP_FILE" ]; then
