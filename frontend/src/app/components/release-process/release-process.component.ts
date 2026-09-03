@@ -317,9 +317,14 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.backendMessage = '';
 
     const execute = command === 'deploy';
+    const stable =
+      command === 'deploy' ? undefined : this.stableVersion.trim() || undefined;
     const payload: ReleaseRunRequest = {
       command,
-      stable: this.stableVersion.trim() || undefined,
+      // During deploy, the orchestrator derives the stable version from the
+      // source branch. After prepare, the local UI already displays the next
+      // development version and must not be used to name the release tag.
+      stable,
       next: this.nextDevVersion.trim() || undefined,
       branch: this.branch.trim() || 'master',
       allowDirty: this.allowDirty,

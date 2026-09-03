@@ -134,6 +134,10 @@ recommencer depuis `dry-run`.
 
 Dans l'assistant, lancer `deploy` et confirmer l'exécution réelle.
 
+La version du tag est déduite de la branche source (`1.6.0-dev` donne
+`v1.6.0`). Elle ne dépend pas de la version locale, qui affiche déjà
+`1.7.0-dev` après `prepare`.
+
 `deploy` :
 
 1. relance les tests ;
