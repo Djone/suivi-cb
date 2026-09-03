@@ -7,13 +7,46 @@ export interface ReleaseNotesSection {
 
 export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
   {
+    version: '1.6.0',
+    items: [
+      {
+        title: '[Ticket 11] Echéances à venir : frontend',
+        description: [
+          '[X] Echéances à venir : amélioration du fonctionnement - Sélection multiple des échéances à venir les valider; annulation de la validation d\'une échéance à venir',
+          '[X] Echéances à venir : amélioration du fonctionnement - Ajout d\'une modale pour l\'édition du montant de l\'échéance à venir',
+        ],
+        status: 'done',
+        targetVersion: '1.6.0',
+        priority: 'high',
+      },
+      {
+        title: '[Ticket 12] Véhicules : nouvelle page pour la gestion des véhicules',
+        description: [
+          '[X] Véhicules : Ajout d\'une nouvelle page pour la gestion des véhicules - Ajout d\'un formulaire pour l\'ajout d\'un véhicule - Ajout d\'un tableau pour la visualisation du coût des véhicules',
+        ],
+        status: 'done',
+        targetVersion: '1.6.0',
+        priority: 'high',
+      },
+      {
+        title: '[Ticket 13] Bug fix : frontend',
+        description: [
+          '[X] Epargne : Correction du calcul du solde de l’épargne “portefeuille”',
+        ],
+        status: 'done',
+        targetVersion: '1.6.0',
+        priority: 'medium',
+      },
+    ],
+  },
+  {
     version: '1.5.0',
     items: [
       {
         title: '[Ticket 8] Bug fix : frontend',
         description: [
-          "[X] Echéances à venir : Supprimer les échéances à venir si elles n'auront pas lieu",
-          "[X] Echéances à venir : Renseigner la date du jour quand l'échéance à venir a été validée",
+          '[X] Echéances à venir : Supprimer les échéances à venir si elles n\'auront pas lieu',
+          '[X] Echéances à venir : Renseigner la date du jour quand l\'échéance à venir a été validée',
         ],
         status: 'done',
         targetVersion: '1.5.0',
@@ -22,7 +55,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
       {
         title: '[Ticket 10] Epargne',
         description: [
-          "[X] Epargne : Ajouter une épargne 'urgences' en plus de celle 'portefeuille' - Ajouter des tabs pour naviguer entre les deux épargnes",
+          '[X] Epargne : Ajouter une épargne \'urgences\' en plus de celle \'portefeuille\' - Ajouter des tabs pour naviguer entre les deux épargnes',
         ],
         status: 'done',
         targetVersion: '1.5.0',
@@ -60,7 +93,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
       {
         title: 'Ameliorations UI/UX',
         description: [
-          "[X] Modal Nouvelle transaction : Ajouter la fonctionnalite d'ajout de sous-categories directement dans la liste deroulante des categories",
+          '[X] Modal Nouvelle transaction : Ajouter la fonctionnalite d\'ajout de sous-categories directement dans la liste deroulante des categories',
           '[X] Modal Nouvelle transaction : Textebox montant - Avoir la meme coherence que celle de Nouvelle recurrence',
           '[X] Modal Nouvelle transaction : liste déroulante catégorie - Avoir la meme coherence que celle de Nouvelle recurrence',
           '[X] Modal Nouvelle transaction : Rendre une autocompletion intelligente pour la textbox "Description"',
@@ -76,8 +109,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
     version: '1.2.0',
     items: [
       {
-        title:
-          'Sous-catégories : Supprimer la partie dédiée dans le menu opérations',
+        title: 'Sous-catégories : Supprimer la partie dédiée dans le menu opérations',
         description: [
           '[X] Supprimer le lien dans le menu latéral',
           '[X] Supprimer les fichiers associés (composant, service, modèle, données de test)',
@@ -89,9 +121,9 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
       {
         title: 'Data : Import des anciennes transactions ',
         description: [
-          "[X] Créer un fichier d'import avec les données 2022",
-          "[X] Créer un fichier d'import avec les données 2023",
-          "[X] Créer un fichier d'import avec les données 2024",
+          '[X] Créer un fichier d\'import avec les données 2022',
+          '[X] Créer un fichier d\'import avec les données 2023',
+          '[X] Créer un fichier d\'import avec les données 2024',
           '[X] Importer les données dans la nouvelle base de données',
         ],
         status: 'done',
@@ -101,8 +133,8 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
       {
         title: 'Data : MAJ des données',
         description: [
-          "[X] Intégrer l'historique des modifications de catégories et sous-catégories",
-          "[X] Vérifier l'intégrité des données après import",
+          '[X] Intégrer l\'historique des modifications de catégories et sous-catégories',
+          '[X] Vérifier l\'intégrité des données après import',
         ],
         status: 'done',
         targetVersion: '1.2.0',
@@ -120,7 +152,9 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
       },
       {
         title: 'Compte Joint - répartition par couple : Backend',
-        description: ['[X] Intégrer la logique backend'],
+        description: [
+          '[X] Intégrer la logique backend',
+        ],
         status: 'done',
         targetVersion: '1.2.0',
         priority: 'medium',
@@ -137,7 +171,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
       {
         title: 'Release notes automatisées',
         description: [
-          "[X] Garder l'historique des modifications dans un fichier dédié",
+          '[X] Garder l\'historique des modifications dans un fichier dédié',
         ],
         status: 'done',
         targetVersion: '1.2.0',
@@ -168,7 +202,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         targetVersion: '1.1.0',
       },
       {
-        title: "Transactions récurrentes : visualisation de l'historique",
+        title: 'Transactions récurrentes : visualisation de l\'historique',
         description: [
           '[X] Afficher l’évolution des montants dans le temps (graphique + filtre).',
           '[X] Filtrer par type de transaction / catégorie / compte bancaire.',
@@ -190,7 +224,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
       {
         title: 'Dashboard : mise à jour des notifications',
         description: [
-          "[X] Montant total de l'épargne mensuelle à jour en fonction des transactions ajoutées/supprimées.",
+          '[X] Montant total de l\'épargne mensuelle à jour en fonction des transactions ajoutées/supprimées.',
           '[X] Prévision en baisse',
           '[X] prochaines transactions pour les 5 prochains jours',
           '[X] Prévision des prochains gros montants.',
@@ -201,7 +235,7 @@ export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
         targetVersion: '1.1.0',
       },
       {
-        title: "Transactions récurrentes : modification de l'UI",
+        title: 'Transactions récurrentes : modification de l\'UI',
         description: [
           '[X] Onglets pour les Revenus et Dépenses.',
           '[X] Grouper par compte bancaire.',
