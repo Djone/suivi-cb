@@ -7,7 +7,7 @@
 .layout-main-container {
   flex: 1;
   margin-top: 70px;
-  background-color: #f8f9fa;
+  background-color: #f4f6f9;
 }
 
 .layout-main-container--mobile {
@@ -17,7 +17,7 @@
 }
 
 .layout-main {
-  padding: 2rem;
+  padding: 2rem 2.5rem;
   min-height: calc(100vh - 70px);
 }
 

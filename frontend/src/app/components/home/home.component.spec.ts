@@ -201,4 +201,42 @@ describe('HomeComponent', () => {
     expect(stats[2].value).toBe('Alimentation');
     expect(stats[2].tone).toBe('positive');
   });
+
+  it('planifie une recurrence semestrielle pendant chacun des mois choisis', () => {
+    const recurring = {
+      id: 4,
+      label: 'Redevance ordures menageres',
+      amount: 76.83,
+      dayOfMonth: 5,
+      subCategoryId: 10,
+      accountId: 1,
+      financialFlowId: 2,
+      frequency: 'biannual' as const,
+      activeMonths: [5, 9],
+      isActive: 1,
+      debit503020: 1,
+    };
+
+    const maySchedules = (component as any).buildSchedulesForMonth(
+      [recurring],
+      2026,
+      4,
+    );
+    const septemberSchedules = (component as any).buildSchedulesForMonth(
+      [recurring],
+      2026,
+      8,
+    );
+    const julySchedules = (component as any).buildSchedulesForMonth(
+      [recurring],
+      2026,
+      6,
+    );
+
+    expect(maySchedules.length).toBe(1);
+    expect(maySchedules[0].dueDate).toEqual(new Date(2026, 4, 5));
+    expect(septemberSchedules.length).toBe(1);
+    expect(septemberSchedules[0].dueDate).toEqual(new Date(2026, 8, 5));
+    expect(julySchedules).toEqual([]);
+  });
 });

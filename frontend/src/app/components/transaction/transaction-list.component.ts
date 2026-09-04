@@ -31,8 +31,9 @@ import { OccurrenceAmountDialogComponent } from './occurrence-amount-dialog.comp
 import { Transaction } from '../../models/transaction.model';
 import { Account } from '../../models/account.model';
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
+import { recurringOccursInMonth } from '../../utils/recurring-frequency.utils';
 import { SubCategory } from '../../models/sub-category.model';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { DEBIT_503020_LIST } from '../../config/debit_503020';
@@ -193,7 +194,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private route: ActivatedRoute,
     private viewportService: ViewportService,
+    private router: Router,
   ) {}
+
+  navigateToAccount(accountId: number | undefined): void {
+    if (typeof accountId === 'number' && accountId !== this.accountId) {
+      this.router.navigate(['/transactions-list', accountId]);
+    }
+  }
 
   ngOnInit(): void {
     this.subscriptions.add(
@@ -606,8 +614,24 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return flowId === 2 ? sum + Math.abs(amount) : sum;
     }, 0);
 
-    this.remainingExpensesThisMonth = Math.max(
-      this.expectedExpensesTotal - this.realizedExpensesThisMonth,
+    // Additionner directement les échéances encore dues. Une soustraction entre
+    // le total théorique et les dépenses réalisées devient incorrecte lorsqu'une
+    // occurrence est annulée, modifiée ou réglée pour un montant différent.
+    this.remainingExpensesThisMonth = monthlySchedules.reduce(
+      (sum, { rt, date }) => {
+        const flowId =
+          typeof rt.financialFlowId === 'string'
+            ? parseInt(rt.financialFlowId, 10)
+            : rt.financialFlowId;
+        if (
+          flowId !== 2 ||
+          this.isScheduleRealized(rt, date) ||
+          this.isOccurrenceSkipped(rt, date)
+        ) {
+          return sum;
+        }
+        return sum + Math.abs(this.getOccurrenceAmount(rt, date));
+      },
       0,
     );
 
@@ -1198,28 +1222,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return sumCurrent + sumNext;
   }
 
-  private shouldApplyRecurring(
-    frequency: RecurringTransaction['frequency'] | null | undefined,
-    monthIndex: number,
-  ): boolean {
-    const month = monthIndex % 12;
-    switch (frequency) {
-      case 'monthly':
-      case 'weekly':
-        return true;
-      case 'bimonthly':
-        return month % 2 === 0;
-      case 'quarterly':
-        return month % 3 === 0;
-      case 'biannual':
-        return month % 6 === 0;
-      case 'yearly':
-        return month === 0;
-      default:
-        return false;
-    }
-  }
-
   private getFrequencyMonthSpan(
     frequency?: RecurringTransaction['frequency'] | null,
   ): number {
@@ -1319,16 +1321,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           : rt.dayOfMonth || 0;
       const freq: RecurringTransaction['frequency'] =
         (rt as any).frequency || 'monthly';
-      const activeMonths = Array.isArray(rt.activeMonths)
-        ? new Set(
-            (rt.activeMonths as number[]).filter(
-              (m) => typeof m === 'number' && m >= 1 && m <= 12,
-            ),
-          )
-        : null;
       const isInstallment = rt.recurrenceKind === 'installment';
 
-      if (!this.shouldApplyRecurring(freq, normalizedMonth)) {
+      if (!recurringOccursInMonth(freq, normalizedMonth, rt.activeMonths)) {
         return;
       }
 
@@ -1341,18 +1336,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           if (date.getDay() !== targetDow) {
             continue;
           }
-          if (activeMonths && !activeMonths.has(date.getMonth() + 1)) {
-            continue;
-          }
           if (isInstallment && !this.isInstallmentDateValid(rt, date)) {
             continue;
           }
           list.push({ rt, date });
         }
-        return;
-      }
-
-      if (activeMonths && !activeMonths.has(normalizedMonth + 1)) {
         return;
       }
 

@@ -286,3 +286,25 @@
     padding: 1rem 1rem 1.5rem;
   }
 }
+
+/* Sidebar de la nouvelle interface */
+.layout-sidebar {
+  background: #fff;
+  border-right: 1px solid #e7eaf0;
+  box-shadow: none;
+}
+.sidebar-content { padding: 1.25rem .75rem 5.5rem; }
+.menu { gap: .2rem; }
+.menu-item, .menu-item-header {
+  margin: 0;
+  padding: .78rem .9rem;
+  border: 0;
+  border-radius: 10px;
+  color: #667085;
+}
+.menu-item:hover, .menu-item-header:hover { color: #2563eb; background: #f3f7ff; border: 0; }
+.menu-item.active { color: #2563eb; background: #eaf2ff; border: 0; }
+.menu-submenu { margin: .25rem 0; background: #f8fafc; border-radius: 10px; }
+.menu-subitem { border: 0; }
+.menu-subitem.active { color: #2563eb; background: #eaf2ff; border: 0; }
+.version-footer { color: #9aa3b2; }

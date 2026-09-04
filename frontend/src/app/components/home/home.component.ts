@@ -13,6 +13,7 @@ import { ViewportService } from '../../services/viewport.service';
 // Models
 import { Transaction } from '../../models/transaction.model';
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
+import { recurringOccursInMonth } from '../../utils/recurring-frequency.utils';
 import { Account } from '../../models/account.model';
 import { DEBIT_503020_LIST } from '../../config/debit_503020';
 import { NotificationCenterService } from '../../services/notification-center.service';
@@ -100,6 +101,11 @@ interface AccountBalance {
   nextMonthLowestBalance: number; // Remplacer le booléen par un nombre
 }
 
+interface DashboardSchedule extends UpcomingSchedule {
+  accountId: number;
+  accountName: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -116,6 +122,7 @@ interface AccountBalance {
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  readonly dashboardDate = new Date();
   isMobile = false;
   transactions: Transaction[] = [];
   recurringTransactions: RecurringTransaction[] = [];
@@ -441,44 +448,27 @@ export class HomeComponent implements OnInit, OnDestroy {
       today.getMonth() + 1,
       1,
     );
+    const nextMonthSchedules = this.buildSchedulesForMonth(
+      accountRecurring,
+      nextMonthDate.getFullYear(),
+      nextMonthDate.getMonth(),
+    );
 
     for (let day = 1; day <= 5; day++) {
-      const currentDate = new Date(
-        nextMonthDate.getFullYear(),
-        nextMonthDate.getMonth(),
-        day,
+      const schedulesForDay = nextMonthSchedules.filter(
+        ({ dueDate }) => dueDate.getDate() === day,
       );
-      const currentDayOfWeekJS = currentDate.getDay(); // 0=Dim, 1=Lun, ...
-
-      // Récupérer TOUTES les échéances pour le jour 'day'
-      const schedulesForDay = accountRecurring.filter((rt) => {
-        // @ts-ignore
-        if (rt.frequency === 'weekly') {
-          const dayOfWeek =
-            typeof rt.dayOfMonth === 'string'
-              ? parseInt(rt.dayOfMonth)
-              : rt.dayOfMonth || 0;
-          if (dayOfWeek < 1 || dayOfWeek > 7) return false;
-          const targetDayOfWeekJS = dayOfWeek % 7;
-          return targetDayOfWeekJS === currentDayOfWeekJS;
-        }
-
-        // Logique pour les échéances mensuelles (et autres basées sur le jour du mois)
-        const dayOfMonth =
-          typeof rt.dayOfMonth === 'string'
-            ? parseInt(rt.dayOfMonth)
-            : rt.dayOfMonth || 0;
-        return dayOfMonth === day;
-      });
 
       // Calculer l'impact net de la journée
-      const netChangeForDay = schedulesForDay.reduce((sum, rt) => {
+      const netChangeForDay = schedulesForDay.reduce((sum, { recurring }) => {
         const amount =
-          typeof rt.amount === 'string'
-            ? parseFloat(rt.amount)
-            : rt.amount || 0;
+          typeof recurring.amount === 'string'
+            ? parseFloat(recurring.amount)
+            : recurring.amount || 0;
         const signedAmount =
-          rt.financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+          recurring.financialFlowId === 2
+            ? -Math.abs(amount)
+            : Math.abs(amount);
         return sum + signedAmount;
       }, 0);
 
@@ -498,25 +488,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     return 0;
-  }
-
-  private shouldApplyRecurring(frequency: string, month: number): boolean {
-    const monthIndex = month; // 0 for January, 1 for February, etc.
-    switch (frequency) {
-      case 'monthly':
-      case 'weekly':
-        return true;
-      case 'bimonthly':
-        return monthIndex % 2 === 0; // Jan, Mar, May...
-      case 'quarterly':
-        return monthIndex % 3 === 0; // Jan, Apr, Jul, Oct
-      case 'biannual':
-        return monthIndex % 6 === 0; // Jan, Jul
-      case 'yearly':
-        return monthIndex === 0; // January
-      default:
-        return false; // Ne pas traiter les fr+�quences inconnues
-    }
   }
 
   private isInstallmentDateValid(
@@ -620,16 +591,15 @@ export class HomeComponent implements OnInit, OnDestroy {
           ? parseInt(recurring.dayOfMonth, 10)
           : recurring.dayOfMonth || 0;
       const frequency = recurring.frequency || 'monthly';
-      const activeMonths = Array.isArray(recurring.activeMonths)
-        ? new Set(
-            (recurring.activeMonths as number[]).filter(
-              (value) => typeof value === 'number' && value >= 1 && value <= 12,
-            ),
-          )
-        : null;
       const isInstallment = recurring.recurrenceKind === 'installment';
 
-      if (!this.shouldApplyRecurring(frequency, normalizedMonth)) {
+      if (
+        !recurringOccursInMonth(
+          frequency,
+          normalizedMonth,
+          recurring.activeMonths,
+        )
+      ) {
         return;
       }
 
@@ -643,18 +613,11 @@ export class HomeComponent implements OnInit, OnDestroy {
           if (dueDate.getDay() !== targetDow) {
             continue;
           }
-          if (activeMonths && !activeMonths.has(dueDate.getMonth() + 1)) {
-            continue;
-          }
           if (isInstallment && !this.isInstallmentDateValid(recurring, dueDate)) {
             continue;
           }
           schedules.push({ recurring, dueDate });
         }
-        return;
-      }
-
-      if (activeMonths && !activeMonths.has(normalizedMonth + 1)) {
         return;
       }
 
@@ -954,6 +917,75 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   navigateToTransactions(accountId: number): void {
     this.router.navigate(['/transactions-list', accountId]);
+  }
+
+  getMainAccountBalances(): AccountBalance[] {
+    const mainAccounts = this.accountBalances.filter((balance) => {
+      const name = this.normalizeLabel(balance.account.name);
+      return name.includes('courant') || name.includes('joint');
+    });
+    return (mainAccounts.length ? mainAccounts : this.accountBalances).slice(
+      0,
+      2,
+    );
+  }
+
+  getMainAccountsLiquidity(): number {
+    return this.getMainAccountBalances().reduce(
+      (sum, balance) => sum + balance.currentBalance,
+      0,
+    );
+  }
+
+  getMainAccountsForecast(): number {
+    return this.getMainAccountBalances().reduce(
+      (sum, balance) => sum + balance.forecastBalance,
+      0,
+    );
+  }
+
+  getDashboardAlertCount(): number {
+    return this.getMainAccountBalances().reduce(
+      (sum, balance) => sum + this.getNotifications(balance).length,
+      0,
+    );
+  }
+
+  getDashboardTransactions(limit = 6): Transaction[] {
+    const accountIds = new Set<number>(
+      this.getMainAccountBalances()
+        .map((balance) => balance.account.id)
+        .filter((id): id is number => typeof id === 'number'),
+    );
+    return this.transactions
+      .filter((transaction) => accountIds.has(Number(transaction.accountId)))
+      .sort((a, b) => {
+        const timeA = a.date ? new Date(a.date).getTime() : 0;
+        const timeB = b.date ? new Date(b.date).getTime() : 0;
+        return timeB - timeA;
+      })
+      .slice(0, limit);
+  }
+
+  getTransactionAccountName(transaction: Transaction): string {
+    return (
+      this.accounts.find(
+        (account) => Number(account.id) === Number(transaction.accountId),
+      )?.name || 'Compte'
+    );
+  }
+
+  getDashboardUpcomingSchedules(limit = 6): DashboardSchedule[] {
+    return this.getMainAccountBalances()
+      .flatMap((balance) =>
+        balance.upcomingSchedules.map((schedule) => ({
+          ...schedule,
+          accountId: balance.account.id!,
+          accountName: balance.account.name,
+        })),
+      )
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+      .slice(0, limit);
   }
 
   getAccountInitials(account: Account): string {

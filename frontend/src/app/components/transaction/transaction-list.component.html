@@ -6,11 +6,29 @@
   <div class="list-container">
     <div class="list-header">
       <div class="header-content">
+        <nav
+          class="account-switcher"
+          *ngIf="accountId && accounts.length > 1 && !isMobile"
+          aria-label="Changer de compte"
+        >
+          <button
+            *ngFor="let availableAccount of accounts"
+            type="button"
+            [class.active]="availableAccount.id === accountId"
+            (click)="navigateToAccount(availableAccount.id)"
+          >
+            {{ availableAccount.name }}
+          </button>
+        </nav>
         <div class="header-top">
           <div class="header-title-block">
-            <div class="header-kicker" *ngIf="isMobile">Compte</div>
+            <div class="header-kicker">Détail du compte</div>
             <h2 *ngIf="account">{{ account["name"] }}</h2>
             <h2 *ngIf="!account">Toutes les transactions</h2>
+            <p class="account-period" *ngIf="accountId">
+              {{ account?.description || "Compte bancaire" }} ·
+              {{ now | date: "MMMM yyyy" : "" : "fr" }}
+            </p>
           </div>
 
           <p-button
@@ -62,6 +80,23 @@
               </div>
               <div class="break-percent">{{ it.percent }}%</div>
             </div>
+            <div
+              class="break-row remaining"
+              [class.negative-remaining]="
+                get503020Breakdown().remaining < 0
+              "
+            >
+              <div class="break-label">Reste à vivre</div>
+              <div class="break-value">
+                {{
+                  get503020Breakdown().remaining
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
+              </div>
+              <div class="break-percent">
+                {{ get503020Breakdown().remainingPercent }}%
+              </div>
+            </div>
           </div>
         </div>
         <div class="recurring-summary" *ngIf="accountId && !isMobile">
@@ -80,20 +115,7 @@
             <div class="summary-amount negative">
               -
               {{
-                expectedExpensesTotal
-                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-              }}
-            </div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Reste à vivre</div>
-            <div
-              class="summary-amount"
-              [class.positive]="get503020Breakdown().remaining >= 0"
-              [class.negative]="get503020Breakdown().remaining < 0"
-            >
-              {{
-                get503020Breakdown().remaining
+                remainingExpensesThisMonth
                   | currency: "EUR" : "symbol" : "1.2-2" : "fr"
               }}
             </div>
@@ -133,24 +155,28 @@
       </div>
     </div>
 
-    <div
-      class="recurring-toggle"
+    <section
+      class="upcoming-accordion"
       *ngIf="!isMobile && accountId && pendingSchedules.length > 0"
     >
-      <p-button
-        [label]="
-          showRecurring
-            ? 'Masquer les échéances à venir'
-            : 'Afficher les échéances à venir (' + pendingSchedules.length + ')'
-        "
-        icon="pi pi-calendar"
-        (onClick)="toggleRecurring()"
-        styleClass="p-button-outlined p-button-secondary"
+      <button
+        type="button"
+        class="upcoming-accordion__trigger"
+        [attr.aria-expanded]="showRecurring"
+        (click)="toggleRecurring()"
       >
-      </p-button>
-    </div>
+        <span class="upcoming-accordion__icon"><i class="pi pi-calendar"></i></span>
+        <span class="upcoming-accordion__copy">
+          <strong>Prochaines échéances</strong>
+          <small>{{ pendingSchedules.length }} opération(s) encore à traiter</small>
+        </span>
+        <span class="upcoming-accordion__total">
+          {{ remainingExpensesThisMonth | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </span>
+        <i class="pi" [ngClass]="showRecurring ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+      </button>
 
-    <div class="recurring-list" *ngIf="!isMobile && showRecurring">
+    <div class="recurring-list" *ngIf="showRecurring">
       <ng-container
         *ngIf="pendingSchedules.length > 0; else noPendingSchedules"
       >
@@ -311,6 +337,7 @@
         </div>
       </ng-template>
     </div>
+    </section>
 
     <div
       *ngIf="undoValidation as undo"

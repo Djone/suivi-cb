@@ -1,436 +1,153 @@
-<div class="dashboard-container">
-  <ng-container *ngIf="isMobile; else desktopDashboard">
-    <div class="mobile-home">
-      <div class="mobile-home__hero">
-        <p class="mobile-home__eyebrow">Version mobile</p>
-        <h1>Mes comptes</h1>
-        <p>Choisis un compte pour afficher sa liste d&apos;opérations.</p>
+<main class="bank-dashboard">
+  <header class="dashboard-heading">
+    <div>
+      <p class="eyebrow">Vue d’ensemble</p>
+      <h1>Bonjour, voici l’essentiel</h1>
+      <p class="dashboard-subtitle">
+        Situation consolidée · {{ dashboardDate | date: "MMMM yyyy" }}
+      </p>
+    </div>
+    <div class="dashboard-date" aria-label="Date de mise à jour">
+      <i class="pi pi-calendar"></i>
+      <span>{{ dashboardDate | date: "dd MMM" }}</span>
+    </div>
+  </header>
+
+  <ng-container *ngIf="getMainAccountBalances().length; else noAccounts">
+    <section class="dashboard-section" aria-labelledby="accounts-title">
+      <div class="section-title-row">
+        <div>
+          <h2 id="accounts-title">Vos comptes</h2>
+          <p>Ouvrez un compte pour consulter son budget et ses mouvements.</p>
+        </div>
       </div>
 
-      <ng-container *ngIf="accountBalances.length > 0; else noAccounts">
-        <div class="mobile-account-list">
+      <div class="dashboard-account-grid">
+        <button
+          *ngFor="let accountBalance of getMainAccountBalances(); let first = first"
+          type="button"
+          class="dashboard-account-card"
+          [class.dashboard-account-card--primary]="first"
+          [ngStyle]="getAccountCardStyle(accountBalance.account)"
+          (click)="navigateToTransactions(accountBalance.account.id!)"
+        >
+          <div class="account-card-heading">
+            <div>
+              <span class="account-card-name">{{ accountBalance.account.name }}</span>
+              <small>{{ accountBalance.account.description || "Compte bancaire" }}</small>
+            </div>
+            <span class="account-card-arrow"><i class="pi pi-arrow-right"></i></span>
+          </div>
+          <div class="account-card-metrics">
+            <div>
+              <span>Solde actuel</span>
+              <strong [class.negative]="accountBalance.currentBalance < 0">
+                {{ accountBalance.currentBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              </strong>
+            </div>
+            <div>
+              <span>Prévisionnel</span>
+              <strong class="forecast" [class.negative]="accountBalance.forecastBalance < 0">
+                {{ accountBalance.forecastBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              </strong>
+            </div>
+          </div>
+          <div class="account-card-footer">
+            <strong>{{ accountBalance.upcomingSchedules.length }} échéance(s) à venir</strong>
+            <span>Voir le détail du compte</span>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <section class="dashboard-kpis" aria-label="Synthèse des comptes">
+      <article class="dashboard-kpi dashboard-kpi--blue">
+        <span>Liquidités disponibles</span>
+        <strong>{{ getMainAccountsLiquidity() | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}</strong>
+        <small>Comptes courant et joint</small>
+      </article>
+      <article class="dashboard-kpi dashboard-kpi--green">
+        <span>Solde prévisionnel</span>
+        <strong>{{ getMainAccountsForecast() | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}</strong>
+        <small>Après les échéances à venir</small>
+      </article>
+      <article class="dashboard-kpi dashboard-kpi--orange">
+        <span>Alertes</span>
+        <strong>{{ getDashboardAlertCount() }}</strong>
+        <small>Points à surveiller ce mois</small>
+      </article>
+    </section>
+
+    <section class="decision-card" *ngIf="getDashboardAlertCount() > 0">
+      <div class="decision-icon"><i class="pi pi-sparkles"></i></div>
+      <div class="decision-copy">
+        <span>À regarder aujourd’hui</span>
+        <strong>{{ getDashboardAlertCount() }} point(s) méritent votre attention</strong>
+        <small>Consultez la cloche de notifications pour voir le détail.</small>
+      </div>
+      <span class="priority-pill">Prioritaire</span>
+    </section>
+
+    <section class="dashboard-lists">
+      <article class="dashboard-list-card">
+        <div class="list-card-heading">
+          <div><p class="eyebrow">Activité</p><h2>Dernières opérations</h2></div>
+          <span>Tous comptes</span>
+        </div>
+        <div class="dashboard-list" *ngIf="getDashboardTransactions().length; else noTransactions">
           <button
-            *ngFor="let accountBalance of accountBalances"
+            *ngFor="let transaction of getDashboardTransactions()"
             type="button"
-            class="mobile-account-card"
-            [ngStyle]="getAccountCardStyle(accountBalance.account)"
-            (click)="navigateToTransactions(accountBalance.account.id!)"
+            class="dashboard-list-row"
+            (click)="navigateToTransactions(transaction.accountId!)"
           >
-            <div class="mobile-account-card__header">
-              <div class="mobile-account-card__badge">
-                {{ getAccountInitials(accountBalance.account) }}
-              </div>
-              <i class="pi pi-arrow-right mobile-account-card__arrow"></i>
-            </div>
-
-            <div class="mobile-account-card__title">
-              {{ accountBalance.account.name }}
-            </div>
-
-            <div class="mobile-account-card__balances">
-              <div class="mobile-account-card__metric">
-                <span>Actuel</span>
-                <strong
-                  [class.positive]="accountBalance.currentBalance >= 0"
-                  [class.negative]="accountBalance.currentBalance < 0"
-                >
-                  {{
-                    accountBalance.currentBalance
-                      | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                  }}
-                </strong>
-              </div>
-              <div class="mobile-account-card__metric">
-                <span>Prévisionnel</span>
-                <strong
-                  [class.positive]="accountBalance.forecastBalance >= 0"
-                  [class.negative]="accountBalance.forecastBalance < 0"
-                >
-                  {{
-                    accountBalance.forecastBalance
-                      | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                  }}
-                </strong>
-              </div>
-            </div>
-
-            <div class="mobile-account-card__footer">
-              <span>
-                {{ getLastFiveTransactions(accountBalance.account.id!).length }}
-                opérations récentes
-              </span>
-              <span
-                class="mobile-account-card__alert"
-                *ngIf="accountBalance.nextMonthLowestBalance < 0"
-              >
-                Alerte solde
-              </span>
-            </div>
+            <span class="list-row-icon"><i class="pi pi-credit-card"></i></span>
+            <span class="list-row-copy">
+              <strong>{{ transaction.description || "Transaction" }}</strong>
+              <small>{{ getTransactionAccountName(transaction) }} · {{ getSubCategoryLabel(transaction.subCategoryId) }}</small>
+            </span>
+            <span class="list-row-amount" [class.positive]="getAmountSigned(transaction) >= 0" [class.negative]="getAmountSigned(transaction) < 0">
+              {{ getAmountSigned(transaction) | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+            </span>
           </button>
         </div>
-      </ng-container>
-    </div>
+      </article>
+
+      <article class="dashboard-list-card">
+        <div class="list-card-heading">
+          <div><p class="eyebrow">À venir</p><h2>Prochaines échéances</h2></div>
+          <span>Tous comptes</span>
+        </div>
+        <div class="dashboard-list" *ngIf="getDashboardUpcomingSchedules().length; else noSchedules">
+          <button
+            *ngFor="let schedule of getDashboardUpcomingSchedules()"
+            type="button"
+            class="dashboard-list-row"
+            (click)="navigateToTransactions(schedule.accountId)"
+          >
+            <span class="list-row-date">
+              <strong>{{ schedule.dueDate | date: "dd" }}</strong>
+              <small>{{ schedule.dueDate | date: "MMM" }}</small>
+            </span>
+            <span class="list-row-copy">
+              <strong>{{ getRecurringLabelWithCountdown(schedule.recurringTransaction) }}</strong>
+              <small>{{ schedule.accountName }} · {{ getSubCategoryLabel(schedule.recurringTransaction.subCategoryId) }}</small>
+            </span>
+            <span class="list-row-amount" [class.positive]="schedule.amount >= 0" [class.negative]="schedule.amount < 0">
+              {{ schedule.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+            </span>
+          </button>
+        </div>
+      </article>
+    </section>
   </ng-container>
 
-  <ng-template #desktopDashboard>
-    <ng-container *ngIf="accountBalances.length > 0; else noAccounts">
-      <div class="account-tabs" role="tablist" aria-label="Comptes bancaires">
-        <p-button
-          *ngFor="let accountBalance of accountBalances"
-          [label]="accountBalance.account.name"
-          [raised]="true"
-          [outlined]="!isAccountActive(accountBalance.account.id)"
-          [severity]="
-            isAccountActive(accountBalance.account.id) ? 'primary' : 'secondary'
-          "
-          [styleClass]="
-            'account-tab-button' +
-            (isAccountActive(accountBalance.account.id)
-              ? ' account-tab-button--active'
-              : '')
-          "
-          (onClick)="selectAccount(accountBalance.account.id)"
-          [attr.role]="'tab'"
-          [attr.aria-selected]="isAccountActive(accountBalance.account.id)"
-        ></p-button>
-      </div>
-
-      <ng-container *ngIf="getActiveAccountBalance() as accountBalance">
-        <div class="home-summary-row">
-          <div class="col">
-            <div
-              class="balances-card"
-              (click)="navigateToTransactions(accountBalance.account.id!)"
-            >
-              <div class="balances-inline">
-                <div class="balance-inline-item">
-                  <span class="label"
-                    ><i class="pi pi-euro mr-1"></i>Actuel</span
-                  >
-                  <span
-                    class="value"
-                    [class.positive]="accountBalance.currentBalance >= 0"
-                    [class.negative]="accountBalance.currentBalance < 0"
-                  >
-                    {{
-                      accountBalance.currentBalance
-                        | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                    }}
-                  </span>
-                </div>
-                <span class="sep">|</span>
-                <div class="balance-inline-item">
-                  <span class="label">
-                    <i class="pi pi-chart-line mr-1"></i>Prévisionnel
-                  </span>
-                  <span
-                    class="value"
-                    [class.positive]="accountBalance.forecastBalance >= 0"
-                    [class.negative]="accountBalance.forecastBalance < 0"
-                  >
-                    {{
-                      accountBalance.forecastBalance
-                        | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                    }}
-                  </span>
-                </div>
-              </div>
-              <div
-                *ngIf="accountBalance.nextMonthLowestBalance < 0"
-                class="alert-banner mt-2"
-              >
-                <i class="pi pi-exclamation-triangle"></i>
-                <div class="alert-text">
-                  Risque de solde négatif !
-                  <span class="alert-amount">
-                    Point bas:
-                    {{
-                      accountBalance.nextMonthLowestBalance
-                        | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                    }}
-                  </span>
-                </div>
-              </div>
-
-              <div
-                class="break503020-container"
-                *ngIf="
-                  get503020Breakdown(accountBalance.account.id!).items as items
-                "
-              >
-                <div class="break503020-list">
-                  <div class="break-group break-income">
-                    <div class="break-row">
-                      <div class="break-label">Revenus</div>
-                      <div class="break-value">
-                        {{
-                          get503020Breakdown(accountBalance.account.id!).total
-                            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                        }}
-                      </div>
-                      <div class="break-percent">Base</div>
-                    </div>
-                    <div class="break-details">
-                      <div
-                        class="break-detail-row"
-                        *ngFor="
-                          let detail of get503020Breakdown(
-                            accountBalance.account.id!
-                          ).incomeDetails
-                        "
-                      >
-                        <span>
-                          {{ detail.label }}
-                          <small *ngIf="detail.occurrences > 1">
-                            × {{ detail.occurrences }} occurrences
-                          </small>
-                        </span>
-                        <strong>
-                          {{
-                            detail.amount
-                              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                          }}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    class="break-group break-expense"
-                    *ngFor="let it of items"
-                  >
-                    <div class="break-row">
-                      <div class="break-label">{{ it.name }}</div>
-                      <div class="break-value">
-                        {{
-                          it.amount
-                            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                        }}
-                      </div>
-                      <div class="break-percent">{{ it.percent }}%</div>
-                    </div>
-                    <div class="break-details" *ngIf="it.details.length">
-                      <div
-                        class="break-detail-row"
-                        *ngFor="let detail of it.details"
-                      >
-                        <span>
-                          {{ detail.label }}
-                          <small *ngIf="detail.occurrences > 1">
-                            × {{ detail.occurrences }} occurrences
-                          </small>
-                        </span>
-                        <strong>
-                          {{
-                            detail.amount
-                              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                          }}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    class="break-group break-unclassified"
-                    *ngIf="
-                      get503020Breakdown(accountBalance.account.id!)
-                        .unclassifiedAmount > 0
-                    "
-                  >
-                    <div class="break-row">
-                      <div class="break-label">À classer</div>
-                      <div class="break-value">
-                        {{
-                          get503020Breakdown(accountBalance.account.id!)
-                            .unclassifiedAmount
-                            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                        }}
-                      </div>
-                      <div class="break-percent">—</div>
-                    </div>
-                    <div class="break-details">
-                      <div
-                        class="break-detail-row"
-                        *ngFor="
-                          let detail of get503020Breakdown(
-                            accountBalance.account.id!
-                          ).unclassifiedDetails
-                        "
-                      >
-                        <span>{{ detail.label }}</span>
-                        <strong>
-                          {{
-                            detail.amount
-                              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                          }}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    class="break-row remaining"
-                    [class.negative-remaining]="
-                      get503020Breakdown(accountBalance.account.id!).remaining <
-                      0
-                    "
-                  >
-                    <div class="break-label">Reste à vivre</div>
-                    <div class="break-value">
-                      {{
-                        get503020Breakdown(accountBalance.account.id!).remaining
-                          | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                      }}
-                    </div>
-                    <div class="break-percent">
-                      {{
-                        get503020Breakdown(accountBalance.account.id!)
-                          .remainingPercent
-                      }}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row-2cols">
-          <div class="col">
-            <div class="section">
-              <div class="section-header">
-                <i class="pi pi-list"></i>
-                <h3>Dernières opérations</h3>
-              </div>
-              <p-table
-                [value]="getLastFiveTransactions(accountBalance.account.id!)"
-                [paginator]="false"
-              >
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th>Date</th>
-                    <th>Libellé</th>
-                    <th>Catégorie</th>
-                    <th class="text-right">Montant</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-tx>
-                  <tr>
-                    <td>{{ tx.date | date: "dd/MM/yyyy" }}</td>
-                    <td>{{ tx.description }}</td>
-                    <td>{{ getSubCategoryLabel(tx.subCategoryId) }}</td>
-                    <td class="text-right">
-                      <p-tag
-                        [severity]="
-                          getAmountSigned(tx) < 0 ? 'danger' : 'success'
-                        "
-                        [value]="
-                          (getAmountSigned(tx)
-                            | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
-                        "
-                      >
-                      </p-tag>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </div>
-          </div>
-
-          <div class="col">
-            <div class="section">
-              <div class="section-header">
-                <i class="pi pi-calendar"></i>
-                <h3>Prochaines échéances</h3>
-              </div>
-              <p-table
-                [value]="getNextUnpaidSchedulesForBalance(accountBalance, 5)"
-                [paginator]="false"
-              >
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th>Libellé</th>
-                    <th>Catégorie</th>
-                    <th class="text-right">Montant</th>
-                    <th></th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-s>
-                  <tr>
-                    <td>
-                      {{
-                        getRecurringLabelWithCountdown(s.recurringTransaction)
-                      }}
-                    </td>
-                    <td>
-                      {{
-                        getSubCategoryLabel(
-                          s.recurringTransaction.subCategoryId
-                        )
-                      }}
-                    </td>
-                    <td class="text-right">
-                      <p-tag
-                        [severity]="s.amount < 0 ? 'danger' : 'success'"
-                        [value]="
-                          (s.amount
-                            | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
-                        "
-                      >
-                      </p-tag>
-                    </td>
-                    <td class="text-right">
-                      <p-button
-                        icon="pi pi-check"
-                        [rounded]="true"
-                        [text]="true"
-                        [raised]="true"
-                        severity="help"
-                        styleClass="p-button-text p-button-success"
-                        (onClick)="markAsPaid(s, accountBalance.account.id!)"
-                        pTooltip="Valider"
-                        tooltipPosition="top"
-                      ></p-button>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </div>
-          </div>
-        </div>
-        <!---->
-        <!-- <div class="section">
-          <div class="section-header">
-            <i class="pi pi-chart-line"></i>
-            <h3>Tendances du budget</h3>
-          </div>
-          <p class="trend-intro">
-            Comparaison du mois en cours avec les trois mois précédents, au
-            même nombre de jours.
-          </p>
-          <div class="budget-trends">
-            <article
-              *ngFor="let stat of getBudgetTrendStats(accountBalance.account.id!)"
-              class="trend-card"
-              [ngClass]="'trend-card--' + stat.tone"
-            >
-              <div class="trend-card__icon">
-                <i class="pi" [ngClass]="stat.icon"></i>
-              </div>
-              <div class="trend-card__content">
-                <span>{{ stat.title }}</span>
-                <strong>{{ stat.value }}</strong>
-                <small>{{ stat.detail }}</small>
-              </div>
-            </article>
-          </div>
-        </div> -->
-      </ng-container>
-    </ng-container>
-  </ng-template>
-
   <ng-template #noAccounts>
-    <div class="no-accounts">
-      <i class="pi pi-wallet"></i>
-      <h3>Aucun compte bancaire configuré.</h3>
-      <p>Ajoutez un compte pour commencer à suivre vos finances</p>
-    </div>
+    <section class="dashboard-empty">
+      <i class="pi pi-wallet"></i><h2>Aucun compte disponible</h2>
+      <p>Ajoutez un compte pour afficher votre situation financière.</p>
+    </section>
   </ng-template>
-</div>
+  <ng-template #noTransactions><div class="dashboard-list-empty">Aucune opération récente.</div></ng-template>
+  <ng-template #noSchedules><div class="dashboard-list-empty">Aucune échéance à venir.</div></ng-template>
+</main>

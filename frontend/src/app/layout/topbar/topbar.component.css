@@ -280,3 +280,29 @@
     margin-right: auto;
   }
 }
+
+/* Navigation claire inspirée de la nouvelle interface */
+.layout-topbar {
+  padding: 0 1.5rem;
+  background: #fff;
+  border-bottom: 1px solid #e7eaf0;
+  box-shadow: none;
+}
+
+.layout-topbar-logo { gap: .75rem; }
+.layout-topbar-logo i {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  color: #fff;
+  background: #2563eb;
+  border-radius: 10px;
+  font-size: 1.15rem;
+}
+.app-title { color: #172033; font-size: 1.05rem; letter-spacing: -.01em; }
+.menu-button { color: #2563eb; }
+.menu-button:hover { background: #eef5ff; }
+.notification-button { color: #667085; background: #fff; border: 1px solid #dfe4eb; border-radius: 10px; }
+.notification-button:hover { color: #2563eb; background: #f8faff; border-color: #bfd4ff; }
+.notification-unread-dot { border-color: #fff; }
