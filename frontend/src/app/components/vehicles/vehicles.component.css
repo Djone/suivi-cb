@@ -1,2 +1,69 @@
-.vehicles-page{display:grid;gap:1.25rem;padding:.5rem 0 2rem;color:#0f172a}.vehicles-header,.section-toolbar,.vehicle-card__top,.form-heading,.form-actions{display:flex;align-items:center;justify-content:space-between;gap:1rem}.eyebrow{color:#2563eb;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.vehicles-header h1,.section-toolbar h2,.section-title h2{margin:.2rem 0}.vehicles-header p,.section-toolbar p,.section-title p{margin:0;color:#64748b}.primary-button{padding:.7rem 1rem;color:#fff;background:#2563eb;border:0;border-radius:9px;font-weight:700;cursor:pointer}.vehicle-grid,.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.vehicle-card,.vehicle-form,.insights-panel,.analysis-panel,.trend-panel,.kpi-grid>div,.empty-state{padding:1.2rem;background:#fff;border:1px solid #e2e8f0;border-radius:14px}.vehicle-card__top span{color:#64748b;font-size:.75rem;text-transform:uppercase}.vehicle-card h2{margin:.2rem 0 1rem}.vehicle-card__top>i{font-size:2rem;color:#2563eb}.vehicle-card>strong{display:block;min-height:58px;color:#475569;font-size:.86rem;line-height:1.45}.card-actions{display:flex;gap:1rem;margin-top:1rem}.card-actions button,.form-heading button,.form-actions button,.year-switch button{background:transparent;border:0;color:#2563eb;cursor:pointer}.danger-link{color:#b91c1c!important}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1rem 0}.form-grid label{display:grid;gap:.4rem;color:#475569;font-size:.82rem;font-weight:700}.form-grid input,.form-grid select,.section-toolbar select{width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px;background:#fff}.kpi-grid>div{display:grid;gap:.35rem}.kpi-grid span{color:#64748b;font-size:.8rem;text-transform:uppercase}.kpi-grid strong{font-size:1.6rem}.section-title{display:flex;gap:.8rem}.section-title>i{padding:.7rem;color:#b45309;background:#fef3c7;border-radius:10px}.insights-panel ul{display:grid;gap:.75rem;margin:1rem 0 0;padding-left:1.3rem}.insights-panel li{line-height:1.5}.year-switch{display:flex;gap:.35rem}.year-switch button{padding:.45rem .7rem;border-radius:7px;color:#475569}.year-switch button.active{color:#fff;background:#2563eb}.table-scroll{overflow-x:auto;margin-top:1rem}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{padding:.7rem;border-bottom:1px solid #e2e8f0;text-align:right;font-size:.82rem}th:first-child{text-align:left;position:sticky;left:0;background:#fff}.total{font-weight:800;background:#f8fafc}.trend-panel svg{width:100%;height:220px;margin-top:1rem;background:linear-gradient(#fff,#f8fafc);border-radius:10px}.trend-panel line{stroke:#cbd5e1;stroke-width:1}.trend-panel polyline{fill:none;stroke:#2563eb;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.trend-axis{display:flex;justify-content:space-between;color:#94a3b8;font-size:.75rem}.empty-state{display:grid;place-items:center;gap:.5rem;padding:3rem;text-align:center}.empty-state i{font-size:2rem;color:#2563eb}@media(max-width:900px){.vehicle-grid,.kpi-grid,.form-grid{grid-template-columns:1fr}.vehicles-header,.section-toolbar{align-items:flex-start;flex-direction:column}.year-switch{flex-wrap:wrap}}
-.vehicle-cost-breakdown{display:grid;gap:.45rem;margin:0 0 1rem;padding:.8rem 0;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0}.vehicle-cost-breakdown>div{display:flex;align-items:center;justify-content:space-between;gap:1rem}.vehicle-cost-breakdown dt{color:#64748b;font-size:.8rem}.vehicle-cost-breakdown dd{margin:0;font-weight:700}.vehicle-cost-breakdown .vehicle-cost-total{padding-top:.45rem;border-top:1px dashed #cbd5e1}.vehicle-cost-breakdown .vehicle-cost-total dt,.vehicle-cost-breakdown .vehicle-cost-total dd{color:#0f172a;font-weight:800}
+.vehicles-page { display: grid; gap: 1.5rem; width: min(1180px, 100%); margin: 0 auto; padding: .5rem 0 2.5rem; color: #172033; }
+.vehicles-header, .section-toolbar, .vehicle-card__top, .form-heading, .form-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.eyebrow { color: #ea580c; font-size: .76rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.vehicles-header h1, .section-toolbar h2, .section-title h2 { margin: .3rem 0 .2rem; letter-spacing: -.03em; }
+.vehicles-header h1 { font-size: 1.5rem; font-weight: 600; }
+.vehicles-header p, .section-toolbar p, .section-title p { margin: 0; color: #778197; }
+.primary-button { display: inline-flex; align-items: center; gap: .5rem; padding: .75rem 1rem; color: #fff; background: #2563eb; border: 0; border-radius: 9px; font-weight: 600; cursor: pointer; }
+.vehicle-form, .analysis-panel, .trend-panel, .empty-state { padding: 1.2rem; background: #fff; border: 1px solid #e1e6ed; border-radius: 14px; }
+.form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.form-grid label { display: grid; gap: .4rem; color: #657084; font-size: .82rem; font-weight: 600; }
+.form-grid input, .form-grid select, .section-toolbar select { width: 100%; padding: .65rem; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; }
+.form-heading button, .form-actions button, .year-switch button { color: #2563eb; background: transparent; border: 0; cursor: pointer; }
+.insights-panel { padding: 1.1rem 1.3rem; color: #9a4a0a; background: #fff7ed; border: 1px solid #fdba74; border-radius: 14px; }
+.section-title { display: flex; gap: .8rem; }
+.section-title > i { padding-top: .35rem; color: #ea580c; }
+.insights-panel .section-title h2 { color: #ea580c; font-size: 1rem; font-weight: 600; }
+.insights-panel ul { display: grid; gap: .55rem; margin: .75rem 0 0; padding-left: 2.6rem; }
+.insights-panel li { line-height: 1.45; }
+.vehicle-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.vehicle-card { display: grid; align-content: start; gap: 1rem; padding: 1.35rem; background: #fff; border: 1px solid #e1e6ed; border-radius: 14px; }
+.vehicle-card__top span, .distribution-title { color: #818b9d; font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.vehicle-card h2 { margin: .25rem 0 0; font-size: 1rem; font-weight: 600; }
+.vehicle-card__top > i { display: grid; place-items: center; width: 42px; height: 42px; color: #2563eb; background: #eef6ff; border-radius: 10px; }
+.vehicle-cost-breakdown { display: grid; gap: .55rem; margin: .25rem 0 0; }
+.vehicle-cost-breakdown > div { display: flex; justify-content: space-between; gap: 1rem; }
+.vehicle-cost-breakdown dt { color: #778197; }
+.vehicle-cost-breakdown dd { margin: 0; font-weight: 600; }
+.vehicle-cost-breakdown .vehicle-cost-total { padding-top: .7rem; border-top: 1px solid #edf0f4; }
+.vehicle-cost-total dt, .vehicle-cost-total dd { color: #172033; font-weight: 600; }
+.vehicle-year-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.vehicle-year-kpis > div { padding: .85rem 1rem; background: #f7f9fc; border-radius: 10px; }
+.vehicle-year-kpis span { display: block; color: #818b9d; font-size: .75rem; }
+.vehicle-year-kpis strong { display: block; margin-top: .35rem; font-size: 1.25rem; font-weight: 600; }
+.vehicle-distribution { display: grid; gap: .65rem; }
+.distribution-row { display: grid; gap: .3rem; }
+.distribution-row > div { display: flex; justify-content: space-between; gap: 1rem; color: #657084; font-size: .8rem; }
+.distribution-row strong { color: #475569; }
+.distribution-track { height: 5px; overflow: hidden; background: #edf0f4; border-radius: 999px; }
+.distribution-track > span { display: block; height: 100%; background: #2563eb; border-radius: inherit; }
+.electric-estimate { margin: 0; color: #818b9d; font-size: .76rem; line-height: 1.4; }
+.card-actions { display: flex; gap: 1rem; padding-top: .75rem; border-top: 1px solid #edf0f4; }
+.card-actions button { padding: 0; color: #2563eb; background: transparent; border: 0; cursor: pointer; }
+.danger-link { color: #dc2626 !important; }
+.kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.kpi-grid > div { display: grid; gap: .35rem; padding: 1.05rem 1.2rem; background: #eef6ff; border: 1px solid #c9e1ff; border-radius: 14px; }
+.kpi-grid span { color: #657084; font-size: .76rem; font-weight: 600; text-transform: uppercase; }
+.kpi-grid strong { font-size: 1.5rem; font-weight: 600; }
+.section-toolbar { align-items: flex-start; }
+.analysis-actions { display: flex; align-items: center; gap: .75rem; }
+.year-switch { display: flex; gap: .3rem; padding: .25rem; background: #eef1f5; border-radius: 9px; }
+.year-switch button { padding: .45rem .7rem; border-radius: 7px; color: #657084; }
+.year-switch button.active { color: #172033; background: #fff; box-shadow: 0 1px 3px rgba(23, 32, 51, .12); }
+.table-scroll { overflow-x: auto; margin-top: 1rem; border: 1px solid #e1e6ed; border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+th, td { padding: .75rem; border-bottom: 1px solid #edf0f4; text-align: right; font-size: .82rem; }
+thead th { color: #657084; background: #f7f9fc; font-size: .74rem; text-transform: uppercase; }
+th:first-child { text-align: left; position: sticky; left: 0; background: inherit; }
+.total { color: #172033; font-weight: 600; background: #f8fafc; }
+.trend-panel svg { width: 100%; height: 220px; margin-top: 1rem; background: linear-gradient(#fff, #f8fafc); border-radius: 10px; }
+.trend-panel line { stroke: #cbd5e1; stroke-width: 1; }
+.trend-panel polyline { fill: none; stroke: #2563eb; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.trend-axis { display: flex; justify-content: space-between; color: #94a3b8; font-size: .75rem; }
+.empty-state { display: grid; place-items: center; gap: .5rem; padding: 3rem; text-align: center; }
+.empty-state i { color: #2563eb; font-size: 2rem; }
+@media (max-width: 900px) {
+  .vehicle-grid, .kpi-grid, .form-grid { grid-template-columns: 1fr; }
+  .vehicles-header, .section-toolbar { align-items: flex-start; flex-direction: column; }
+  .analysis-actions, .year-switch { flex-wrap: wrap; }
+}

@@ -1,6 +1,7 @@
 <div
   class="transaction-list"
   [class.transaction-list--mobile]="isMobile"
+  [class.transaction-list--global]="!accountId"
   [ngStyle]="getAccentVars()"
 >
   <div class="list-container">
@@ -22,142 +23,221 @@
         </nav>
         <div class="header-top">
           <div class="header-title-block">
-            <div class="header-kicker">Détail du compte</div>
+            <div class="header-kicker">
+              {{ accountId ? "Détail du compte" : "Vue consolidée" }}
+            </div>
             <h2 *ngIf="account">{{ account["name"] }}</h2>
-            <h2 *ngIf="!account">Toutes les transactions</h2>
+            <h2 *ngIf="!account">Opérations</h2>
             <p class="account-period" *ngIf="accountId">
               {{ account?.description || "Compte bancaire" }} ·
               {{ now | date: "MMMM yyyy" : "" : "fr" }}
             </p>
+            <p class="account-period" *ngIf="!accountId">
+              {{ filteredTransactions.length }} transactions
+            </p>
           </div>
 
-          <p-button
-            label="Nouvelle transaction"
-            icon="pi pi-plus"
-            (onClick)="createTransaction()"
-            styleClass="p-button-success"
-          >
-          </p-button>
-        </div>
-
-        <div class="balance-display" *ngIf="accountId">
-          <div class="balance-item current">
-            <div class="balance-label">Solde actuel</div>
-            <div
-              class="balance-amount"
-              [class.positive]="currentBalance > 0"
-              [class.negative]="currentBalance < 0"
-            >
-              {{ currentBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-            </div>
-          </div>
-          <div class="balance-separator">
-            <i class="pi pi-arrow-right"></i>
-          </div>
-          <div class="balance-item forecast">
-            <div class="balance-label">Solde prévisionnel</div>
-            <div
-              class="balance-amount"
-              [class.positive]="forecastedBalance > 0"
-              [class.negative]="forecastedBalance < 0"
-            >
-              {{
-                forecastedBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-              }}
-            </div>
-          </div>
-        </div>
-
-        <div class="break503020-container" *ngIf="accountId && !isMobile">
-          <div class="break503020-list">
-            <div
-              class="break-row"
-              *ngFor="let it of get503020Breakdown().items"
-            >
-              <div class="break-label">{{ it.name }}</div>
-              <div class="break-value">
-                {{ it.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-              </div>
-              <div class="break-percent">{{ it.percent }}%</div>
-            </div>
-            <div
-              class="break-row remaining"
-              [class.negative-remaining]="
-                get503020Breakdown().remaining < 0
-              "
-            >
-              <div class="break-label">Reste à vivre</div>
-              <div class="break-value">
-                {{
-                  get503020Breakdown().remaining
-                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-                }}
-              </div>
-              <div class="break-percent">
-                {{ get503020Breakdown().remainingPercent }}%
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="recurring-summary" *ngIf="accountId && !isMobile">
-          <div class="summary-item">
-            <div class="summary-label">Revenus prévus</div>
-            <div class="summary-amount positive">
-              +
-              {{
-                expectedIncomeTotal
-                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-              }}
-            </div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Dépenses prévues</div>
-            <div class="summary-amount negative">
-              -
-              {{
-                remainingExpensesThisMonth
-                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-              }}
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="credit-insight"
-          [class.credit-insight-joint]="isJointAccountView()"
-          *ngIf="!isMobile && (isCurrentAccountView() || isJointAccountView())"
-        >
-          <div class="credit-insight-head">
-            <span class="credit-insight-title">
-              {{
-                isJointAccountView()
-                  ? "Montant à déduire en attente"
-                  : "Avance sur le compte joint"
-              }}
-            </span>
+          <div class="account-header-actions">
             <button
               type="button"
-              class="credit-insight-count credit-insight-count-button"
-              (click)="filterToAdvanceJointTransactions()"
-              pTooltip="Afficher uniquement les transactions d'avance compte joint"
-              tooltipPosition="top"
+              class="account-transfer-button"
+              *ngIf="!isMobile && isCurrentAccountView()"
+              (click)="transferPendingAdvancesToJointAccount()"
             >
-              {{ advanceJointGlobalCount }} transaction(s)
+              <i class="pi pi-arrow-right-arrow-left"></i>
+              Transférer
             </button>
-          </div>
-          <div class="credit-insight-amount">
-            {{
-              advanceJointGlobalTotal
-                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-            }}
+            <p-button
+              label="Nouvelle transaction"
+              icon="pi pi-plus"
+              (onClick)="createTransaction()"
+              styleClass="account-primary-action"
+            >
+            </p-button>
           </div>
         </div>
+
+        <nav
+          class="account-view-tabs"
+          *ngIf="accountId && !isMobile"
+          aria-label="Mode de consultation du compte"
+        >
+          <button
+            type="button"
+            [class.active]="accountViewMode === 'overview'"
+            (click)="accountViewMode = 'overview'"
+          >
+            Vue du compte
+          </button>
+          <button
+            type="button"
+            [class.active]="accountViewMode === 'operations'"
+            (click)="accountViewMode = 'operations'"
+          >
+            Opérations
+          </button>
+        </nav>
+
+        <ng-container
+          *ngIf="accountId && (isMobile || accountViewMode === 'overview')"
+        >
+          <section class="account-kpi-grid" aria-label="Soldes du compte">
+            <article class="account-kpi account-kpi--balance">
+              <span>Solde actuel</span>
+              <strong [class.negative]="currentBalance < 0">
+                {{
+                  currentBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
+              </strong>
+            </article>
+            <article class="account-kpi account-kpi--forecast">
+              <span>Solde prévisionnel</span>
+              <strong [class.negative]="forecastedBalance < 0">
+                {{
+                  forecastedBalance
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
+              </strong>
+            </article>
+          </section>
+
+          <section class="account-budget-card" *ngIf="!isMobile">
+            <header>
+              <h3>Budget de {{ now | date: "MMMM" : "" : "fr" }}</h3>
+              <small>{{ account?.name }}</small>
+            </header>
+
+            <article
+              class="account-budget-section account-budget-section--income"
+            >
+              <button
+                type="button"
+                class="account-budget-trigger"
+                [attr.aria-expanded]="isBudgetSectionExpanded('income')"
+                (click)="toggleBudgetSection('income')"
+              >
+                <i
+                  class="pi"
+                  [ngClass]="
+                    isBudgetSectionExpanded('income')
+                      ? 'pi-angle-up'
+                      : 'pi-angle-down'
+                  "
+                ></i>
+                <span>Revenus</span>
+                <strong
+                  >+
+                  {{
+                    expectedIncomeTotal
+                      | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                  }}</strong
+                >
+              </button>
+              <div
+                class="account-budget-details"
+                *ngIf="isBudgetSectionExpanded('income')"
+              >
+                <div
+                  class="account-budget-detail"
+                  *ngFor="let detail of getBudgetDetailItems('income')"
+                >
+                  <span>
+                    {{ detail.label }}
+                    <small *ngIf="detail.occurrences > 1"
+                      >× {{ detail.occurrences }} occurrences</small
+                    >
+                  </span>
+                  <strong>{{
+                    detail.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                  }}</strong>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="account-budget-section"
+              *ngFor="let item of getBudgetRows()"
+            >
+              <button
+                type="button"
+                class="account-budget-trigger"
+                [attr.aria-expanded]="
+                  isBudgetSectionExpanded('expense-' + item.id)
+                "
+                (click)="toggleBudgetSection('expense-' + item.id)"
+              >
+                <i
+                  class="pi"
+                  [ngClass]="
+                    isBudgetSectionExpanded('expense-' + item.id)
+                      ? 'pi-angle-up'
+                      : 'pi-angle-down'
+                  "
+                ></i>
+                <span>{{ item.name }}</span>
+                <em>{{ item.percent }}%</em>
+                <strong>{{
+                  item.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}</strong>
+              </button>
+              <div
+                class="account-budget-details"
+                *ngIf="isBudgetSectionExpanded('expense-' + item.id)"
+              >
+                <div
+                  class="account-budget-detail"
+                  *ngFor="
+                    let detail of getBudgetDetailItems('expense', item.id)
+                  "
+                >
+                  <span>
+                    {{ detail.label }}
+                    <small *ngIf="detail.occurrences > 1"
+                      >× {{ detail.occurrences }} occurrences</small
+                    >
+                  </span>
+                  <strong>{{
+                    detail.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                  }}</strong>
+                </div>
+              </div>
+            </article>
+
+            <div
+              class="account-budget-remaining"
+              [class.negative]="get503020Breakdown().remaining < 0"
+            >
+              <span>Reste à vivre</span>
+              <strong>{{
+                get503020Breakdown().remaining
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}</strong>
+              <em>{{ get503020Breakdown().remainingPercent }}%</em>
+            </div>
+          </section>
+        </ng-container>
       </div>
     </div>
 
+    <div
+      class="account-section-label"
+      *ngIf="
+        !isMobile &&
+        accountId &&
+        accountViewMode === 'overview' &&
+        pendingSchedules.length > 0
+      "
+    >
+      À traiter
+    </div>
     <section
       class="upcoming-accordion"
-      *ngIf="!isMobile && accountId && pendingSchedules.length > 0"
+      *ngIf="
+        !isMobile &&
+        accountId &&
+        accountViewMode === 'overview' &&
+        pendingSchedules.length > 0
+      "
     >
       <button
         type="button"
@@ -165,178 +245,190 @@
         [attr.aria-expanded]="showRecurring"
         (click)="toggleRecurring()"
       >
-        <span class="upcoming-accordion__icon"><i class="pi pi-calendar"></i></span>
+        <span class="upcoming-accordion__icon"
+          ><i class="pi pi-calendar"></i
+        ></span>
         <span class="upcoming-accordion__copy">
-          <strong>Prochaines échéances</strong>
-          <small>{{ pendingSchedules.length }} opération(s) encore à traiter</small>
+          <strong>Prochaines échéances à traiter</strong>
+          <small
+            >{{ pendingSchedules.length }} opération(s) encore à traiter</small
+          >
         </span>
         <span class="upcoming-accordion__total">
-          {{ remainingExpensesThisMonth | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+          {{
+            remainingExpensesThisMonth
+              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}
         </span>
-        <i class="pi" [ngClass]="showRecurring ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+        <i
+          class="pi"
+          [ngClass]="showRecurring ? 'pi-chevron-up' : 'pi-chevron-down'"
+        ></i>
       </button>
 
-    <div class="recurring-list" *ngIf="showRecurring">
-      <ng-container
-        *ngIf="pendingSchedules.length > 0; else noPendingSchedules"
-      >
-        <section
-          class="bulk-validation-card"
-          aria-labelledby="bulk-validation-title"
+      <div class="recurring-list" *ngIf="showRecurring">
+        <ng-container
+          *ngIf="pendingSchedules.length > 0; else noPendingSchedules"
         >
-          <div class="bulk-validation-summary">
-            <div>
-              <span id="bulk-validation-title" class="bulk-validation-title">
-                Validation en masse
-              </span>
-              <span class="bulk-validation-count">
-                {{ selectedScheduleCount }} transaction(s) sélectionnée(s)
-              </span>
-            </div>
-            <strong
-              class="bulk-validation-total"
-              [class.positive]="selectedScheduleTotal > 0"
-              [class.negative]="selectedScheduleTotal < 0"
-            >
-              {{
-                selectedScheduleTotal
-                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-              }}
-            </strong>
-          </div>
-          <div class="bulk-validation-actions">
-            <button
-              type="button"
-              class="bulk-select-all"
-              (click)="selectAllPendingSchedules()"
-              [disabled]="selectedScheduleCount === pendingSchedules.length"
-            >
-              Tout sélectionner
-            </button>
-            <button
-              type="button"
-              class="bulk-select-all"
-              (click)="clearScheduleSelection()"
-              [disabled]="selectedScheduleCount === 0"
-            >
-              Désélectionner tout
-            </button>
-            <div class="bulk-date-field">
-              <span>Date de validation</span>
-              <strong> Aujourd’hui, {{ now | date: "dd/MM/yyyy" }} </strong>
-            </div>
-            <p-button
-              label="Valider la sélection"
-              icon="pi pi-check-circle"
-              severity="success"
-              [loading]="isBulkValidating"
-              [disabled]="selectedScheduleCount === 0"
-              (onClick)="validateSelectedSchedules()"
-            ></p-button>
-          </div>
-        </section>
-        <div class="recurring-items">
-          <div
-            *ngFor="let schedule of pendingSchedules"
-            class="recurring-item"
-            [class.overdue]="schedule.isOverdue"
-            [class.selected]="isScheduleSelected(schedule)"
+          <section
+            class="bulk-validation-card"
+            aria-labelledby="bulk-validation-title"
           >
-            <label class="recurring-selection">
-              <input
-                type="checkbox"
-                [checked]="isScheduleSelected(schedule)"
-                (change)="toggleScheduleSelection(schedule, $event)"
-                [attr.aria-label]="
-                  'Sélectionner ' +
-                  getRecurringDisplayLabel(schedule.recurringTransaction)
-                "
-              />
-              <span class="selection-indicator" aria-hidden="true"></span>
-            </label>
-            <div class="recurring-info flex items-center">
-              <i class="pi pi-calendar mr-2"></i>
-              <div class="recurring-details">
-                <div class="recurring-description">
-                  {{ getRecurringDisplayLabel(schedule.recurringTransaction) }}
-                </div>
-                <div class="recurring-schedule">
-                  {{ schedule.dueDate | date: "dd MMM yyyy" }} •
-                  {{ getFrequencyLabel(schedule.recurringTransaction) }}
-                  <span
-                    *ngIf="
-                      getRecurringKindBadge(
-                        schedule.recurringTransaction
-                      ) as badge
-                    "
-                    class="recurring-kind-badge"
-                    [ngClass]="badge.cssClass"
-                  >
-                    {{ badge.label }}
-                  </span>
-                  <span
-                    *ngIf="schedule.isOverdue"
-                    class="recurring-kind-badge overdue-badge"
-                  >
-                    En retard
-                  </span>
-                </div>
+            <div class="bulk-validation-summary">
+              <div>
+                <span id="bulk-validation-title" class="bulk-validation-title">
+                  Validation en masse
+                </span>
+                <span class="bulk-validation-count">
+                  {{ selectedScheduleCount }} transaction(s) sélectionnée(s)
+                </span>
               </div>
+              <strong
+                class="bulk-validation-total"
+                [class.positive]="selectedScheduleTotal > 0"
+                [class.negative]="selectedScheduleTotal < 0"
+              >
+                {{
+                  selectedScheduleTotal
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
+              </strong>
             </div>
+            <div class="bulk-validation-actions">
+              <button
+                type="button"
+                class="bulk-select-all"
+                (click)="selectAllPendingSchedules()"
+                [disabled]="selectedScheduleCount === pendingSchedules.length"
+              >
+                Tout sélectionner
+              </button>
+              <button
+                type="button"
+                class="bulk-select-all"
+                (click)="clearScheduleSelection()"
+                [disabled]="selectedScheduleCount === 0"
+              >
+                Désélectionner tout
+              </button>
+              <div class="bulk-date-field">
+                <span>Date de validation</span>
+                <strong> Aujourd’hui, {{ now | date: "dd/MM/yyyy" }} </strong>
+              </div>
+              <p-button
+                label="Valider la sélection"
+                icon="pi pi-check-circle"
+                severity="success"
+                [loading]="isBulkValidating"
+                [disabled]="selectedScheduleCount === 0"
+                (onClick)="validateSelectedSchedules()"
+              ></p-button>
+            </div>
+          </section>
+          <div class="recurring-items">
             <div
-              class="recurring-amount"
-              [class.positive]="schedule.amount > 0"
-              [class.negative]="schedule.amount < 0"
+              *ngFor="let schedule of pendingSchedules"
+              class="recurring-item"
+              [class.overdue]="schedule.isOverdue"
+              [class.selected]="isScheduleSelected(schedule)"
             >
-              {{
-                schedule.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-              }}
-            </div>
-            <div class="recurring-status">
-              <div class="due-chip" [class.overdue-text]="schedule.isOverdue">
-                {{ schedule.dueDate | date: "dd/MM" }}
+              <label class="recurring-selection">
+                <input
+                  type="checkbox"
+                  [checked]="isScheduleSelected(schedule)"
+                  (change)="toggleScheduleSelection(schedule, $event)"
+                  [attr.aria-label]="
+                    'Sélectionner ' +
+                    getRecurringDisplayLabel(schedule.recurringTransaction)
+                  "
+                />
+                <span class="selection-indicator" aria-hidden="true"></span>
+              </label>
+              <div class="recurring-info flex items-center">
+                <i class="pi pi-calendar mr-2"></i>
+                <div class="recurring-details">
+                  <div class="recurring-description">
+                    {{
+                      getRecurringDisplayLabel(schedule.recurringTransaction)
+                    }}
+                  </div>
+                  <div class="recurring-schedule">
+                    {{ schedule.dueDate | date: "dd MMM yyyy" }} •
+                    {{ getFrequencyLabel(schedule.recurringTransaction) }}
+                    <span
+                      *ngIf="
+                        getRecurringKindBadge(
+                          schedule.recurringTransaction
+                        ) as badge
+                      "
+                      class="recurring-kind-badge"
+                      [ngClass]="badge.cssClass"
+                    >
+                      {{ badge.label }}
+                    </span>
+                    <span
+                      *ngIf="schedule.isOverdue"
+                      class="recurring-kind-badge overdue-badge"
+                    >
+                      En retard
+                    </span>
+                  </div>
+                </div>
               </div>
-              <p-button
-                icon="pi pi-pencil"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                (onClick)="editUpcomingOccurrence(schedule)"
-                pTooltip="Modifier uniquement cette échéance"
-                tooltipPosition="top"
-              ></p-button>
-              <p-button
-                icon="pi pi-trash"
-                [rounded]="true"
-                [text]="true"
-                severity="danger"
-                (onClick)="skipUpcomingOccurrence(schedule)"
-                pTooltip="Annuler uniquement cette échéance"
-                tooltipPosition="top"
-              ></p-button>
-              <p-button
-                icon="pi pi-check"
-                [rounded]="true"
-                [text]="true"
-                [raised]="true"
-                severity="help"
-                styleClass="p-button-text p-button-success"
-                [style]="{ 'margin-left': '0.5rem' }"
-                (onClick)="markRecurringAsPaid(schedule)"
-                pTooltip="Valider"
-                tooltipPosition="top"
-              ></p-button>
+              <div
+                class="recurring-amount"
+                [class.positive]="schedule.amount > 0"
+                [class.negative]="schedule.amount < 0"
+              >
+                {{
+                  schedule.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
+              </div>
+              <div class="recurring-status">
+                <div class="due-chip" [class.overdue-text]="schedule.isOverdue">
+                  {{ schedule.dueDate | date: "dd/MM" }}
+                </div>
+                <p-button
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="editUpcomingOccurrence(schedule)"
+                  pTooltip="Modifier uniquement cette échéance"
+                  tooltipPosition="top"
+                ></p-button>
+                <p-button
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="skipUpcomingOccurrence(schedule)"
+                  pTooltip="Annuler uniquement cette échéance"
+                  tooltipPosition="top"
+                ></p-button>
+                <p-button
+                  icon="pi pi-check"
+                  [rounded]="true"
+                  [text]="true"
+                  [raised]="true"
+                  severity="help"
+                  styleClass="p-button-text p-button-success"
+                  [style]="{ 'margin-left': '0.5rem' }"
+                  (onClick)="markRecurringAsPaid(schedule)"
+                  pTooltip="Valider"
+                  tooltipPosition="top"
+                ></p-button>
+              </div>
             </div>
           </div>
-        </div>
-      </ng-container>
-      <ng-template #noPendingSchedules>
-        <div class="no-data text-center py-4">
-          <i class="pi pi-check-circle mr-2"></i>
-          <span>Aucune échéance à afficher pour cette période.</span>
-        </div>
-      </ng-template>
-    </div>
+        </ng-container>
+        <ng-template #noPendingSchedules>
+          <div class="no-data text-center py-4">
+            <i class="pi pi-check-circle mr-2"></i>
+            <span>Aucune échéance à afficher pour cette période.</span>
+          </div>
+        </ng-template>
+      </div>
     </section>
 
     <div
@@ -369,130 +461,151 @@
       </button>
     </div>
 
+    <section
+      class="operations-heading"
+      *ngIf="!isMobile && accountId && accountViewMode === 'operations'"
+    >
+      <div>
+        <span>Historique du compte</span>
+        <h3>Dernières opérations</h3>
+      </div>
+      <strong>{{ filteredTransactions.length }} transaction(s)</strong>
+    </section>
+
     <div
       class="list-controls p-3 surface-card border-round-lg shadow-1"
-      *ngIf="!isMobile"
+      *ngIf="!isMobile && (!accountId || accountViewMode === 'operations')"
     >
-      <div class="filters-layout">
-        <div class="filters-primary">
-          <p-inputGroup class="date-filter">
-            <p-inputGroupAddon
-              ><i class="pi pi-calendar"></i
-            ></p-inputGroupAddon>
-            <p-calendar
-              [ngModel]="filters.dateRange"
-              (ngModelChange)="onDateRangeChange($event)"
-              selectionMode="range"
-              [readonlyInput]="true"
-              placeholder="Filtrer par date"
-              dateFormat="dd/mm/yy"
-              [showClear]="true"
-              styleClass="w-full"
-            ></p-calendar>
-          </p-inputGroup>
-
-          <p-inputGroup class="description-filter">
-            <p-inputGroupAddon
-              ><i class="pi pi-align-left"></i
-            ></p-inputGroupAddon>
-            <input
-              pInputText
-              type="text"
-              [(ngModel)]="filters.description"
-              (input)="applyFilter()"
-              placeholder="Filtrer par libellé"
-              class="w-full"
-            />
-          </p-inputGroup>
-
-          <p-inputGroup class="amount-filter">
-            <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
-            <input
-              pInputText
-              type="number"
-              min="0"
-              step="0.01"
-              [(ngModel)]="filters.amount"
-              (input)="applyFilter()"
-              (keypress)="allowOnlyNumbers($event)"
-              placeholder="Filtrer par montant"
-              class="w-full"
-            />
-          </p-inputGroup>
-        </div>
-
-        <div class="filters-secondary">
-          <p-multiSelect
-            [options]="categoryOptions"
-            [(ngModel)]="filters.categoryIds"
-            optionLabel="label"
-            optionValue="value"
-            display="chip"
-            [showClear]="true"
-            placeholder="Filtrer par catégorie"
-            (onChange)="onCategoryFilterChange()"
-          ></p-multiSelect>
-          <p-multiSelect
-            [options]="filteredSubCategoryOptions"
-            [(ngModel)]="filters.subCategoryIds"
-            optionLabel="label"
-            optionValue="value"
-            display="chip"
-            [filter]="true"
-            [showClear]="true"
-            [virtualScroll]="true"
-            [virtualScrollItemSize]="40"
-            placeholder="Filtrer par sous-catégorie"
-            (onChange)="applyFilter()"
-          ></p-multiSelect>
-          <p-dropdown
-            [options]="advanceJointFilterOptions"
-            [(ngModel)]="filters.advanceJoint"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Filtrer avances compte joint"
-            (onChange)="applyFilter()"
-          ></p-dropdown>
-          <p-dropdown
-            [options]="internalTransferFilterOptions"
-            [(ngModel)]="filters.internalTransfer"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Filtrer transferts internes"
-            (onChange)="applyFilter()"
-          ></p-dropdown>
-        </div>
+      <div class="filters-toolbar">
+        <p-inputGroup class="description-filter">
+          <p-inputGroupAddon><i class="pi pi-search"></i></p-inputGroupAddon>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="filters.description"
+            (input)="applyFilter()"
+            placeholder="Rechercher une transaction…"
+            class="w-full"
+          />
+        </p-inputGroup>
+        <button
+          type="button"
+          class="filters-toolbar__button"
+          [class.active]="showAdvancedFilters"
+          (click)="showAdvancedFilters = !showAdvancedFilters"
+        >
+          <i class="pi pi-filter"></i>
+          Filtres
+          <span *ngIf="activeAdvancedFilterCount">{{
+            activeAdvancedFilterCount
+          }}</span>
+        </button>
+        <button
+          type="button"
+          class="filters-toolbar__button"
+          (click)="sortBy('date')"
+        >
+          <i class="pi pi-sort-alt"></i>
+          Tri
+          <small>{{ sortDirection === "desc" ? "récent" : "ancien" }}</small>
+        </button>
       </div>
 
-      <div
-        class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3"
-      >
-        <div class="flex align-items-center gap-2">
-          <span class="font-medium">Groupes par page :</span>
-          <p-dropdown
-            [options]="pageSizeOptions"
-            [(ngModel)]="pageSize"
-            optionLabel="label"
-            optionValue="value"
-            (onChange)="changePageSize(pageSize)"
-            styleClass="w-8rem"
-          ></p-dropdown>
+      <div class="filters-advanced" *ngIf="showAdvancedFilters">
+        <div class="filters-layout">
+          <div class="filters-primary">
+            <p-inputGroup class="date-filter">
+              <p-inputGroupAddon
+                ><i class="pi pi-calendar"></i
+              ></p-inputGroupAddon>
+              <p-calendar
+                [ngModel]="filters.dateRange"
+                (ngModelChange)="onDateRangeChange($event)"
+                selectionMode="range"
+                [readonlyInput]="true"
+                placeholder="Filtrer par date"
+                dateFormat="dd/mm/yy"
+                [showClear]="true"
+                styleClass="w-full"
+              ></p-calendar>
+            </p-inputGroup>
+
+            <p-inputGroup class="amount-filter">
+              <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
+              <input
+                pInputText
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="filters.amount"
+                (input)="applyFilter()"
+                (keypress)="allowOnlyNumbers($event)"
+                placeholder="Filtrer par montant"
+                class="w-full"
+              />
+            </p-inputGroup>
+          </div>
+
+          <div class="filters-secondary">
+            <p-multiSelect
+              [options]="categoryOptions"
+              [(ngModel)]="filters.categoryIds"
+              optionLabel="label"
+              optionValue="value"
+              display="chip"
+              [showClear]="true"
+              placeholder="Filtrer par catégorie"
+              (onChange)="onCategoryFilterChange()"
+            ></p-multiSelect>
+            <p-multiSelect
+              [options]="filteredSubCategoryOptions"
+              [(ngModel)]="filters.subCategoryIds"
+              optionLabel="label"
+              optionValue="value"
+              display="chip"
+              [filter]="true"
+              [showClear]="true"
+              [virtualScroll]="true"
+              [virtualScrollItemSize]="40"
+              placeholder="Filtrer par sous-catégorie"
+              (onChange)="applyFilter()"
+            ></p-multiSelect>
+            <p-dropdown
+              [options]="advanceJointFilterOptions"
+              [(ngModel)]="filters.advanceJoint"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Filtrer avances compte joint"
+              (onChange)="applyFilter()"
+            ></p-dropdown>
+            <p-dropdown
+              [options]="internalTransferFilterOptions"
+              [(ngModel)]="filters.internalTransfer"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Filtrer transferts internes"
+              (onChange)="applyFilter()"
+            ></p-dropdown>
+          </div>
         </div>
 
-        <div>
-          <button
-            pButton
-            type="button"
-            class="p-button-text"
-            (click)="sortBy('date')"
-            [class.active]="sortColumn === 'date'"
-            icon="pi pi-sort-alt"
-            label="Trier par date"
-          ></button>
-        </div>
-
-        <div class="results-info font-semibold text-color-secondary">
-          {{ filteredTransactions.length }} transaction(s)
+        <div
+          class="controls-row flex justify-between align-items-center mt-4 flex-wrap gap-3"
+        >
+          <div class="flex align-items-center gap-2">
+            <span class="font-medium">Groupes par page :</span>
+            <p-dropdown
+              [options]="pageSizeOptions"
+              [(ngModel)]="pageSize"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="changePageSize(pageSize)"
+              styleClass="w-8rem"
+            ></p-dropdown>
+          </div>
+          <div class="results-info font-semibold text-color-secondary">
+            {{ filteredTransactions.length }} transaction(s)
+          </div>
         </div>
       </div>
     </div>
@@ -513,7 +626,10 @@
       </div>
     </div>
 
-    <div class="grouped-transactions">
+    <div
+      class="grouped-transactions"
+      *ngIf="!accountId || isMobile || accountViewMode === 'operations'"
+    >
       <div
         *ngFor="let group of paginatedGroupedTransactions"
         class="date-group"
@@ -614,13 +730,25 @@
     </div>
 
     <!-- Message si aucune transaction -->
-    <div *ngIf="paginatedGroupedTransactions.length === 0" class="no-data">
+    <div
+      *ngIf="
+        (!accountId || isMobile || accountViewMode === 'operations') &&
+        paginatedGroupedTransactions.length === 0
+      "
+      class="no-data"
+    >
       <i class="pi pi-info-circle mr-2"></i>
       <span>Aucune transaction trouvée pour les filtres actuels.</span>
     </div>
 
     <!-- Pagination -->
-    <div class="pagination-container" *ngIf="totalPages > 1">
+    <div
+      class="pagination-container"
+      *ngIf="
+        (!accountId || isMobile || accountViewMode === 'operations') &&
+        totalPages > 1
+      "
+    >
       <p-paginator
         [rows]="pageSize"
         [totalRecords]="groupedTransactions.length"

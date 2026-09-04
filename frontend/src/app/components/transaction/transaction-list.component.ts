@@ -63,6 +63,12 @@ interface UndoValidationState {
   isUndoing: boolean;
 }
 
+interface BudgetDetailItem {
+  label: string;
+  amount: number;
+  occurrences: number;
+}
+
 type AdvanceJointFilter = 'all' | 'only' | 'exclude';
 type InternalTransferFilter = 'all' | 'only' | 'exclude';
 
@@ -94,6 +100,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   account: Account | null = null;
   accounts: Account[] = [];
   showRecurring: boolean = false;
+  showAdvancedFilters: boolean = false;
+  accountViewMode: 'overview' | 'operations' = 'overview';
   allTransactions: Transaction[] = [];
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
@@ -110,6 +118,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   undoValidation: UndoValidationState | null = null;
   private undoValidationTimer: ReturnType<typeof setTimeout> | null = null;
   occurrenceExceptions = new Map<string, RecurringOccurrenceException>();
+  expandedBudgetSections = new Set<string>();
   sortedRecurringTransactions: RecurringTransaction[] = [];
   currentBalance: number = 0;
   forecastedBalance: number = 0;
@@ -166,8 +175,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   ];
   advanceJointTotal = 0;
   advanceJointCount = 0;
-  advanceJointGlobalTotal = 0;
-  advanceJointGlobalCount = 0;
 
   // Tri
   sortColumn: string = 'date';
@@ -211,16 +218,29 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     );
 
     // Récupérer l'accountId depuis les paramètres de route
-    this.route.params.subscribe((params) => {
-      if (params['accountId']) {
-        this.accountId = parseInt(params['accountId'], 10);
-        console.log(
-          'TRANSACTION LIST : accountId depuis la route:',
-          this.accountId,
-        );
-        this.loadAccountInfo();
-      }
-    });
+    this.subscriptions.add(
+      this.route.params.subscribe((params) => {
+        const routeAccountId = params['accountId']
+          ? parseInt(params['accountId'], 10)
+          : null;
+        this.accountId = Number.isNaN(routeAccountId) ? null : routeAccountId;
+        this.account =
+          this.accounts.find((account) => account.id === this.accountId) ||
+          null;
+        this.selectTransactionsForActiveAccount();
+
+        if (this.accountId) {
+          console.log(
+            'TRANSACTION LIST : accountId depuis la route:',
+            this.accountId,
+          );
+          this.loadAccountInfo();
+        } else {
+          this.recurringTransactions = [];
+          this.pendingSchedules = [];
+        }
+      }),
+    );
 
     // Charger les comptes
     this.subscriptions.add(
@@ -250,29 +270,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
           this.allTransactions = data || [];
 
-          // Filtrer par compte si accountId est fourni
-          if (this.accountId !== null) {
-            console.log(
-              'TRANSACTION LIST : Filtrage pour le compte',
-              this.accountId,
-            );
-            this.transactions = data.filter((t) => {
-              const tAccountId =
-                typeof t.accountId === 'string'
-                  ? parseInt(t.accountId)
-                  : t.accountId;
-              return tAccountId === this.accountId;
-            });
-            console.log(
-              'TRANSACTION LIST : Après filtrage:',
-              this.transactions.length,
-              'transactions',
-            );
-          } else {
-            this.transactions = data;
-          }
-          this.updateAdvanceJointGlobalMetrics();
-          this.applyFiltersAndSort();
+          this.selectTransactionsForActiveAccount();
           if (this.recurringTransactions.length > 0) {
             this.calculateRecurringMonthTotals();
           }
@@ -309,6 +307,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     );
 
     this.subCategoryService.getSubCategories().subscribe();
+    // Cette vue calcule les soldes à partir de l'historique complet. Elle ne
+    // doit jamais réutiliser un sous-ensemble laissé dans le service par une
+    // autre page ou par un compte précédemment affiché.
+    this.transactionService.clearFiltersTransactions();
   }
 
   ngOnDestroy(): void {
@@ -318,6 +320,22 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   loadTransactions(): void {
     this.transactionService.loadTransactions();
+  }
+
+  private selectTransactionsForActiveAccount(): void {
+    if (this.accountId === null) {
+      this.transactions = [...this.allTransactions];
+    } else {
+      this.transactions = this.allTransactions.filter((transaction) => {
+        const transactionAccountId =
+          typeof transaction.accountId === 'string'
+            ? parseInt(transaction.accountId, 10)
+            : transaction.accountId;
+        return transactionAccountId === this.accountId;
+      });
+    }
+
+    this.applyFiltersAndSort();
   }
 
   private toNumber(value: unknown): number | null {
@@ -705,9 +723,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     const remaining = salaryBase - totalExpenses;
     const remainingPercent =
-      salaryBase > 0
-        ? Math.round((remaining / salaryBase) * 100)
-        : 0;
+      salaryBase > 0 ? Math.round((remaining / salaryBase) * 100) : 0;
 
     return {
       total: salaryBase,
@@ -716,6 +732,87 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       remaining,
       remainingPercent,
     };
+  }
+
+  getBudgetRows() {
+    const displayOrder = [1, 2, 3];
+    return [...this.get503020Breakdown().items].sort(
+      (a, b) => displayOrder.indexOf(a.id) - displayOrder.indexOf(b.id),
+    );
+  }
+
+  get activeAdvancedFilterCount(): number {
+    return [
+      Boolean(this.filters.dateRange?.length),
+      Boolean(this.filters.amount),
+      this.filters.categoryIds.length > 0,
+      this.filters.subCategoryIds.length > 0,
+      this.filters.advanceJoint !== 'all',
+      this.filters.internalTransfer !== 'all',
+    ].filter(Boolean).length;
+  }
+
+  isBudgetSectionExpanded(section: string): boolean {
+    return this.expandedBudgetSections.has(section);
+  }
+
+  toggleBudgetSection(section: string): void {
+    const expanded = new Set(this.expandedBudgetSections);
+    if (expanded.has(section)) {
+      expanded.delete(section);
+    } else {
+      expanded.add(section);
+    }
+    this.expandedBudgetSections = expanded;
+  }
+
+  getBudgetDetailItems(
+    kind: 'income' | 'expense',
+    debit503020Id?: number,
+  ): BudgetDetailItem[] {
+    if (!this.accountId) return [];
+
+    const now = new Date();
+    const schedules = this.buildSchedulesForMonth(
+      this.recurringTransactions.filter((recurring) => {
+        const recurringAccountId =
+          typeof recurring.accountId === 'string'
+            ? parseInt(recurring.accountId, 10)
+            : recurring.accountId;
+        return (
+          recurringAccountId === this.accountId && recurring.isActive === 1
+        );
+      }),
+      now.getFullYear(),
+      now.getMonth(),
+    );
+    const details = new Map<string, BudgetDetailItem>();
+
+    schedules.forEach(({ rt }) => {
+      const flowId =
+        typeof rt.financialFlowId === 'string'
+          ? parseInt(rt.financialFlowId, 10)
+          : rt.financialFlowId;
+      const matches =
+        kind === 'income'
+          ? flowId === 1
+          : flowId === 2 && Number(rt.debit503020) === debit503020Id;
+      if (!matches) return;
+
+      const subCategory = this.getSubCategoryById(rt.subCategoryId);
+      const label = subCategory?.label || rt.label || 'Sans sous-catégorie';
+      const key = String(rt.subCategoryId || label);
+      const existing = details.get(key);
+      const amount = Math.abs(this.getSignedAmountFromRecurring(rt));
+      if (existing) {
+        existing.amount += amount;
+        existing.occurrences += 1;
+      } else {
+        details.set(key, { label, amount, occurrences: 1 });
+      }
+    });
+
+    return [...details.values()].sort((a, b) => b.amount - a.amount);
   }
 
   onDateRangeChange(dateRange: Date[] | null): void {
@@ -762,11 +859,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   applyFilter(): void {
     this.currentPage = 1;
     this.applyFiltersAndSort();
-  }
-
-  filterToAdvanceJointTransactions(): void {
-    this.filters.advanceJoint = 'only';
-    this.applyFilter();
   }
 
   // Obtenir le nom de la sous-catégorie
@@ -1178,8 +1270,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       rec,
       currentYear,
       currentMonth,
-    ).filter((d) =>
-      !this.isScheduleRealized(d.rt, d.date) && !this.isOccurrenceSkipped(d.rt, d.date),
+    ).filter(
+      (d) =>
+        !this.isScheduleRealized(d.rt, d.date) &&
+        !this.isOccurrenceSkipped(d.rt, d.date),
     );
 
     const nextStartDue: { rt: RecurringTransaction; date: Date }[] = [];
@@ -1187,7 +1281,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       const nextMonth = (currentMonth + 1) % 12;
       const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       const next = this.buildSchedulesForMonth(rec, nextYear, nextMonth).filter(
-        (d) => d.date.getDate() <= 5 &&
+        (d) =>
+          d.date.getDate() <= 5 &&
           !this.isScheduleRealized(d.rt, d.date) &&
           !this.isOccurrenceSkipped(d.rt, d.date),
       );
@@ -1409,38 +1504,43 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     recurring: RecurringTransaction,
     dueDate: Date,
   ): RecurringOccurrenceException | undefined {
-    return this.occurrenceExceptions.get(`${recurring.id}:${this.toDateKey(dueDate)}`);
+    return this.occurrenceExceptions.get(
+      `${recurring.id}:${this.toDateKey(dueDate)}`,
+    );
   }
 
-  private isOccurrenceSkipped(recurring: RecurringTransaction, dueDate: Date): boolean {
+  private isOccurrenceSkipped(
+    recurring: RecurringTransaction,
+    dueDate: Date,
+  ): boolean {
     return Boolean(this.getOccurrenceException(recurring, dueDate)?.isSkipped);
   }
 
-  private getOccurrenceAmount(recurring: RecurringTransaction, dueDate: Date): number {
+  private getOccurrenceAmount(
+    recurring: RecurringTransaction,
+    dueDate: Date,
+  ): number {
     const override = this.getOccurrenceException(recurring, dueDate)?.amount;
     if (override === null || override === undefined) {
       return this.getSignedAmountFromRecurring(recurring);
     }
-    return recurring.financialFlowId === 2 ? -Math.abs(override) : Math.abs(override);
+    return recurring.financialFlowId === 2
+      ? -Math.abs(override)
+      : Math.abs(override);
   }
 
   editUpcomingOccurrence(schedule: UpcomingScheduleLite): void {
-    const dialogRef = this.dialogService.open(
-      OccurrenceAmountDialogComponent,
-      {
-        header: "Modifier le montant de l'échéance",
-        width: '430px',
-        modal: true,
-        closable: true,
-        data: {
-          label: this.getRecurringDisplayLabel(
-            schedule.recurringTransaction,
-          ),
-          dueDate: schedule.dueDate,
-          amount: Math.abs(schedule.amount),
-        },
+    const dialogRef = this.dialogService.open(OccurrenceAmountDialogComponent, {
+      header: "Modifier le montant de l'échéance",
+      width: '430px',
+      modal: true,
+      closable: true,
+      data: {
+        label: this.getRecurringDisplayLabel(schedule.recurringTransaction),
+        dueDate: schedule.dueDate,
+        amount: Math.abs(schedule.amount),
       },
-    );
+    });
 
     dialogRef.onClose.subscribe((amount: number | null | undefined) => {
       if (amount === null || amount === undefined) return;
@@ -1452,7 +1552,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
       width: '450px',
       data: {
-        title: "Annuler cette échéance",
+        title: 'Annuler cette échéance',
         message: `Confirmer l’annulation exceptionnelle de « ${schedule.recurringTransaction.label} » le ${schedule.dueDate.toLocaleDateString('fr-FR')} ?`,
         confirmText: 'Annuler cette échéance',
         cancelText: 'Conserver',
@@ -1505,10 +1605,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     return this.selectedScheduleKeys.has(this.getScheduleKey(schedule));
   }
 
-  toggleScheduleSelection(
-    schedule: UpcomingScheduleLite,
-    event: Event,
-  ): void {
+  toggleScheduleSelection(schedule: UpcomingScheduleLite, event: Event): void {
     const checkbox = event.target as HTMLInputElement;
     const key = this.getScheduleKey(schedule);
     if (checkbox.checked) {
@@ -1623,27 +1720,25 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.clearUndoValidationTimer();
     this.undoValidation = { ...state, isUndoing: true };
 
-    this.transactionService
-      .deleteTransactions(state.transactionIds)
-      .subscribe({
-        next: () => {
-          this.dismissUndoValidation();
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Validation annulée',
-            detail: `${state.count} transaction(s) ont été supprimées.`,
-          });
-        },
-        error: () => {
-          this.undoValidation = { ...state, isUndoing: false };
-          this.startUndoValidationTimer();
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Annulation impossible',
-            detail: "La suppression du lot n'a pas pu être terminée.",
-          });
-        },
-      });
+    this.transactionService.deleteTransactions(state.transactionIds).subscribe({
+      next: () => {
+        this.dismissUndoValidation();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Validation annulée',
+          detail: `${state.count} transaction(s) ont été supprimées.`,
+        });
+      },
+      error: () => {
+        this.undoValidation = { ...state, isUndoing: false };
+        this.startUndoValidationTimer();
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Annulation impossible',
+          detail: "La suppression du lot n'a pas pu être terminée.",
+        });
+      },
+    });
   }
 
   dismissUndoValidation(): void {
@@ -1995,6 +2090,104 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
   }
 
+  get pendingAdvanceJointTransactions(): Transaction[] {
+    const currentAccountId = this.getCurrentAccountId();
+    if (currentAccountId === null) return [];
+
+    return this.allTransactions.filter((transaction) => {
+      const transactionAccountId =
+        typeof transaction.accountId === 'string'
+          ? parseInt(transaction.accountId, 10)
+          : transaction.accountId;
+      return (
+        transactionAccountId === currentAccountId &&
+        Boolean(transaction.id) &&
+        this.isAdvanceToJointAccount(transaction)
+      );
+    });
+  }
+
+  get pendingAdvanceJointTotal(): number {
+    return this.pendingAdvanceJointTransactions.reduce(
+      (sum, transaction) => sum + Math.abs(this.getSignedAmount(transaction)),
+      0,
+    );
+  }
+
+  transferPendingAdvancesToJointAccount(): void {
+    const transactions = this.pendingAdvanceJointTransactions;
+    const jointAccountId = this.getJointAccountId();
+    if (!transactions.length || jointAccountId === null) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Aucun transfert à effectuer',
+        detail: 'Aucune avance à régulariser vers le compte joint.',
+      });
+      return;
+    }
+
+    const total = this.pendingAdvanceJointTotal;
+    const dialogRef = this.dialogService.open(ConfirmDialogComponent, {
+      width: '450px',
+      data: {
+        title: 'Verser au compte joint',
+        message: `Confirmer le transfert de ${transactions.length} transaction(s), soit ${total.toFixed(2)} €, vers le compte joint ?`,
+        confirmText: 'Transférer',
+        cancelText: 'Annuler',
+      },
+    });
+
+    dialogRef.onClose.subscribe((confirmed) => {
+      if (!confirmed) return;
+
+      const mirroredTransactions = transactions.map(
+        (transaction) =>
+          ({
+            description: transaction.description,
+            amount: Math.abs(this.getSignedAmount(transaction)),
+            date: transaction.date,
+            subCategoryId: transaction.subCategoryId,
+            accountId: jointAccountId,
+            financialFlowId: transaction.financialFlowId,
+            recurringTransactionId: null,
+            advanceToJointAccount: false,
+            isInternalTransfer: false,
+          }) as Transaction,
+      );
+      const sourceIds = transactions.map((transaction) => transaction.id!);
+
+      this.transactionService
+        .addTransactions(mirroredTransactions)
+        .pipe(
+          switchMap(() =>
+            this.transactionService.deleteTransactions(sourceIds),
+          ),
+        )
+        .subscribe({
+          next: () => {
+            this.loadTransactions();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Transfert effectué',
+              detail: `${transactions.length} transaction(s) ont été versées au compte joint.`,
+            });
+          },
+          error: (err) => {
+            console.error(
+              'TRANSACTION LIST : Erreur lors du transfert groupé vers le compte joint:',
+              err,
+            );
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail:
+                'Le transfert n’a pas pu être finalisé complètement. Vérifiez les transactions.',
+            });
+          },
+        });
+    });
+  }
+
   transferAdvanceToJointAccount(transaction: Transaction): void {
     if (!this.canTransferAdvanceToJointAccount(transaction)) {
       this.messageService.add({
@@ -2198,15 +2391,5 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return byName.id;
     }
     return this.accounts.some((account) => account.id === 2) ? 2 : null;
-  }
-
-  private updateAdvanceJointGlobalMetrics(): void {
-    const globalAdvanceJoint = this.allTransactions.filter((tx) =>
-      this.isAdvanceToJointAccount(tx),
-    );
-    this.advanceJointGlobalCount = globalAdvanceJoint.length;
-    this.advanceJointGlobalTotal = globalAdvanceJoint.reduce((sum, tx) => {
-      return sum + Math.abs(this.getSignedAmount(tx));
-    }, 0);
   }
 }

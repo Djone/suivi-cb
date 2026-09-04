@@ -24,7 +24,10 @@
 
       <div class="dashboard-account-grid">
         <button
-          *ngFor="let accountBalance of getMainAccountBalances(); let first = first"
+          *ngFor="
+            let accountBalance of getMainAccountBalances();
+            let first = first
+          "
           type="button"
           class="dashboard-account-card"
           [class.dashboard-account-card--primary]="first"
@@ -33,27 +36,45 @@
         >
           <div class="account-card-heading">
             <div>
-              <span class="account-card-name">{{ accountBalance.account.name }}</span>
-              <small>{{ accountBalance.account.description || "Compte bancaire" }}</small>
+              <span class="account-card-name">{{
+                accountBalance.account.name
+              }}</span>
+              <small>{{
+                accountBalance.account.description || "Compte bancaire"
+              }}</small>
             </div>
-            <span class="account-card-arrow"><i class="pi pi-arrow-right"></i></span>
+            <span class="account-card-arrow"
+              ><i class="pi pi-arrow-right"></i
+            ></span>
           </div>
           <div class="account-card-metrics">
             <div>
               <span>Solde actuel</span>
               <strong [class.negative]="accountBalance.currentBalance < 0">
-                {{ accountBalance.currentBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+                {{
+                  accountBalance.currentBalance
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
               </strong>
             </div>
             <div>
               <span>Prévisionnel</span>
-              <strong class="forecast" [class.negative]="accountBalance.forecastBalance < 0">
-                {{ accountBalance.forecastBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              <strong
+                class="forecast"
+                [class.negative]="accountBalance.forecastBalance < 0"
+              >
+                {{
+                  accountBalance.forecastBalance
+                    | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
               </strong>
             </div>
           </div>
           <div class="account-card-footer">
-            <strong>{{ accountBalance.upcomingSchedules.length }} échéance(s) à venir</strong>
+            <strong
+              >{{ accountBalance.upcomingSchedules.length }} échéance(s) à
+              venir</strong
+            >
             <span>Voir le détail du compte</span>
           </div>
         </button>
@@ -63,38 +84,105 @@
     <section class="dashboard-kpis" aria-label="Synthèse des comptes">
       <article class="dashboard-kpi dashboard-kpi--blue">
         <span>Liquidités disponibles</span>
-        <strong>{{ getMainAccountsLiquidity() | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}</strong>
+        <strong>{{
+          getMainAccountsLiquidity()
+            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
         <small>Comptes courant et joint</small>
       </article>
       <article class="dashboard-kpi dashboard-kpi--green">
         <span>Solde prévisionnel</span>
-        <strong>{{ getMainAccountsForecast() | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}</strong>
+        <strong>{{
+          getMainAccountsForecast()
+            | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
         <small>Après les échéances à venir</small>
       </article>
-      <article class="dashboard-kpi dashboard-kpi--orange">
-        <span>Alertes</span>
-        <strong>{{ getDashboardAlertCount() }}</strong>
-        <small>Points à surveiller ce mois</small>
+      <article class="dashboard-kpi dashboard-kpi--savings">
+        <span>Épargne disponible</span>
+        <strong>{{
+          getAvailableSavings() | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
+        <small>Liquidités à court et moyen terme</small>
+      </article>
+      <article class="dashboard-kpi dashboard-kpi--long-term">
+        <span>Épargne long terme</span>
+        <strong>{{
+          getLongTermSavings() | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
+        <small>Placements inclus au patrimoine</small>
       </article>
     </section>
 
     <section class="decision-card" *ngIf="getDashboardAlertCount() > 0">
-      <div class="decision-icon"><i class="pi pi-sparkles"></i></div>
-      <div class="decision-copy">
-        <span>À regarder aujourd’hui</span>
-        <strong>{{ getDashboardAlertCount() }} point(s) méritent votre attention</strong>
-        <small>Consultez la cloche de notifications pour voir le détail.</small>
+      <button
+        type="button"
+        class="decision-trigger"
+        [attr.aria-expanded]="showDashboardNotifications"
+        (click)="toggleDashboardNotifications()"
+      >
+        <span class="decision-icon"><i class="pi pi-sparkles"></i></span>
+        <span class="decision-copy">
+          <span>À regarder aujourd’hui</span>
+          <strong
+            >{{ getDashboardAlertCount() }} point(s) méritent votre
+            attention</strong
+          >
+          <small>Cliquez pour afficher le détail des notifications.</small>
+        </span>
+        <span class="priority-pill">Prioritaire</span>
+        <i
+          class="pi"
+          [ngClass]="
+            showDashboardNotifications ? 'pi-chevron-up' : 'pi-chevron-down'
+          "
+        ></i>
+      </button>
+
+      <div class="decision-notifications" *ngIf="showDashboardNotifications">
+        <button
+          *ngFor="let notification of getDashboardNotifications()"
+          type="button"
+          class="decision-notification"
+          [class.decision-notification--warn]="notification.severity === 'warn'"
+          [class.decision-notification--danger]="
+            notification.severity === 'danger'
+          "
+          (click)="openDashboardNotification(notification)"
+        >
+          <i
+            class="pi"
+            [ngClass]="
+              notification.severity === 'danger'
+                ? 'pi-exclamation-circle'
+                : notification.severity === 'warn'
+                  ? 'pi-exclamation-triangle'
+                  : 'pi-info-circle'
+            "
+          ></i>
+          <span>
+            <small>{{ notification.accountName }}</small>
+            <strong>{{ notification.text }}</strong>
+            <em *ngIf="notification.tooltip">{{ notification.tooltip }}</em>
+          </span>
+          <i class="pi pi-arrow-right"></i>
+        </button>
       </div>
-      <span class="priority-pill">Prioritaire</span>
     </section>
 
     <section class="dashboard-lists">
       <article class="dashboard-list-card">
         <div class="list-card-heading">
-          <div><p class="eyebrow">Activité</p><h2>Dernières opérations</h2></div>
+          <div>
+            <p class="eyebrow">Activité</p>
+            <h2>Dernières opérations</h2>
+          </div>
           <span>Tous comptes</span>
         </div>
-        <div class="dashboard-list" *ngIf="getDashboardTransactions().length; else noTransactions">
+        <div
+          class="dashboard-list"
+          *ngIf="getDashboardTransactions().length; else noTransactions"
+        >
           <button
             *ngFor="let transaction of getDashboardTransactions()"
             type="button"
@@ -104,10 +192,20 @@
             <span class="list-row-icon"><i class="pi pi-credit-card"></i></span>
             <span class="list-row-copy">
               <strong>{{ transaction.description || "Transaction" }}</strong>
-              <small>{{ getTransactionAccountName(transaction) }} · {{ getSubCategoryLabel(transaction.subCategoryId) }}</small>
+              <small
+                >{{ getTransactionAccountName(transaction) }} ·
+                {{ getSubCategoryLabel(transaction.subCategoryId) }}</small
+              >
             </span>
-            <span class="list-row-amount" [class.positive]="getAmountSigned(transaction) >= 0" [class.negative]="getAmountSigned(transaction) < 0">
-              {{ getAmountSigned(transaction) | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+            <span
+              class="list-row-amount"
+              [class.positive]="getAmountSigned(transaction) >= 0"
+              [class.negative]="getAmountSigned(transaction) < 0"
+            >
+              {{
+                getAmountSigned(transaction)
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
             </span>
           </button>
         </div>
@@ -115,10 +213,16 @@
 
       <article class="dashboard-list-card">
         <div class="list-card-heading">
-          <div><p class="eyebrow">À venir</p><h2>Prochaines échéances</h2></div>
+          <div>
+            <p class="eyebrow">À venir</p>
+            <h2>Prochaines échéances</h2>
+          </div>
           <span>Tous comptes</span>
         </div>
-        <div class="dashboard-list" *ngIf="getDashboardUpcomingSchedules().length; else noSchedules">
+        <div
+          class="dashboard-list"
+          *ngIf="getDashboardUpcomingSchedules().length; else noSchedules"
+        >
           <button
             *ngFor="let schedule of getDashboardUpcomingSchedules()"
             type="button"
@@ -130,11 +234,26 @@
               <small>{{ schedule.dueDate | date: "MMM" }}</small>
             </span>
             <span class="list-row-copy">
-              <strong>{{ getRecurringLabelWithCountdown(schedule.recurringTransaction) }}</strong>
-              <small>{{ schedule.accountName }} · {{ getSubCategoryLabel(schedule.recurringTransaction.subCategoryId) }}</small>
+              <strong>{{
+                getRecurringLabelWithCountdown(schedule.recurringTransaction)
+              }}</strong>
+              <small
+                >{{ schedule.accountName }} ·
+                {{
+                  getSubCategoryLabel(
+                    schedule.recurringTransaction.subCategoryId
+                  )
+                }}</small
+              >
             </span>
-            <span class="list-row-amount" [class.positive]="schedule.amount >= 0" [class.negative]="schedule.amount < 0">
-              {{ schedule.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+            <span
+              class="list-row-amount"
+              [class.positive]="schedule.amount >= 0"
+              [class.negative]="schedule.amount < 0"
+            >
+              {{
+                schedule.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}
             </span>
           </button>
         </div>
@@ -144,10 +263,19 @@
 
   <ng-template #noAccounts>
     <section class="dashboard-empty">
-      <i class="pi pi-wallet"></i><h2>Aucun compte disponible</h2>
+      <i class="pi pi-wallet"></i>
+      <h2>Aucun compte disponible</h2>
       <p>Ajoutez un compte pour afficher votre situation financière.</p>
     </section>
   </ng-template>
-  <ng-template #noTransactions><div class="dashboard-list-empty">Aucune opération récente.</div></ng-template>
-  <ng-template #noSchedules><div class="dashboard-list-empty">Aucune échéance à venir.</div></ng-template>
+  <ng-template #noTransactions
+    ><div class="dashboard-list-empty">
+      Aucune opération récente.
+    </div></ng-template
+  >
+  <ng-template #noSchedules
+    ><div class="dashboard-list-empty">
+      Aucune échéance à venir.
+    </div></ng-template
+  >
 </main>

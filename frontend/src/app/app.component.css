@@ -1,6 +1,6 @@
 /* Conteneur principal */
 .app-container {
-  font-family: Arial, sans-serif;
+  font-family: var(--font-sans);
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;

@@ -1,60 +1,55 @@
-.savings-dashboard { display: grid; gap: 1.5rem; padding: 1rem 0 2.5rem; }
-.page-header { display: flex; justify-content: space-between; align-items: end; gap: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--surface-border); }
-.eyebrow, .section-kicker { color: var(--primary-color); font-size: .72rem; font-weight: 700; text-transform: uppercase; }
-h1 { margin: .25rem 0; font-size: 1.8rem; }
-.page-header p { margin: 0; color: var(--text-color-secondary); }
-.wealth-total { text-align: right; }
+.savings-dashboard { display: grid; gap: 1.65rem; width: min(1180px, 100%); margin: 0 auto; padding: .5rem 0 2.5rem; color: #172033; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; }
+.eyebrow, .section-kicker { color: #2563eb; font-size: .72rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; }
+h1 { margin: .35rem 0 .25rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -.025em; }
+.page-header p { margin: 0; color: #778197; }
 .header-actions { display: flex; align-items: center; gap: 1rem; }
-.wealth-total span, .overview-item span, .balance-block span { color: var(--text-color-secondary); font-size: .78rem; }
-.wealth-total strong { display: block; margin-top: .25rem; font-size: 1.5rem; }
-.overview-strip { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface-0, #fff); border: 1px solid var(--surface-300); border-radius: 8px; box-shadow: 0 4px 14px rgba(15, 23, 42, .07); }
-.overview-item { display: flex; align-items: center; gap: .9rem; min-width: 0; padding: 1.1rem 1.25rem; }
-.overview-item + .overview-item { border-left: 1px solid var(--surface-border); }
-.overview-item strong { display: block; margin-top: .2rem; color: var(--text-color); font-size: 1.08rem; }
-.overview-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 8px; background: var(--green-100); color: var(--green-800); font-size: 1.05rem; }
-.overview-icon.is-liquid { background: var(--cyan-50); color: var(--cyan-700); }
-.overview-icon.is-long-term { background: var(--indigo-50); color: var(--indigo-700); }
-.overview-icon.is-alert { background: var(--red-50); color: var(--red-700); }
-.account-section { display: grid; gap: .85rem; }
-.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; padding-bottom: .2rem; }
-.section-heading h2 { margin: .15rem 0 0; font-size: 1.25rem; }
-.section-count { padding: .35rem .55rem; color: var(--text-color-secondary); font-size: .78rem; font-weight: 600; background: var(--surface-100); border: 1px solid var(--surface-200); border-radius: 6px; }
-.account-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.15rem; }
-.account-tile { display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 1rem; min-height: 310px; padding: 1.2rem; color: var(--text-color); text-decoration: none; background: var(--surface-0, #fff); border: 1px solid var(--surface-300); border-top: 5px solid var(--primary-color); border-radius: 8px; box-shadow: 0 5px 16px rgba(15, 23, 42, .09); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
-.account-tile:hover { transform: translateY(-3px); border-color: var(--primary-400); box-shadow: 0 12px 26px rgba(15, 23, 42, .14); }
-.account-tile:focus-visible { outline: 3px solid var(--primary-200); outline-offset: 2px; }
-.account-tile.long-term { border-top-color: var(--indigo-500); }
-.account-tile.is-alert { border-color: var(--red-300); border-top-color: var(--red-600); background: color-mix(in srgb, var(--red-50) 38%, var(--surface-0, #fff)); }
+.wealth-total { text-align: right; }
+.wealth-total span, .overview-item span, .balance-block span { color: #818b9d; font-size: .76rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.wealth-total strong { display: block; margin-top: .3rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -.02em; }
+.overview-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.overview-item { min-width: 0; padding: 1.15rem 1.25rem; background: #eef6ff; border: 1px solid #c9e1ff; border-radius: 14px; }
+.overview-item.is-liquid { background: #effcf5; border-color: #c4efd6; }
+.overview-item.is-alert { background: #fff7ed; border-color: #fed7aa; }
+.overview-item.is-alert.is-ok { background: #effcf5; border-color: #c4efd6; }
+.overview-item strong { display: block; margin-top: .45rem; color: #172033; font-size: 1.5rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+.overview-item.is-alert:not(.is-ok) strong { color: #ea580c; }
+.account-section { display: grid; gap: .9rem; }
+.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
+.section-heading h2 { margin: .25rem 0 0; font-size: 1rem; font-weight: 600; letter-spacing: -.01em; }
+.section-count { color: #778197; font-size: .82rem; }
+.account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.account-section:last-child .account-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.account-tile { display: grid; grid-template-rows: auto auto auto 1fr auto; gap: .9rem; min-height: 272px; padding: 1.2rem; color: #172033; text-decoration: none; background: #fff; border: 1px solid #e1e6ed; border-radius: 14px; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.account-tile:hover { transform: translateY(-2px); border-color: #bcd5fb; box-shadow: 0 12px 28px rgba(23, 32, 51, .08); }
+.account-tile:focus-visible { outline: 3px solid #bfdbfe; outline-offset: 2px; }
+.account-tile.is-alert { border-color: #fecaca; }
 .tile-top, .tile-footer, .objective > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-.account-icon { display: grid; place-items: center; width: 52px; height: 52px; padding: 7px; overflow: hidden; border-radius: 8px; background: #fff; border: 1px solid var(--surface-300); box-shadow: 0 2px 7px rgba(15, 23, 42, .08); }
+.account-icon { display: grid; place-items: center; width: 38px; height: 38px; padding: 5px; overflow: hidden; background: #f7f9fc; border: 1px solid #edf0f4; border-radius: 10px; }
 .account-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }
-.account-icon > i { color: var(--primary-700); font-size: 1.25rem; }
-.liquidity-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .38rem .58rem; border-radius: 6px; background: var(--surface-100); border: 1px solid var(--surface-200); color: var(--text-color-secondary); font-size: .74rem; font-weight: 600; }
-.account-title span { color: var(--primary-700); font-size: .76rem; font-weight: 700; text-transform: uppercase; }
-.account-title h3 { margin: .25rem 0; font-size: 1.08rem; }
-.account-title p { margin: 0; color: var(--text-color-secondary); font-size: .82rem; }
-.balance-block { padding: .85rem 1rem; background: var(--surface-100); border: 1px solid var(--surface-200); border-radius: 8px; }
-.balance-block strong { display: block; margin-top: .25rem; color: var(--text-color); font-size: 1.5rem; }
+.account-icon > i { color: #2563eb; }
+.liquidity-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .35rem .55rem; color: #657084; font-size: .72rem; font-weight: 600; background: #f7f9fc; border-radius: 999px; }
+.account-title span { color: #818b9d; font-size: .7rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.account-title h3 { margin: .25rem 0 .1rem; font-size: 1rem; font-weight: 600; }
+.account-title p { margin: 0; color: #778197; font-size: .82rem; }
+.balance-block { padding: 0; background: transparent; border: 0; }
+.balance-block strong { display: block; margin-top: .35rem; color: #172033; font-size: 1.25rem; font-weight: 600; letter-spacing: -.015em; }
 .objective { align-self: end; }
-.objective span, .objective strong { font-size: .75rem; }
-.objective.is-empty { display: flex; align-items: center; min-height: 31px; color: var(--text-color-secondary); }
-.objective-progress { height: 10px; margin-top: .6rem; border: 1px solid var(--surface-300); background: var(--surface-200); }
-:host ::ng-deep .objective-progress .p-progressbar-value { background: var(--green-500, #22c55e); }
-.progress-track { height: 9px; margin-top: .55rem; overflow: hidden; background: var(--surface-200); border-radius: 5px; }
-.progress-fill { height: 100%; background: var(--green-500); border-radius: inherit; }
-.tile-footer { padding-top: .85rem; border-top: 1px solid var(--surface-300); }
-.status { display: inline-flex; align-items: center; gap: .4rem; color: var(--text-color-secondary); font-size: .78rem; font-weight: 600; }
-.status.is-ok { color: var(--green-700); }
-.status.is-warning { color: var(--red-700); }
-.open-button { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border-radius: 8px; color: var(--primary-800); background: var(--primary-100); }
-.account-tile:hover .open-button { color: var(--primary-color-text); background: var(--primary-color); }
-.loading { padding: 2rem; text-align: center; color: var(--text-color-secondary); }
-@media (max-width: 1100px) { .account-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.objective span, .objective strong { color: #818b9d; font-size: .74rem; }
+.objective.is-empty { display: flex; align-items: center; min-height: 31px; }
+:host ::ng-deep .objective-progress { height: 7px; margin-top: .55rem; overflow: hidden; background: #edf0f4; border: 0; border-radius: 999px; }
+:host ::ng-deep .objective-progress .p-progressbar-value { background: #16a34a; }
+.tile-footer { padding-top: .75rem; border-top: 1px solid #edf0f4; }
+.status { display: inline-flex; align-items: center; gap: .4rem; color: #657084; font-size: .78rem; font-weight: 600; }
+.status.is-ok { color: #169457; }
+.status.is-warning { color: #ea580c; }
+.open-button { color: #2563eb; }
+.loading { padding: 2rem; text-align: center; color: #778197; }
+@media (max-width: 1000px) { .account-section:last-child .account-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px) {
-  .page-header { align-items: start; flex-direction: column; gap: 1rem; }
-  .wealth-total { text-align: left; }
+  .page-header { flex-direction: column; gap: 1rem; }
   .header-actions { width: 100%; justify-content: space-between; }
-  .overview-strip, .account-grid { grid-template-columns: 1fr; }
-  .overview-item + .overview-item { border-left: 0; border-top: 1px solid var(--surface-border); }
+  .wealth-total { text-align: left; }
+  .overview-strip, .account-grid, .account-section:last-child .account-grid { grid-template-columns: 1fr; }
   .account-tile { min-height: 0; }
 }

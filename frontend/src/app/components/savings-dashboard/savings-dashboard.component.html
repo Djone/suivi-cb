@@ -19,17 +19,14 @@
 
   <ng-container *ngIf="!loading && !loadError">
     <div class="overview-strip">
-      <div class="overview-item">
-        <span class="overview-icon is-liquid"><i class="pi pi-bolt"></i></span>
+      <div class="overview-item is-liquid">
         <div><span>Disponible</span><strong>{{ availableSavings | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
       </div>
-      <div class="overview-item">
-        <span class="overview-icon is-long-term"><i class="pi pi-chart-line"></i></span>
+      <div class="overview-item is-long-term">
         <div><span>Long terme</span><strong>{{ longTermSavings | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
       </div>
-      <div class="overview-item">
-        <span class="overview-icon" [class.is-alert]="alertCount > 0"><i class="pi" [class.pi-check]="alertCount === 0" [class.pi-exclamation-triangle]="alertCount > 0"></i></span>
-        <div><span>Seuils</span><strong>{{ alertCount === 0 ? 'Tous respectes' : alertCount + ' alerte(s)' }}</strong></div>
+      <div class="overview-item is-alert" [class.is-ok]="alertCount === 0">
+        <div><span>Alertes</span><strong>{{ alertCount === 0 ? 'Aucune alerte' : alertCount + ' alerte(s)' }}</strong></div>
       </div>
     </div>
 

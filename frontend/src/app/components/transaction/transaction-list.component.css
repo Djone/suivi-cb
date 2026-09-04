@@ -11,15 +11,15 @@
 h1, h2 {
   color: #343a40;
   margin-bottom: 20px;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
 h3 {
   color: #343a40;
   margin-bottom: 15px;
-  font-size: 1.3rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 
@@ -63,8 +63,8 @@ h3 {
 
 .list-header h2 {
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -99,8 +99,8 @@ h3 {
 }
 
 .balance-amount {
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   text-align: center;
@@ -317,8 +317,20 @@ h3 {
 
 .transaction-list:not(.transaction-list--mobile) .header-top { align-items: flex-end; }
 .transaction-list:not(.transaction-list--mobile) .header-kicker { color: #778197; opacity: 1; letter-spacing: .14em; }
-.transaction-list:not(.transaction-list--mobile) .list-header h2 { margin-top: .3rem; color: #172033; font-size: 2rem; text-shadow: none; letter-spacing: -.035em; }
+.transaction-list:not(.transaction-list--mobile) .list-header h2 { margin-top: .3rem; color: #172033; font-size: 1.5rem; font-weight: 600; text-shadow: none; letter-spacing: -.025em; }
 .account-period { margin: .35rem 0 0; color: #778197; }
+
+.account-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .7rem;
+  margin-top: .35rem;
+}
+
+.account-overview-current { grid-column: 1; grid-row: 1; }
+.account-overview-forecast { grid-column: 2; grid-row: 1; }
+.account-overview-income { grid-column: 1; grid-row: 2; }
+.account-overview-advance { grid-column: 2; grid-row: 2; }
 
 .transaction-list:not(.transaction-list--mobile) .balance-display {
   display: grid;
@@ -354,6 +366,26 @@ h3 {
 .transaction-list:not(.transaction-list--mobile) .balance-amount.negative { color: #dc2626; }
 .transaction-list:not(.transaction-list--mobile) .balance-separator { display: none; }
 
+.transaction-list:not(.transaction-list--mobile) .summary-item--interactive {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .75rem;
+  min-height: 66px;
+  padding: .85rem 1rem;
+  color: #172033;
+  text-align: left;
+  background: #effcf5;
+  border: 1px solid #c4efd6;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+.transaction-list:not(.transaction-list--mobile) .summary-item--interactive:hover { border-color: #7ed7a3; background: #e8faef; }
+.transaction-list:not(.transaction-list--mobile) .summary-item--interactive .summary-label { color: #657084; }
+.transaction-list:not(.transaction-list--mobile) .summary-item--interactive .summary-amount { color: #047857; font-size: 1.05rem; font-weight: 600; }
+
 .transaction-list:not(.transaction-list--mobile) .break503020-container,
 .transaction-list:not(.transaction-list--mobile) .recurring-summary {
   margin: 0;
@@ -374,6 +406,16 @@ h3 {
   border: 1px solid #e2e7ee;
   border-radius: 12px;
 }
+.transaction-list:not(.transaction-list--mobile) button.break-row {
+  grid-template-columns: minmax(0, 1fr) auto 60px;
+  width: 100%;
+  color: #172033;
+  text-align: left;
+  border: 1px solid #e2e7ee;
+  font: inherit;
+  cursor: pointer;
+}
+.transaction-list:not(.transaction-list--mobile) button.break-row:hover { border-color: #bfd4f5; background: #f8faff; }
 
 .transaction-list:not(.transaction-list--mobile) .break-row.remaining { background: #effcf5; border-color: #c4efd6; }
 .transaction-list:not(.transaction-list--mobile) .recurring-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
@@ -976,7 +1018,7 @@ h3 {
 }
 
 .description-text {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: #212529;
   white-space: nowrap;
@@ -985,7 +1027,7 @@ h3 {
 }
 
 .subcategory-text {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #6c757d;
   white-space: nowrap;
   overflow: hidden;
@@ -993,7 +1035,7 @@ h3 {
 }
 
 .transaction-amount {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   min-width: 100px;
   text-align: right;
@@ -1195,4 +1237,32 @@ h3 {
   .bulk-date-field {
     justify-content: space-between;
   }
+}
+
+/* Vue consolidée des opérations */
+.transaction-list--global:not(.transaction-list--mobile) .list-header { margin-bottom: 1.25rem; }
+.transaction-list--global:not(.transaction-list--mobile) .header-kicker { display: none; }
+.transaction-list--global:not(.transaction-list--mobile) .list-header h2 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+.transaction-list--global:not(.transaction-list--mobile) .header-top { align-items: center; }
+.transaction-list--global:not(.transaction-list--mobile) .list-controls { padding: 0; background: transparent; border: 0; }
+.transaction-list--global:not(.transaction-list--mobile) .filters-primary { grid-template-columns: minmax(360px, 1fr) minmax(190px, .32fr) minmax(180px, .3fr); }
+.transaction-list--global:not(.transaction-list--mobile) .description-filter { order: -1; }
+.transaction-list--global:not(.transaction-list--mobile) .filters-secondary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.transaction-list--global:not(.transaction-list--mobile) .controls-row { margin-top: .75rem !important; padding: .75rem 0; border-top: 1px solid #e1e6ed; }
+.transaction-list--global:not(.transaction-list--mobile) .transactions-list { border-radius: 12px; }
+.transaction-list--global:not(.transaction-list--mobile) .transaction-item { min-height: 68px; padding: .9rem 1.1rem; }
+:host ::ng-deep .transaction-list--global:not(.transaction-list--mobile) .list-header .p-button { color: #fff; background: #2563eb; border-color: #2563eb; border-radius: 9px; }
+
+@media (max-width: 1050px) {
+  .transaction-list--global:not(.transaction-list--mobile) .filters-primary { grid-template-columns: 1fr 1fr; }
+  .transaction-list--global:not(.transaction-list--mobile) .description-filter { grid-column: 1 / -1; }
+  .transaction-list--global:not(.transaction-list--mobile) .filters-secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .account-overview-grid { grid-template-columns: 1fr; }
+  .account-overview-current,
+  .account-overview-forecast,
+  .account-overview-income,
+  .account-overview-advance { grid-column: 1; grid-row: auto; }
 }

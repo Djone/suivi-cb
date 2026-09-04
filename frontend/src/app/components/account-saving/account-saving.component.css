@@ -2,12 +2,12 @@
 .back-link { justify-self: start; }
 .revolut-detail { display: grid; gap: 1rem; }
 .detail-header { display: flex; justify-content: space-between; align-items: end; gap: 2rem; padding: 1.25rem 0; border-bottom: 1px solid var(--surface-border); }
-.bank-name { color: var(--primary-color); font-size: .8rem; font-weight: 700; text-transform: uppercase; }
-h1 { margin: .2rem 0; font-size: 1.8rem; }
+.bank-name { color: var(--primary-color); font-size: .75rem; font-weight: 600; text-transform: uppercase; }
+h1 { margin: .2rem 0; font-size: 1.5rem; font-weight: 600; }
 .detail-header p { margin: 0; color: var(--text-color-secondary); }
 .balance { text-align: right; }
 .balance span { display: block; color: var(--text-color-secondary); font-size: .8rem; }
-.balance strong { display: block; margin-top: .2rem; font-size: 1.5rem; }
+.balance strong { display: block; margin-top: .2rem; font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .progress-panel, .account-form { padding: 1.25rem; background: var(--surface-card); border: 1px solid var(--surface-border); border-radius: 8px; }
 .progress-heading, .progress-heading > div { display: flex; justify-content: space-between; gap: .75rem; }
 .progress-heading { align-items: center; }
@@ -26,7 +26,7 @@ h1 { margin: .2rem 0; font-size: 1.8rem; }
 .transactions-heading h2 { margin: .2rem 0 0; font-size: 1.05rem; }
 .transaction-count { color: var(--text-color-secondary); font-size: .8rem; }
 .text-right { text-align: right; }
-.movement-amount { font-weight: 700; }
+.movement-amount { font-weight: 600; font-variant-numeric: tabular-nums; }
 .movement-amount.is-positive { color: var(--green-700); }
 .movement-amount.is-negative { color: var(--red-700); }
 .empty-history { padding: 2rem; text-align: center; color: var(--text-color-secondary); }
