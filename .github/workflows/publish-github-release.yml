@@ -1,0 +1,140 @@
+name: Publish GitHub release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create or update the major release
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const tag = context.ref.replace('refs/tags/', '');
+            const match = /^v(\d+)\.(\d+)\.(\d+)$/.exec(tag);
+            if (!match) {
+              core.info(`Ignoring non-stable tag ${tag}.`);
+              return;
+            }
+
+            const [, major, minor, patch] = match;
+            const majorTag = `v${major}`;
+            const isMajorRelease = minor === '0' && patch === '0';
+            const markerPattern = /\n?<!-- latest-version:v\d+\.\d+\.\d+ -->/g;
+
+            let release;
+            try {
+              const response = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: majorTag,
+              });
+              release = response.data;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            if (!release && !isMajorRelease) {
+              core.setFailed(
+                `Release ${majorTag} is missing. Publish ${majorTag}.0.0 first.`,
+              );
+              return;
+            }
+
+            const refName = `tags/${majorTag}`;
+            let majorRefExists = true;
+            try {
+              await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: refName,
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              majorRefExists = false;
+            }
+
+            if (majorRefExists) {
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: refName,
+                sha: context.sha,
+                force: true,
+              });
+            } else {
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/${refName}`,
+                sha: context.sha,
+              });
+            }
+
+            if (!release) {
+              const notes = await github.rest.repos.generateReleaseNotes({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tag,
+                target_commitish: context.sha,
+              });
+
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: majorTag,
+                name: majorTag,
+                body: `${notes.data.body}\n\n<!-- latest-version:${tag} -->`,
+                draft: false,
+                prerelease: false,
+                make_latest: 'true',
+              });
+              return;
+            }
+
+            const currentBody = release.body || '';
+            const previousVersion = currentBody.match(
+              /<!-- latest-version:(v\d+\.\d+\.\d+) -->/,
+            )?.[1];
+
+            if (previousVersion === tag) {
+              core.info(`${tag} is already included in release ${majorTag}.`);
+              return;
+            }
+
+            const notes = await github.rest.repos.generateReleaseNotes({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              target_commitish: context.sha,
+              ...(previousVersion ? { previous_tag_name: previousVersion } : {}),
+            });
+            const previousBody = currentBody.replace(markerPattern, '').trim();
+            const body = [
+              previousBody,
+              `## ${tag}`,
+              notes.data.body,
+              `<!-- latest-version:${tag} -->`,
+            ]
+              .filter(Boolean)
+              .join('\n\n');
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              tag_name: majorTag,
+              name: majorTag,
+              body,
+              draft: false,
+              prerelease: false,
+              make_latest: 'true',
+            });

@@ -5,10 +5,12 @@ This project provides a release orchestration CLI with validation before product
 ## Commands
 
 - `npm run release:dry-run -- --branch=master`
+
   - Runs git preflight checks and tests.
   - Does not change files.
 
 - `npm run release:prepare -- --stable=1.3.0 --next=1.4.0-dev --branch=master`
+
   - Runs preflight + tests.
   - Updates version files:
     - `package.json` (next dev version)
@@ -17,12 +19,19 @@ This project provides a release orchestration CLI with validation before product
     - regenerates `frontend/src/app/version.ts`
 
 - `npm run release:deploy -- --branch=master`
+
   - Runs preflight + tests.
-  - Build/deploy steps are dry-run unless `--execute` is provided.
-  - Build can be skipped with `--skip-build`.
-  - NAS deploy is optional via `--with-nas-deploy` (Linux/Mac script only).
+  - With `--execute`, merges the current release branch into `master`, pushes
+    `master`, then creates and pushes the stable tag (for example `v2.0.0`).
+  - Pushing a stable tag triggers `.github/workflows/publish-github-release.yml`.
+  - A major tag ending in `.0.0` (for example `v2.0.0`) creates the corresponding
+    major GitHub Release (`v2`) and marks it as latest.
+  - Later minor and patch tags (for example `v2.1.0` and `v2.0.1`) keep their
+    immutable exact tags, move the major alias `v2` to the latest deployed commit,
+    and append their generated notes to the existing `v2` release.
 
 - `npm run release:full -- --stable=1.3.0 --next=1.4.0-dev --branch=master`
+
   - Executes prepare + deploy flow in one command.
 
 - `npm run release:rollback`
@@ -62,6 +71,5 @@ Each run writes a report:
 - `--skip-master-check`
 - `--allow-dirty`
 - `--execute`
-- `--with-nas-deploy`
 - `--rollback-on-failure`
 - `--report=data/release/custom-report.json`
