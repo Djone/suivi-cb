@@ -22,7 +22,10 @@ if (env !== "production") {
     commit = execSync("git rev-parse --short HEAD").toString().trim();
   } catch {}
 
-  displayVersion = `${pkg.version}-dev${commit ? "+" + commit : ""}`;
+  const devVersion = pkg.version.endsWith("-dev")
+    ? pkg.version
+    : `${pkg.version}-dev`;
+  displayVersion = `${devVersion}${commit ? "+" + commit : ""}`;
 }
 
 const outDir = path.resolve(__dirname, "../frontend/src/app");

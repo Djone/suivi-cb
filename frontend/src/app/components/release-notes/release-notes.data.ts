@@ -7,31 +7,6 @@ export interface ReleaseNotesSection {
 
 export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
   {
-    version: '2.0.0',
-    items: [
-      {
-        title: 'Amélioration UX',
-        description: [
-          '[X] Liste des transactions : bandeau bleu - Modification du calcul des dépenses prévues. Le montant affiché est celui des dépenses restantes à date.',
-          '[X] Liste des transactions : bandeau bleu - Placer le reste à vivre sous Epargne et non à côté de Dépenses prévues',
-          '[X] Dashboard et pages comptes : nouvelle interface V2 avec accès direct aux comptes courant et joint',
-        ],
-        status: 'done',
-        targetVersion: '2.0.0',
-        priority: 'medium',
-      },
-      {
-        title: 'Bug fix',
-        description: [
-          '[X] Transactions récurrentes : Correction de l\'affichage et calcul des transactions autres que mensuelles',
-        ],
-        status: 'done',
-        targetVersion: '2.0.0',
-        priority: 'medium',
-      },
-    ],
-  },
-  {
     version: '1.6.0',
     items: [
       {
