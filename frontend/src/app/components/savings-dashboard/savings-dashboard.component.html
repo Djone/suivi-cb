@@ -1,89 +1,319 @@
 <section class="savings-dashboard">
   <header class="page-header">
     <div>
-      <span class="eyebrow">Epargne multi-banques</span>
-      <h1>Comptes d'epargne</h1>
-      <p>Liquidites disponibles, objectifs et placements de long terme.</p>
+      <span class="eyebrow">Vue patrimoniale</span>
+      <h1>Votre épargne</h1>
+      <p>Une lecture par disponibilité, horizon et objectif.</p>
     </div>
     <div class="header-actions">
-      <div class="wealth-total">
-        <span>Patrimoine suivi</span>
-        <strong>{{ totalWealth | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong>
-      </div>
-      <a pButton routerLink="/savings/settings" icon="pi pi-cog" class="p-button-outlined" aria-label="Paramétrer les comptes"></a>
+      <a
+        pButton
+        routerLink="/savings/settings"
+        icon="pi pi-cog"
+        class="p-button-text"
+        aria-label="Paramétrer les comptes"
+      ></a
+      ><a
+        pButton
+        routerLink="/savings/settings"
+        [queryParams]="{ create: 'true' }"
+        icon="pi pi-plus"
+        label="Ajouter un compte"
+        class="savings-add-account"
+      ></a>
     </div>
   </header>
-
-  <p-message *ngIf="loadError" severity="error" text="Impossible de charger les comptes d'epargne."></p-message>
+  <p-message
+    *ngIf="loadError"
+    severity="error"
+    text="Impossible de charger les comptes d'epargne."
+  ></p-message>
   <div class="loading" *ngIf="loading">Chargement...</div>
 
   <ng-container *ngIf="!loading && !loadError">
-    <div class="overview-strip">
-      <div class="overview-item is-liquid">
-        <div><span>Disponible</span><strong>{{ availableSavings | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
-      </div>
-      <div class="overview-item is-long-term">
-        <div><span>Long terme</span><strong>{{ longTermSavings | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
-      </div>
-      <div class="overview-item is-alert" [class.is-ok]="alertCount === 0">
-        <div><span>Alertes</span><strong>{{ alertCount === 0 ? 'Aucune alerte' : alertCount + ' alerte(s)' }}</strong></div>
-      </div>
+    <div class="overview-grid">
+      <article class="panel wealth-card">
+        <span class="section-kicker">Patrimoine suivi</span
+        ><strong class="wealth-amount">{{
+          totalWealth | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
+        <p>
+          Réparti sur {{ accounts.length }} enveloppes d’épargne et
+          d’investissement.
+        </p>
+        <div class="wealth-breakdown">
+          <div>
+            <span>Disponible rapidement</span
+            ><strong class="green">{{
+              availableSavings | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}</strong>
+          </div>
+          <div>
+            <span>Immobilisé / long terme</span
+            ><strong class="blue">{{
+              longTermSavings | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}</strong>
+          </div>
+        </div>
+      </article>
+      <aside class="panel alert-panel" [class.all-clear]="alertCount === 0">
+        <h2>
+          <i
+            class="pi"
+            [class.pi-exclamation-triangle]="alertCount > 0"
+            [class.pi-check]="alertCount === 0"
+          ></i>
+          {{
+            alertCount
+              ? alertCount + " compte(s) à renforcer"
+              : "Vos réserves sont au niveau attendu"
+          }}
+        </h2>
+        <p>
+          {{
+            alertCount
+              ? "Certains comptes sont sous leur seuil minimum."
+              : "Aucun compte n’est sous son seuil minimum défini."
+          }}
+        </p>
+        <button
+          type="button"
+          class="goals-link"
+          (click)="
+            goals.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          "
+        >
+          Voir les objectifs →
+        </button>
+      </aside>
     </div>
-
-    <section class="account-section" *ngIf="liquidAccounts.length">
+    <section class="panel distribution">
       <div class="section-heading">
-        <div><span class="section-kicker">Court et moyen terme</span><h2>Epargne disponible</h2></div>
-        <span class="section-count">{{ liquidAccounts.length }} comptes</span>
+        <div>
+          <h2>Répartition de votre épargne</h2>
+          <p>Chaque montant est classé selon le délai d’accès aux fonds.</p>
+        </div>
+        <div class="view-switch" aria-label="Afficher les comptes">
+          <button
+            type="button"
+            [class.active]="view === 'all'"
+            [attr.aria-pressed]="view === 'all'"
+            (click)="view = 'all'"
+          >
+            Vue générale</button
+          ><button
+            type="button"
+            [class.active]="view === 'available'"
+            [attr.aria-pressed]="view === 'available'"
+            (click)="view = 'available'"
+          >
+            Disponible</button
+          ><button
+            type="button"
+            [class.active]="view === 'long_term'"
+            [attr.aria-pressed]="view === 'long_term'"
+            (click)="view = 'long_term'"
+          >
+            Long terme
+          </button>
+        </div>
       </div>
-      <div class="account-grid">
-        <a class="account-tile" *ngFor="let account of liquidAccounts" [class.is-alert]="isBelowMinimum(account)" [routerLink]="['/account-saving', account.id]" [attr.aria-label]="'Ouvrir ' + account.name">
-          <div class="tile-top">
-            <span class="account-icon">
-              <img *ngIf="hasBankLogo(account)" [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" />
-              <i *ngIf="!hasBankLogo(account)" class="pi pi-building-columns"></i>
-            </span>
-            <span class="liquidity-badge"><i class="pi pi-clock"></i>{{ liquidityLabel(account.liquidityLevel) }}</span>
-          </div>
-          <div class="account-title"><span>{{ account.bankName }}</span><h3>{{ account.name }}</h3><p>{{ roleLabel(account.role) }}</p></div>
-          <div class="balance-block"><span>Solde actuel</span><strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
-          <div class="objective" *ngIf="account.targetBalance != null; else noObjective">
-            <div><span>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }} sur {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
-            <p-progressBar [value]="progress(account)" [showValue]="false" styleClass="objective-progress"></p-progressBar>
-          </div>
-          <ng-template #noObjective><div class="objective is-empty"><span>Aucun objectif defini</span></div></ng-template>
-          <div class="tile-footer">
-            <span class="status is-warning" *ngIf="isBelowMinimum(account)"><i class="pi pi-exclamation-circle"></i>Sous le seuil</span>
-            <span class="status is-ok" *ngIf="!isBelowMinimum(account)"><i class="pi pi-check-circle"></i>Situation normale</span>
-            <span class="open-button"><i class="pi pi-arrow-right"></i></span>
-          </div>
-        </a>
+      <div class="distribution-row">
+        <div>
+          <span>Disponible et précaution</span
+          ><strong class="green"
+            >{{
+              availableSavings | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
+            · {{ share(availableSavings) | number: "1.0-0" }}%</strong
+          >
+        </div>
+        <div class="track">
+          <div
+            class="fill green-fill"
+            [style.width.%]="share(availableSavings)"
+          ></div>
+        </div>
+      </div>
+      <div class="distribution-row">
+        <div>
+          <span>Investissements long terme</span
+          ><strong class="blue"
+            >{{
+              longTermSavings | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}
+            · {{ share(longTermSavings) | number: "1.0-0" }}%</strong
+          >
+        </div>
+        <div class="track">
+          <div class="fill" [style.width.%]="share(longTermSavings)"></div>
+        </div>
       </div>
     </section>
+    <div
+      class="available-layout"
+      [class.only-goals]="view === 'long_term' || !liquidAccounts.length"
+    >
+      <section
+        class="account-section"
+        *ngIf="liquidAccounts.length && view !== 'long_term'"
+      >
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Accessible rapidement</span>
+            <h2>épargne disponible</h2>
+          </div>
+          <span class="section-count">{{ liquidAccounts.length }} comptes</span>
+        </div>
+        <div class="account-grid">
+          <a
+            class="account-tile"
+            *ngFor="let account of liquidAccounts"
+            [class.is-alert]="isBelowMinimum(account)"
+            [routerLink]="['/account-saving', account.id]"
+            [attr.aria-label]="'Ouvrir ' + account.name"
+          >
+            <div class="tile-top">
+              <span class="liquidity-badge">{{
+                liquidityLabel(account.liquidityLevel)
+              }}</span>
+            </div>
+            <div class="account-title">
+              <span>{{ account.bankName }}</span>
+              <h3>{{ account.name }}</h3>
+              <p>{{ roleLabel(account.role) }}</p>
+            </div>
+            <div class="balance-block">
+              <span>Solde actuel</span
+              ><strong>{{
+                account.currentBalance
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}</strong>
+            </div>
+            <div
+              class="objective"
+              *ngIf="account.targetBalance != null; else noObjective"
+            >
+              <div>
+                <span
+                  >{{
+                    account.currentBalance
+                      | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+                  }}
+                  sur
+                  {{
+                    account.targetBalance
+                      | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+                  }}</span
+                ><strong>{{ progress(account) | number: "1.0-0" }} %</strong>
+              </div>
+              <p-progressBar
+                [value]="progress(account)"
+                [showValue]="false"
+                styleClass="objective-progress"
+              ></p-progressBar>
+            </div>
+            <ng-template #noObjective></ng-template>
+            <div class="tile-footer">
+              <span class="status is-warning" *ngIf="isBelowMinimum(account)"
+                ><i class="pi pi-exclamation-circle"></i>Sous le seuil</span
+              >
+              <span class="status is-ok" *ngIf="!isBelowMinimum(account)"
+                ><i class="pi pi-check-circle"></i>Situation normale</span
+              >
+            </div>
+          </a>
+        </div>
+      </section>
 
-    <section class="account-section" *ngIf="longTermAccounts.length">
+      <aside class="panel goals-panel" id="savings-goals" #goals>
+        <span class="section-kicker">Objectifs suivis</span>
+        <h2>Cap vers vos réserves</h2>
+        <ng-container *ngIf="goalAccounts.length; else noGoals"
+          ><strong class="coverage"
+            >{{ goalCoverage | number: "1.0-0" }}%</strong
+          >
+          <p>de vos objectifs chiffrés sont couverts</p>
+          <div class="track">
+            <div class="fill" [style.width.%]="goalCoverage"></div>
+          </div>
+          <p>
+            Suivez vos réserves et ajustez les objectifs de chaque compte selon
+            vos projets.
+          </p></ng-container
+        ><ng-template #noGoals
+          ><p>Aucun objectif chiffré défini pour le moment.</p></ng-template
+        ><a routerLink="/savings/settings">Gérer les objectifs →</a>
+      </aside>
+    </div>
+    <section
+      class="account-section"
+      *ngIf="longTermAccounts.length && view !== 'available'"
+    >
       <div class="section-heading">
-        <div><span class="section-kicker">Patrimoine</span><h2>Placements long terme</h2></div>
+        <div>
+          <span class="section-kicker">Horizon de plusieurs années</span>
+          <h2>Placements long terme</h2>
+        </div>
         <span class="section-count">{{ longTermAccounts.length }} comptes</span>
       </div>
       <div class="account-grid">
-        <a class="account-tile long-term" *ngFor="let account of longTermAccounts" [routerLink]="['/account-saving', account.id]" [attr.aria-label]="'Ouvrir ' + account.name">
+        <a
+          class="account-tile long-term"
+          *ngFor="let account of longTermAccounts"
+          [routerLink]="['/account-saving', account.id]"
+          [attr.aria-label]="'Ouvrir ' + account.name"
+        >
           <div class="tile-top">
-            <span class="account-icon">
-              <img *ngIf="hasBankLogo(account)" [src]="bankLogo(account)" [alt]="'Logo ' + account.bankName" />
-              <i *ngIf="!hasBankLogo(account)" class="pi pi-building-columns"></i>
-            </span>
-            <span class="liquidity-badge"><i class="pi pi-lock"></i>{{ liquidityLabel(account.liquidityLevel) }}</span>
+            <span class="liquidity-badge">{{
+              liquidityLabel(account.liquidityLevel)
+            }}</span>
           </div>
-          <div class="account-title"><span>{{ account.bankName }}</span><h3>{{ account.name }}</h3><p>{{ roleLabel(account.role) }}</p></div>
-          <div class="balance-block"><span>Valorisation actuelle</span><strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong></div>
-          <div class="objective" *ngIf="account.targetBalance != null; else longNoObjective">
-            <div><span>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }} sur {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span><strong>{{ progress(account) | number: '1.0-0' }} %</strong></div>
-            <p-progressBar [value]="progress(account)" [showValue]="false" styleClass="objective-progress"></p-progressBar>
+          <div class="account-title">
+            <span>{{ account.bankName }}</span>
+            <h3>{{ account.name }}</h3>
+            <p>{{ roleLabel(account.role) }}</p>
           </div>
-          <ng-template #longNoObjective><div class="objective is-empty"><span>Suivi de valorisation</span></div></ng-template>
+          <div class="balance-block">
+            <span>Valorisation actuelle</span
+            ><strong>{{
+              account.currentBalance
+                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}</strong>
+          </div>
+          <div
+            class="objective"
+            *ngIf="account.targetBalance != null; else longNoObjective"
+          >
+            <div>
+              <span
+                >{{
+                  account.currentBalance
+                    | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+                }}
+                sur
+                {{
+                  account.targetBalance
+                    | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+                }}</span
+              ><strong>{{ progress(account) | number: "1.0-0" }} %</strong>
+            </div>
+            <p-progressBar
+              [value]="progress(account)"
+              [showValue]="false"
+              styleClass="objective-progress"
+            ></p-progressBar>
+          </div>
+          <ng-template #longNoObjective></ng-template>
           <div class="tile-footer">
-            <span class="status"><i class="pi pi-chart-line"></i>Inclus au patrimoine</span>
-            <span class="open-button"><i class="pi pi-arrow-right"></i></span>
+            <span class="status"
+              ><i class="pi pi-chart-line"></i
+              >{{
+                account.includeInWealth
+                  ? "Inclus au patrimoine"
+                  : "Hors patrimoine suivi"
+              }}</span
+            >
           </div>
         </a>
       </div>

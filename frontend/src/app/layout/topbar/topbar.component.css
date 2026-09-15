@@ -74,7 +74,7 @@
 }
 
 .notification-center::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   right: 0;
@@ -135,7 +135,7 @@
 }
 
 .notification-panel::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -6px;
   right: 14px;
@@ -253,12 +253,8 @@
 
 /* Desktop: cacher le bouton menu */
 @media screen and (min-width: 961px) {
-  .menu-button {
+  .layout-topbar {
     display: none;
-  }
-
-  .layout-topbar-logo {
-    justify-content: flex-start;
   }
 }
 
@@ -289,7 +285,9 @@
   box-shadow: none;
 }
 
-.layout-topbar-logo { gap: .75rem; }
+.layout-topbar-logo {
+  gap: 0.75rem;
+}
 .layout-topbar-logo i {
   display: grid;
   place-items: center;
@@ -300,9 +298,28 @@
   border-radius: 10px;
   font-size: 1.15rem;
 }
-.app-title { color: #172033; font-size: 1.05rem; letter-spacing: -.01em; }
-.menu-button { color: #2563eb; }
-.menu-button:hover { background: #eef5ff; }
-.notification-button { color: #667085; background: #fff; border: 1px solid #dfe4eb; border-radius: 10px; }
-.notification-button:hover { color: #2563eb; background: #f8faff; border-color: #bfd4ff; }
-.notification-unread-dot { border-color: #fff; }
+.app-title {
+  color: #172033;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+.menu-button {
+  color: #2563eb;
+}
+.menu-button:hover {
+  background: #eef5ff;
+}
+.notification-button {
+  color: #667085;
+  background: #fff;
+  border: 1px solid #dfe4eb;
+  border-radius: 10px;
+}
+.notification-button:hover {
+  color: #2563eb;
+  background: #f8faff;
+  border-color: #bfd4ff;
+}
+.notification-unread-dot {
+  border-color: #fff;
+}

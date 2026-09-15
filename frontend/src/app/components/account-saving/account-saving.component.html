@@ -1,110 +1,250 @@
 <div class="account-saving-shell">
-  <a pButton routerLink="/savings" icon="pi pi-arrow-left" label="Comptes d'epargne" class="p-button-text back-link"></a>
-
   <div class="loading" *ngIf="loading">Chargement...</div>
-  <p-message *ngIf="loadError" severity="error" text="Ce compte d'epargne n'existe pas."></p-message>
+  <p-message
+    *ngIf="loadError"
+    severity="error"
+    text="Ce compte d’épargne n’existe pas."
+  ></p-message>
+  <app-savings
+    *ngIf="account?.providerKey === 'plum'"
+    [accountName]="account?.name || 'Loisirs et provisions'"
+  ></app-savings>
 
-  <app-savings *ngIf="account?.providerKey === 'plum'"></app-savings>
-
-  <section class="revolut-detail" *ngIf="account && account.providerKey !== 'plum'">
-    <header class="detail-header">
-      <div>
-        <span class="bank-name">{{ account.bankName }}</span>
-        <h1>{{ account.name }}</h1>
-        <p>{{ accountDescription }}</p>
-      </div>
-      <div class="balance">
-        <span>Solde actuel</span>
-        <strong>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}</strong>
-      </div>
-    </header>
-
-    <p-message *ngIf="belowMinimum" severity="warn" text="Le solde est inferieur au seuil minimum."></p-message>
-    <p-message *ngIf="saved" severity="success" text="Les donnees du compte ont ete enregistrees."></p-message>
-    <p-message *ngIf="saveError" severity="error" text="Impossible d'enregistrer les modifications."></p-message>
-
-    <div class="progress-panel">
-      <div class="progress-heading">
-        <div><span>Progression vers l'objectif</span><strong>{{ progress | number: '1.0-0' }} %</strong></div>
-        <span>{{ account.currentBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }} / {{ account.targetBalance | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }}</span>
-      </div>
-      <div class="progress-track"><div class="progress-fill" [style.width.%]="progress"></div></div>
-    </div>
-
-    <form class="account-form" (ngSubmit)="save()">
-      <div class="form-field">
-        <label for="currentBalance">Solde de depart / ajustement</label>
-        <p-inputNumber inputId="currentBalance" [(ngModel)]="account.baseBalance" name="currentBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber>
-      </div>
-      <div class="form-field">
-        <label for="targetBalance">Solde cible</label>
-        <p-inputNumber inputId="targetBalance" [(ngModel)]="account.targetBalance" name="targetBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber>
-      </div>
-      <div class="form-field">
-        <label for="minimumBalance">Seuil minimum</label>
-        <p-inputNumber inputId="minimumBalance" [(ngModel)]="account.minimumBalance" name="minimumBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber>
-      </div>
-      <div class="settings">
-        <label><input type="checkbox" [(ngModel)]="account.includeInDailyBudget" name="includeInDailyBudget" /> Inclus dans le budget quotidien</label>
-        <label><input type="checkbox" [(ngModel)]="account.includeInWealth" name="includeInWealth" /> Inclus dans le patrimoine</label>
-      </div>
-      <div class="form-actions">
-        <button pButton type="submit" icon="pi pi-save" label="Enregistrer"></button>
-      </div>
-    </form>
-
-    <section class="transactions-panel">
-      <div class="transactions-heading">
+  <ng-container *ngIf="account && account.providerKey !== 'plum'">
+    <a routerLink="/savings" class="back-link"
+      ><i class="pi pi-arrow-left" aria-hidden="true"></i> Retour à votre
+      épargne</a
+    >
+    <section class="saving-detail">
+      <header class="detail-header">
         <div>
-          <span class="bank-name">Historique</span>
-          <h2>Mouvements liés à {{ account.bankName }}</h2>
+          <span class="bank-name">{{ account.bankName }}</span>
+          <h1>{{ account.name }}</h1>
+          <p>{{ accountDescription }}</p>
         </div>
-        <span class="transaction-count">{{ savingTransactions.length }} mouvement(s)</span>
+        <a
+          pButton
+          href="#account-settings"
+          icon="pi pi-plus"
+          label="Renforcer la réserve"
+          class="reinforce-button"
+        ></a>
+      </header>
+
+      <div class="feedback">
+        <p-message
+          *ngIf="saved"
+          severity="success"
+          text="Les données du compte ont été enregistrées."
+        ></p-message
+        ><p-message
+          *ngIf="saveError"
+          severity="error"
+          text="Impossible d’enregistrer les modifications."
+        ></p-message>
       </div>
 
-      <p-table
-        [value]="savingTransactions"
-        [paginator]="savingTransactions.length > 10"
-        [rows]="10"
-        responsiveLayout="scroll"
+      <div class="summary-grid">
+        <article class="panel balance-card">
+          <span class="section-kicker">Réserve disponible aujourd’hui</span
+          ><strong>{{
+            account.currentBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}</strong>
+          <div class="minimum-alert" *ngIf="belowMinimum">
+            <i class="pi pi-exclamation-triangle"></i>
+            <div>
+              <strong>Seuil minimum non atteint.</strong
+              ><span
+                >Il manque
+                {{
+                  minimumShortfall | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+                }}
+                pour atteindre votre premier palier de sécurité.</span
+              >
+            </div>
+          </div>
+          <div class="minimum-alert is-ok" *ngIf="!belowMinimum">
+            <i class="pi pi-check-circle"></i>
+            <div>
+              <strong>Seuil minimum atteint.</strong
+              ><span>Votre premier palier de sécurité est constitué.</span>
+            </div>
+          </div>
+        </article>
+        <article class="panel target-card">
+          <div class="target-heading">
+            <div>
+              <span class="section-kicker">Cap à atteindre</span
+              ><strong>{{
+                account.targetBalance
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}</strong>
+            </div>
+            <strong class="target-percent"
+              >{{ progress | number: "1.0-0" }}%</strong
+            >
+          </div>
+          <p>Objectif défini pour ce compte d’épargne.</p>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="progress"></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="metric-grid">
+        <article class="metric">
+          <span class="metric-label">Seuil de sécurité</span
+          ><strong>{{
+            account.minimumBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}</strong
+          ><small>Premier palier</small>
+        </article>
+        <article class="metric">
+          <span class="metric-label">Reste à constituer</span
+          ><strong class="orange">{{
+            targetRemaining | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}</strong
+          ><small>Jusqu’à l’objectif</small>
+        </article>
+        <article class="metric is-blue">
+          <span class="metric-label">Situation actuelle</span
+          ><strong class="blue">{{
+            belowMinimum ? "À renforcer" : "Sécurisée"
+          }}</strong
+          ><small>Selon le seuil défini</small>
+        </article>
+      </div>
+
+      <form
+        id="account-settings"
+        class="panel account-form"
+        (ngSubmit)="save()"
       >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Compte d'origine</th>
-            <th>Type</th>
-            <th class="text-right">Impact sur le solde</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-transaction>
-          <tr>
-            <td>{{ transaction.date | date: 'dd/MM/yyyy' }}</td>
-            <td>{{ transaction.description }}</td>
-            <td>{{ transaction.accountName || '-' }}</td>
-            <td>
-              <p-tag
-                [severity]="movementAmount(transaction) >= 0 ? 'success' : 'warn'"
-                [value]="movementLabel(transaction)"
-              ></p-tag>
-            </td>
-            <td
-              class="text-right movement-amount"
+        <h2>Paramètres de la réserve</h2>
+        <p class="form-intro">
+          Ajustez le solde, les repères et l’intégration de ce compte.
+        </p>
+        <div class="form-field">
+          <label for="currentBalance">Solde de départ / ajustement</label
+          ><p-inputNumber
+            inputId="currentBalance"
+            [(ngModel)]="account.baseBalance"
+            name="currentBalance"
+            mode="currency"
+            currency="EUR"
+            locale="fr-FR"
+            [min]="0"
+          ></p-inputNumber>
+        </div>
+        <div class="form-field">
+          <label for="targetBalance">Solde cible</label
+          ><p-inputNumber
+            inputId="targetBalance"
+            [(ngModel)]="account.targetBalance"
+            name="targetBalance"
+            mode="currency"
+            currency="EUR"
+            locale="fr-FR"
+            [min]="0"
+          ></p-inputNumber>
+        </div>
+        <div class="form-field">
+          <label for="minimumBalance">Seuil minimum</label
+          ><p-inputNumber
+            inputId="minimumBalance"
+            [(ngModel)]="account.minimumBalance"
+            name="minimumBalance"
+            mode="currency"
+            currency="EUR"
+            locale="fr-FR"
+            [min]="0"
+          ></p-inputNumber>
+        </div>
+        <div class="settings">
+          <label
+            ><input
+              type="checkbox"
+              [(ngModel)]="account.includeInDailyBudget"
+              name="includeInDailyBudget"
+            />
+            Inclus dans le budget quotidien</label
+          ><label
+            ><input
+              type="checkbox"
+              [(ngModel)]="account.includeInWealth"
+              name="includeInWealth"
+            />
+            Inclus dans le patrimoine</label
+          >
+        </div>
+        <div class="form-actions">
+          <button
+            pButton
+            type="submit"
+            icon="pi pi-save"
+            label="Enregistrer"
+          ></button>
+        </div>
+      </form>
+
+      <section class="history">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Historique récent</span>
+            <h2>Versements vers votre réserve</h2>
+          </div>
+          <div class="history-actions">
+            <span class="transaction-count"
+              >{{ savingTransactions.length }} mouvement(s)</span
+            >
+            <button
+              *ngIf="savingTransactions.length > 4"
+              type="button"
+              class="history-toggle"
+              (click)="showAllMovements = !showAllMovements"
+              [attr.aria-expanded]="showAllMovements"
+              aria-controls="saving-movement-list"
+            >
+              {{
+                showAllMovements
+                  ? "Réduire la liste"
+                  : "Voir tous les mouvements"
+              }}
+            </button>
+          </div>
+        </div>
+        <div class="panel movement-list" id="saving-movement-list">
+          <div
+            class="movement-row"
+            *ngFor="
+              let transaction of savingTransactions
+                | slice: 0 : (showAllMovements ? savingTransactions.length : 4)
+            "
+          >
+            <div class="movement-main">
+              <strong>{{ transaction.description }}</strong>
+              <p>
+                {{ transaction.date | date: "dd MMM" : "" : "fr" }} ·
+                {{ transaction["accountName"] || account.bankName }} ·
+                {{ movementLabel(transaction) }}
+              </p>
+            </div>
+            <strong
+              class="movement-amount"
               [class.is-positive]="movementAmount(transaction) >= 0"
               [class.is-negative]="movementAmount(transaction) < 0"
+              >{{ movementAmount(transaction) > 0 ? "+ " : ""
+              }}{{
+                movementAmount(transaction)
+                  | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+              }}</strong
             >
-              {{ movementAmount(transaction) | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr' }}
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="5" class="empty-history">
-              Aucun mouvement lié à ce compte d'épargne.
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+          </div>
+          <div class="empty-history" *ngIf="!savingTransactions.length">
+            Aucun mouvement lié à ce compte d’épargne.
+          </div>
+        </div>
+      </section>
     </section>
-  </section>
+  </ng-container>
 </div>

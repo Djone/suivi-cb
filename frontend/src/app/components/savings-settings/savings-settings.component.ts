@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
@@ -45,9 +45,12 @@ export class SavingsSettingsComponent implements OnInit {
 
   form: SavingAccountSettings = this.emptyForm();
 
-  constructor(private service: SavingAccountService) {}
+  constructor(private service: SavingAccountService, private route: ActivatedRoute) {}
 
-  ngOnInit(): void { this.loadAccounts(); }
+  ngOnInit(): void {
+    this.loadAccounts();
+    if (this.route.snapshot.queryParamMap.get('create') === 'true') this.openCreate();
+  }
 
   openCreate(): void {
     this.editingId = null;

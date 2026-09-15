@@ -5,12 +5,22 @@ import { MessageModule } from 'primeng/message';
 import { ButtonModule } from 'primeng/button';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { SavingAccountService } from '../../services/saving-account.service';
-import { LiquidityLevel, SavingAccount, SavingAccountRole } from '../../models/saving-account.model';
+import {
+  LiquidityLevel,
+  SavingAccount,
+  SavingAccountRole,
+} from '../../models/saving-account.model';
 
 @Component({
   selector: 'app-savings-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MessageModule, ButtonModule, ProgressBarModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    MessageModule,
+    ButtonModule,
+    ProgressBarModule,
+  ],
   templateUrl: './savings-dashboard.component.html',
   styleUrl: './savings-dashboard.component.css',
 })
@@ -18,18 +28,49 @@ export class SavingsDashboardComponent implements OnInit {
   accounts: SavingAccount[] = [];
   loading = true;
   loadError = false;
+  view: 'all' | 'available' | 'long_term' = 'all';
+
+  get goalAccounts(): SavingAccount[] {
+    return this.accounts.filter((account) => (account.targetBalance ?? 0) > 0);
+  }
+
+  get goalCoverage(): number {
+    const target = this.goalAccounts.reduce(
+      (sum, account) => sum + account.targetBalance!,
+      0,
+    );
+    const covered = this.goalAccounts.reduce(
+      (sum, account) =>
+        sum +
+        Math.min(Math.max(0, account.currentBalance), account.targetBalance!),
+      0,
+    );
+    return target > 0 ? (covered / target) * 100 : 0;
+  }
+
+  share(amount: number): number {
+    const total = this.availableSavings + this.longTermSavings;
+    return total > 0 ? Math.min(100, Math.max(0, (amount / total) * 100)) : 0;
+  }
 
   constructor(private savingAccountService: SavingAccountService) {}
 
   ngOnInit(): void {
     this.savingAccountService.getAccounts().subscribe({
-      next: (accounts) => { this.accounts = accounts; this.loading = false; },
-      error: () => { this.loadError = true; this.loading = false; },
+      next: (accounts) => {
+        this.accounts = accounts;
+        this.loading = false;
+      },
+      error: () => {
+        this.loadError = true;
+        this.loading = false;
+      },
     });
   }
 
   get totalWealth(): number {
-    return this.accounts.filter((item) => item.includeInWealth)
+    return this.accounts
+      .filter((item) => item.includeInWealth)
       .reduce((total, item) => total + item.currentBalance, 0);
   }
 
@@ -42,11 +83,17 @@ export class SavingsDashboardComponent implements OnInit {
   }
 
   get availableSavings(): number {
-    return this.liquidAccounts.reduce((total, item) => total + item.currentBalance, 0);
+    return this.liquidAccounts.reduce(
+      (total, item) => total + item.currentBalance,
+      0,
+    );
   }
 
   get longTermSavings(): number {
-    return this.longTermAccounts.reduce((total, item) => total + item.currentBalance, 0);
+    return this.longTermAccounts.reduce(
+      (total, item) => total + item.currentBalance,
+      0,
+    );
   }
 
   get alertCount(): number {
@@ -55,26 +102,34 @@ export class SavingsDashboardComponent implements OnInit {
 
   progress(account: SavingAccount): number {
     if (!account.targetBalance || account.targetBalance <= 0) return 0;
-    return Math.min(100, Math.max(0, account.currentBalance / account.targetBalance * 100));
+    return Math.min(
+      100,
+      Math.max(0, (account.currentBalance / account.targetBalance) * 100),
+    );
   }
 
   isBelowMinimum(account: SavingAccount): boolean {
-    return account.minimumBalance != null && account.currentBalance < account.minimumBalance;
+    return (
+      account.minimumBalance != null &&
+      account.currentBalance < account.minimumBalance
+    );
   }
 
   roleLabel(role: SavingAccountRole): string {
-    return ({
+    return {
       leisure: 'Loisirs et provisions',
       emergency: "Fonds d'urgence",
       online_payment: 'Paiements en ligne et charges',
       savings: 'Epargne disponible',
       investment: 'Investissement long terme',
       employee_savings: 'Epargne salariale',
-    })[role];
+    }[role];
   }
 
   liquidityLabel(level: LiquidityLevel): string {
-    return ({ instant: 'Immediate', day_1: 'J+1', long_term: 'Long terme' })[level];
+    return { instant: 'Immédiat', day_1: 'J+1', long_term: 'Long terme' }[
+      level
+    ];
   }
 
   bankLogo(account: SavingAccount): string {
@@ -85,8 +140,10 @@ export class SavingsDashboardComponent implements OnInit {
   }
 
   hasBankLogo(account: SavingAccount): boolean {
-    return ['plum', 'revolut', 'fortuneo', 'cfcal', 'cic'].includes(
-      account.providerKey,
-    ) || account.providerKey.startsWith('goodvest');
+    return (
+      ['plum', 'revolut', 'fortuneo', 'cfcal', 'cic'].includes(
+        account.providerKey,
+      ) || account.providerKey.startsWith('goodvest')
+    );
   }
 }

@@ -1,5 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
@@ -70,6 +71,7 @@ type WalletConfirmationAction = 'close' | 'delete';
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     FormsModule,
     CardModule,
     DropdownModule,
@@ -88,6 +90,42 @@ type WalletConfirmationAction = 'close' | 'delete';
   styleUrl: './savings.component.css',
 })
 export class SavingsComponent implements OnInit, OnDestroy {
+  @Input() accountName = 'Loisirs et provisions';
+  showAllMovements = false;
+
+  // Presentation-only summary: independent of the filters used by wallet allocation.
+  get overviewMovements(): SavingsMovement[] {
+    return this.transactions
+      .filter(
+        (transaction) =>
+          this.isInternalTransfer(transaction) &&
+          this.toNumber(transaction.savingAccountId) === null,
+      )
+      .map((transaction) => this.toSavingsMovement(transaction))
+      .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
+  }
+
+  get overviewBalance(): number {
+    return this.overviewMovements.reduce(
+      (sum, movement) => sum + movement.signedAmount,
+      0,
+    );
+  }
+
+  monthlyAmount(direction: 'incoming' | 'outgoing'): number {
+    const now = new Date();
+    return this.overviewMovements
+      .filter(
+        (movement) =>
+          movement.date?.getFullYear() === now.getFullYear() &&
+          movement.date?.getMonth() === now.getMonth() &&
+          (direction === 'incoming'
+            ? movement.signedAmount > 0
+            : movement.signedAmount < 0),
+      )
+      .reduce((sum, movement) => sum + Math.abs(movement.signedAmount), 0);
+  }
+
   private subscriptions = new Subscription();
 
   private transactions: Transaction[] = [];
@@ -292,7 +330,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    this.refreshView();
+    this.applyDisplayFilters();
   }
 
   resetFilters(): void {
@@ -301,7 +339,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
     this.selectedYear = null;
     this.selectedFlow = 'all';
     this.selectedWallet = null;
-    this.refreshView();
+    this.applyDisplayFilters();
   }
 
   openCreateWalletDialog(): void {
@@ -845,7 +883,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   getAllocationRemaining(): number {
-    return this.roundAmount(this.netAmount - this.getAllocationTotal());
+    return this.roundAmount(this.overviewBalance - this.getAllocationTotal());
   }
 
   getAllocationOverage(): number {
@@ -916,7 +954,9 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   getTargetBudgetRemaining(): number {
-    return this.roundAmount(this.netAmount - this.getActiveWalletTargetTotal());
+    return this.roundAmount(
+      this.overviewBalance - this.getActiveWalletTargetTotal(),
+    );
   }
 
   getTargetBudgetOverage(): number {
@@ -934,7 +974,9 @@ export class SavingsComponent implements OnInit, OnDestroy {
   }
 
   getRemainingToAllocate(): number {
-    return this.roundAmount(this.netAmount - this.getAllocatedBudgetTotal());
+    return this.roundAmount(
+      this.overviewBalance - this.getAllocatedBudgetTotal(),
+    );
   }
 
   getRemainingToAllocateOverage(): number {
@@ -1075,18 +1117,6 @@ export class SavingsComponent implements OnInit, OnDestroy {
         return timeB - timeA;
       });
 
-    if (!this.baseMovements.length) {
-      this.movements = [];
-      this.walletProgress = [];
-      this.totalIncoming = 0;
-      this.totalOutgoing = 0;
-      this.netAmount = 0;
-      this.savingsByType = [];
-      this.savingsByAccount = [];
-      this.savingsTypeChartData = null;
-      return;
-    }
-
     this.applyDisplayFilters();
     this.loadWalletProgressSummary();
   }
@@ -1103,24 +1133,6 @@ export class SavingsComponent implements OnInit, OnDestroy {
     const date = transaction.date ? new Date(transaction.date) : null;
     if (!date || Number.isNaN(date.getTime())) {
       return false;
-    }
-
-    if (
-      this.selectedYear !== null &&
-      date.getFullYear() !== this.selectedYear
-    ) {
-      return false;
-    }
-
-    if (this.selectedMonth !== null && date.getMonth() !== this.selectedMonth) {
-      return false;
-    }
-
-    if (this.selectedAccount !== null) {
-      const accountId = this.toNumber(transaction.accountId);
-      if (accountId !== this.selectedAccount) {
-        return false;
-      }
     }
 
     return true;
@@ -1174,10 +1186,10 @@ export class SavingsComponent implements OnInit, OnDestroy {
   private loadWalletProgressSummary(): void {
     this.savingsWalletService
       .getAllocationSummary({
-        accountId: this.selectedAccount,
-        year: this.selectedYear,
-        month: this.selectedMonth,
-        flow: this.selectedFlow,
+        accountId: null,
+        year: null,
+        month: null,
+        flow: 'all',
         includeClosed: true,
       })
       .subscribe({
@@ -1193,6 +1205,21 @@ export class SavingsComponent implements OnInit, OnDestroy {
 
   private applyDisplayFilters(): void {
     const filtered = this.baseMovements
+      .filter(
+        (movement) =>
+          this.selectedAccount === null ||
+          movement.accountId === this.selectedAccount,
+      )
+      .filter(
+        (movement) =>
+          this.selectedYear === null ||
+          movement.date?.getFullYear() === this.selectedYear,
+      )
+      .filter(
+        (movement) =>
+          this.selectedMonth === null ||
+          movement.date?.getMonth() === this.selectedMonth,
+      )
       .filter((movement) => this.matchesFlowFilter(movement))
       .filter((movement) => this.matchesWalletFilter(movement));
 
