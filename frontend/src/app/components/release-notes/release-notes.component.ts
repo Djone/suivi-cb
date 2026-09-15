@@ -8,6 +8,27 @@ import {
   ReleaseNotesSection,
 } from './release-notes.data';
 
+export function buildReleaseSections(
+  releaseVersion: string,
+  devItems: DevTodoItem[],
+  history: ReleaseNotesSection[],
+): ReleaseNotesSection[] {
+  const archivedCurrentSection = history.find(
+    (section) => section.version === releaseVersion,
+  );
+  const currentSection: ReleaseNotesSection = archivedCurrentSection ?? {
+    version: releaseVersion,
+    items: devItems.filter(
+      (item) => item.status === 'done' && item.targetVersion === releaseVersion,
+    ),
+  };
+  const historySections = history.filter(
+    (section) => section.version !== releaseVersion,
+  );
+
+  return [currentSection, ...historySections];
+}
+
 @Component({
   selector: 'app-release-notes',
   standalone: true,
@@ -20,20 +41,11 @@ export class ReleaseNotesComponent {
   public readonly releaseVersion = this.rawVersion.split('-')[0];
   private readonly expandedVersions = new Set<string>([this.releaseVersion]);
 
-  public readonly releaseSections: ReleaseNotesSection[] = (() => {
-    const currentItems = DEV_TODO_ITEMS.filter(
-      (item) =>
-        item.status === 'done' && item.targetVersion === this.releaseVersion,
-    );
-    const currentSection: ReleaseNotesSection = {
-      version: this.releaseVersion,
-      items: currentItems,
-    };
-    const historySections = RELEASE_NOTES_HISTORY.filter(
-      (section) => section.version !== this.releaseVersion,
-    );
-    return [currentSection, ...historySections];
-  })();
+  public readonly releaseSections = buildReleaseSections(
+    this.releaseVersion,
+    DEV_TODO_ITEMS,
+    RELEASE_NOTES_HISTORY,
+  );
 
   isExpanded(version: string): boolean {
     return this.expandedVersions.has(version);
