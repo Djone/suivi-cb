@@ -17,7 +17,17 @@ import { Transaction } from '../../models/transaction.model';
 @Component({
   selector: 'app-account-saving',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputNumberModule, MessageModule, TableModule, TagModule, SavingsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    InputNumberModule,
+    MessageModule,
+    TableModule,
+    TagModule,
+    SavingsComponent,
+  ],
   templateUrl: './account-saving.component.html',
   styleUrl: './account-saving.component.css',
 })
@@ -27,6 +37,7 @@ export class AccountSavingComponent implements OnInit, OnDestroy {
   loadError = false;
   saveError = false;
   saved = false;
+  showAllMovements = false;
   savingTransactions: Transaction[] = [];
   private readonly subscription = new Subscription();
 
@@ -38,43 +49,74 @@ export class AccountSavingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscription.add(
-      this.route.paramMap.pipe(
-        switchMap((params) => this.service.getAccount(Number(params.get('id')))),
-      ).subscribe({
-        next: (account) => {
-          this.account = account;
-          this.loading = false;
-          if (account.providerKey !== 'plum') {
-            this.loadSavingTransactions(account.id);
-          }
-        },
-        error: () => { this.loadError = true; this.loading = false; },
-      }),
+      this.route.paramMap
+        .pipe(
+          switchMap((params) =>
+            this.service.getAccount(Number(params.get('id'))),
+          ),
+        )
+        .subscribe({
+          next: (account) => {
+            this.account = account;
+            this.loading = false;
+            if (account.providerKey !== 'plum') {
+              this.loadSavingTransactions(account.id);
+            }
+          },
+          error: () => {
+            this.loadError = true;
+            this.loading = false;
+          },
+        }),
     );
   }
 
-  ngOnDestroy(): void { this.subscription.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
 
   get progress(): number {
     const target = this.account?.targetBalance;
     if (!target || target <= 0) return 0;
-    return Math.min(100, Math.max(0, (this.account?.currentBalance ?? 0) / target * 100));
+    return Math.min(
+      100,
+      Math.max(0, ((this.account?.currentBalance ?? 0) / target) * 100),
+    );
   }
 
   get belowMinimum(): boolean {
-    return this.account?.minimumBalance != null && this.account.currentBalance < this.account.minimumBalance;
+    return (
+      this.account?.minimumBalance != null &&
+      this.account.currentBalance < this.account.minimumBalance
+    );
+  }
+
+  get minimumShortfall(): number {
+    if (!this.account?.minimumBalance) return 0;
+    return Math.max(
+      0,
+      this.account.minimumBalance - this.account.currentBalance,
+    );
+  }
+
+  get targetRemaining(): number {
+    if (!this.account?.targetBalance) return 0;
+    return Math.max(
+      0,
+      this.account.targetBalance - this.account.currentBalance,
+    );
   }
 
   get accountDescription(): string {
     if (!this.account) return '';
-    return ({
-      emergency: 'Epargne de securite disponible immediatement.',
-      online_payment: 'Reserve dediee aux paiements en ligne et aux charges.',
-      savings: 'Epargne disponible avec un delai de retrait.',
-      investment: 'Placement destine aux objectifs de long terme.',
-      employee_savings: 'Epargne salariale destinee au moyen et long terme.',
-      leisure: 'Epargne consacree aux loisirs et aux provisions.',
-    })[this.account.role];
+    return {
+      emergency: 'Épargne de sécurité disponible immédiatement.',
+      online_payment: 'Réserve dédiée aux paiements en ligne et aux charges.',
+      savings: 'Épargne disponible avec un délai de retrait.',
+      investment: 'Placement destiné aux objectifs de long terme.',
+      employee_savings: 'Épargne salariale destinée au moyen et long terme.',
+      leisure: 'Épargne consacrée aux loisirs et aux provisions.',
+    }[this.account.role];
   }
 
   movementAmount(transaction: Transaction): number {
@@ -105,15 +147,22 @@ export class AccountSavingComponent implements OnInit, OnDestroy {
     if (!this.account || this.account.providerKey === 'plum') return;
     this.saved = false;
     this.saveError = false;
-    this.service.updateAccount(this.account.id, {
-      currentBalance: this.account.baseBalance,
-      targetBalance: this.account.targetBalance,
-      minimumBalance: this.account.minimumBalance,
-      includeInDailyBudget: this.account.includeInDailyBudget,
-      includeInWealth: this.account.includeInWealth,
-    }).subscribe({
-      next: (account) => { this.account = account; this.saved = true; },
-      error: () => { this.saveError = true; },
-    });
+    this.service
+      .updateAccount(this.account.id, {
+        currentBalance: this.account.baseBalance,
+        targetBalance: this.account.targetBalance,
+        minimumBalance: this.account.minimumBalance,
+        includeInDailyBudget: this.account.includeInDailyBudget,
+        includeInWealth: this.account.includeInWealth,
+      })
+      .subscribe({
+        next: (account) => {
+          this.account = account;
+          this.saved = true;
+        },
+        error: () => {
+          this.saveError = true;
+        },
+      });
   }
 }

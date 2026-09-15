@@ -75,6 +75,19 @@
     <i class="pi pi-car"></i><strong>Aucun véhicule suivi</strong>
   </div>
 
+  <section class="insights-panel" *ngIf="activeVehicles.length">
+    <div class="section-title">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div>
+        <h2>Constats importants</h2>
+        <p>Comparaison avec les deux années précédentes.</p>
+      </div>
+    </div>
+    <ul>
+      <li *ngFor="let insight of insights">{{ insight }}</li>
+    </ul>
+  </section>
+
   <div class="vehicle-grid" *ngIf="activeVehicles.length">
     <article class="vehicle-card" *ngFor="let vehicle of activeVehicles">
       <div class="vehicle-card__top">
@@ -113,7 +126,28 @@
           </dd>
         </div>
       </dl>
-      <strong>{{ electricEstimate(vehicle) }}</strong>
+      <ng-container *ngIf="vehicleYearRow(vehicle) as yearRow">
+        <div class="vehicle-year-kpis">
+          <div>
+            <span>Dépenses {{ selectedYear }}</span>
+            <strong>{{ yearRow.total | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}</strong>
+          </div>
+          <div>
+            <span>Moyenne/mois</span>
+            <strong>{{ yearRow.monthlyAverage | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}</strong>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="vehicleCategorySummary(vehicle) as categories">
+        <div class="vehicle-distribution" *ngIf="categories.length">
+          <span class="distribution-title">Répartition</span>
+          <div class="distribution-row" *ngFor="let category of categories">
+            <div><span>{{ category.label }}</span><strong>{{ category.total | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}</strong></div>
+            <span class="distribution-track"><span [style.width.%]="category.percent"></span></span>
+          </div>
+        </div>
+      </ng-container>
+      <p class="electric-estimate">{{ electricEstimate(vehicle) }}</p>
       <div class="card-actions">
         <button (click)="edit(vehicle)">Modifier</button
         ><button class="danger-link" (click)="archive(vehicle)">
@@ -138,19 +172,6 @@
         }}</strong>
       </div>
     </div>
-
-    <section class="insights-panel">
-      <div class="section-title">
-        <i class="pi pi-lightbulb"></i>
-        <div>
-          <h2>Constats importants</h2>
-          <p>Comparaison avec les deux années précédentes.</p>
-        </div>
-      </div>
-      <ul>
-        <li *ngFor="let insight of insights">{{ insight }}</li>
-      </ul>
-    </section>
 
     <section class="analysis-panel">
       <div class="section-toolbar">

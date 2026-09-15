@@ -2,7 +2,7 @@ import { DevTodoItem } from './dev-todo.model';
 
 export const DEV_TODO_ITEMS: DevTodoItem[] = [
   {
-    title: '[Ticket 9] Bug fix : frontend',
+    title: 'Bug fix : frontend',
     description: [
       '[ ] Transactions : revoir le design du formulaire de recherche de transactions',
       '[ ] Dialog date : revoir le design du dialog de sélection de date',
@@ -12,7 +12,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     priority: 'medium',
   },
   {
-    title: '[Ticket 4.1] Tableau de salaires : frontend',
+    title: 'Tableau de salaires : frontend',
     description: [
       '[ ] Integrer la logique frontend',
     ],
@@ -21,7 +21,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     priority: 'medium',
   },
   {
-    title: '[Ticket 4.2] Tableau de salaires : backend',
+    title: 'Tableau de salaires : backend',
     description: [
       '[ ] Integrer la logique backend',
     ],
@@ -30,7 +30,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     priority: 'medium',
   },
   {
-    title: '[Ticket 7] Impots : frontend',
+    title: 'Impots : frontend',
     description: [
       '[ ] Integrer la logique frontend',
     ],

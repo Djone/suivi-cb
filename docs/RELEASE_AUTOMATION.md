@@ -5,10 +5,12 @@ This project provides a release orchestration CLI with validation before product
 ## Commands
 
 - `npm run release:dry-run -- --branch=master`
+
   - Runs git preflight checks and tests.
   - Does not change files.
 
 - `npm run release:prepare -- --stable=1.3.0 --next=1.4.0-dev --branch=master`
+
   - Runs preflight + tests.
   - Updates version files:
     - `package.json` (next dev version)
@@ -17,12 +19,19 @@ This project provides a release orchestration CLI with validation before product
     - regenerates `frontend/src/app/version.ts`
 
 - `npm run release:deploy -- --branch=master`
+
   - Runs preflight + tests.
-  - Build/deploy steps are dry-run unless `--execute` is provided.
-  - Build can be skipped with `--skip-build`.
-  - NAS deploy is optional via `--with-nas-deploy` (Linux/Mac script only).
+  - With `--execute`, merges the current release branch into `master`, pushes
+    `master`, then creates and pushes the stable tag (for example `v2.0.0`).
+  - Pushing a stable tag triggers `.github/workflows/publish-github-release.yml`.
+  - A major tag ending in `.0.0` (for example `v2.0.0`) creates the corresponding
+    major GitHub Release (`v2`) and marks it as latest.
+  - Later minor and patch tags (for example `v2.1.0` and `v2.0.1`) keep their
+    immutable exact tags, move the major alias `v2` to the latest deployed commit,
+    and append their generated notes to the existing `v2` release.
 
 - `npm run release:full -- --stable=1.3.0 --next=1.4.0-dev --branch=master`
+
   - Executes prepare + deploy flow in one command.
 
 - `npm run release:rollback`
@@ -44,6 +53,13 @@ Example:
 
 ## Rollback behavior
 
+- Executed deployment requires a clean working tree and no merge in progress,
+  including when `--allow-dirty` was supplied.
+- If the deployment merge conflicts, the orchestrator aborts that merge before
+  returning to the source release branch. The report records whether recovery
+  succeeded in `git-restore-source`; it does not select an older version backup.
+- Returning to the source branch preserves the prepared versions: for example,
+  production `2.0.0` and development `2.1.0-dev` after preparing that release.
 - Backups are created automatically before version updates during `prepare` and `full`.
 - Backup location: `data/release/backups`.
 - Auto rollback on failure can be enabled with `--rollback-on-failure`.
@@ -62,6 +78,5 @@ Each run writes a report:
 - `--skip-master-check`
 - `--allow-dirty`
 - `--execute`
-- `--with-nas-deploy`
 - `--rollback-on-failure`
 - `--report=data/release/custom-report.json`

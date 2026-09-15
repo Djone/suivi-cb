@@ -2,6 +2,11 @@
   class="layout-sidebar"
   [class.active]="menuService.sidebarVisible$ | async"
 >
+  <a *ngIf="!isMobile" routerLink="/home" class="sidebar-brand">
+    <span class="sidebar-brand__icon"><i class="pi pi-wallet"></i></span>
+    <span>Suivi Bancaire</span>
+  </a>
+
   <div class="sidebar-content">
     <nav class="menu">
       <ng-container *ngIf="isMobile; else desktopMenu">
@@ -62,16 +67,6 @@
         </a>
 
         <a
-          routerLink="/statistics"
-          routerLinkActive="active"
-          class="menu-item"
-          (click)="onMenuItemClick()"
-        >
-          <i class="pi pi-chart-bar"></i>
-          <span>Statistiques</span>
-        </a>
-
-        <a
           routerLink="/savings"
           routerLinkActive="active"
           class="menu-item"
@@ -99,6 +94,16 @@
         >
           <i class="pi pi-percentage"></i>
           <span>Impôts</span>
+        </a>
+
+        <a
+          routerLink="/statistics"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="onMenuItemClick()"
+        >
+          <i class="pi pi-chart-bar"></i>
+          <span>Statistiques</span>
         </a>
 
         <div class="menu-group">

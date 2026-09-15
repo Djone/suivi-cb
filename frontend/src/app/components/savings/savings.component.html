@@ -1,23 +1,101 @@
 <div class="savings-container">
-  <p-card header="Portefeuilles d'epargne fictifs">
-    <div class="actions-toolbar">
-      <div class="toolbar-actions">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-plus"
-          label="Creer un portefeuille"
-          (click)="openCreateWalletDialog()"
-        ></button>
-        <button
-          pButton
-          type="button"
-          icon="pi pi-arrow-right-arrow-left"
-          class="p-button-outlined"
-          label="+ Depot/retrait"
-          (click)="openManualMovementDialog()"
-        ></button>
+  <a routerLink="/savings" class="plum-back-link"
+    ><i class="pi pi-arrow-left" aria-hidden="true"></i> Retour à votre
+    épargne</a
+  >
+  <header class="plum-header">
+    <div>
+      <span class="plum-kicker">Compte d’épargne</span>
+      <h1>{{ accountName }}</h1>
+      <p>Plum · épargne disponible · Accès immédiat</p>
+    </div>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-plus"
+      label="Ajouter un versement"
+      (click)="openManualMovementDialog()"
+    ></button>
+  </header>
+  <div class="plum-overview">
+    <article class="plum-panel plum-balance">
+      <span class="plum-kicker">Solde disponible</span
+      ><strong>{{
+        overviewBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+      }}</strong>
+      <p>
+        Cette enveloppe sert aux loisirs prévus et aux dépenses ponctuelles.
+      </p>
+      <div class="plum-month">
+        <div>
+          <span>Entrées ce mois</span
+          ><b class="amount-positive"
+            >+
+            {{
+              monthlyAmount("incoming")
+                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}</b
+          >
+        </div>
+        <div>
+          <span>Sorties ce mois</span
+          ><b class="amount-negative"
+            >−
+            {{
+              monthlyAmount("outgoing")
+                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}</b
+          >
+        </div>
       </div>
+    </article>
+    <aside class="savings-recap" aria-label="Récapitulatif de l’épargne">
+      <div class="summary-card incoming">
+        <div class="summary-label">Entrées sur épargne</div>
+        <div class="summary-value">
+          {{ totalIncoming | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </div>
+      </div>
+      <div class="summary-card outgoing">
+        <div class="summary-label">Sorties depuis épargne</div>
+        <div class="summary-value">
+          {{ totalOutgoing | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </div>
+      </div>
+      <div class="summary-card net" [class.negative]="netAmount < 0">
+        <div class="summary-label">Net épargne</div>
+        <div class="summary-value">
+          {{ netAmount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+        </div>
+      </div>
+    </aside>
+  </div>
+  <p-card styleClass="wallets-panel">
+    <ng-template pTemplate="title">
+      <div class="wallets-heading">
+        <h2>Vos portefeuilles</h2>
+        <div class="wallets-heading-actions">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-sliders-h"
+            class="wallet-primary-button"
+            label="Répartir"
+            [disabled]="wallets.length === 0"
+            (click)="openAllocationDialog()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-plus"
+            class="wallet-primary-button"
+            label="Créer un portefeuille"
+            (click)="openCreateWalletDialog()"
+          ></button>
+        </div>
+      </div>
+    </ng-template>
+    <div class="actions-toolbar" *ngIf="createWalletError || walletActionError">
       <p-message
         *ngIf="createWalletError"
         severity="warn"
@@ -38,7 +116,7 @@
       <div class="target-budget-main">
         <div class="target-budget-label">Epargne disponible</div>
         <div class="target-budget-value">
-          {{ netAmount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+          {{ overviewBalance | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
         </div>
       </div>
       <div class="target-budget-main">
@@ -63,125 +141,99 @@
       </div>
     </div>
 
-    <div class="wallet-allocation-toolbar">
-      <button
-        pButton
-        type="button"
-        icon="pi pi-sliders-h"
-        class="p-button-outlined"
-        label="Repartir"
-        [disabled]="wallets.length === 0"
-        (click)="openAllocationDialog()"
-      ></button>
-    </div>
-
-    <p-table
-      [value]="walletProgress"
-      [paginator]="true"
-      [rows]="5"
-      [rowsPerPageOptions]="[5, 10, 20]"
-    >
-      <ng-template pTemplate="caption">
-        <strong>Recapitulatif par portefeuille</strong>
-      </ng-template>
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Portefeuille</th>
-          <th class="text-right">Objectif</th>
-          <th class="text-right">Montant mis de cote</th>
-          <th class="text-right">Reste</th>
-          <th class="text-right">Progression</th>
-          <th>Etat</th>
-          <th>Actions</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-progress>
-        <tr [class.wallet-closed]="!progress.isActive">
-          <td>{{ progress.name }}</td>
-          <td class="text-right">
+    <div class="wallet-card-grid">
+      <article
+        class="wallet-card"
+        *ngFor="let progress of walletProgress"
+        [class.wallet-closed]="!progress.isActive"
+      >
+        <div class="wallet-card-heading">
+          <h3>{{ progress.name }}</h3>
+          <span
+            class="wallet-state"
+            [class.wallet-state-active]="progress.isActive"
+            [class.wallet-state-closed]="!progress.isActive"
+            >{{ progress.isActive ? "Actif" : "Clôturé" }}</span
+          >
+        </div>
+        <span class="wallet-card-label">Montant mis de côté</span
+        ><strong class="wallet-card-amount">{{
+          progress.allocatedAmount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</strong>
+        <div class="wallet-card-progress">
+          <span
+            >sur
             {{
               progress.targetAmount
                 | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-            }}
-          </td>
-          <td class="text-right">
-            {{
-              progress.allocatedAmount
-                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-            }}
-          </td>
-          <td class="text-right">
-            {{
-              progress.remainingAmount
-                | currency: "EUR" : "symbol" : "1.2-2" : "fr"
-            }}
-          </td>
-          <td class="text-right">
-            {{ progress.progressRate | number: "1.0-1" }} %
-            <div class="wallet-progress-track">
-              <div
-                class="wallet-progress-fill"
-                [style.width.%]="getProgressWidth(progress.progressRate)"
-              ></div>
-            </div>
-          </td>
-          <td>
-            <span
-              class="wallet-state"
-              [class.wallet-state-active]="progress.isActive"
-              [class.wallet-state-closed]="!progress.isActive"
-            >
-              {{ progress.isActive ? "Actif" : "Cloture" }}
-            </span>
-            <span
-              *ngIf="progress.isActive && progress.remainingAmount <= 0"
-              class="wallet-state wallet-state-active"
-            >
-              Objectif atteint
-            </span>
-          </td>
-          <td>
-            <div class="wallet-actions">
-              <button
-                pButton
-                type="button"
-                icon="pi pi-pencil"
-                class="p-button-text"
-                (click)="openEditWalletDialog(progress)"
-              ></button>
-              <button
-                *ngIf="progress.isActive"
-                pButton
-                type="button"
-                icon="pi pi-lock"
-                class="p-button-text"
-                (click)="closeWalletById(progress.id)"
-              ></button>
-              <button
-                pButton
-                type="button"
-                icon="pi pi-trash"
-                class="p-button-text p-button-danger"
-                (click)="requestDeleteWallet(progress)"
-              ></button>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="7">Aucun portefeuille fictif d'epargne.</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
-
-  <p-card header="Mouvements de transfert interne">
-    <div class="movements-scope-note">
-      Tous les mouvements internes sont listes ici. En revanche, l'agregat par
-      compte epargne exclut les comptes courants et joints.
+            }}</span
+          ><b>{{ progress.progressRate | number: "1.0-1" }} %</b>
+        </div>
+        <div class="wallet-progress-track">
+          <div
+            class="wallet-progress-fill"
+            [style.width.%]="getProgressWidth(progress.progressRate)"
+          ></div>
+        </div>
+        <p class="wallet-card-remaining">
+          {{
+            progress.remainingAmount <= 0
+              ? "Objectif atteint"
+              : "Reste à constituer : "
+          }}<span *ngIf="progress.remainingAmount > 0">{{
+            progress.remainingAmount
+              | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+          }}</span>
+        </p>
+        <div class="wallet-actions">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-text"
+            [attr.aria-label]="'Modifier ' + progress.name"
+            (click)="openEditWalletDialog(progress)"
+          ></button
+          ><button
+            *ngIf="progress.isActive"
+            pButton
+            type="button"
+            icon="pi pi-lock"
+            class="p-button-text"
+            [attr.aria-label]="'Clore ' + progress.name"
+            (click)="closeWalletById(progress.id)"
+          ></button
+          ><button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger"
+            [attr.aria-label]="'Supprimer ' + progress.name"
+            (click)="requestDeleteWallet(progress)"
+          ></button>
+        </div>
+      </article>
+      <p *ngIf="!walletProgress.length">Aucun portefeuille à afficher.</p>
     </div>
-
+  </p-card>
+  <section class="recent-section">
+    <div class="plum-section-heading">
+      <div>
+        <span class="plum-kicker">Historique récent</span>
+        <h2>Mouvements de cette enveloppe</h2>
+      </div>
+      <button
+        type="button"
+        class="plum-text-button"
+        (click)="showAllMovements = !showAllMovements"
+        [attr.aria-expanded]="showAllMovements"
+        aria-controls="all-savings-movements"
+      >
+        {{
+          showAllMovements ? "Masquer les détails" : "Voir tous les mouvements"
+        }}
+      </button>
+    </div>
     <div class="filters-grid">
       <div class="filter-item">
         <label>Compte</label>
@@ -194,7 +246,7 @@
       </div>
 
       <div class="filter-item">
-        <label>Annee</label>
+        <label>Année</label>
         <p-dropdown
           [options]="yearOptions"
           [(ngModel)]="selectedYear"
@@ -233,156 +285,84 @@
         <button
           pButton
           type="button"
-          class="p-button-outlined"
+          class="filter-reset-button"
           icon="pi pi-refresh"
-          label="Reinitialiser"
+          label="Réinitialiser"
           (click)="resetFilters()"
         ></button>
       </div>
     </div>
 
-    <div class="summary-grid">
-      <div class="summary-card incoming">
-        <div class="summary-label">Entrees sur epargne</div>
-        <div class="summary-value">
-          {{ totalIncoming | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-        </div>
+    <div class="plum-panel recent-list" id="all-savings-movements">
+      <ng-container
+        *ngFor="
+          let movement of movements
+            | slice: 0 : (showAllMovements ? movements.length : 4)
+        "
+      >
+        <ng-container
+          *ngTemplateOutlet="
+            movementRow;
+            context: { $implicit: movement, detailed: showAllMovements }
+          "
+        ></ng-container>
+      </ng-container>
+      <p class="recent-empty" *ngIf="!movements.length">
+        Aucun mouvement pour les filtres sélectionnés.
+      </p>
+    </div>
+  </section>
+  <ng-template #movementRow let-movement let-detailed="detailed">
+    <div class="recent-movement">
+      <span
+        class="movement-dot"
+        [class.outgoing-dot]="movement.signedAmount < 0"
+      ></span>
+      <div class="movement-copy">
+        <strong>{{ movement.description || "Transfert interne" }}</strong>
+        <p>
+          {{
+            movement.date
+              | date: (detailed ? "dd MMM yyyy" : "dd MMM") : "" : "fr"
+          }}
+          · {{ movement.signedAmount < 0 ? "Sortie" : "Entrée" }}
+        </p>
+        <p *ngIf="detailed">
+          {{ movement.accountName }} · {{ movement.categoryLabel }} ·
+          {{ movement.subCategoryLabel }}
+        </p>
       </div>
-      <div class="summary-card outgoing">
-        <div class="summary-label">Sorties depuis epargne</div>
-        <div class="summary-value">
-          {{ totalOutgoing | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-        </div>
-      </div>
-      <div class="summary-card net" [class.negative]="netAmount < 0">
-        <div class="summary-label">Net epargne</div>
-        <div class="summary-value">
-          {{ netAmount | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-        </div>
+      <b
+        [class.amount-positive]="movement.signedAmount >= 0"
+        [class.amount-negative]="movement.signedAmount < 0"
+        >{{ movement.signedAmount > 0 ? "+ " : ""
+        }}{{
+          movement.signedAmount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+        }}</b
+      >
+      <div
+        class="movement-actions"
+        *ngIf="detailed && isStandaloneInternalMovement(movement)"
+      >
+        <button
+          pButton
+          type="button"
+          icon="pi pi-pencil"
+          class="p-button-text"
+          aria-label="Modifier le mouvement"
+          (click)="openEditManualMovementDialog(movement)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button-text p-button-danger"
+          aria-label="Supprimer le mouvement"
+          (click)="deleteManualMovement(movement)"
+        ></button>
       </div>
     </div>
-
-    <div class="stats-grid">
-      <p-card header="Repartition par type d'epargne">
-        <div
-          class="chart-container"
-          *ngIf="savingsByType.length > 0; else noTypeData"
-        >
-          <p-chart
-            type="bar"
-            [data]="savingsTypeChartData"
-            [options]="savingsTypeChartOptions"
-          ></p-chart>
-        </div>
-        <ng-template #noTypeData>
-          <div class="empty-block">
-            Aucun type d'epargne a afficher pour ce filtre.
-          </div>
-        </ng-template>
-      </p-card>
-
-      <p-card header="Montant total par compte epargne">
-        <p-table [value]="savingsByAccount" [paginator]="false">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Compte</th>
-              <th class="text-right">Entrees</th>
-              <th class="text-right">Sorties</th>
-              <th class="text-right">Net</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-row>
-            <tr>
-              <td>{{ row.accountName }}</td>
-              <td class="text-right amount-positive">
-                {{ row.incoming | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-              </td>
-              <td class="text-right amount-negative">
-                {{ row.outgoing | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-              </td>
-              <td
-                class="text-right"
-                [class.amount-positive]="row.net >= 0"
-                [class.amount-negative]="row.net < 0"
-              >
-                {{ row.net | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="4">Aucun mouvement a agreger par compte.</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-card>
-    </div>
-
-    <p-table
-      [value]="movements"
-      [paginator]="true"
-      [rows]="20"
-      [rowsPerPageOptions]="[20, 50, 100]"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Compte</th>
-          <th>Categorie</th>
-          <th>Sous-categorie</th>
-          <th class="text-right">Montant</th>
-          <th>Actions</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-movement>
-        <tr>
-          <td>{{ movement.date | date: "dd/MM/yyyy" }}</td>
-          <td>{{ movement.description }}</td>
-          <td>{{ movement.accountName }}</td>
-          <td>{{ movement.categoryLabel }}</td>
-          <td>{{ movement.subCategoryLabel }}</td>
-          <td class="text-right">
-            <p-tag
-              [severity]="movement.signedAmount < 0 ? 'danger' : 'success'"
-              [value]="
-                (movement.signedAmount
-                  | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') || ''
-              "
-            >
-            </p-tag>
-          </td>
-          <td>
-            <div class="movement-actions">
-              <button
-                *ngIf="isStandaloneInternalMovement(movement)"
-                pButton
-                type="button"
-                icon="pi pi-pencil"
-                class="p-button-text"
-                (click)="openEditManualMovementDialog(movement)"
-              ></button>
-              <button
-                *ngIf="isStandaloneInternalMovement(movement)"
-                pButton
-                type="button"
-                icon="pi pi-trash"
-                class="p-button-text p-button-danger"
-                (click)="deleteManualMovement(movement)"
-              ></button>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="7">
-            Aucun mouvement epargne pour les filtres selectionnes.
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
+  </ng-template>
 </div>
 
 <p-dialog

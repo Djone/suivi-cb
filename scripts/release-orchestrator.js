@@ -517,10 +517,10 @@ function gitPrepare(report, options) {
   }
 }
 
-function gitMergeToMaster(report) {
+function gitMergeToMaster(report, runGit = runCommand) {
   const start = Date.now();
 
-  const currentBranch = runCommand('git rev-parse --abbrev-ref HEAD');
+  const currentBranch = runGit('git rev-parse --abbrev-ref HEAD');
   if (!currentBranch.ok) {
     failStep(report, 'git-merge-master', start, currentBranch.stderr || 'unable to read current branch');
     throw new Error('Unable to read current branch.');
@@ -539,30 +539,60 @@ function gitMergeToMaster(report) {
     };
   }
 
-  const fetch = runCommand('git fetch origin');
+  // Switching branches and aborting a merge require a clean starting point,
+  // even when --allow-dirty was used for the earlier validation steps.
+  const status = runGit('git status --porcelain');
+  const pendingMerge = runGit('git rev-parse -q --verify MERGE_HEAD');
+  if (!status.ok || status.stdout.trim() || pendingMerge.ok) {
+    const error = 'Deployment requires a clean working tree with no merge in progress.';
+    failStep(report, 'git-merge-master', start, error);
+    throw new Error(error);
+  }
+
+  const fetch = runGit('git fetch origin');
   if (!fetch.ok) {
     failStep(report, 'git-merge-master', start, fetch.stderr || fetch.stdout || 'git fetch failed');
     throw new Error('Unable to fetch origin.');
   }
 
-  const checkoutMaster = runCommand('git checkout master');
+  const checkoutMaster = runGit('git checkout master');
   if (!checkoutMaster.ok) {
     failStep(report, 'git-merge-master', start, checkoutMaster.stderr || checkoutMaster.stdout || 'git checkout master failed');
     throw new Error('Unable to checkout master.');
   }
 
-  const syncMaster = runCommand('git pull --ff-only origin master');
+  const restoreSourceBranch = (abortMerge) => {
+    const recoveryStart = Date.now();
+    if (abortMerge) {
+      const abort = runGit('git merge --abort');
+      if (!abort.ok) {
+        failStep(report, 'git-restore-source', recoveryStart,
+          abort.stderr || abort.stdout || 'Unable to abort merge; source branch was not restored.');
+        return;
+      }
+    }
+    const checkout = runGit(`git checkout ${sourceBranch}`);
+    if (!checkout.ok) {
+      failStep(report, 'git-restore-source', recoveryStart,
+        checkout.stderr || checkout.stdout || 'Unable to restore source branch.');
+      return;
+    }
+    passStep(report, 'git-restore-source', recoveryStart, { sourceBranch });
+  };
+
+  const syncMaster = runGit('git pull --ff-only origin master');
   if (!syncMaster.ok) {
-    runCommand(`git checkout ${sourceBranch}`);
     failStep(report, 'git-merge-master', start, syncMaster.stderr || syncMaster.stdout || 'git pull --ff-only failed');
+    restoreSourceBranch(false);
     throw new Error('Unable to fast-forward local master from origin.');
   }
 
   const mergeCmd = `git merge --no-ff ${sourceBranch} -m "chore(release): merge ${sourceBranch} into master"`;
-  const merge = runCommand(mergeCmd);
+  const merge = runGit(mergeCmd);
   if (!merge.ok) {
-    runCommand(`git checkout ${sourceBranch}`);
     failStep(report, 'git-merge-master', start, merge.stderr || merge.stdout || 'git merge failed');
+    const mergeState = runGit('git rev-parse -q --verify MERGE_HEAD');
+    restoreSourceBranch(mergeState.ok);
     throw new Error('Unable to merge source branch into master.');
   }
 
@@ -572,7 +602,7 @@ function gitMergeToMaster(report) {
   });
 
   const pushStart = Date.now();
-  const push = runCommand('git push origin master');
+  const push = runGit('git push origin master');
   if (!push.ok) {
     failStep(report, 'git-push-master', pushStart, push.stderr || push.stdout || 'git push failed');
     throw new Error('Unable to push master to origin.');
@@ -794,5 +824,6 @@ if (require.main === module) {
 }
 
 module.exports = {
+  gitMergeToMaster,
   resolveStableVersionForTag,
 };

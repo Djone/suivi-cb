@@ -9,13 +9,15 @@ import { TransactionService } from '../../services/transaction.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { ViewportService } from '../../services/viewport.service';
+import { SavingAccountService } from '../../services/saving-account.service';
 
 // Models
 import { Transaction } from '../../models/transaction.model';
 import { RecurringTransaction } from '../../models/recurring-transaction.model';
+import { recurringOccursInMonth } from '../../utils/recurring-frequency.utils';
 import { Account } from '../../models/account.model';
+import { SavingAccount } from '../../models/saving-account.model';
 import { DEBIT_503020_LIST } from '../../config/debit_503020';
-import { NotificationCenterService } from '../../services/notification-center.service';
 
 // PrimeNG Modules
 import { CardModule } from 'primeng/card';
@@ -72,6 +74,8 @@ interface DashboardNotification {
   text: string;
   tooltip?: string;
   type?: string;
+  accountId?: number;
+  accountName?: string;
 }
 
 interface BudgetTrendStat {
@@ -100,6 +104,11 @@ interface AccountBalance {
   nextMonthLowestBalance: number; // Remplacer le booléen par un nombre
 }
 
+interface DashboardSchedule extends UpcomingSchedule {
+  accountId: number;
+  accountName: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -116,10 +125,12 @@ interface AccountBalance {
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  readonly dashboardDate = new Date();
   isMobile = false;
   transactions: Transaction[] = [];
   recurringTransactions: RecurringTransaction[] = [];
   accounts: Account[] = [];
+  savingAccounts: SavingAccount[] = [];
   accountBalances: AccountBalance[] = [];
   activeAccountId: number | null = null;
   initialBalances: Map<number, number> = new Map();
@@ -131,17 +142,18 @@ export class HomeComponent implements OnInit, OnDestroy {
   expandedSchedules: Set<number> = new Set(); // Track which account schedules are expanded
   expandedExpenses: Set<number> = new Set(); // Track which account expenses are expanded
   expandedIncomes: Set<number> = new Set(); // Track which account incomes are expanded
+  showDashboardNotifications = false;
   private subCategoriesLoaded = false; // Flag pour savoir si les sous-catégories sont chargées
 
   constructor(
     private transactionService: TransactionService,
     private recurringTransactionService: RecurringTransactionService,
     private accountService: AccountService,
+    private savingAccountService: SavingAccountService,
     private subCategoryService: SubCategoryService,
     private viewportService: ViewportService,
     private router: Router,
     private dialogService: DialogService,
-    private notificationCenter: NotificationCenterService,
   ) {}
 
   ngOnInit(): void {
@@ -204,6 +216,14 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.transactionService.clearFiltersTransactions();
     this.recurringTransactionService.getRecurringTransactions().subscribe();
     this.accountService.getAccounts().subscribe();
+    this.savingAccountService.getAccounts().subscribe({
+      next: (accounts) => {
+        this.savingAccounts = accounts;
+      },
+      error: () => {
+        this.savingAccounts = [];
+      },
+    });
     // getSubCategories() est déjà appelé plus haut
   }
 
@@ -218,7 +238,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       return;
     }
     if (!this.accounts.length) {
-      this.notificationCenter.setNotifications([]);
       return;
     }
 
@@ -279,8 +298,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.activeAccountId = typeof firstId === 'number' ? firstId : null;
     }
 
-    this.publishHeaderNotifications();
-
     // Correction : Déplacer la logique de mise à jour de l'onglet actif ici
     if (
       this.accountBalances.length > 0 &&
@@ -311,9 +328,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     return initialBalance + totalTransactions;
   }
 
-  private getRecurringTransactionId(
-    value: unknown,
-  ): number | null {
+  private getRecurringTransactionId(value: unknown): number | null {
     if (typeof value === 'number' && !Number.isNaN(value)) {
       return value;
     }
@@ -441,44 +456,27 @@ export class HomeComponent implements OnInit, OnDestroy {
       today.getMonth() + 1,
       1,
     );
+    const nextMonthSchedules = this.buildSchedulesForMonth(
+      accountRecurring,
+      nextMonthDate.getFullYear(),
+      nextMonthDate.getMonth(),
+    );
 
     for (let day = 1; day <= 5; day++) {
-      const currentDate = new Date(
-        nextMonthDate.getFullYear(),
-        nextMonthDate.getMonth(),
-        day,
+      const schedulesForDay = nextMonthSchedules.filter(
+        ({ dueDate }) => dueDate.getDate() === day,
       );
-      const currentDayOfWeekJS = currentDate.getDay(); // 0=Dim, 1=Lun, ...
-
-      // Récupérer TOUTES les échéances pour le jour 'day'
-      const schedulesForDay = accountRecurring.filter((rt) => {
-        // @ts-ignore
-        if (rt.frequency === 'weekly') {
-          const dayOfWeek =
-            typeof rt.dayOfMonth === 'string'
-              ? parseInt(rt.dayOfMonth)
-              : rt.dayOfMonth || 0;
-          if (dayOfWeek < 1 || dayOfWeek > 7) return false;
-          const targetDayOfWeekJS = dayOfWeek % 7;
-          return targetDayOfWeekJS === currentDayOfWeekJS;
-        }
-
-        // Logique pour les échéances mensuelles (et autres basées sur le jour du mois)
-        const dayOfMonth =
-          typeof rt.dayOfMonth === 'string'
-            ? parseInt(rt.dayOfMonth)
-            : rt.dayOfMonth || 0;
-        return dayOfMonth === day;
-      });
 
       // Calculer l'impact net de la journée
-      const netChangeForDay = schedulesForDay.reduce((sum, rt) => {
+      const netChangeForDay = schedulesForDay.reduce((sum, { recurring }) => {
         const amount =
-          typeof rt.amount === 'string'
-            ? parseFloat(rt.amount)
-            : rt.amount || 0;
+          typeof recurring.amount === 'string'
+            ? parseFloat(recurring.amount)
+            : recurring.amount || 0;
         const signedAmount =
-          rt.financialFlowId === 2 ? -Math.abs(amount) : Math.abs(amount);
+          recurring.financialFlowId === 2
+            ? -Math.abs(amount)
+            : Math.abs(amount);
         return sum + signedAmount;
       }, 0);
 
@@ -498,25 +496,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     return 0;
-  }
-
-  private shouldApplyRecurring(frequency: string, month: number): boolean {
-    const monthIndex = month; // 0 for January, 1 for February, etc.
-    switch (frequency) {
-      case 'monthly':
-      case 'weekly':
-        return true;
-      case 'bimonthly':
-        return monthIndex % 2 === 0; // Jan, Mar, May...
-      case 'quarterly':
-        return monthIndex % 3 === 0; // Jan, Apr, Jul, Oct
-      case 'biannual':
-        return monthIndex % 6 === 0; // Jan, Jul
-      case 'yearly':
-        return monthIndex === 0; // January
-      default:
-        return false; // Ne pas traiter les fr+�quences inconnues
-    }
   }
 
   private isInstallmentDateValid(
@@ -620,16 +599,15 @@ export class HomeComponent implements OnInit, OnDestroy {
           ? parseInt(recurring.dayOfMonth, 10)
           : recurring.dayOfMonth || 0;
       const frequency = recurring.frequency || 'monthly';
-      const activeMonths = Array.isArray(recurring.activeMonths)
-        ? new Set(
-            (recurring.activeMonths as number[]).filter(
-              (value) => typeof value === 'number' && value >= 1 && value <= 12,
-            ),
-          )
-        : null;
       const isInstallment = recurring.recurrenceKind === 'installment';
 
-      if (!this.shouldApplyRecurring(frequency, normalizedMonth)) {
+      if (
+        !recurringOccursInMonth(
+          frequency,
+          normalizedMonth,
+          recurring.activeMonths,
+        )
+      ) {
         return;
       }
 
@@ -643,18 +621,14 @@ export class HomeComponent implements OnInit, OnDestroy {
           if (dueDate.getDay() !== targetDow) {
             continue;
           }
-          if (activeMonths && !activeMonths.has(dueDate.getMonth() + 1)) {
-            continue;
-          }
-          if (isInstallment && !this.isInstallmentDateValid(recurring, dueDate)) {
+          if (
+            isInstallment &&
+            !this.isInstallmentDateValid(recurring, dueDate)
+          ) {
             continue;
           }
           schedules.push({ recurring, dueDate });
         }
-        return;
-      }
-
-      if (activeMonths && !activeMonths.has(normalizedMonth + 1)) {
         return;
       }
 
@@ -691,7 +665,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       currentYear,
       currentMonth,
     )
-      .filter(({ recurring, dueDate }) => !this.isRecurringRealized(recurring, dueDate))
+      .filter(
+        ({ recurring, dueDate }) =>
+          !this.isRecurringRealized(recurring, dueDate),
+      )
       .map(({ recurring, dueDate }) =>
         this.createSchedule(recurring, dueDate, today),
       );
@@ -956,11 +933,112 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.router.navigate(['/transactions-list', accountId]);
   }
 
+  getMainAccountBalances(): AccountBalance[] {
+    const mainAccounts = this.accountBalances.filter((balance) => {
+      const name = this.normalizeLabel(balance.account.name);
+      return name.includes('courant') || name.includes('joint');
+    });
+    return (mainAccounts.length ? mainAccounts : this.accountBalances).slice(
+      0,
+      2,
+    );
+  }
+
+  getMainAccountsLiquidity(): number {
+    return this.getMainAccountBalances().reduce(
+      (sum, balance) => sum + balance.currentBalance,
+      0,
+    );
+  }
+
+  getMainAccountsForecast(): number {
+    return this.getMainAccountBalances().reduce(
+      (sum, balance) => sum + balance.forecastBalance,
+      0,
+    );
+  }
+
+  getAvailableSavings(): number {
+    return this.savingAccounts
+      .filter(
+        (account) =>
+          account.isActive !== false && account.liquidityLevel !== 'long_term',
+      )
+      .reduce((sum, account) => sum + account.currentBalance, 0);
+  }
+
+  getLongTermSavings(): number {
+    return this.savingAccounts
+      .filter(
+        (account) =>
+          account.isActive !== false && account.liquidityLevel === 'long_term',
+      )
+      .reduce((sum, account) => sum + account.currentBalance, 0);
+  }
+
+  getDashboardNotifications(): DashboardNotification[] {
+    return this.getMainAccountBalances().flatMap((accountBalance) =>
+      this.getNotifications(accountBalance).map((notification) => ({
+        ...notification,
+        accountId: accountBalance.account.id,
+        accountName: accountBalance.account.name,
+      })),
+    );
+  }
+
+  getDashboardAlertCount(): number {
+    return this.getDashboardNotifications().length;
+  }
+
+  toggleDashboardNotifications(): void {
+    this.showDashboardNotifications = !this.showDashboardNotifications;
+  }
+
+  openDashboardNotification(notification: DashboardNotification): void {
+    if (typeof notification.accountId === 'number') {
+      this.navigateToTransactions(notification.accountId);
+    }
+  }
+
+  getDashboardTransactions(limit = 6): Transaction[] {
+    const accountIds = new Set<number>(
+      this.getMainAccountBalances()
+        .map((balance) => balance.account.id)
+        .filter((id): id is number => typeof id === 'number'),
+    );
+    return this.transactions
+      .filter((transaction) => accountIds.has(Number(transaction.accountId)))
+      .sort((a, b) => {
+        const timeA = a.date ? new Date(a.date).getTime() : 0;
+        const timeB = b.date ? new Date(b.date).getTime() : 0;
+        return timeB - timeA;
+      })
+      .slice(0, limit);
+  }
+
+  getTransactionAccountName(transaction: Transaction): string {
+    return (
+      this.accounts.find(
+        (account) => Number(account.id) === Number(transaction.accountId),
+      )?.name || 'Compte'
+    );
+  }
+
+  getDashboardUpcomingSchedules(limit = 6): DashboardSchedule[] {
+    return this.getMainAccountBalances()
+      .flatMap((balance) =>
+        balance.upcomingSchedules.map((schedule) => ({
+          ...schedule,
+          accountId: balance.account.id!,
+          accountName: balance.account.name,
+        })),
+      )
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+      .slice(0, limit);
+  }
+
   getAccountInitials(account: Account): string {
-    const parts = (account.name || '')
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2);
+    const parts = (account.name || '').split(/\s+/).filter(Boolean).slice(0, 2);
 
     if (!parts.length) {
       return 'CB';
@@ -1194,24 +1272,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     return notes;
   }
 
-  private publishHeaderNotifications(): void {
-    this.notificationCenter.setNotifications(
-      this.accountBalances.flatMap((accountBalance) => {
-        const accountId = accountBalance.account.id;
-        if (typeof accountId !== 'number') return [];
-
-        return this.getNotifications(accountBalance).map(
-          (notification, index) => ({
-            ...notification,
-            id: `${accountId}:${notification.type || notification.severity}:${notification.text}:${index}`,
-            accountId,
-            accountName: accountBalance.account.name,
-          }),
-        );
-      }),
-    );
-  }
-
   getLastFiveTransactions(accountId: number): Transaction[] {
     return this.transactions
       .filter((tx) => {
@@ -1375,14 +1435,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       percent: 0,
       details: [],
     }));
-    const detailsByBucket = new Map<
-      number,
-      Map<string, Debit503020Detail>
-    >();
-    const unclassifiedBySubCategory = new Map<
-      string,
-      Debit503020Detail
-    >();
+    const detailsByBucket = new Map<number, Map<string, Debit503020Detail>>();
+    const unclassifiedBySubCategory = new Map<string, Debit503020Detail>();
     const incomeBySubCategory = new Map<string, Debit503020Detail>();
     let salaryBase = 0;
     let totalExpenses = 0;
@@ -1397,7 +1451,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       const subCategoryId =
         typeof rawSubCategoryId === 'string'
           ? parseInt(rawSubCategoryId, 10)
-          : rawSubCategoryId ?? null;
+          : (rawSubCategoryId ?? null);
       const key = subCategoryId === null ? 'none' : String(subCategoryId);
       const current = target.get(key);
       if (current) {
@@ -1458,9 +1512,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     const remaining = salaryBase - totalExpenses;
     const remainingPercent =
-      salaryBase > 0
-        ? Math.round((remaining / salaryBase) * 100)
-        : 0;
+      salaryBase > 0 ? Math.round((remaining / salaryBase) * 100) : 0;
 
     const breakdown = {
       total: salaryBase,
@@ -1470,9 +1522,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       totalExpenses,
       items,
       unclassifiedAmount,
-      unclassifiedDetails: Array.from(
-        unclassifiedBySubCategory.values(),
-      ).sort((a, b) => b.amount - a.amount),
+      unclassifiedDetails: Array.from(unclassifiedBySubCategory.values()).sort(
+        (a, b) => b.amount - a.amount,
+      ),
       remaining,
       remainingPercent,
     };
@@ -1522,7 +1574,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         if (flowId === 1) currentIncomeTotal += amount;
         if (flowId === 2) {
           currentExpenseTotal += amount;
-          currentExpenses.set(label, (currentExpenses.get(label) || 0) + amount);
+          currentExpenses.set(
+            label,
+            (currentExpenses.get(label) || 0) + amount,
+          );
         }
         return;
       }
@@ -1572,7 +1627,8 @@ export class HomeComponent implements OnInit, OnDestroy {
           totalDeltaPercent === null
             ? 'Historique insuffisant pour comparer'
             : `${totalDeltaPercent >= 0 ? '+' : ''}${totalDeltaPercent}% vs moyenne des 3 mois précédents`,
-        tone: totalDelta > 0 ? 'negative' : totalDelta < 0 ? 'positive' : 'neutral',
+        tone:
+          totalDelta > 0 ? 'negative' : totalDelta < 0 ? 'positive' : 'neutral',
       },
       this.buildCategoryTrendStat(increase, true),
       this.buildCategoryTrendStat(decrease, false),
@@ -1587,7 +1643,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private buildCategoryTrendStat(
-    change: { label: string; current: number; average: number; delta: number } | undefined,
+    change:
+      | { label: string; current: number; average: number; delta: number }
+      | undefined,
     isIncrease: boolean,
   ): BudgetTrendStat {
     const isMeaningful =

@@ -42,6 +42,12 @@ interface VehicleCostSummary {
   total: number;
 }
 
+interface VehicleCategorySummary {
+  label: string;
+  total: number;
+  percent: number;
+}
+
 @Component({
   selector: 'app-vehicles',
   standalone: true,
@@ -247,6 +253,22 @@ export class VehiclesComponent implements OnInit {
       externalExpenses,
       total: acquisition + externalExpenses,
     };
+  }
+
+  vehicleYearRow(vehicle: Vehicle): VehicleYearRow | undefined {
+    return this.yearRows.find((row) => row.vehicle.id === vehicle.id);
+  }
+
+  vehicleCategorySummary(vehicle: Vehicle): VehicleCategorySummary[] {
+    const rows = this.subCategoryYearRows.filter(
+      (row) => row.vehicleId === vehicle.id && row.total > 0,
+    );
+    const total = rows.reduce((sum, row) => sum + row.total, 0);
+    return rows.slice(0, 5).map((row) => ({
+      label: row.label,
+      total: row.total,
+      percent: total > 0 ? (row.total / total) * 100 : 0,
+    }));
   }
 
   get manualOperationsForYear(): VehicleOperation[] {

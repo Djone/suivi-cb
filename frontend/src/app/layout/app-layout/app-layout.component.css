@@ -7,23 +7,31 @@
 .layout-main-container {
   flex: 1;
   margin-top: 70px;
-  background-color: #f8f9fa;
+  background-color: #f4f6f9;
 }
 
 .layout-main-container--mobile {
-  background:
-    radial-gradient(circle at top, rgba(102, 126, 234, 0.08), transparent 35%),
+  background: radial-gradient(
+      circle at top,
+      rgba(102, 126, 234, 0.08),
+      transparent 35%
+    ),
     #f8f9fa;
 }
 
 .layout-main {
-  padding: 2rem;
+  padding: 2rem 2.5rem;
   min-height: calc(100vh - 70px);
 }
 
 @media screen and (min-width: 961px) {
   .layout-main-container {
+    margin-top: 0;
     margin-left: 280px;
+  }
+
+  .layout-main {
+    min-height: 100vh;
   }
 }
 

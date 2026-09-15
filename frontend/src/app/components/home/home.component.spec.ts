@@ -9,6 +9,7 @@ import { TransactionService } from '../../services/transaction.service';
 import { RecurringTransactionService } from '../../services/recurring-transaction.service';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { ViewportService } from '../../services/viewport.service';
+import { SavingAccountService } from '../../services/saving-account.service';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -40,11 +41,24 @@ describe('HomeComponent', () => {
       providers: [
         { provide: AccountService, useValue: accountServiceMock },
         { provide: TransactionService, useValue: transactionServiceMock },
-        { provide: RecurringTransactionService, useValue: recurringServiceMock },
+        {
+          provide: RecurringTransactionService,
+          useValue: recurringServiceMock,
+        },
         { provide: SubCategoryService, useValue: subCategoryServiceMock },
         { provide: ViewportService, useValue: { mobile$: of(false) } },
-        { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } },
-        { provide: DialogService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: SavingAccountService,
+          useValue: { getAccounts: () => of([]) },
+        },
+        {
+          provide: Router,
+          useValue: { navigate: jasmine.createSpy('navigate') },
+        },
+        {
+          provide: DialogService,
+          useValue: { open: jasmine.createSpy('open') },
+        },
       ],
     }).compileComponents();
 
@@ -57,10 +71,52 @@ describe('HomeComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('sépare l’épargne disponible des placements long terme', () => {
+    component.savingAccounts = [
+      {
+        id: 1,
+        name: 'Disponible',
+        bankName: 'Banque',
+        providerKey: 'bank',
+        role: 'savings',
+        liquidityLevel: 'instant',
+        currentBalance: 1200,
+        baseBalance: 1200,
+        targetBalance: null,
+        minimumBalance: null,
+        includeInDailyBudget: true,
+        includeInWealth: true,
+        isActive: true,
+      },
+      {
+        id: 2,
+        name: 'Placement',
+        bankName: 'Banque',
+        providerKey: 'bank',
+        role: 'investment',
+        liquidityLevel: 'long_term',
+        currentBalance: 8000,
+        baseBalance: 8000,
+        targetBalance: null,
+        minimumBalance: null,
+        includeInDailyBudget: false,
+        includeInWealth: true,
+        isActive: true,
+      },
+    ];
+
+    expect(component.getAvailableSavings()).toBe(1200);
+    expect(component.getLongTermSavings()).toBe(8000);
+  });
+
   it('totalise les occurrences hebdomadaires et agrege par sous-categorie', () => {
     const now = new Date();
     let mondays = 0;
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const lastDay = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+    ).getDate();
     for (let day = 1; day <= lastDay; day++) {
       if (new Date(now.getFullYear(), now.getMonth(), day).getDay() === 1) {
         mondays += 1;
@@ -200,5 +256,43 @@ describe('HomeComponent', () => {
     expect(stats[1].tone).toBe('negative');
     expect(stats[2].value).toBe('Alimentation');
     expect(stats[2].tone).toBe('positive');
+  });
+
+  it('planifie une recurrence semestrielle pendant chacun des mois choisis', () => {
+    const recurring = {
+      id: 4,
+      label: 'Redevance ordures menageres',
+      amount: 76.83,
+      dayOfMonth: 5,
+      subCategoryId: 10,
+      accountId: 1,
+      financialFlowId: 2,
+      frequency: 'biannual' as const,
+      activeMonths: [5, 9],
+      isActive: 1,
+      debit503020: 1,
+    };
+
+    const maySchedules = (component as any).buildSchedulesForMonth(
+      [recurring],
+      2026,
+      4,
+    );
+    const septemberSchedules = (component as any).buildSchedulesForMonth(
+      [recurring],
+      2026,
+      8,
+    );
+    const julySchedules = (component as any).buildSchedulesForMonth(
+      [recurring],
+      2026,
+      6,
+    );
+
+    expect(maySchedules.length).toBe(1);
+    expect(maySchedules[0].dueDate).toEqual(new Date(2026, 4, 5));
+    expect(septemberSchedules.length).toBe(1);
+    expect(septemberSchedules[0].dueDate).toEqual(new Date(2026, 8, 5));
+    expect(julySchedules).toEqual([]);
   });
 });

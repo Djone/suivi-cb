@@ -176,4 +176,5 @@ echo "[7/8] Cleaning old docker images..."
 sudo docker image prune -f
 
 echo "[8/8] Update completed successfully."
+git fetch --prune --tags origin "$GIT_BRANCH"
 echo "Current version: $(git describe --tags --always --dirty)"

@@ -2,6 +2,13 @@
 
 /* PrimeNG Base Styling */
 :root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-data: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --font-size-title: 24px;
+  --font-size-section: 16px;
+  --font-size-body: 14px;
+  --font-size-meta: 12px;
   --primary-color: #667eea;
   --primary-color-text: #ffffff;
   --surface-0: #ffffff;
@@ -27,14 +34,17 @@
   --gray-900: #212121;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  font-weight: 400;
   background-color: #f8f9fa;
 }
 
@@ -44,7 +54,43 @@ body {
 
 /* PrimeNG Theme Overrides */
 .p-component {
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1 {
+  font-size: var(--font-size-title);
+  font-weight: 600;
+}
+
+h2,
+h3 {
+  font-weight: 600;
+}
+
+.balance-amount,
+.summary-amount,
+.date-total,
+.transaction-amount,
+.list-row-amount,
+.account-card-metrics strong,
+.dashboard-kpi strong,
+.wealth-total strong,
+.overview-item strong,
+.balance-block strong,
+.vehicle-cost-breakdown dd,
+.vehicle-year-kpis strong,
+.kpi-grid strong,
+td,
+.total {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Material Snackbar */
@@ -154,5 +200,423 @@ body {
     right: 1rem;
     bottom: 1rem;
     left: 1rem;
+  }
+}
+
+/* Détail mensuel des tuiles budget du compte. */
+.transaction-list:not(.transaction-list--mobile)
+  .account-overview-grid
+  > .credit-insight {
+  min-height: 66px;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  color: #172033;
+  background: #effcfb;
+  border: 1px solid #bdebe5;
+  border-radius: 12px;
+  box-shadow: none;
+}
+.transaction-list:not(.transaction-list--mobile)
+  .account-overview-grid
+  > .credit-insight-joint {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+.transaction-list:not(.transaction-list--mobile)
+  .account-overview-grid
+  .credit-insight-title {
+  color: #657084;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+.transaction-list:not(.transaction-list--mobile)
+  .account-overview-grid
+  .credit-insight-count {
+  color: #657084;
+  background: rgba(255, 255, 255, 0.7);
+}
+.transaction-list:not(.transaction-list--mobile)
+  .account-overview-grid
+  .credit-insight-amount {
+  margin-top: 0.3rem;
+  color: #0f766e;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-shadow: none;
+}
+.transaction-list:not(.transaction-list--mobile)
+  .account-overview-grid
+  .credit-insight-joint
+  .credit-insight-amount {
+  color: #ea580c;
+}
+/* Hiérarchie décisionnelle de la page de détail d'un compte. */
+.account-primary-action.p-button {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+.account-primary-action.p-button:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+.account-view-tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.65rem;
+  border-bottom: 1px solid #dfe5ed;
+}
+.account-view-tabs button {
+  position: relative;
+  padding: 0.75rem 0.1rem;
+  color: #748096;
+  background: transparent;
+  border: 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+.account-view-tabs button:hover {
+  color: #2563eb;
+}
+.account-view-tabs button.active {
+  color: #172033;
+}
+.account-view-tabs button.active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: #2563eb;
+  border-radius: 999px 999px 0 0;
+}
+.account-section-label {
+  margin: 1.5rem 0 0.65rem;
+  color: #465166;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.account-section-label + .upcoming-accordion {
+  margin-top: 0;
+}
+.account-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.account-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 106px;
+  padding: 1rem 1.1rem;
+  color: #172033;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #dfe5ed;
+  border-radius: 14px;
+}
+button.account-kpi {
+  font: inherit;
+  cursor: pointer;
+}
+button.account-kpi:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(20, 31, 52, 0.07);
+}
+.account-kpi > span,
+.account-budget-card > header span,
+.operations-heading span {
+  color: #778197;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.account-kpi > strong {
+  margin-top: 0.45rem;
+  font-size: 21px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.account-kpi > small {
+  margin-top: auto;
+  color: #8993a5;
+  font-size: 11px;
+}
+.account-kpi--balance {
+  background: #eef6ff;
+  border-color: #c7defd;
+}
+.account-kpi--forecast {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+.account-kpi--forecast > strong {
+  color: #ea580c;
+}
+.account-kpi strong.negative {
+  color: #dc2626;
+}
+
+.account-budget-card {
+  margin-top: 1.5rem;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e1e6ed;
+  border-radius: 14px;
+}
+.account-budget-card > header,
+.operations-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.account-budget-card > header {
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid #e9edf2;
+}
+.account-budget-card > header h3,
+.operations-heading h3 {
+  margin: 0.2rem 0 0;
+  color: #172033;
+  font-size: 16px;
+  font-weight: 600;
+}
+.account-budget-card > header small,
+.operations-heading > strong {
+  color: #7c8799;
+  font-size: 12px;
+  font-weight: 500;
+}
+.account-budget-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.account-budget-card > header {
+  padding: 0 0 0.25rem;
+  border: 0;
+}
+.account-budget-card > header h3 {
+  margin: 0;
+  color: #465166;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.account-budget-section,
+.account-budget-remaining {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dfe5ed;
+  border-radius: 12px;
+}
+.account-budget-trigger {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 56px;
+  padding: 0.8rem 1.15rem;
+  color: #172033;
+  text-align: left;
+  background: #fff;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.account-budget-trigger:hover {
+  background: #f8faff;
+}
+.account-budget-trigger > i {
+  font-size: 12px;
+}
+.account-budget-trigger > span,
+.account-budget-trigger > strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.account-budget-trigger > strong {
+  min-width: 102px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.account-budget-trigger > em {
+  min-width: 48px;
+  padding: 0.2rem 0.55rem;
+  color: #2563eb;
+  background: #edf5ff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  text-align: center;
+}
+.account-budget-section--income .account-budget-trigger > span,
+.account-budget-section--income .account-budget-trigger > strong {
+  color: #169457;
+}
+.account-budget-section--income .account-budget-trigger > strong {
+  grid-column: 3 / 5;
+}
+.account-budget-details {
+  background: #f8fafc;
+  border-top: 1px solid #e7ebf0;
+}
+.account-budget-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 44px;
+  padding: 0.65rem 1.15rem 0.65rem 3.35rem;
+  color: #667286;
+  border-bottom: 1px solid #e7ebf0;
+}
+.account-budget-detail:last-child {
+  border-bottom: 0;
+}
+.account-budget-detail > span {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+.account-budget-detail small {
+  color: #94a0b2;
+  font-size: 10px;
+}
+.account-budget-detail > strong {
+  color: #465166;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.account-budget-remaining {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 48px;
+  align-items: center;
+  gap: 1rem;
+  min-height: 56px;
+  padding: 0.8rem 1.15rem;
+  color: #047857;
+  background: #effcf5;
+  border-color: #bdebcf;
+}
+.account-budget-remaining > span,
+.account-budget-remaining > strong {
+  font-weight: 600;
+}
+.account-budget-remaining > strong {
+  font-variant-numeric: tabular-nums;
+}
+.account-budget-remaining > em {
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  text-align: center;
+}
+.account-budget-remaining.negative {
+  color: #dc2626;
+  background: #fff5f5;
+  border-color: #fecaca;
+}
+
+.account-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+.account-transfer-button,
+.filters-toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0.65rem 0.9rem;
+  color: #334155;
+  background: #fff;
+  border: 1px solid #d7dee8;
+  border-radius: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.account-transfer-button:hover {
+  color: #2563eb;
+  border-color: #93b9fa;
+  background: #f4f8ff;
+}
+.account-transfer-button > i {
+  font-size: 13px;
+}
+
+.operations-heading {
+  margin: 1.7rem 0 0.7rem;
+}
+.filters-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+.filters-toolbar__button:hover,
+.filters-toolbar__button.active {
+  color: #2563eb;
+  border-color: #93b9fa;
+  background: #f4f8ff;
+}
+.filters-toolbar__button > span {
+  display: grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 0.3rem;
+  color: #fff;
+  background: #2563eb;
+  border-radius: 999px;
+  font-size: 10px;
+}
+.filters-toolbar__button > small {
+  color: #8390a3;
+  font-size: 10px;
+  font-weight: 500;
+}
+.filters-advanced {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e8ecf2;
+}
+
+@media (max-width: 1050px) {
+  .account-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .account-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    margin-top: 1rem;
+  }
+  .account-kpi {
+    min-height: 92px;
+    padding: 0.8rem;
+  }
+  .account-kpi > strong {
+    font-size: 17px;
+  }
+  .filters-toolbar {
+    grid-template-columns: 1fr;
   }
 }
