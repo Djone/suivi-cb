@@ -53,6 +53,13 @@ Example:
 
 ## Rollback behavior
 
+- Executed deployment requires a clean working tree and no merge in progress,
+  including when `--allow-dirty` was supplied.
+- If the deployment merge conflicts, the orchestrator aborts that merge before
+  returning to the source release branch. The report records whether recovery
+  succeeded in `git-restore-source`; it does not select an older version backup.
+- Returning to the source branch preserves the prepared versions: for example,
+  production `2.0.0` and development `2.1.0-dev` after preparing that release.
 - Backups are created automatically before version updates during `prepare` and `full`.
 - Backup location: `data/release/backups`.
 - Auto rollback on failure can be enabled with `--rollback-on-failure`.
