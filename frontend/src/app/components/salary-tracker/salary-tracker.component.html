@@ -2,13 +2,23 @@
   <div class="header">
     <div>
       <p class="eyebrow">Suivi salaires</p>
-      <h2>Évolution, moyenne, simulation</h2>
+      <h2>Historique et évolution des salaires</h2>
       <p class="muted">
-        Centralisez vos feuilles de paie pour suivre l'historique, l'ancienneté
-        et préparer vos simulations d'impôts.
+        Centralisez vos feuilles de paie pour suivre vos revenus.
       </p>
     </div>
     <div class="header-actions">
+      <p-multiSelect
+        [options]="yearOptions"
+        [(ngModel)]="selectedYears"
+        (ngModelChange)="onFilterChange()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Toutes les années"
+        ariaLabel="Années concernées"
+        [showClear]="true"
+        appendTo="body"
+      ></p-multiSelect>
       <p-dropdown
         [options]="historyFilterOptions"
         [(ngModel)]="historyFilterValue"
@@ -21,22 +31,46 @@
       <button
         pButton
         type="button"
-        label="Ajouter / éditer"
+        label="Ajouter une feuille"
+        [disabled]="loading || saving"
         icon="pi pi-plus"
         (click)="openModal()"
       ></button>
     </div>
   </div>
 
+  <p *ngIf="errorMessage" role="alert" class="error-message">
+    {{ errorMessage }}
+    <button
+      pButton
+      type="button"
+      label="Réessayer"
+      (click)="loadEntries()"
+      [disabled]="loading || saving"
+    ></button>
+  </p>
+  <p class="muted">
+    Moyennes par feuille sur les années et établissements sélectionnés.
+    Évolution du revenu net total entre les deux derniers mois renseignés de la
+    sélection.
+  </p>
   <div class="cards">
+    <p-card class="kpi-card">
+      <p class="kpi-label">Ancienneté depuis la première paie</p>
+      <div class="kpi-value">{{ seniority }}</div>
+      <p class="muted" *ngIf="firstPayslip">
+        Depuis {{ firstPayslip | date: "MMMM yyyy" }} · au mois courant
+      </p>
+    </p-card>
     <p-card *ngFor="let card of cards" class="kpi-card">
       <p class="kpi-label">{{ card.label }}</p>
       <div class="kpi-value">
-        <span *ngIf="card.suffix === '%'"
+        <span *ngIf="card.value === null">—</span>
+        <span *ngIf="card.value !== null && card.suffix === '%'"
           >{{ card.value | number: "1.1-1" }}%</span
         >
-        <span *ngIf="card.suffix === '€'">{{
-          card.value | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+        <span *ngIf="card.value !== null && card.suffix === '€'">{{
+          card.value | currency: "EUR" : "symbol" : "1.2-2" : "fr"
         }}</span>
         <span *ngIf="!card.suffix">{{ card.value }}</span>
       </div>
@@ -44,18 +78,169 @@
   </div>
 
   <div class="grid">
-    <p-card class="chart-card">
-      <div class="card-title">Visuel brut annuel</div>
-      <p-chart type="bar" [data]="chartData" [options]="chartOptions"></p-chart>
+    <p-card class="history-chart">
+      <h3>Évolution du revenu net depuis le début</h3>
+      <p class="muted">
+        Total net de chaque mois, tous les mois de l’historique de
+        l’établissement sélectionné. Le filtre des années ne limite pas cette
+        courbe. Les mois manquants interrompent la ligne.
+      </p>
+      <p-chart
+        *ngIf="chartData.labels.length; else noChart"
+        type="line"
+        [data]="chartData"
+        [options]="chartOptions"
+        height="320px"
+        ariaLabel="Évolution chronologique du revenu net mensuel"
+      ></p-chart>
+      <ng-template #noChart
+        ><p class="muted">Aucune feuille de paie.</p></ng-template
+      >
     </p-card>
-
+    <p-card class="annual-card">
+      <h3>Calculs annuels</h3>
+      <p class="muted">
+        RNA et RNIA : sommes des feuilles. MRNM : RNA ÷ nombre de mois
+        renseignés. L’évolution du net compare les MRNM de deux années complètes
+        consécutives.
+      </p>
+      <p class="muted">
+        RFR (N−1) et IR de l’année précédente : valeurs de référence globales,
+        indépendantes du filtre ETS. Un tiret signifie « non renseigné ».
+        L’évolution IR utilise la valeur absolue de l’IR précédent pour traiter
+        les remboursements négatifs.
+      </p>
+      <p *ngIf="fiscalError" class="error-message" role="alert">
+        {{ fiscalError }}
+      </p>
+      <div class="annual-scroll">
+        <table class="annual-table">
+          <thead>
+            <tr>
+              <th>Année</th>
+              <th>Évol. net</th>
+              <th>RNA</th>
+              <th>MRNM</th>
+              <th>RNIA</th>
+              <th>Brut annuel</th>
+              <th>RFR (N−1)</th>
+              <th>IR</th>
+              <th>Évol. IR</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of annualRows">
+              <th scope="row">
+                {{ row.year
+                }}<small
+                  >{{ row.months }} mois{{
+                    row.partial ? " · partielle" : ""
+                  }}</small
+                >
+              </th>
+              <td>
+                {{
+                  row.evolution === null
+                    ? "—"
+                    : (row.evolution | number: "1.2-2") + " %"
+                }}
+              </td>
+              <td>
+                {{ row.rna | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              </td>
+              <td>
+                {{ row.mrnm | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              </td>
+              <td>
+                {{ row.rnia | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              </td>
+              <td>
+                {{ row.gross | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+              </td>
+              <td>
+                {{
+                  row.rfr === null
+                    ? "—"
+                    : (row.rfr | currency: "EUR" : "symbol" : "1.2-2" : "fr")
+                }}
+              </td>
+              <td>
+                {{
+                  row.ir === null
+                    ? "—"
+                    : (row.ir | currency: "EUR" : "symbol" : "1.2-2" : "fr")
+                }}
+              </td>
+              <td>
+                {{
+                  row.irEvolution === null
+                    ? "—"
+                    : (row.irEvolution | number: "1.2-2") + " %"
+                }}
+              </td>
+              <td>
+                <button
+                  pButton
+                  class="p-button-text"
+                  icon="pi pi-pencil"
+                  [attr.aria-label]="'Modifier RFR et IR ' + row.year"
+                  (click)="editFiscal(row.year)"
+                ></button>
+              </td>
+            </tr>
+            <tr *ngIf="!annualRows.length">
+              <td colspan="10">Aucune donnée pour cette sélection.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <details class="salary-legend">
+        <summary>Signification des abréviations</summary>
+        <p>
+          RN : Revenu net · RNI : Revenu net imposable · RNA : Revenu net annuel
+          · RNIA : Revenu net imposable annuel · MRNM : Moyenne du revenu net
+          mensuel · RFR : Revenu fiscal de référence (N−1) · IR : Impôts sur le
+          revenu de l’année précédente · PAS : Prélèvement à la source · NDF :
+          Note de frais.
+        </p>
+      </details>
+    </p-card>
     <p-card class="table-card">
       <div class="card-title">Détail des feuilles de paie</div>
+      <nav
+        class="year-navigation"
+        aria-label="Pagination par année"
+        *ngIf="detailYears.length"
+      >
+        <button
+          pButton
+          label="Année précédente"
+          icon="pi pi-chevron-left"
+          [disabled]="
+            detailYears.indexOf(detailYear!) >= detailYears.length - 1
+          "
+          (click)="changeYear(1)"
+        ></button>
+        <label for="detail-year">Année</label>
+        <select id="detail-year" [(ngModel)]="detailYear">
+          <option *ngFor="let year of detailYears" [ngValue]="year">
+            {{ year }}
+          </option>
+        </select>
+        <span>{{ detailRows.length }} feuille(s)</span>
+        <button
+          pButton
+          label="Année suivante"
+          icon="pi pi-chevron-right"
+          [disabled]="detailYears.indexOf(detailYear!) <= 0"
+          (click)="changeYear(-1)"
+        ></button>
+      </nav>
       <p-table
-        [value]="filteredRows"
-        [paginator]="true"
-        [rows]="8"
-        [rowsPerPageOptions]="[8, 15, 30]"
+        [value]="detailRows"
+        [loading]="loading"
+        [paginator]="false"
         sortMode="multiple"
         [responsiveLayout]="'stack'"
         breakpoint="960px"
@@ -65,8 +250,11 @@
             <th pSortableColumn="month">
               Date <p-sortIcon field="month"></p-sortIcon>
             </th>
-            <th pSortableColumn="company">
-              ETS <p-sortIcon field="company"></p-sortIcon>
+            <th pSortableColumn="ets">
+              ETS <p-sortIcon field="ets"></p-sortIcon>
+            </th>
+            <th pSortableColumn="gross">
+              Revenu brut <p-sortIcon field="gross"></p-sortIcon>
             </th>
             <th pSortableColumn="net">
               Revenu net <p-sortIcon field="net"></p-sortIcon>
@@ -88,17 +276,19 @@
             <td>
               <div class="tag-cell">
                 <p-tag [value]="row.ets" severity="info"></p-tag>
-                <span class="muted">{{ row.company }}</span>
               </div>
             </td>
-            <td>{{ row.net | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}</td>
             <td>
-              {{ row.netTaxable | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}
+              {{ row.gross | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
             </td>
-            <td>{{ row.pas | currency: "EUR" : "symbol" : "1.0-0" : "fr" }}</td>
+            <td>{{ row.net | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}</td>
+            <td>
+              {{ row.netTaxable | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}
+            </td>
+            <td>{{ row.pas | currency: "EUR" : "symbol" : "1.2-2" : "fr" }}</td>
             <td>
               {{
-                row.rounding || 0 | currency: "EUR" : "symbol" : "1.0-0" : "fr"
+                row.rounding || 0 | currency: "EUR" : "symbol" : "1.2-2" : "fr"
               }}
             </td>
             <td class="muted">{{ row.comment }}</td>
@@ -107,33 +297,97 @@
                 pButton
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm"
+                [disabled]="saving"
+                aria-label="Modifier la feuille de paie"
                 (click)="openModal(row)"
               ></button>
               <button
                 pButton
                 icon="pi pi-trash"
                 class="p-button-text p-button-danger p-button-sm"
+                [disabled]="saving"
+                aria-label="Supprimer la feuille de paie"
                 (click)="deleteEntry(row)"
               ></button>
             </td>
           </tr>
         </ng-template>
+        <ng-template pTemplate="emptymessage"
+          ><tr>
+            <td colspan="9">Aucune feuille de paie pour cette sélection.</td>
+          </tr></ng-template
+        >
       </p-table>
     </p-card>
   </div>
 
+  <p-dialog
+    header="Données annuelles"
+    [(visible)]="fiscalVisible"
+    [modal]="true"
+    [closable]="!fiscalSaving"
+    [style]="{ width: '440px' }"
+    [breakpoints]="{ '640px': '95vw' }"
+  >
+    <p>Année de la ligne : {{ fiscalForm.year }}</p>
+    <p class="muted">
+      Recopiez les montants de référence. Laissez vide si inconnu ; un IR
+      négatif représente un remboursement.
+    </p>
+    <p *ngIf="fiscalError" role="alert" class="error-message">
+      {{ fiscalError }}
+    </p>
+    <div class="field">
+      <label for="fiscal-rfr">RFR (N−1)</label
+      ><p-inputNumber
+        inputId="fiscal-rfr"
+        [(ngModel)]="fiscalForm.rfr"
+        mode="currency"
+        currency="EUR"
+        locale="fr-FR"
+        [min]="0"
+        [disabled]="fiscalSaving"
+      ></p-inputNumber>
+    </div>
+    <div class="field">
+      <label for="fiscal-ir">IR de l’année précédente</label
+      ><p-inputNumber
+        inputId="fiscal-ir"
+        [(ngModel)]="fiscalForm.ir"
+        mode="currency"
+        currency="EUR"
+        locale="fr-FR"
+        [disabled]="fiscalSaving"
+      ></p-inputNumber>
+    </div>
+    <ng-template pTemplate="footer"
+      ><button
+        pButton
+        label="Enregistrer"
+        [loading]="fiscalSaving"
+        [disabled]="fiscalSaving"
+        (click)="saveFiscal()"
+      ></button
+    ></ng-template>
+  </p-dialog>
   <p-dialog
     header="Saisie salaire"
     [(visible)]="visibleModal"
     [modal]="true"
     [style]="{ width: '520px' }"
     [breakpoints]="{ '960px': '90vw', '640px': '95vw' }"
-    [dismissableMask]="true"
+    [dismissableMask]="!saving"
+    [closable]="!saving"
+    [closeOnEscape]="!saving"
   >
-    <div class="form-grid">
+    <p *ngIf="formError" role="alert" class="error-message">{{ formError }}</p>
+    <p class="muted">* Champs obligatoires</p>
+    <fieldset class="form-grid" [disabled]="saving">
       <div class="field">
-        <label>Mois / Année</label>
+        <label for="salary-month">Mois / Année *</label>
         <p-calendar
+          inputId="salary-month"
+          [required]="true"
           [(ngModel)]="formModel.month"
           view="month"
           dateFormat="mm/yy"
@@ -142,22 +396,35 @@
         ></p-calendar>
       </div>
       <div class="field">
-        <label>ETS</label>
+        <label for="salary-ets">ETS *</label>
         <p-dropdown
           [options]="etsOptions"
+          inputId="salary-ets"
+          [required]="true"
           [(ngModel)]="formModel.ets"
           optionLabel="label"
           optionValue="value"
           appendTo="body"
         ></p-dropdown>
       </div>
+
       <div class="field">
-        <label>Entreprise</label>
-        <input pInputText [(ngModel)]="formModel.company" />
+        <label for="salary-gross">Revenu brut *</label>
+        <p-inputNumber
+          inputId="salary-gross"
+          [required]="true"
+          [(ngModel)]="formModel.gross"
+          mode="currency"
+          currency="EUR"
+          locale="fr-FR"
+          [min]="0"
+        ></p-inputNumber>
       </div>
       <div class="field">
-        <label>Revenu net</label>
+        <label for="salary-net">Revenu net *</label>
         <p-inputNumber
+          inputId="salary-net"
+          [required]="true"
           [(ngModel)]="formModel.net"
           mode="currency"
           currency="EUR"
@@ -165,8 +432,10 @@
         ></p-inputNumber>
       </div>
       <div class="field">
-        <label>Revenu net imposable</label>
+        <label for="salary-netTaxable">Revenu net imposable *</label>
         <p-inputNumber
+          inputId="salary-netTaxable"
+          [required]="true"
           [(ngModel)]="formModel.netTaxable"
           mode="currency"
           currency="EUR"
@@ -204,36 +473,21 @@
         <label>Commentaire</label>
         <input pInputText [(ngModel)]="formModel.comment" />
       </div>
-      <div class="field full">
-        <label>Date d'entrée (ancienneté)</label>
-        <p-calendar
-          [(ngModel)]="tenureStart"
-          dateFormat="dd/mm/yy"
-          appendTo="body"
-          [locale]="frLocale"
-        ></p-calendar>
-      </div>
-      <div class="field full">
-        <label>Dons annuels (pour simulation impôts)</label>
-        <p-inputNumber
-          [(ngModel)]="formModel.donations"
-          mode="currency"
-          currency="EUR"
-          locale="fr-FR"
-        ></p-inputNumber>
-      </div>
-    </div>
+    </fieldset>
     <ng-template pTemplate="footer">
       <button
         pButton
         label="Annuler"
         class="p-button-text"
+        [disabled]="saving"
         (click)="visibleModal = false"
       ></button>
       <button
         pButton
         label="Enregistrer"
         icon="pi pi-check"
+        [disabled]="saving"
+        [loading]="saving"
         (click)="saveEntry()"
       ></button>
     </ng-template>

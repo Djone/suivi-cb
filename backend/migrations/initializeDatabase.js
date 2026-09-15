@@ -448,6 +448,7 @@ const initializeDatabase = async () => {
     // Migrations incrémentales V1.1.0
     const migrateAdvancedRecurring = require("./migrate_2025_advanced_recurring");
     await migrateAdvancedRecurring();
+    await require('./salary-tracker')(db);
 
     console.log("✅ Migrations terminées avec succès.");
   } catch (err) {

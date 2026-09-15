@@ -1,0 +1,10 @@
+const router = require("express").Router();
+const controller = require("../controllers/salary.controller");
+const schema = require("../schemas/salary.schema");
+const validate = require("../middlewares/validation.middleware");
+router.use("/annual", require("./salary-annual.routes"));
+router.get("/", controller.getAll);
+router.post("/", validate(schema), controller.save);
+router.put("/:id", validate(schema), controller.save);
+router.delete("/:id", controller.delete);
+module.exports = router;

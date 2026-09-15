@@ -1,5 +1,5 @@
 ﻿import { CommonModule } from '@angular/common';
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
@@ -9,25 +9,16 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ChartModule } from 'primeng/chart';
+import { annualSalaries, monthlyNet } from './salary-calculations';
+import { SalaryFiscalYear } from '../../services/salary.service';
+import {
+  SalaryEntry,
+  SalaryEts,
+  SalaryService,
+} from '../../services/salary.service';
 import { TagModule } from 'primeng/tag';
-
-type SalaryEts = 'CST' | 'CAP' | 'SDG' | 'ATS' | 'OTHER';
-
-interface SalaryEntry {
-  id: number;
-  month: Date;
-  ets: SalaryEts;
-  company: string;
-  net: number;
-  netTaxable: number;
-  pas: number;
-  rounding?: number;
-  gross?: number;
-  bonus?: number;
-  donations?: number;
-  comment?: string;
-}
 
 interface HistoryOption {
   label: string;
@@ -48,78 +39,148 @@ interface HistoryOption {
     CalendarModule,
     DropdownModule,
     ButtonModule,
+    MultiSelectModule,
     ChartModule,
     TagModule,
   ],
   templateUrl: './salary-tracker.component.html',
   styleUrls: ['./salary-tracker.component.css'],
 })
-export class SalaryTrackerComponent implements AfterViewInit {
-  entries: SalaryEntry[] = [
-    {
-      id: 1,
-      month: new Date('2025-01-01'),
-      ets: 'CST',
-      company: 'Consorteo',
-      net: 3213,
-      netTaxable: 3000,
-      pas: 50,
-      rounding: 0,
-      bonus: 0,
-      comment: 'CST 2025',
+export class SalaryTrackerComponent implements OnInit {
+  entries: SalaryEntry[] = [];
+  selectedYears: number[] = [];
+  loading = false;
+  saving = false;
+  errorMessage = '';
+  formError = '';
+  detailYear: number | null = null;
+  fiscalYears: SalaryFiscalYear[] = [];
+  fiscalForm: SalaryFiscalYear = {
+    year: new Date().getFullYear(),
+    rfr: null,
+    ir: null,
+  };
+  fiscalVisible = false;
+  fiscalSaving = false;
+  fiscalError = '';
+  chartData: { labels: string[]; datasets: object[] } = {
+    labels: [],
+    datasets: [],
+  };
+  chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        ticks: { maxTicksLimit: 12, maxRotation: 0 },
+        grid: { display: false },
+      },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Revenu net mensuel (€)' },
+      },
     },
-    {
-      id: 2,
-      month: new Date('2024-01-01'),
-      ets: 'CST',
-      company: 'Consorteo',
-      net: 3144,
-      netTaxable: 2900,
-      pas: 48,
-      rounding: 0,
-      bonus: 0,
-      comment: 'CST 2024',
-    },
-    {
-      id: 3,
-      month: new Date('2023-01-01'),
-      ets: 'CST',
-      company: 'Consorteo',
-      net: 3090,
-      netTaxable: 2850,
-      pas: 45,
-      rounding: 0,
-      bonus: 1000,
-      comment: 'Prime fin année',
-    },
-    {
-      id: 4,
-      month: new Date('2022-01-01'),
-      ets: 'CST',
-      company: 'Consorteo',
-      net: 2950,
-      netTaxable: 2720,
-      pas: 44,
-      rounding: 0,
-      bonus: 0,
-      comment: 'CST 2022',
-    },
-    {
-      id: 5,
-      month: new Date('2021-01-01'),
-      ets: 'CST',
-      company: 'Consorteo',
-      net: 2820,
-      netTaxable: 2600,
-      pas: 42,
-      rounding: 0,
-      bonus: 0,
-      comment: 'CST 2021',
-    },
-  ];
+  };
 
-  tenureStart = new Date('2019-01-20');
-  tenureEnd: Date | null = null;
+  get establishmentRows() {
+    return this.entries.filter(
+      (e) =>
+        this.historyFilterValue === 'ALL' || e.ets === this.historyFilterValue,
+    );
+  }
+  get annualRows() {
+    return annualSalaries(this.establishmentRows)
+      .filter(
+        (r) =>
+          !this.selectedYears.length || this.selectedYears.includes(r.year),
+      )
+      .map((row) => {
+        const fiscal = this.fiscalYears.find((f) => f.year === row.year);
+        const previous = this.fiscalYears.find((f) => f.year === row.year - 1);
+        const ir = fiscal?.ir ?? null;
+        return {
+          ...row,
+          rfr: fiscal?.rfr ?? null,
+          ir,
+          irEvolution:
+            ir !== null && previous?.ir != null && previous.ir !== 0
+              ? ((ir - previous.ir) / Math.abs(previous.ir)) * 100
+              : null,
+        };
+      });
+  }
+  get detailYears() {
+    return [
+      ...new Set(this.filteredRows.map((e) => e.month.getFullYear())),
+    ].sort((a, b) => b - a);
+  }
+  get detailRows() {
+    return this.filteredRows.filter(
+      (e) => e.month.getFullYear() === this.detailYear,
+    );
+  }
+  changeYear(direction: number) {
+    const index = this.detailYears.indexOf(this.detailYear!);
+    this.detailYear = this.detailYears[index + direction] ?? this.detailYear;
+  }
+  get seniority() {
+    if (!this.entries.length) return '—';
+    const first = Math.min(
+      ...this.entries.map(
+        (e) => e.month.getFullYear() * 12 + e.month.getMonth(),
+      ),
+    );
+    const now = new Date();
+    const elapsed = Math.max(
+      0,
+      now.getFullYear() * 12 + now.getMonth() - first,
+    );
+    return `${Math.floor(elapsed / 12)} ans ${elapsed % 12} mois`;
+  }
+  get firstPayslip() {
+    return this.entries.length
+      ? new Date(Math.min(...this.entries.map((e) => e.month.getTime())))
+      : null;
+  }
+  editFiscal(year: number) {
+    this.fiscalForm = {
+      ...(this.fiscalYears.find((f) => f.year === year) || {
+        year,
+        rfr: null,
+        ir: null,
+      }),
+    };
+    this.fiscalError = '';
+    this.fiscalVisible = true;
+  }
+  saveFiscal() {
+    if (this.fiscalSaving) return;
+    this.fiscalSaving = true;
+    this.salaryService.saveAnnual(this.fiscalForm).subscribe({
+      next: (row) => {
+        this.fiscalYears = [
+          ...this.fiscalYears.filter((f) => f.year !== row.year),
+          row,
+        ];
+        this.fiscalVisible = false;
+        this.fiscalSaving = false;
+      },
+      error: () => {
+        this.fiscalError = 'Enregistrement des données annuelles impossible.';
+        this.fiscalSaving = false;
+      },
+    });
+  }
+
+  constructor(private readonly salaryService: SalaryService) {}
+
+  get yearOptions() {
+    return [...new Set(this.entries.map((e) => e.month.getFullYear()))]
+      .sort((a, b) => b - a)
+      .map((year) => ({ label: String(year), value: year }));
+  }
 
   // Locale français pour PrimeNG p-calendar
   frLocale = {
@@ -183,190 +244,193 @@ export class SalaryTrackerComponent implements AfterViewInit {
     (opt) => opt.value !== 'ALL',
   );
   filteredRows: SalaryEntry[] = [];
-  chartData: any = null;
 
   get cards() {
-    const count = this.entries.length || 1;
-    const netAvg = this.entries.reduce((sum, e) => sum + e.net, 0) / count;
-    const netTaxableAvg =
-      this.entries.reduce((sum, e) => sum + e.netTaxable, 0) / count;
-    const last = this.entries.at(0);
-    const prev = this.entries.at(1);
-    const evol =
-      last && prev && prev.net > 0
-        ? ((last.net - prev.net) / prev.net) * 100
-        : 0;
-
+    const rows = this.filteredRows;
+    const count = rows.length;
+    const monthly = new Map<number, number>();
+    rows.forEach((row) => {
+      const month = row.month.getFullYear() * 12 + row.month.getMonth();
+      monthly.set(month, (monthly.get(month) || 0) + row.net);
+    });
+    const months = [...monthly.keys()].sort((a, b) => b - a);
+    const last = monthly.get(months[0]);
+    const previous = monthly.get(months[1]);
+    const evolution =
+      last !== undefined && previous !== undefined && previous > 0
+        ? ((last - previous) / previous) * 100
+        : null;
     return [
       {
         label: 'Net moyen',
-        value: netAvg,
+        value: count ? rows.reduce((sum, e) => sum + e.net, 0) / count : null,
         suffix: '€',
       },
       {
         label: 'Net imposable moyen',
-        value: netTaxableAvg,
+        value: count
+          ? rows.reduce((sum, e) => sum + e.netTaxable, 0) / count
+          : null,
         suffix: '€',
       },
-      {
-        label: 'Évolution récente',
-        value: evol,
-        suffix: '%',
-      },
-      {
-        label: 'Ancienneté',
-        value: this.tenureLabel(),
-        suffix: '',
-      },
+      { label: 'Évolution du net', value: evolution, suffix: '%' },
     ];
   }
 
-  chartOptions = {
-    responsive: false,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: 'bottom',
-      },
-    },
-    scales: {
-      y: {
-        ticks: {
-          callback: (value: string | number) =>
-            `${Number(value).toLocaleString('fr-FR')} €`,
-        },
-      },
-    },
-  };
-
   ngOnInit(): void {
-    this.refreshView();
+    this.loadEntries();
+    this.salaryService.loadAnnual().subscribe({
+      next: (rows) => (this.fiscalYears = rows),
+      error: () =>
+        (this.fiscalError =
+          'Impossible de charger les valeurs RFR et IR. Réessayez en rechargeant la page.'),
+    });
   }
 
-  ngAfterViewInit(): void {
-    this.refreshView();
+  loadEntries(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.salaryService.load().subscribe({
+      next: (rows) => {
+        this.entries = rows;
+        this.refreshView();
+        this.loading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Impossible de charger les salaires. Réessayez.';
+        this.loading = false;
+      },
+    });
   }
 
-  openModal(entry?: SalaryEntry) {
-    if (entry) {
-      this.editingId = entry.id;
-      this.formModel = { ...entry };
-    } else {
-      this.editingId = null;
-      this.formModel = {
-        month: new Date(),
-        ets: 'CST',
-        company: '',
-        gross: 0,
-        net: 0,
-        bonus: 0,
-        netTaxable: 0,
-        pas: 0,
-        rounding: 0,
-        donations: 0,
-        comment: '',
-      };
-    }
+  openModal(entry?: SalaryEntry): void {
+    this.formError = '';
+    this.editingId = entry?.id ?? null;
+    this.formModel = entry
+      ? { ...entry, month: new Date(entry.month) }
+      : {
+          month: new Date(),
+          ets: 'CST',
+          gross: undefined,
+          net: undefined,
+          netTaxable: undefined,
+          pas: 0,
+          rounding: 0,
+          bonus: 0,
+          comment: '',
+        };
     this.visibleModal = true;
   }
 
-  saveEntry() {
+  saveEntry(): void {
+    if (this.saving) return;
+    const form = this.formModel;
+    if (!form.month || !Number.isFinite(form.month.getTime()) || !form.ets) {
+      this.formError = 'Renseignez le mois et l’établissement.';
+      return;
+    }
+    const moneyFields = ['gross', 'net', 'netTaxable', 'pas', 'bonus'] as const;
+    form.pas ??= 0;
+    form.bonus ??= 0;
+    form.rounding ??= 0;
     if (
-      !this.formModel.month ||
-      !this.formModel.ets ||
-      !this.formModel.company
+      moneyFields.some(
+        (field) =>
+          typeof form[field] !== 'number' ||
+          !Number.isFinite(form[field]) ||
+          form[field]! < 0,
+      ) ||
+      typeof form.rounding !== 'number' ||
+      !Number.isFinite(form.rounding)
     ) {
+      this.formError =
+        'Renseignez des montants valides et positifs (sauf l’arrondi).';
       return;
     }
     const payload: SalaryEntry = {
-      id: this.editingId || Date.now(),
-      month: new Date(this.formModel.month),
-      ets: this.formModel.ets as SalaryEts,
-      company: this.formModel.company,
-      netTaxable: this.formModel.netTaxable || 0,
-      net: this.formModel.net || 0,
-      pas: this.formModel.pas || 0,
-      rounding: this.formModel.rounding || 0,
-      bonus: this.formModel.bonus || 0,
-      donations: this.formModel.donations || 0,
-      comment: this.formModel.comment || '',
+      ...(form as SalaryEntry),
+      id: this.editingId ?? undefined,
     };
-    if (this.editingId) {
-      this.entries = this.entries.map((e) =>
-        e.id === this.editingId ? payload : e,
-      );
-    } else {
-      this.entries = [payload, ...this.entries];
-    }
+    this.saving = true;
+    this.formError = '';
+    this.salaryService.save(payload).subscribe({
+      next: (result) => {
+        const saved = { ...payload, id: result.id };
+        this.entries = this.editingId
+          ? this.entries.map((e) => (e.id === this.editingId ? saved : e))
+          : [...this.entries, saved];
+        this.refreshView();
+        this.saving = false;
+        this.visibleModal = false;
+      },
+      error: (error) => {
+        this.saving = false;
+        this.formError =
+          error?.error?.error ||
+          error?.error?.errors?.join(' ') ||
+          'Enregistrement impossible. Vos saisies sont conservées.';
+      },
+    });
+  }
+
+  deleteEntry(entry: SalaryEntry): void {
+    if (
+      this.saving ||
+      !entry.id ||
+      !confirm('Supprimer cette feuille de paie ?')
+    )
+      return;
+    this.saving = true;
+    this.errorMessage = '';
+    this.salaryService.delete(entry.id).subscribe({
+      next: () => {
+        this.entries = this.entries.filter((e) => e.id !== entry.id);
+        this.refreshView();
+        this.saving = false;
+      },
+      error: () => {
+        this.errorMessage = 'Suppression impossible. Réessayez.';
+        this.saving = false;
+      },
+    });
+  }
+
+  onFilterChange(): void {
     this.refreshView();
-    this.visibleModal = false;
-  }
-
-  deleteEntry(entry: SalaryEntry) {
-    this.entries = this.entries.filter((e) => e.id !== entry.id);
-    this.refreshView();
-  }
-
-  onFilterChange() {
-    this.refreshView();
-  }
-
-  tenureLabel(): string {
-    const start = this.tenureStart;
-    const end = this.tenureEnd || new Date();
-    const diffMs = end.getTime() - start.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const years = Math.floor(diffDays / 365);
-    const months = Math.floor((diffDays % 365) / 30);
-    return `${years} ans ${months} mois`;
-  }
-
-  private updateChartData(): void {
-    this.chartData = this.buildChartData(this.filteredRows);
   }
 
   private refreshView(): void {
-    const source =
-      this.historyFilterValue === 'ALL'
-        ? this.entries
-        : this.entries.filter((e) => e.ets === this.historyFilterValue);
-    this.filteredRows = [...source].sort(
-      (a, b) => b.month.getTime() - a.month.getTime(),
-    );
-    this.updateChartData();
-  }
-
-  private buildChartData(filtered: SalaryEntry[]) {
-    const yearly = filtered.reduce(
-      (acc, e) => {
-        const year = e.month.getFullYear();
-        acc[year] = (acc[year] || 0) + e.netTaxable + (e.bonus || 0);
-        return acc;
-      },
-      {} as Record<number, number>,
-    );
-
-    const years = Object.keys(yearly)
-      .map((y) => Number(y))
-      .sort((a, b) => a - b);
-
-    return {
-      labels: years.map((y) => y.toString()),
+    this.filteredRows = this.entries
+      .filter(
+        (e) =>
+          (this.historyFilterValue === 'ALL' ||
+            e.ets === this.historyFilterValue) &&
+          (!this.selectedYears.length ||
+            this.selectedYears.includes(e.month.getFullYear())),
+      )
+      .sort(
+        (a, b) =>
+          b.month.getTime() - a.month.getTime() || (b.id || 0) - (a.id || 0),
+      );
+    if (!this.detailYears.includes(this.detailYear!))
+      this.detailYear = this.detailYears[0] ?? null;
+    const series = monthlyNet(this.establishmentRows);
+    this.chartData = {
+      labels: series.map((p) =>
+        p.date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }),
+      ),
       datasets: [
         {
-          type: 'bar',
-          label: 'Brut annuel',
-          data: years.map((y) => yearly[y]),
-          backgroundColor: '#3B82F6',
-        },
-        {
-          type: 'line',
-          label: 'Tendance',
-          data: years.map((y) => yearly[y]),
-          borderColor: '#10B981',
-          backgroundColor: 'rgba(16, 185, 129, 0.2)',
-          tension: 0.25,
+          label: 'Revenu net mensuel (€)',
+          data: series.map((p) => p.net),
+          borderColor: '#2563eb',
+          backgroundColor: '#2563eb',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHitRadius: 12,
+          pointHoverRadius: 4,
+          tension: 0,
+          spanGaps: false,
         },
       ],
     };

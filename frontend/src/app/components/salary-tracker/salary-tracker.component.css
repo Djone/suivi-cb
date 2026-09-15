@@ -101,3 +101,83 @@
     flex-direction: column;
   }
 }
+
+.grid {
+  display: block;
+  min-width: 0;
+}
+.table-card {
+  display: block;
+  min-width: 0;
+}
+fieldset.form-grid {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.error-message {
+  color: #b91c1c;
+}
+.history-chart,
+.annual-card {
+  display: block;
+  margin-bottom: 1rem;
+  min-width: 0;
+}
+.annual-scroll {
+  overflow-x: auto;
+}
+.annual-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.annual-table th,
+.annual-table td {
+  padding: 0.7rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: right;
+  white-space: nowrap;
+}
+.annual-table thead th {
+  background: #2563eb;
+  color: white;
+}
+.annual-table tbody th {
+  text-align: left;
+}
+.annual-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+.annual-table small {
+  display: block;
+  color: #64748b;
+  font-weight: normal;
+}
+.salary-legend {
+  margin-top: 1rem;
+  color: #475569;
+}
+.year-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.year-navigation select {
+  font: inherit;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.5rem;
+  background: white;
+}
+@media (max-width: 640px) {
+  .salary-page {
+    padding: 0.75rem;
+  }
+  .field.full {
+    grid-column: auto;
+  }
+}

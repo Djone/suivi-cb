@@ -47,6 +47,7 @@ const startServer = async () => {
     app.use('/api/savings-wallets', savingsWalletRoutes);
     app.use('/api/saving-accounts', savingAccountRoutes);
     app.use('/api/vehicles', vehicleRoutes);
+    app.use('/api/salaries', require('./routes/salary.routes'));
 
     // 3. Démarrer le serveur Express
     app.listen(PORT_BACK, () => {
