@@ -72,6 +72,21 @@ export class SalaryTrackerComponent implements OnInit {
     labels: [],
     datasets: [],
   };
+  recentChartData: { labels: string[]; datasets: object[] } = {
+    labels: [],
+    datasets: [],
+  };
+  latestMonthlyNet: number | null = null;
+  recentChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: {
+      x: { display: false },
+      y: { display: false },
+    },
+  };
   chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -96,12 +111,7 @@ export class SalaryTrackerComponent implements OnInit {
     );
   }
   get annualRows() {
-    const years = this.selectedYears ?? [];
-    return annualSalaries(this.establishmentRows)
-      .filter(
-        (r) =>
-          !years.length || years.includes(r.year),
-      )
+    return annualSalaries(this.entries)
       .map((row) => {
         const fiscal = this.fiscalYears.find((f) => f.year === row.year);
         const previous = this.fiscalYears.find((f) => f.year === row.year - 1);
@@ -139,13 +149,13 @@ export class SalaryTrackerComponent implements OnInit {
   changeAnnualPage(delta: number) { this.annualPage = Math.min(Math.max(0, this.annualPage + delta), this.annualPageCount - 1); }
   get detailYears() {
     return [
-      ...new Set(this.filteredRows.map((e) => e.month.getFullYear())),
+      ...new Set(this.entries.map((e) => e.month.getFullYear())),
     ].sort((a, b) => b - a);
   }
   get detailRows() {
-    return this.filteredRows.filter(
+    return this.entries.filter(
       (e) => e.month.getFullYear() === this.detailYear,
-    );
+    ).sort((a, b) => b.month.getTime() - a.month.getTime() || (b.id || 0) - (a.id || 0));
   }
   changeYear(direction: number) {
     const index = this.detailYears.indexOf(this.detailYear!);
@@ -288,15 +298,15 @@ export class SalaryTrackerComponent implements OnInit {
         : null;
     return [
       {
-        label: 'Net moyen',
-        value: count ? rows.reduce((sum, e) => sum + e.net, 0) / count : null,
-        suffix: '€',
-      },
-      {
         label: 'Net imposable moyen',
         value: count
           ? rows.reduce((sum, e) => sum + e.netTaxable, 0) / count
           : null,
+        suffix: '€',
+      },
+      {
+        label: 'Net moyen',
+        value: count ? rows.reduce((sum, e) => sum + e.net, 0) / count : null,
         suffix: '€',
       },
       {
@@ -319,6 +329,12 @@ export class SalaryTrackerComponent implements OnInit {
     if (average < 2674) return 'Classe moyenne';
     if (average < 4010) return 'Barre haute de la classe moyenne';
     return 'Catégorie aisée';
+  }
+
+  get socialPositionPercent(): number {
+    const average = this.cards[1].value;
+    if (typeof average !== 'number') return 0;
+    return Math.max(0, Math.min(100, ((average - 1300) / (4500 - 1300)) * 100));
   }
 
   ngOnInit(): void {
@@ -477,6 +493,24 @@ export class SalaryTrackerComponent implements OnInit {
           pointHoverRadius: 4,
           tension: 0,
           spanGaps: false,
+        },
+      ],
+    };
+    const recent = series.slice(-12);
+    this.latestMonthlyNet = recent.at(-1)?.net ?? null;
+    this.recentChartData = {
+      labels: recent.map((p) =>
+        p.date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+      ),
+      datasets: [
+        {
+          data: recent.map((p) => p.net),
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, .12)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .25,
+          fill: true,
         },
       ],
     };

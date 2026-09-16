@@ -1,9 +1,13 @@
 :host {
   display: block;
+  min-width: 0;
 }
 
 .impots-page {
-  padding: 1.5rem;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: .5rem 0 2.5rem;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -43,7 +47,32 @@
 .grid {
   display: grid;
   gap: 1rem;
+  margin: 0;
 }
+
+.income-layout { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.stack, .panel { min-width: 0; }
+:host ::ng-deep .panel .p-card { border: 1px solid #dfe4ed; border-radius: 12px; box-shadow: none; background: #fff; overflow: hidden; }
+:host ::ng-deep .panel .p-card-header { padding: 1.15rem 1.25rem .8rem; color: #0f172a; font-weight: 600; }
+:host ::ng-deep .panel .p-card-body { padding: .5rem 1.25rem 1.25rem; }
+:host ::ng-deep .p-tabview-panels,
+:host ::ng-deep .p-tabpanels { background: transparent; padding: 1.5rem 0 0; }
+:host ::ng-deep .p-tabview-nav,
+:host ::ng-deep [role="tablist"] { background: transparent; border-color: #dfe4ed; }
+:host ::ng-deep .p-tabview-nav-link,
+:host ::ng-deep [role="tab"] { background: transparent; color: #2563eb; font-weight: 500; font-size: .85rem; }
+:host ::ng-deep .p-tabview-selected .p-tabview-nav-link { color: #2563eb; border-color: #2563eb; }
+:host ::ng-deep [role="tab"][aria-selected="true"] { border-color: #2563eb; }
+:host ::ng-deep .p-tablist-active-bar,
+:host ::ng-deep .p-tabview-ink-bar { background: #2563eb; }
+:host ::ng-deep .form-field .p-inputnumber, :host ::ng-deep .person-row .p-inputnumber { width: 100%; min-width: 0; }
+:host ::ng-deep .form-field input, :host ::ng-deep .person-row input { width: 100%; min-width: 0; }
+:host ::ng-deep .header-actions .p-button { color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: .8rem; }
+.eyebrow { color: #2563eb; }
+.subtitle { font-size: .9rem; color: #64748b; }
+:host ::ng-deep .p-datatable-thead > tr > th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: .68rem; font-weight: 500; }
+:host ::ng-deep .p-datatable-tbody > tr > td { padding: .8rem .55rem; font-size: .8rem; border-color: #edf0f5; }
+:host ::ng-deep .p-datatable-table-container { overflow-x: auto; }
 
 .grid-2 {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -62,14 +91,15 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
 .form-field label {
   display: block;
-  font-weight: 600;
-  color: #0f172a;
+  font-weight: 400;
+  font-size: .8rem;
+  color: #64748b;
   margin-bottom: 0.35rem;
 }
 
@@ -85,9 +115,10 @@
 }
 
 .pill-strong {
-  background: #ecfeff;
-  color: #0e7490;
-  border-color: #a5f3fc;
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+  width: 100%;
 }
 
 .people-section {
@@ -105,7 +136,7 @@
 
 .person-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 2rem minmax(0, 1fr) minmax(5rem, .27fr);
   gap: 0.5rem;
   align-items: center;
 }
@@ -146,7 +177,7 @@
 }
 
 .summary-list {
-  gap: 0.35rem;
+  gap: 0;
 }
 
 .summary-row {
@@ -154,7 +185,8 @@
   grid-template-columns: 1.2fr 1fr 1fr 0.6fr;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.35rem 0.25rem;
+  padding: .65rem 0;
+  font-size: .75rem;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -163,6 +195,12 @@
   color: #475569;
   border-bottom-width: 2px;
 }
+.summary-previous { color: #94a3b8; }
+.summary-value, .summary-previous { text-align: right; font-variant-numeric: tabular-nums; }
+.summary-row p-tag { justify-self: end; }
+.bullet-list { font-size: .8rem; line-height: 1.5; }
+.hint { background: #eff6ff; border-color: #bfdbfe; font-size: .75rem; }
+.quick-actions > button { flex: 1; font-size: .8rem; }
 
 .summary-label {
   font-weight: 600;
@@ -281,11 +319,14 @@
     align-items: flex-start;
   }
 
-  .grid-2-1 {
+  .grid-2-1, .income-layout {
     grid-template-columns: 1fr;
   }
 
-  .summary-row {
-    grid-template-columns: 1fr 1fr;
-  }
+}
+@media (max-width: 640px) {
+  .impots-page { padding: .25rem 0 1.5rem; }
+  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .person-row { grid-template-columns: 2rem minmax(0, 1fr); }
+  .person-row p-inputNumber:last-child { grid-column: 2; }
 }
