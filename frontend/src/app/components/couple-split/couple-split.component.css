@@ -1,5 +1,10 @@
+:host { display: block; min-width: 0; }
+
 .couple-split-page {
-  padding: 1.5rem;
+  width: min(1180px, 100%);
+  min-width: 0;
+  margin: 0 auto;
+  padding: .5rem 0 2.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -244,10 +249,48 @@
 
 @media (min-width: 1024px) {
   .grid {
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      "member-a summary"
-      "member-b summary";
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas: "member-a member-b summary";
     align-items: start;
   }
 }
+.couple-split-page { background: #f5f6f9; gap: 1.5rem; color: #0f172a; }
+.grid { margin: 0; gap: 0; border: 1px solid #dfe4ed; border-radius: 12px; background: white; overflow: hidden; grid-template-areas: 'member-a' 'member-b' 'summary'; grid-template-columns: minmax(0, 1fr); }
+.member-card { border: 0; }
+.member-card, .summary-card { min-width: 0; }
+:host ::ng-deep .grid .p-card { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+:host ::ng-deep .grid .p-card-body { padding: 1.5rem; }
+.grid .card-title { text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; color: #64748b; font-weight: 500; margin-bottom: 1rem; }
+.input-row label { font-size: .8rem; font-weight: 400; }
+:host ::ng-deep .input-row .p-inputnumber, :host ::ng-deep .input-row input { width: 100%; min-width: 0; }
+.summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.summary-item { background: transparent; padding: .5rem 0; }
+.summary-item > span { font-size: .8rem; color: #64748b; }
+.summary-item:nth-child(1) strong, .split-legend span:first-child { color: #10ad4a; }
+.summary-item:nth-child(2) strong, .split-legend span:last-child { color: #6860ff; }
+.summary-item.delta { padding: .6rem; background: #fff8ef; border: 1px solid #fed7aa; color: #c75b10; }
+.split-bar { display: flex; background: #6860ff; height: 8px; border-radius: 8px; overflow: hidden; }
+.split-bar span { background: #10ad4a; }
+.split-legend { display: flex; justify-content: space-between; font-size: .7rem; margin: .4rem 0 .8rem; }
+:host ::ng-deep .table-card > .p-card { background: transparent; box-shadow: none; border: 0; }
+:host ::ng-deep .table-card .p-card-body { padding: 0; }
+.table-header { flex-wrap: wrap; margin-bottom: 1rem; }
+.table-actions { margin-left: auto; }
+.hint { font-size: .85rem; line-height: 1.5; }
+:host ::ng-deep .table-actions button { font-size: .8rem; }
+:host ::ng-deep .table-actions button:not(.p-button-outlined) { background: #2563eb; border-color: #2563eb; }
+:host ::ng-deep .table-card .p-datatable { border: 1px solid #dfe4ed; border-radius: 12px; overflow: hidden; }
+:host ::ng-deep .table-card .p-datatable-thead > tr > th { background: #f8fafc; color: #64748b; font-size: .7rem; text-transform: uppercase; font-weight: 500; }
+:host ::ng-deep .table-card .p-datatable-tbody > tr > td { padding: .75rem; font-size: .8rem; border-color: #edf0f5; }
+:host ::ng-deep .table-card .p-datatable-tbody > tr > td:nth-child(6) { color: #10ad4a; }
+:host ::ng-deep .table-card .p-datatable-tbody > tr > td:nth-child(7) { color: #6860ff; }
+.charge-amount { display: block; text-align: right; white-space: nowrap; }
+.charge-label { font-weight: 500; }
+.account-pill { background: #eff6ff; color: #2563eb; font-size: .7rem; padding: .15rem .45rem; }
+.sub-label { font-size: .7rem; }
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: 'member-a member-b summary'; align-items: stretch; }
+  .member-card { border-right: 1px solid #e6eaf0; }
+}
+@media (max-width: 1023px) { .member-card { border-bottom: 1px solid #e6eaf0; } }
+@media (max-width: 640px) { .couple-split-page { padding: .25rem 0 1.5rem; } }

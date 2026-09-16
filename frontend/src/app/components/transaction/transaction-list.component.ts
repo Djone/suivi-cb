@@ -11,6 +11,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { DropdownModule } from 'primeng/dropdown';
@@ -83,6 +84,7 @@ type InternalTransferFilter = 'all' | 'only' | 'exclude';
     PaginatorModule,
     CalendarModule,
     InputTextModule,
+    InputNumberModule,
     InputGroupModule,
     InputGroupAddonModule,
     DropdownModule,
@@ -145,7 +147,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   filters = {
     dateRange: null as Date[] | null,
     description: '',
-    amount: '',
+    amountMin: null as number | null,
+    amountMax: null as number | null,
     categoryIds: [] as number[],
     subCategoryIds: [] as number[],
     advanceJoint: 'all' as AdvanceJointFilter,
@@ -444,11 +447,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
             .toLowerCase()
             .includes(this.filters.description.toLowerCase()));
 
-      const matchAmount =
-        !this.filters.amount ||
-        (transaction.amount !== null &&
-          transaction.amount !== undefined &&
-          transaction.amount.toString().includes(this.filters.amount));
+      const amount = Math.abs(Number(transaction.amount) || 0);
+      const matchAmountMin = this.filters.amountMin === null || amount >= this.filters.amountMin;
+      const matchAmountMax = this.filters.amountMax === null || amount <= this.filters.amountMax;
+      const matchAmount = matchAmountMin && matchAmountMax;
 
       const subCategory = this.getSubCategoryById(transaction.subCategoryId);
 
@@ -744,7 +746,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   get activeAdvancedFilterCount(): number {
     return [
       Boolean(this.filters.dateRange?.length),
-      Boolean(this.filters.amount),
+      this.filters.amountMin !== null || this.filters.amountMax !== null,
       this.filters.categoryIds.length > 0,
       this.filters.subCategoryIds.length > 0,
       this.filters.advanceJoint !== 'all',
@@ -817,6 +819,18 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   onDateRangeChange(dateRange: Date[] | null): void {
     this.filters.dateRange = dateRange;
+    this.applyFilter();
+  }
+
+  onStartDateChange(date: Date | null): void {
+    const end = this.filters.dateRange?.[1] || null;
+    this.filters.dateRange = date || end ? [date, end] as Date[] : null;
+    this.applyFilter();
+  }
+
+  onEndDateChange(date: Date | null): void {
+    const start = this.filters.dateRange?.[0] || null;
+    this.filters.dateRange = start || date ? [start, date] as Date[] : null;
     this.applyFilter();
   }
 

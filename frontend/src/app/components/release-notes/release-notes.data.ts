@@ -7,6 +7,33 @@ export interface ReleaseNotesSection {
 
 export const RELEASE_NOTES_HISTORY: ReleaseNotesSection[] = [
   {
+    version: '2.1.0',
+    items: [
+      {
+        title: 'Bug fix : frontend',
+        description: [
+          '[X] Transactions : revoir le design du formulaire de recherche de transactions',
+          '[X] Dialog date : revoir le design du dialog de sélection de date',
+          '[X] Salaires : revoir le design de la page de gestion des salaires',
+          '[X] Impots : revoir le design de la page de gestion des impots',
+        ],
+        status: 'done',
+        targetVersion: '2.1.0',
+        priority: 'medium',
+      },
+      {
+        title: 'Tableau de salaires : frontend',
+        description: [
+          '[X] Integrer la logique frontend',
+          '[X] Integrer la logique backend',
+        ],
+        status: 'done',
+        targetVersion: '2.1.0',
+        priority: 'medium',
+      },
+    ],
+  },
+  {
     version: '2.0.0',
     items: [
       {

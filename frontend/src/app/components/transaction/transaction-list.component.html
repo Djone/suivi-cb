@@ -513,37 +513,39 @@
 
       <div class="filters-advanced" *ngIf="showAdvancedFilters">
         <div class="filters-layout">
-          <div class="filters-primary">
-            <p-inputGroup class="date-filter">
-              <p-inputGroupAddon
-                ><i class="pi pi-calendar"></i
-              ></p-inputGroupAddon>
-              <p-calendar
-                [ngModel]="filters.dateRange"
-                (ngModelChange)="onDateRangeChange($event)"
-                selectionMode="range"
-                [readonlyInput]="true"
-                placeholder="Filtrer par date"
-                dateFormat="dd/mm/yy"
-                [showClear]="true"
-                styleClass="w-full"
-              ></p-calendar>
-            </p-inputGroup>
-
-            <p-inputGroup class="amount-filter">
-              <p-inputGroupAddon><i class="pi pi-euro"></i></p-inputGroupAddon>
-              <input
-                pInputText
-                type="number"
-                min="0"
-                step="0.01"
-                [(ngModel)]="filters.amount"
-                (input)="applyFilter()"
-                (keypress)="allowOnlyNumbers($event)"
-                placeholder="Filtrer par montant"
-                class="w-full"
-              />
-            </p-inputGroup>
+          <div class="filters-primary filters-primary--range">
+            <div class="filter-field">
+              <label>Date de début <span>(Facultatif)</span></label>
+              <p-calendar #startCalendar [ngModel]="filters.dateRange?.[0]" (ngModelChange)="onStartDateChange($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="false" [showClear]="false" appendTo="body" placeholder="JJ/MM/AAAA" styleClass="w-full">
+                <ng-template #footer>
+                  <div class="date-filter-actions">
+                    <button type="button" (click)="startCalendar.onClearButtonClick($event)">Réinitialiser</button>
+                    <button type="button" (click)="startCalendar.onTodayButtonClick($event)">Aujourd’hui</button>
+                    <button type="button" (click)="startCalendar.hideOverlay()">Valider</button>
+                  </div>
+                </ng-template>
+              </p-calendar>
+            </div>
+            <div class="filter-field">
+              <label>Date de fin <span>(Facultatif)</span></label>
+              <p-calendar #endCalendar [ngModel]="filters.dateRange?.[1]" (ngModelChange)="onEndDateChange($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="false" [showClear]="false" appendTo="body" placeholder="JJ/MM/AAAA" styleClass="w-full">
+                <ng-template #footer>
+                  <div class="date-filter-actions">
+                    <button type="button" (click)="endCalendar.onClearButtonClick($event)">Réinitialiser</button>
+                    <button type="button" (click)="endCalendar.onTodayButtonClick($event)">Aujourd’hui</button>
+                    <button type="button" (click)="endCalendar.hideOverlay()">Valider</button>
+                  </div>
+                </ng-template>
+              </p-calendar>
+            </div>
+            <div class="filter-field">
+              <label>Montant minimum <span>(Facultatif)</span></label>
+              <p-inputNumber [(ngModel)]="filters.amountMin" (ngModelChange)="applyFilter()" mode="currency" currency="EUR" locale="fr-FR" [min]="0" placeholder="0 €" styleClass="w-full"></p-inputNumber>
+            </div>
+            <div class="filter-field">
+              <label>Montant maximum <span>(Facultatif)</span></label>
+              <p-inputNumber [(ngModel)]="filters.amountMax" (ngModelChange)="applyFilter()" mode="currency" currency="EUR" locale="fr-FR" [min]="0" placeholder="0 €" styleClass="w-full"></p-inputNumber>
+            </div>
           </div>
 
           <div class="filters-secondary">

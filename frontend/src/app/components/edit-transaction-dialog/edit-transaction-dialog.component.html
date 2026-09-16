@@ -65,7 +65,7 @@
       (onSelect)="onDescriptionSelected($event)"
       field="label"
       [(ngModel)]="data.transaction.description"
-      (ngModelChange)="onFieldChange()"
+      (ngModelChange)="selectVehicleFromDescription()"
       placeholder="Entrez la description"
       [dropdown]="true"
       styleClass="w-full"

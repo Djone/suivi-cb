@@ -2,20 +2,11 @@
   <div class="page-header">
     <div>
       <h2>Qui paye quoi ?</h2>
-
-      <p class="hint">
-        Gérez la répartition 50/50, prorata revenus ou fixe. Les charges
-        récurrentes existantes sont incluses automatiquement : supprimez la
-        ligne si vous ne voulez pas la prendre en compte.
-      </p>
     </div>
   </div>
 
   <div class="grid">
-    <p-card
-      class="member-card member-card-a"
-      [style]="{ borderColor: members()[0].color }"
-    >
+    <p-card class="member-card member-card-a">
       <div class="card-title">Personne A</div>
       <div class="input-row">
         <label>Nom</label>
@@ -36,12 +27,19 @@
           [minFractionDigits]="2"
         ></p-inputNumber>
       </div>
+      <div class="input-row">
+        <label>Prorata</label>
+        <p-inputNumber
+          [ngModel]="customProrataA()"
+          (ngModelChange)="setCustomProrata('A', $event)"
+          [min]="0"
+          [max]="100"
+          suffix=" %"
+        ></p-inputNumber>
+      </div>
     </p-card>
 
-    <p-card
-      class="member-card member-card-b"
-      [style]="{ borderColor: members()[1].color }"
-    >
+    <p-card class="member-card member-card-b">
       <div class="card-title">Personne B</div>
       <div class="input-row">
         <label>Nom</label>
@@ -62,10 +60,27 @@
           [minFractionDigits]="2"
         ></p-inputNumber>
       </div>
+      <div class="input-row">
+        <label>Prorata</label>
+        <p-inputNumber
+          [ngModel]="100 - customProrataA()"
+          (ngModelChange)="setCustomProrata('B', $event)"
+          [min]="0"
+          [max]="100"
+          suffix=" %"
+        ></p-inputNumber>
+      </div>
     </p-card>
 
     <p-card class="summary-card">
       <div class="card-title">Synthèse</div>
+      <div class="split-bar" aria-hidden="true">
+        <span [style.width.%]="customProrataA()"></span>
+      </div>
+      <div class="split-legend">
+        <span>{{ members()[0].name }} · {{ customProrataA() }} %</span
+        ><span>{{ members()[1].name }} · {{ 100 - customProrataA() }} %</span>
+      </div>
       <div class="summary-grid">
         <div class="summary-item">
           <span>{{ members()[0].name }}</span>
@@ -119,61 +134,13 @@
           <small *ngIf="totals().delta === 0">Répartition équilibrée</small>
         </div>
       </div>
-      <div class="chart-wrapper">
-        <p-chart
-          type="doughnut"
-          [data]="chartData()"
-          [options]="chartOptions"
-        ></p-chart>
-      </div>
     </p-card>
   </div>
-
-  <p-card class="prorata-card standalone">
-    <div class="card-title">Paramétrage prorata</div>
-
-    <div class="prorata-custom">
-      <p-slider
-        [ngModel]="customProrataA()"
-        (ngModelChange)="setCustomProrata('A', $event)"
-        [min]="0"
-        [max]="100"
-        [step]="1"
-        styleClass="w-full"
-      ></p-slider>
-      <div class="prorata-inputs">
-        <div class="input-row">
-          <label>{{ members()[0].name }}</label>
-          <p-inputNumber
-            [ngModel]="customProrataA()"
-            (ngModelChange)="setCustomProrata('A', $event)"
-            [min]="0"
-            [max]="100"
-            suffix="%"
-          ></p-inputNumber>
-        </div>
-        <div class="input-row">
-          <label>{{ members()[1].name }}</label>
-          <p-inputNumber
-            [ngModel]="100 - customProrataA()"
-            (ngModelChange)="setCustomProrata('B', $event)"
-            [min]="0"
-            [max]="100"
-            suffix="%"
-          ></p-inputNumber>
-        </div>
-      </div>
-    </div>
-  </p-card>
 
   <p-card class="table-card">
     <div class="table-header">
       <div>
         <div class="card-title">Charges</div>
-        <p class="hint">
-          Import auto : charges récurrentes courantes ou jointes (incluses par
-          défaut).
-        </p>
       </div>
       <div class="table-actions">
         <p-dropdown
@@ -223,7 +190,11 @@
       <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
         <tr>
           <td>
+            <span *ngIf="row.source === 'recurring'" class="charge-label">{{
+              row.label
+            }}</span>
             <input
+              *ngIf="row.source !== 'recurring'"
               pInputText
               [(ngModel)]="row.label"
               [readonly]="row.source === 'recurring'"
@@ -242,7 +213,11 @@
             >
           </td>
           <td>
+            <span *ngIf="row.source === 'recurring'" class="charge-amount">{{
+              row.amount | currency: "EUR" : "symbol" : "1.2-2" : "fr"
+            }}</span>
             <p-inputNumber
+              *ngIf="row.source !== 'recurring'"
               [(ngModel)]="row.amount"
               [disabled]="row.source === 'recurring'"
               (ngModelChange)="onLineChange()"

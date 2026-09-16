@@ -63,9 +63,29 @@ export class SalaryTrackerComponent implements OnInit {
   fiscalVisible = false;
   fiscalSaving = false;
   fiscalError = '';
+  annualSearch = '';
+  annualSortKey: 'year' | 'evolution' | 'rna' | 'mrnm' | 'rnia' | 'gross' | 'rfr' | 'ir' | 'irEvolution' = 'year';
+  annualSortDesc = true;
+  annualPage = 0;
+  readonly annualPageSize = 10;
   chartData: { labels: string[]; datasets: object[] } = {
     labels: [],
     datasets: [],
+  };
+  recentChartData: { labels: string[]; datasets: object[] } = {
+    labels: [],
+    datasets: [],
+  };
+  latestMonthlyNet: number | null = null;
+  recentChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: {
+      x: { display: false },
+      y: { display: false },
+    },
   };
   chartOptions = {
     responsive: true,
@@ -91,11 +111,7 @@ export class SalaryTrackerComponent implements OnInit {
     );
   }
   get annualRows() {
-    return annualSalaries(this.establishmentRows)
-      .filter(
-        (r) =>
-          !this.selectedYears.length || this.selectedYears.includes(r.year),
-      )
+    return annualSalaries(this.entries)
       .map((row) => {
         const fiscal = this.fiscalYears.find((f) => f.year === row.year);
         const previous = this.fiscalYears.find((f) => f.year === row.year - 1);
@@ -111,15 +127,35 @@ export class SalaryTrackerComponent implements OnInit {
         };
       });
   }
+  get annualFilteredRows() {
+    const query = this.annualSearch.trim().toLowerCase();
+    const rows = this.annualRows.filter(row => !query || Object.values(row).some(value => value != null && String(value).toLowerCase().includes(query)));
+    return [...rows].sort((a, b) => {
+      const av = a[this.annualSortKey] ?? -Infinity;
+      const bv = b[this.annualSortKey] ?? -Infinity;
+      return (av < bv ? -1 : av > bv ? 1 : 0) * (this.annualSortDesc ? -1 : 1);
+    });
+  }
+  get annualPageCount() { return Math.max(1, Math.ceil(this.annualFilteredRows.length / this.annualPageSize)); }
+  get annualPageRows() { const start = this.annualPage * this.annualPageSize; return this.annualFilteredRows.slice(start, start + this.annualPageSize); }
+  setAnnualSort(key: string) {
+    if (!['year', 'evolution', 'rna', 'mrnm', 'rnia', 'gross', 'rfr', 'ir', 'irEvolution'].includes(key)) return;
+    const sortKey = key as typeof this.annualSortKey;
+    this.annualSortDesc = this.annualSortKey === sortKey ? !this.annualSortDesc : sortKey === 'year';
+    this.annualSortKey = sortKey;
+    this.annualPage = 0;
+  }
+  onAnnualSearch(value: string) { this.annualSearch = value; this.annualPage = 0; }
+  changeAnnualPage(delta: number) { this.annualPage = Math.min(Math.max(0, this.annualPage + delta), this.annualPageCount - 1); }
   get detailYears() {
     return [
-      ...new Set(this.filteredRows.map((e) => e.month.getFullYear())),
+      ...new Set(this.entries.map((e) => e.month.getFullYear())),
     ].sort((a, b) => b - a);
   }
   get detailRows() {
-    return this.filteredRows.filter(
+    return this.entries.filter(
       (e) => e.month.getFullYear() === this.detailYear,
-    );
+    ).sort((a, b) => b.month.getTime() - a.month.getTime() || (b.id || 0) - (a.id || 0));
   }
   changeYear(direction: number) {
     const index = this.detailYears.indexOf(this.detailYear!);
@@ -253,19 +289,14 @@ export class SalaryTrackerComponent implements OnInit {
       const month = row.month.getFullYear() * 12 + row.month.getMonth();
       monthly.set(month, (monthly.get(month) || 0) + row.net);
     });
-    const months = [...monthly.keys()].sort((a, b) => b - a);
-    const last = monthly.get(months[0]);
-    const previous = monthly.get(months[1]);
+    const months = [...monthly.keys()].sort((a, b) => a - b);
+    const last = monthly.get(months.at(-1)!);
+    const previous = monthly.get(months[0]);
     const evolution =
       last !== undefined && previous !== undefined && previous > 0
         ? ((last - previous) / previous) * 100
         : null;
     return [
-      {
-        label: 'Net moyen',
-        value: count ? rows.reduce((sum, e) => sum + e.net, 0) / count : null,
-        suffix: '€',
-      },
       {
         label: 'Net imposable moyen',
         value: count
@@ -273,8 +304,37 @@ export class SalaryTrackerComponent implements OnInit {
           : null,
         suffix: '€',
       },
+      {
+        label: 'Net moyen',
+        value: count ? rows.reduce((sum, e) => sum + e.net, 0) / count : null,
+        suffix: '€',
+      },
+      {
+        label: 'Brut moyen',
+        value: count ? rows.reduce((sum, e) => sum + e.gross, 0) / count : null,
+        suffix: '€',
+      },
       { label: 'Évolution du net', value: evolution, suffix: '%' },
     ];
+  }
+
+  get socialPosition(): string {
+    const values = this.filteredRows.map((row) => row.net).filter(Number.isFinite);
+    if (!values.length) return 'Non classé';
+    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+    // Repères indicatifs pour une personne seule : ils comparent un salaire net
+    // au niveau de vie INSEE et ne constituent pas une catégorie officielle.
+    if (average < 1337) return 'Sous le seuil de pauvreté';
+    if (average < 1782) return 'Classe populaire';
+    if (average < 2674) return 'Classe moyenne';
+    if (average < 4010) return 'Barre haute de la classe moyenne';
+    return 'Catégorie aisée';
+  }
+
+  get socialPositionPercent(): number {
+    const average = this.cards[1].value;
+    if (typeof average !== 'number') return 0;
+    return Math.max(0, Math.min(100, ((average - 1300) / (4500 - 1300)) * 100));
   }
 
   ngOnInit(): void {
@@ -400,13 +460,14 @@ export class SalaryTrackerComponent implements OnInit {
   }
 
   private refreshView(): void {
+    const years = this.selectedYears ?? [];
+    this.selectedYears = years;
     this.filteredRows = this.entries
       .filter(
         (e) =>
           (this.historyFilterValue === 'ALL' ||
             e.ets === this.historyFilterValue) &&
-          (!this.selectedYears.length ||
-            this.selectedYears.includes(e.month.getFullYear())),
+          (!years.length || years.includes(e.month.getFullYear())),
       )
       .sort(
         (a, b) =>
@@ -414,6 +475,7 @@ export class SalaryTrackerComponent implements OnInit {
       );
     if (!this.detailYears.includes(this.detailYear!))
       this.detailYear = this.detailYears[0] ?? null;
+    this.annualPage = Math.min(this.annualPage, this.annualPageCount - 1);
     const series = monthlyNet(this.establishmentRows);
     this.chartData = {
       labels: series.map((p) =>
@@ -431,6 +493,24 @@ export class SalaryTrackerComponent implements OnInit {
           pointHoverRadius: 4,
           tension: 0,
           spanGaps: false,
+        },
+      ],
+    };
+    const recent = series.slice(-12);
+    this.latestMonthlyNet = recent.at(-1)?.net ?? null;
+    this.recentChartData = {
+      labels: recent.map((p) =>
+        p.date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+      ),
+      datasets: [
+        {
+          data: recent.map((p) => p.net),
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, .12)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .25,
+          fill: true,
         },
       ],
     };

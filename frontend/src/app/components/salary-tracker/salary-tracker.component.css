@@ -1,8 +1,15 @@
+:host { display: block; min-width: 0; }
+
 .salary-page {
+  width: min(1180px, 100%);
+  min-width: 0;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.5rem;
+  padding: .5rem 0 2.5rem;
+  background: #f6f7fb;
+  color: #172033;
 }
 
 .header {
@@ -11,6 +18,8 @@
   align-items: flex-start;
   gap: 1rem;
 }
+.header h2 { margin: .2rem 0 .35rem; font-size: 1.75rem; letter-spacing: -.03em; }
+.header .muted { margin: 0; font-size: 1rem; }
 
 .header-actions {
   display: flex;
@@ -23,7 +32,8 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 700;
-  color: #475569;
+  color: #6b7688;
+  font-size: .76rem;
   margin: 0;
 }
 
@@ -31,15 +41,30 @@
   color: #64748b;
 }
 
-.cards {
+.salary-overview {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: minmax(260px, .95fr) minmax(420px, 1.9fr);
+  gap: 1rem;
 }
-
-.kpi-card {
-  background: linear-gradient(120deg, #e0f2fe, #eff6ff);
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 1rem;
 }
+:host ::ng-deep .kpi-card .p-card-body,
+:host ::ng-deep .social-card .p-card-body,
+:host ::ng-deep .history-chart .p-card-body,
+:host ::ng-deep .annual-card .p-card-body,
+:host ::ng-deep .table-card .p-card-body { padding: 1.35rem 1.5rem; }
+:host ::ng-deep .kpi-card .p-card {
+  background: #eef6ff;
+  border: 1px solid #bcd9ff;
+  border-radius: 14px;
+  box-shadow: none;
+  height: 100%;
+}
+:host ::ng-deep .seniority-card .p-card { background: #fff; border-color: #e2e7ef; }
+:host ::ng-deep .kpi-card--positive .p-card { background: #effdf4; border-color: #b5f0c8; }
 
 .kpi-label {
   margin: 0 0 0.35rem;
@@ -48,10 +73,35 @@
 }
 
 .kpi-value {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: #0f172a;
 }
+:host ::ng-deep .social-card .p-card { background: #eef6ff; border: 1px solid #b8d8ff; border-radius: 14px; box-shadow: none; }
+:host ::ng-deep .social-card .p-card-content {
+  display: grid;
+  grid-template-columns: 250px minmax(360px, 1fr) 230px;
+  gap: 1.75rem;
+  align-items: stretch;
+}
+.social-copy { border-right: 1px solid #b8d8ff; padding-right: 2rem; }
+.social-copy p { color: #52637c; font-size: .9rem; line-height: 1.55; }
+.social-copy a { color: #2563eb; font-size: .8rem; font-weight: 700; text-decoration: none; }
+.social-value { margin: .45rem 0; font-size: 1.45rem; font-weight: 700; }
+.social-scale .eyebrow { color: #2563eb; }
+.scale-labels, .scale-values { display: flex; justify-content: space-between; gap: .5rem; font-size: .78rem; color: #65738a; }
+.scale-labels { margin: 1rem 0 .75rem; }
+.scale-track { position: relative; height: 16px; border-radius: 999px; background: linear-gradient(90deg, #bfdbfe 0 20%, #93c5fd 20% 48%, #60a5fa 48% 72%, #3b82f6 72% 87%, #2563eb 87%); }
+.scale-marker { position: absolute; top: 50%; width: 14px; height: 14px; transform: translate(-50%, -50%); border: 3px solid #2563eb; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(37,99,235,.35); }
+.scale-values { position: relative; margin-top: .7rem; align-items: center; padding-top: 1.25rem; }
+.scale-values strong { position: absolute; top: 0; transform: translateX(-50%); color: #2563eb; white-space: nowrap; }
+.social-scale { align-self: center; }
+.recent-net { border-left: 1px solid #b8d8ff; padding-left: 1.75rem; min-width: 0; }
+.recent-net .eyebrow { color: #2563eb; }
+.recent-net > strong { display: block; margin-top: .55rem; color: #172033; font-size: 1.4rem; }
+.recent-net > span { display: block; margin-top: .2rem; color: #64748b; font-size: .78rem; }
+.recent-net p-chart { display: block; margin-top: .35rem; }
+.recent-range { display: flex; justify-content: space-between; color: #64748b; font-size: .7rem; }
 
 .grid {
   display: grid;
@@ -125,6 +175,11 @@ fieldset.form-grid {
   margin-bottom: 1rem;
   min-width: 0;
 }
+:host ::ng-deep .history-chart .p-card,
+:host ::ng-deep .annual-card .p-card,
+:host ::ng-deep .table-card .p-card { background: #fff; border: 1px solid #e1e6ee; border-radius: 14px; box-shadow: none; }
+.history-chart h3, .annual-card h3 { margin: .25rem 0 .35rem; font-size: 1.15rem; }
+.history-chart .muted, .annual-card > .muted { font-size: .86rem; margin: 0 0 .8rem; }
 .annual-scroll {
   overflow-x: auto;
 }
@@ -140,10 +195,17 @@ fieldset.form-grid {
   text-align: right;
   white-space: nowrap;
 }
+.annual-table thead th:first-child,
+.annual-table tbody th { width: 6rem; min-width: 6rem; }
+.sortable-header button { border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; padding: 0; }
+.annual-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: .75rem; }
+.annual-controls input { min-width: 18rem; }
 .annual-table thead th {
   background: #2563eb;
   color: white;
 }
+.annual-table thead th:first-child { border-radius: 10px 0 0 0; }
+.annual-table thead th:last-child { border-radius: 0 10px 0 0; }
 .annual-table tbody th {
   text-align: left;
 }
@@ -166,18 +228,34 @@ fieldset.form-grid {
   gap: 0.75rem;
   margin: 1rem 0;
 }
-.year-navigation select {
-  font: inherit;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 0.5rem;
-  background: white;
-}
+.section-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.section-toolbar .annual-controls, .section-toolbar .year-navigation { margin: 0 0 0 auto; gap: .5rem; }
+.section-toolbar .card-title { margin: .25rem 0 0; font-size: 1.15rem; }
+.section-toolbar .annual-controls input { min-width: 0; width: 17rem; max-width: 100%; }
+.section-toolbar button { background: white; border: 1px solid #e1e6ee; border-radius: 9px; color: #64748b; font-size: .8rem; padding: .55rem .7rem; }
+.section-toolbar button:disabled { opacity: .45; }
+.salary-legend summary { cursor: pointer; }
+.annual-card { margin-bottom: 2rem; }
+:host ::ng-deep .annual-card .p-card, :host ::ng-deep .table-card .p-card { background: #fff; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgb(15 23 42 / 4%); }
+:host ::ng-deep .annual-card .p-card-body, :host ::ng-deep .table-card .p-card-body { padding: 1.5rem; }
+.annual-table { background: #fff; }
+:host ::ng-deep .table-card .p-datatable { border: 1px solid #e1e6ee; border-radius: 14px; overflow: hidden; }
+:host ::ng-deep .table-card .p-datatable-thead > tr > th { background: #f8fafc; color: #6b7688; font-size: .78rem; text-transform: uppercase; }
+:host ::ng-deep .table-card .p-datatable-tbody > tr > td { border-color: #edf0f5; padding: 1rem; }
 @media (max-width: 640px) {
   .salary-page {
-    padding: 0.75rem;
+    padding: .25rem 0 1.5rem;
   }
   .field.full {
     grid-column: auto;
   }
+}
+@media (max-width: 900px) {
+  .salary-overview, :host ::ng-deep .social-card .p-card-content { grid-template-columns: 1fr; }
+  .social-copy { border-right: 0; border-bottom: 1px solid #b8d8ff; padding: 0 0 1rem; }
+  .recent-net { border-left: 0; border-top: 1px solid #b8d8ff; padding: 1rem 0 0; }
+}
+@media (max-width: 560px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .header-actions { width: 100%; }
 }

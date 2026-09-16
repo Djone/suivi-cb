@@ -31,7 +31,8 @@
       <button
         pButton
         type="button"
-        label="Ajouter une feuille"
+        label="Nouvelle feuille de paie"
+        class="p-button-primary"
         [disabled]="loading || saving"
         icon="pi pi-plus"
         (click)="openModal()"
@@ -49,20 +50,16 @@
       [disabled]="loading || saving"
     ></button>
   </p>
-  <p class="muted">
-    Moyennes par feuille sur les années et établissements sélectionnés.
-    Évolution du revenu net total entre les deux derniers mois renseignés de la
-    sélection.
-  </p>
-  <div class="cards">
-    <p-card class="kpi-card">
+  <section class="salary-overview" aria-label="Indicateurs de salaire">
+    <p-card class="kpi-card seniority-card">
       <p class="kpi-label">Ancienneté depuis la première paie</p>
       <div class="kpi-value">{{ seniority }}</div>
       <p class="muted" *ngIf="firstPayslip">
         Depuis {{ firstPayslip | date: "MMMM yyyy" }} · au mois courant
       </p>
     </p-card>
-    <p-card *ngFor="let card of cards" class="kpi-card">
+    <div class="kpi-grid">
+      <p-card *ngFor="let card of cards" class="kpi-card" [class.kpi-card--positive]="card.label === 'Évolution du net' || card.label === 'Net moyen'">
       <p class="kpi-label">{{ card.label }}</p>
       <div class="kpi-value">
         <span *ngIf="card.value === null">—</span>
@@ -74,11 +71,35 @@
         }}</span>
         <span *ngIf="!card.suffix">{{ card.value }}</span>
       </div>
-    </p-card>
-  </div>
+      </p-card>
+    </div>
+  </section>
+
+  <p-card class="social-card">
+    <div class="social-copy">
+      <p class="eyebrow">Position indicative</p>
+      <div class="social-value">{{ socialPosition }}</div>
+      <p>Net moyen comparé aux seuils de niveau de vie INSEE 2024 pour une personne seule.</p>
+      <a href="https://www.insee.fr/fr/statistiques/2489735#tableau-figure1_radio1" target="_blank" rel="noopener noreferrer">Voir la source INSEE <i class="pi pi-arrow-right"></i></a>
+    </div>
+    <div class="social-scale" aria-label="Répartition indicative des revenus nets">
+      <p class="eyebrow">Répartition des revenus nets</p>
+      <div class="scale-labels"><span>Modeste</span><span>Classe moy.</span><span>Aisée</span><span>Élevée</span></div>
+      <div class="scale-track"><span class="scale-marker" [style.left.%]="socialPositionPercent"></span></div>
+      <div class="scale-values"><span>1 300 €</span><strong [style.left.%]="socialPositionPercent">{{ cards[1].value | currency: 'EUR' : 'symbol' : '1.0-0' : 'fr' }} · vous</strong><span>4 500 €+</span></div>
+    </div>
+    <div class="recent-net">
+      <p class="eyebrow">Net · 12 derniers mois</p>
+      <strong>{{ latestMonthlyNet === null ? '—' : (latestMonthlyNet | currency: 'EUR' : 'symbol' : '1.2-2' : 'fr') }}</strong>
+      <span>Dernier mois enregistré</span>
+      <p-chart *ngIf="recentChartData.labels.length" type="line" [data]="recentChartData" [options]="recentChartOptions" height="82px" ariaLabel="Revenu net des douze derniers mois"></p-chart>
+      <div class="recent-range" *ngIf="recentChartData.labels.length"><span>{{ recentChartData.labels[0] }}</span><span>{{ recentChartData.labels[recentChartData.labels.length - 1] }}</span></div>
+    </div>
+  </p-card>
 
   <div class="grid">
     <p-card class="history-chart">
+      <p class="eyebrow">Tout l’historique</p>
       <h3>Évolution du revenu net depuis le début</h3>
       <p class="muted">
         Total net de chaque mois, tous les mois de l’historique de
@@ -98,18 +119,18 @@
       >
     </p-card>
     <p-card class="annual-card">
+      <div class="section-toolbar">
+      <div>
+      <p class="eyebrow">Données agrégées par exercice</p>
       <h3>Calculs annuels</h3>
-      <p class="muted">
-        RNA et RNIA : sommes des feuilles. MRNM : RNA ÷ nombre de mois
-        renseignés. L’évolution du net compare les MRNM de deux années complètes
-        consécutives.
-      </p>
-      <p class="muted">
-        RFR (N−1) et IR de l’année précédente : valeurs de référence globales,
-        indépendantes du filtre ETS. Un tiret signifie « non renseigné ».
-        L’évolution IR utilise la valeur absolue de l’IR précédent pour traiter
-        les remboursements négatifs.
-      </p>
+      </div>
+      <div class="annual-controls" role="search">
+        <input pInputText type="search" placeholder="Rechercher une année ou une valeur" aria-label="Rechercher dans les calculs annuels" [ngModel]="annualSearch" (ngModelChange)="onAnnualSearch($event)" />
+        <button pButton type="button" class="p-button-text" label="Précédente" icon="pi pi-chevron-left" [disabled]="annualPage === 0" (click)="changeAnnualPage(-1)"></button>
+        <span>Page {{ annualPage + 1 }} / {{ annualPageCount }}</span>
+        <button pButton type="button" class="p-button-text" label="Suivante" icon="pi pi-chevron-right" [disabled]="annualPage >= annualPageCount - 1" (click)="changeAnnualPage(1)"></button>
+      </div>
+      </div>
       <p *ngIf="fiscalError" class="error-message" role="alert">
         {{ fiscalError }}
       </p>
@@ -117,20 +138,12 @@
         <table class="annual-table">
           <thead>
             <tr>
-              <th>Année</th>
-              <th>Évol. net</th>
-              <th>RNA</th>
-              <th>MRNM</th>
-              <th>RNIA</th>
-              <th>Brut annuel</th>
-              <th>RFR (N−1)</th>
-              <th>IR</th>
-              <th>Évol. IR</th>
+              <th *ngFor="let column of [{key:'year',label:'Année'},{key:'evolution',label:'Évol. net'},{key:'rna',label:'RNA'},{key:'mrnm',label:'MRNM'},{key:'rnia',label:'RNIA'},{key:'gross',label:'BA'},{key:'rfr',label:'RFR (N−1)'},{key:'ir',label:'IR'},{key:'irEvolution',label:'Évol. IR'}]" class="sortable-header"><button type="button" (click)="setAnnualSort(column.key)" [attr.aria-label]="'Trier par ' + column.label">{{ column.label }} <span aria-hidden="true">{{ annualSortKey === column.key ? (annualSortDesc ? '↓' : '↑') : '↕' }}</span></button></th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of annualRows">
+            <tr *ngFor="let row of annualPageRows">
               <th scope="row">
                 {{ row.year
                 }}<small
@@ -189,7 +202,7 @@
                 ></button>
               </td>
             </tr>
-            <tr *ngIf="!annualRows.length">
+            <tr *ngIf="!annualFilteredRows.length">
               <td colspan="10">Aucune donnée pour cette sélection.</td>
             </tr>
           </tbody>
@@ -207,7 +220,11 @@
       </details>
     </p-card>
     <p-card class="table-card">
+      <div class="section-toolbar">
+      <div>
+      <p class="eyebrow">Feuille par feuille</p>
       <div class="card-title">Détail des feuilles de paie</div>
+      </div>
       <nav
         class="year-navigation"
         aria-label="Pagination par année"
@@ -222,12 +239,12 @@
           "
           (click)="changeYear(1)"
         ></button>
-        <label for="detail-year">Année</label>
-        <select id="detail-year" [(ngModel)]="detailYear">
-          <option *ngFor="let year of detailYears" [ngValue]="year">
-            {{ year }}
-          </option>
-        </select>
+        <p-dropdown
+          [options]="detailYears"
+          [(ngModel)]="detailYear"
+          ariaLabel="Choisir l’année des feuilles de paie"
+          appendTo="body"
+        ></p-dropdown>
         <span>{{ detailRows.length }} feuille(s)</span>
         <button
           pButton
@@ -237,6 +254,7 @@
           (click)="changeYear(-1)"
         ></button>
       </nav>
+      </div>
       <p-table
         [value]="detailRows"
         [loading]="loading"
