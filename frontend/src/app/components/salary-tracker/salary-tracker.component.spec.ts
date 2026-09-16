@@ -51,8 +51,8 @@ describe('SalaryTrackerComponent', () => {
     component.historyFilterValue = 'CST';
     component.onFilterChange();
     expect(component.filteredRows.length).toBe(2);
-    expect(component.cards[0].value).toBe(1100);
-    expect(component.cards[1].value).toBe(1200);
+    expect(component.cards[0].value).toBe(1200);
+    expect(component.cards[1].value).toBe(1100);
     expect(component.cards[3].value).toBe(20);
     component.selectedYears = [2025, 2026];
     component.onFilterChange();
@@ -61,7 +61,7 @@ describe('SalaryTrackerComponent', () => {
   it('compares monthly net totals independently of gross, taxable income and bonus', () => {
     expect(component.cards[3].value).toBe(50);
   });
-  it('paginates by year without limiting the full-history chart', () => {
+  it('paginates independently from filters without limiting the full-history chart', () => {
     expect(component.detailYear).toBe(2026);
     expect(component.detailRows.length).toBe(3);
     component.changeYear(1);
@@ -69,7 +69,7 @@ describe('SalaryTrackerComponent', () => {
     expect(component.detailRows.length).toBe(1);
     component.selectedYears = [2026];
     component.onFilterChange();
-    expect(component.detailYear).toBe(2026);
+    expect(component.detailYear).toBe(2025);
     expect(component.chartData.labels.length).toBe(3);
   });
   it('keeps seniority based on all history regardless of filters', () => {
