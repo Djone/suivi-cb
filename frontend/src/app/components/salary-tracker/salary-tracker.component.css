@@ -53,6 +53,8 @@
   color: #0f172a;
 }
 .social-value { font-size: 1.15rem; }
+.social-reference { line-height: 1.35; }
+.social-reference a { color: var(--primary-color, #2563eb); }
 
 .grid {
   display: grid;
