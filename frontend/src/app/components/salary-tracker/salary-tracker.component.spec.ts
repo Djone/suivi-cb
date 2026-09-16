@@ -53,13 +53,13 @@ describe('SalaryTrackerComponent', () => {
     expect(component.filteredRows.length).toBe(2);
     expect(component.cards[0].value).toBe(1100);
     expect(component.cards[1].value).toBe(1200);
-    expect(component.cards[2].value).toBe(20);
+    expect(component.cards[3].value).toBe(20);
     component.selectedYears = [2025, 2026];
     component.onFilterChange();
     expect(component.filteredRows.length).toBe(3);
   });
   it('compares monthly net totals independently of gross, taxable income and bonus', () => {
-    expect(component.cards[2].value).toBe(50);
+    expect(component.cards[3].value).toBe(50);
   });
   it('paginates by year without limiting the full-history chart', () => {
     expect(component.detailYear).toBe(2026);
@@ -83,7 +83,7 @@ describe('SalaryTrackerComponent', () => {
   it('does not invent an evolution when there is no comparison or zero previous net', () => {
     component.entries = [entry(1, 2026, 1, 0), entry(2, 2026, 2, 1000)];
     component.onFilterChange();
-    expect(component.cards[2].value).toBeNull();
+    expect(component.cards[3].value).toBeNull();
     component.selectedYears = [2024];
     component.onFilterChange();
     expect(component.cards[0].value).toBeNull();

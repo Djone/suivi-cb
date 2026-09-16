@@ -18,6 +18,7 @@ export interface ReleaseRunRequest {
   withNasDeploy?: boolean;
   report?: string;
   createReleaseBranch?: boolean;
+  createNextBranch?: boolean;
   releaseBranch?: string;
   branchPrefix?: string;
   commit?: boolean;

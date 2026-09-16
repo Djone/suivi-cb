@@ -80,6 +80,7 @@ function buildArgs(payload) {
     ['execute', 'execute'],
     ['withNasDeploy', 'with-nas-deploy'],
     ['createReleaseBranch', 'create-release-branch'],
+    ['createNextBranch', 'create-next-branch'],
     ['commit', 'commit'],
     ['tag', 'tag'],
     ['rollbackOnFailure', 'rollback-on-failure'],

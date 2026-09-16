@@ -59,6 +59,7 @@ function parseArgs(argv) {
     execute: false,
 
     createReleaseBranch: false,
+    createNextBranch: false,
     releaseBranch: '',
     branchPrefix: 'release/',
     commit: false,
@@ -107,6 +108,10 @@ function parseArgs(argv) {
         break;
       case 'create-release-branch':
         options.createReleaseBranch = true;
+        break;
+      case 'create-next-branch':
+      case 'auto-create-next-branch':
+        options.createNextBranch = true;
         break;
       case 'release-branch':
         options.releaseBranch = v;
@@ -683,6 +688,37 @@ function gitTagAndPushRelease(report, options, mergeResult) {
   });
 }
 
+function createAndPushNextBranch(report, options, mergeResult, runGit = runCommand) {
+  if (!options.createNextBranch || !mergeResult?.merged) {
+    skipStep(report, 'git-create-next-branch', options.createNextBranch ? 'merge not performed' : 'disabled');
+    return;
+  }
+  const packageJson = JSON.parse(fs.readFileSync(ROOT_PACKAGE_FILE, 'utf8'));
+  const nextVersion = String(packageJson.version || '').match(/^(\d+\.\d+\.\d+)(?:-dev(?:\.\d+)?)?$/);
+  if (!nextVersion) {
+    failStep(report, 'git-create-next-branch', Date.now(), 'Unable to derive next development version from package.json.');
+    throw new Error('Unable to derive next development version.');
+  }
+  const branchName = nextVersion[1];
+  const existing = runGit(`git ls-remote --heads origin ${branchName}`);
+  if (existing.ok && existing.stdout.trim()) {
+    skipStep(report, 'git-create-next-branch', `${branchName} already exists on origin`);
+    return;
+  }
+  const start = Date.now();
+  const checkout = runGit(`git checkout -b ${branchName} master`);
+  if (!checkout.ok) {
+    failStep(report, 'git-create-next-branch', start, checkout.stderr || checkout.stdout || 'branch creation failed');
+    throw new Error(`Unable to create next branch ${branchName}.`);
+  }
+  const push = runGit(`git push -u origin ${branchName}`);
+  if (!push.ok) {
+    failStep(report, 'git-create-next-branch', start, push.stderr || push.stdout || 'branch push failed');
+    throw new Error(`Unable to publish next branch ${branchName}.`);
+  }
+  passStep(report, 'git-create-next-branch', start, { branchName, sourceBranch: 'master' });
+}
+
 function finalizeForDeployment(report, options) {
   // Deployment pipeline is now validation + Git integration only.
   skipStep(
@@ -744,6 +780,7 @@ function run() {
         const mergeResult = gitMergeToMaster(report);
         if (mergeResult && mergeResult.merged) {
           gitTagAndPushRelease(report, options, mergeResult);
+          createAndPushNextBranch(report, options, mergeResult);
         } else {
           skipStep(report, 'git-tag-release', 'merge not performed');
           skipStep(report, 'git-push-tag', 'merge not performed');
@@ -766,6 +803,7 @@ function run() {
         const mergeResult = gitMergeToMaster(report);
         if (mergeResult && mergeResult.merged) {
           gitTagAndPushRelease(report, options, mergeResult);
+          createAndPushNextBranch(report, options, mergeResult);
         } else {
           skipStep(report, 'git-tag-release', 'merge not performed');
           skipStep(report, 'git-push-tag', 'merge not performed');
@@ -826,4 +864,5 @@ if (require.main === module) {
 module.exports = {
   gitMergeToMaster,
   resolveStableVersionForTag,
+  createAndPushNextBranch,
 };

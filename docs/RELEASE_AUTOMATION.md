@@ -21,8 +21,11 @@ This project provides a release orchestration CLI with validation before product
 - `npm run release:deploy -- --branch=master`
 
   - Runs preflight + tests.
-  - With `--execute`, merges the current release branch into `master`, pushes
+- With `--execute`, merges the current release branch into `master`, pushes
     `master`, then creates and pushes the stable tag (for example `v2.0.0`).
+  - Add `--create-next-branch` to create and publish the next development
+    branch automatically after the merge, based on the version in `package.json`
+    (for example `2.1.0`). The option is idempotent when the branch already exists.
   - Pushing a stable tag triggers `.github/workflows/publish-github-release.yml`.
   - A major tag ending in `.0.0` (for example `v2.0.0`) creates the corresponding
     major GitHub Release (`v2`) and marks it as latest.
