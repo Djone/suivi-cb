@@ -751,6 +751,32 @@ h3 {
     minmax(140px, 0.6fr);
   gap: .85rem;
 }
+.filters-primary--range { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.filter-field { display: flex; flex-direction: column; gap: .35rem; }
+.filter-field label { font-weight: 600; color: #1f2937; }
+.filter-field label span { font-weight: 400; color: #6b7280; }
+.date-filter-actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: .75rem 0;
+  border-top: 1px solid #e5e7eb;
+}
+.date-filter-actions button {
+  padding: .5rem;
+  border: 0;
+  background: transparent;
+  color: #00796b;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.date-filter-actions button:focus-visible {
+  outline: 2px solid #00796b;
+  outline-offset: 2px;
+}
 .filters-secondary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .85rem; }
 .filters-primary > *, .filters-secondary > * { width: 100%; min-width: 0; }
 

@@ -4,38 +4,32 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
   {
     title: 'Bug fix : frontend',
     description: [
-      '[ ] Transactions : revoir le design du formulaire de recherche de transactions',
-      '[ ] Dialog date : revoir le design du dialog de sélection de date',
+      '[X] Transactions : revoir le design du formulaire de recherche de transactions',
+      '[X] Dialog date : revoir le design du dialog de sélection de date',
     ],
-    status: 'todo',
-    targetVersion: '1.4.5',
+    status: 'done',
+    targetVersion: '2.1.0',
     priority: 'medium',
   },
   {
     title: 'Tableau de salaires : frontend',
-    description: [
-      '[ ] Integrer la logique frontend',
-    ],
-    status: 'todo',
-    targetVersion: '1.4.5',
+    description: ['[X] Integrer la logique frontend'],
+    status: 'done',
+    targetVersion: '2.1.0',
     priority: 'medium',
   },
   {
     title: 'Tableau de salaires : backend',
-    description: [
-      '[ ] Integrer la logique backend',
-    ],
-    status: 'todo',
-    targetVersion: '1.4.0',
+    description: ['[X] Integrer la logique backend'],
+    status: 'done',
+    targetVersion: '2.1.0',
     priority: 'medium',
   },
   {
     title: 'Impots : frontend',
-    description: [
-      '[ ] Integrer la logique frontend',
-    ],
+    description: ['[ ] Integrer la logique frontend'],
     status: 'todo',
-    targetVersion: '1.4.5',
+    targetVersion: '2.2.0',
     priority: 'high',
   },
 ];

@@ -144,6 +144,9 @@ export class EditTransactionDialogComponent implements OnInit {
   ngOnInit(): void {
     this.vehicleService.loadVehicles().subscribe((vehicles) => {
       this.vehicles = vehicles.filter((vehicle) => Number(vehicle.isActive) !== 0);
+      if (this.isNew && !this.data.transaction.vehicleId) {
+        this.selectVehicleFromDescription();
+      }
     });
     // Charger les comptes
     this.accountService.accounts$.subscribe({
@@ -359,6 +362,7 @@ export class EditTransactionDialogComponent implements OnInit {
     }
 
     this.data.transaction.description = suggestion.label;
+    this.selectVehicleFromDescription();
 
     if (
       suggestion.financialFlowId &&
@@ -371,6 +375,31 @@ export class EditTransactionDialogComponent implements OnInit {
     if (typeof suggestion.subCategoryId === 'number') {
       this.selectedSubCategoryId = suggestion.subCategoryId;
       this.data.transaction.subCategoryId = suggestion.subCategoryId;
+    }
+  }
+
+  selectVehicleFromDescription(): void {
+    const description = this.data.transaction.description;
+    if (typeof description !== 'string') return;
+
+    const normalize = (value: string): string => value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+    const text = ` ${normalize(description)} `;
+    const matches = this.vehicles.filter((vehicle) => {
+      const aliases = [vehicle.name, vehicle.model, `${vehicle.brand || ''} ${vehicle.model || ''}`];
+      return vehicle.id != null && aliases.some((alias) => {
+        const name = normalize(alias || '');
+        return name.length >= 3 && text.includes(` ${name} `);
+      });
+    });
+
+    // Une description ambiguë ou sans véhicule conserve le choix existant.
+    if (matches.length === 1) {
+      this.data.transaction.vehicleId = matches[0].id!;
     }
   }
 
