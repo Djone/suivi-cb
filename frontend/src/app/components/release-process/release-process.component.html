@@ -34,10 +34,7 @@
       </li>
       <li><strong>Construire et tester Docker</strong> sur le poste local.</li>
       <li><strong>deploy</strong> pour fusionner, pousser et créer le tag.</li>
-      <li>
-        <strong>Créer la branche suivante</strong>, puis mettre à jour le NAS
-        plus tard.
-      </li>
+      <li>La branche suivante peut être créée automatiquement après la clôture.</li>
     </ol>
 
     <details class="release-guide-details">
@@ -271,6 +268,13 @@ sudo docker-compose logs --tail=100</code></pre>
           <small>
             Facultatif. Ne pas activer si la branche à livrer existe déjà.
           </small>
+        </label>
+        <label class="release-option" title="Crée et publie la branche du prochain cycle depuis master après la clôture.">
+          <span class="release-option-control">
+            <input type="checkbox" [(ngModel)]="createNextBranch" />
+            <strong>Créer automatiquement la branche suivante</strong>
+          </span>
+          <small>Exemple : après 2.0.0, création de <code>2.1.0</code> depuis master.</small>
         </label>
       </div>
     </details>

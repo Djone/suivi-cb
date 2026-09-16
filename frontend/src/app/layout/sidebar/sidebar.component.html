@@ -31,6 +31,16 @@
         </a>
 
         <a
+          routerLink="/salary-tracker"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="onMenuItemClick()"
+        >
+          <i class="pi pi-chart-line"></i>
+          <span>Salaires</span>
+        </a>
+
+        <a
           routerLink="/vehicles"
           routerLinkActive="active"
           class="menu-item"
@@ -74,6 +84,16 @@
         >
           <i class="pi pi-wallet"></i>
           <span>Épargne</span>
+        </a>
+
+        <a
+          routerLink="/salary-tracker"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="onMenuItemClick()"
+        >
+          <i class="pi pi-chart-line"></i>
+          <span>Salaires</span>
         </a>
 
         <a
@@ -148,15 +168,6 @@
             >
               <i class="pi pi-sync"></i>
               <span>Récurrentes</span>
-            </a>
-            <a
-              routerLink="/salary-tracker"
-              routerLinkActive="active"
-              class="menu-subitem"
-              (click)="onMenuItemClick()"
-            >
-              <i class="pi pi-chart-line"></i>
-              <span>Salaires & stats</span>
             </a>
             <a
               routerLink="/category"

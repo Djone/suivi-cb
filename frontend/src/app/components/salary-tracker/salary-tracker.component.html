@@ -31,7 +31,8 @@
       <button
         pButton
         type="button"
-        label="Ajouter une feuille"
+        label="Nouvelle feuille de paie"
+        class="p-button-primary"
         [disabled]="loading || saving"
         icon="pi pi-plus"
         (click)="openModal()"
@@ -75,6 +76,20 @@
         <span *ngIf="!card.suffix">{{ card.value }}</span>
       </div>
     </p-card>
+    <p-card class="kpi-card social-card">
+      <p class="kpi-label">Position indicative</p>
+      <div class="kpi-value social-value">{{ socialPosition }}</div>
+      <p class="muted social-reference">
+        Repère : moyenne du revenu net mensuel saisi, comparée aux seuils indicatifs
+        de niveau de vie INSEE 2024 pour une personne seule. Le classement est
+        indicatif (le niveau de vie dépend aussi du foyer, des prestations et du patrimoine).
+        Sources :
+        <a href="https://www.insee.fr/fr/statistiques/2489735#tableau-figure1_radio1" target="_blank" rel="noopener noreferrer">INSEE revenus et niveaux de vie</a>
+        ·
+        <a href="https://www.insee.fr/fr/statistiques/9019316" target="_blank" rel="noopener noreferrer">INSEE niveaux de vie</a>.
+      </p>
+      <p class="muted">Repère pour une personne seule, selon des seuils INSEE 2024. Le niveau de vie réel dépend du foyer, des prestations et du patrimoine.</p>
+    </p-card>
   </div>
 
   <div class="grid">
@@ -114,23 +129,21 @@
         {{ fiscalError }}
       </p>
       <div class="annual-scroll">
+        <div class="annual-controls" role="search">
+          <input pInputText type="search" placeholder="Rechercher une année ou une valeur" aria-label="Rechercher dans les calculs annuels" [ngModel]="annualSearch" (ngModelChange)="onAnnualSearch($event)" />
+          <button pButton type="button" class="p-button-text" label="Précédente" icon="pi pi-chevron-left" [disabled]="annualPage === 0" (click)="changeAnnualPage(-1)"></button>
+          <span>Page {{ annualPage + 1 }} / {{ annualPageCount }}</span>
+          <button pButton type="button" class="p-button-text" label="Suivante" icon="pi pi-chevron-right" [disabled]="annualPage >= annualPageCount - 1" (click)="changeAnnualPage(1)"></button>
+        </div>
         <table class="annual-table">
           <thead>
             <tr>
-              <th>Année</th>
-              <th>Évol. net</th>
-              <th>RNA</th>
-              <th>MRNM</th>
-              <th>RNIA</th>
-              <th>Brut annuel</th>
-              <th>RFR (N−1)</th>
-              <th>IR</th>
-              <th>Évol. IR</th>
+              <th *ngFor="let column of [{key:'year',label:'Année'},{key:'evolution',label:'Évol. net'},{key:'rna',label:'RNA'},{key:'mrnm',label:'MRNM'},{key:'rnia',label:'RNIA'},{key:'gross',label:'BA'},{key:'rfr',label:'RFR (N−1)'},{key:'ir',label:'IR'},{key:'irEvolution',label:'Évol. IR'}]" class="sortable-header"><button type="button" (click)="setAnnualSort(column.key)" [attr.aria-label]="'Trier par ' + column.label">{{ column.label }} <span aria-hidden="true">{{ annualSortKey === column.key ? (annualSortDesc ? '↓' : '↑') : '↕' }}</span></button></th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of annualRows">
+            <tr *ngFor="let row of annualPageRows">
               <th scope="row">
                 {{ row.year
                 }}<small
@@ -189,7 +202,7 @@
                 ></button>
               </td>
             </tr>
-            <tr *ngIf="!annualRows.length">
+            <tr *ngIf="!annualFilteredRows.length">
               <td colspan="10">Aucune donnée pour cette sélection.</td>
             </tr>
           </tbody>

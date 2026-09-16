@@ -52,6 +52,9 @@
   font-weight: 700;
   color: #0f172a;
 }
+.social-value { font-size: 1.15rem; }
+.social-reference { line-height: 1.35; }
+.social-reference a { color: var(--primary-color, #2563eb); }
 
 .grid {
   display: grid;
@@ -140,6 +143,11 @@ fieldset.form-grid {
   text-align: right;
   white-space: nowrap;
 }
+.annual-table thead th:first-child,
+.annual-table tbody th { width: 6rem; min-width: 6rem; }
+.sortable-header button { border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; padding: 0; }
+.annual-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: .75rem; }
+.annual-controls input { min-width: 18rem; }
 .annual-table thead th {
   background: #2563eb;
   color: white;

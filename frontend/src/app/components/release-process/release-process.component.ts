@@ -47,6 +47,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public skipTests = false;
 
   public createReleaseBranch = false;
+  public createNextBranch = true;
   public releaseBranch = '';
   public branchPrefix = 'release/';
   public commit = true;
@@ -161,6 +162,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.skipTests = false;
 
     this.createReleaseBranch = false;
+    this.createNextBranch = true;
     this.releaseBranch = '';
     this.branchPrefix = 'release/';
     this.commit = true;
@@ -333,6 +335,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       skipBuild: false,
       execute,
       createReleaseBranch: this.createReleaseBranch,
+      createNextBranch: this.createNextBranch,
       releaseBranch: this.releaseBranch.trim() || undefined,
       branchPrefix: this.branchPrefix.trim() || 'release/',
       commit: this.commit,
