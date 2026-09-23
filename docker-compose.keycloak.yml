@@ -1,0 +1,16 @@
+# Development only. Run alongside npm start, not as a production identity server.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.0
+    command: start-dev --import-realm
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:?Choisir un mot de passe administrateur local}
+    volumes:
+      - keycloak-dev-data:/opt/keycloak/data
+      - ./keycloak/realm-dev.json:/opt/keycloak/data/import/realm.json:ro
+      - ./keycloak/themes/suivi-cb:/opt/keycloak/themes/suivi-cb:ro
+volumes:
+  keycloak-dev-data:

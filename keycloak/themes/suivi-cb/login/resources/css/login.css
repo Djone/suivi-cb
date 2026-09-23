@@ -1,0 +1,27 @@
+:root { color-scheme: light; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f8f9fa; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f8f9fa; font-size: 14px; }
+[hidden] { display: none !important; }
+.login-pf-page { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1rem; }
+#kc-header { text-align: center; color: #172033; font-size: 18px; font-weight: 600; margin-bottom: 1.5rem; }
+.card-pf { width: min(100%, 600px); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3rem); background: #fff; border: 1px solid #e1e6ed; border-radius: 18px; box-shadow: 0 12px 36px #17203308; }
+h1 { margin: 0 0 2.5rem; font-size: clamp(1.7rem, 4vw, 2.2rem); line-height: 1.2; font-weight: 650; letter-spacing: -.03em; }
+label { display: block; font-weight: 600; margin-top: 1rem; }
+.field-hint { margin: .5rem 0; color: #667085; font-size: .8rem; }
+input:not([type="hidden"]):not([type="checkbox"]) { width: 100%; min-width: 0; padding: .9rem 1rem; border: 1px solid #8b98b2; border-radius: 12px; background: #fff; color: #172033; font: inherit; }
+button, input[type="submit"] { padding: .85rem 1.25rem; border: 0; border-radius: 999px; background: #2563eb; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+button:hover { background: #1d4ed8; }
+button:disabled { opacity: .6; cursor: wait; }
+a, summary, .text-button { color: #2563eb; text-decoration: underline; cursor: pointer; }
+.text-button { padding: .5rem 0; border: 0; background: transparent; font-weight: 400; }
+.text-button:hover { background: transparent; color: #1d4ed8; }
+:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+.identifier-help, .reset-link { display: block; margin-top: 1.25rem; }
+.identifier-help p { color: #667085; line-height: 1.5; }
+.actions { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 2.5rem; }
+#previous-step { margin-right: auto; }
+.password-row { display: flex; gap: .75rem; align-items: center; }
+.alert { padding: 1rem; margin-bottom: 1.5rem; border-radius: 10px; background: #fff7ed; color: #9a3412; }
+.alert-error { background: #fef2f2; color: #b91c1c; }
+#kc-locale { text-align: right; }
+#kc-info-wrapper, #kc-form-options, #kc-form-buttons { margin-top: 1.25rem; }

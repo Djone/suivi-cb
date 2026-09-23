@@ -1,4 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AuthService } from '../../auth/auth.service';
+import { ChangePasswordDialogComponent } from '../../auth/change-password-dialog.component';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -11,7 +13,7 @@ import { ViewportService } from '../../services/viewport.service';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ChangePasswordDialogComponent],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
 })
@@ -20,6 +22,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   public currentYear = new Date().getFullYear();
   public readonly isDevBuild = !environment.production;
   public isMobile = false;
+  public passwordDialogVisible = false;
   public accounts: Account[] = [];
   private readonly subscriptions = new Subscription();
 
@@ -28,6 +31,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   };
 
   constructor(
+    public readonly auth: AuthService,
     public menuService: MenuService,
     private readonly accountService: AccountService,
     private readonly viewportService: ViewportService,

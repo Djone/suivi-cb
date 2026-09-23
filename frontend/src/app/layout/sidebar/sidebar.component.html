@@ -200,6 +200,26 @@
     </nav>
   </div>
 
+  @if (auth.authenticated()) {
+    <section class="account-footer" aria-label="Mon compte">
+      @if (auth.user(); as user) {
+        <div class="account-identity">
+          <span class="account-avatar" aria-hidden="true">{{ user.initials }}</span>
+          <div class="account-details">
+            <strong>{{ user.name }}</strong>
+            @if (user.email) { <span>{{ user.email }}</span> }
+          </div>
+        </div>
+      }
+      <button type="button" class="account-action" (click)="passwordDialogVisible = true">
+        <i class="pi pi-lock" aria-hidden="true"></i> Modifier le mot de passe
+      </button>
+      <button type="button" class="account-action account-action--logout" (click)="auth.logout()">
+        <i class="pi pi-sign-out" aria-hidden="true"></i> Se déconnecter
+      </button>
+    </section>
+  }
+
   <div class="version-footer">
     <div class="version-line">
       <small>Version {{ appVersion }}</small>
@@ -215,6 +235,8 @@
     <small>© {{ currentYear }}</small>
   </div>
 </div>
+
+<app-change-password-dialog [(visible)]="passwordDialogVisible" />
 
 <div
   class="layout-sidebar-overlay"

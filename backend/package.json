@@ -4,10 +4,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "jest",
+    "test": "jest && npm run test:auth",
+    "test:auth": "node --test tests/auth/*.test.cjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --maxWorkers=2"
+    "test:ci": "jest --ci --coverage --maxWorkers=2 && npm run test:auth"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,7 @@
     "express": "^4.21.1",
     "humps": "^2.0.1",
     "joi": "^17.13.3",
+    "jose": "^6.2.12",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

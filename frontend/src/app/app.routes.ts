@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './auth/auth.guard';
+import { LoginComponent } from './auth/login.component';
 import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
 import { HomeComponent } from './components/home/home.component';
 import { TransactionListComponent } from './components/transaction/transaction-list.component';
@@ -96,8 +98,11 @@ if (!environment.production) {
 }
 
 export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
   {
     path: '',
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
     component: AppLayoutComponent,
     children: childRoutes,
   },

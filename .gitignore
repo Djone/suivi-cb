@@ -42,6 +42,7 @@ desktop.ini
 *.tmp
 *.temp
 .cache/
+.npm-cache/
 
 # Coverage
 coverage/

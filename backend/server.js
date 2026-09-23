@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const { authConfig } = require('./config/auth');
+const { createAuthMiddleware } = require('./middlewares/auth.middleware');
 const db = require('./config/db'); // Import the db instance
 const initializeDatabase = require('./migrations/initializeDatabase');
 const transactionRoutes = require('./routes/transaction.routes');
@@ -29,6 +31,13 @@ app.use(bodyParser.json());
 // Fonction de démarrage asynchrone
 const startServer = async () => {
   try {
+    const auth = authConfig();
+    const requireAuth = await createAuthMiddleware(auth);
+    app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+    app.get('/api/auth/config', (_req, res) => {
+      res.set('Cache-Control', 'no-store').json(auth.public);
+    });
+    app.use('/api', requireAuth);
     // 1. Attendre que la base de données soit prête
     await initializeDatabase();
     console.log(`[SERVER_START_DEBUG] DB connection filename after init: "${db.filename}"`);

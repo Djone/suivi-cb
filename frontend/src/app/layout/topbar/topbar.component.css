@@ -63,6 +63,8 @@
   letter-spacing: 0.5px;
 }
 
+.brand-text { display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+
 .layout-topbar-menu {
   display: flex;
   align-items: center;
