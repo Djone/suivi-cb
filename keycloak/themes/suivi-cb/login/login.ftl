@@ -21,7 +21,11 @@
         <div class="password-row">
           <input id="password" name="password" type="password" autocomplete="current-password"
                  required aria-describedby="password-hint" />
-          <button id="toggle-password" class="text-button" type="button" aria-pressed="false" hidden>Afficher</button>
+          <button id="toggle-password" class="password-toggle" type="button" aria-controls="password"
+                  aria-label="Afficher le mot de passe" aria-pressed="false" title="Afficher le mot de passe" hidden>
+            <svg class="eye-open" aria-hidden="true" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-closed" aria-hidden="true" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 6.2A10.6 10.6 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3 3.7M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6c1.1 0 2.2-.2 3.1-.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+          </button>
         </div>
         <#if realm.resetPasswordAllowed>
           <a class="reset-link" href="${url.loginResetCredentialsUrl}">J’ai oublié mon mot de passe</a>

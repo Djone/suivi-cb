@@ -6,6 +6,13 @@ const { createAuthMiddleware } = require('../../middlewares/auth.middleware');
 
 let jose, pair, middleware;
 const config = authConfig({});
+test('account API preserves the issuer hostname unless explicitly overridden', () => {
+  assert.equal(config.accountUrl, config.public.url);
+  assert.equal(config.accountUrl, 'http://localhost:8080');
+  const internal = authConfig({ KEYCLOAK_ACCOUNT_URL: 'http://keycloak:8080/' });
+  assert.equal(internal.accountUrl, 'http://keycloak:8080');
+  assert.equal(internal.issuer, config.issuer);
+});
 before(async () => {
   jose = await import('jose');
   pair = await jose.generateKeyPair('RS256');

@@ -9,7 +9,6 @@ La base de données reste partagée : attribuer ce rôle uniquement aux personne
 Prérequis : Node 20 ou supérieur, Docker démarré. Depuis la racine, dans PowerShell :
 
 ```powershell
-$env:KC_BOOTSTRAP_ADMIN_PASSWORD = Read-Host 'Mot de passe administrateur Keycloak'
 docker compose -f docker-compose.keycloak.yml up -d
 npm --prefix backend ci
 npm --prefix frontend ci
@@ -46,6 +45,54 @@ Le bas du menu affiche le nom, les initiales et l'email issus du jeton d'identit
 
 La déconnexion figure dans le même bloc, sur ordinateur et dans le menu mobile, et termine la session Keycloak.
 
+## Authentification à deux facteurs (OTP)
+
+Le lien **Configurer l'OTP** du bloc compte ouvre une modale de confirmation. En choisissant **Oui**, l'application lance l'action Keycloak `CONFIGURE_TOTP` avec réauthentification (`maxAge: 0`). Keycloak affiche alors son parcours sécurisé : l'utilisateur associe son application d'authentification en scannant le QR code et confirme le code généré. La clé secrète et les codes temporaires ne transitent jamais par l'application.
+
+### Autorisation du statut OTP dans le menu
+
+Pour supprimer l'OTP sans redirection, le jeton doit aussi contenir le claim `acr`. Dans **Clients → suivi-cb-web → Client scopes**, ajouter le scope standard **acr** en **Default**. S'il est déjà affecté, vérifier dans **Client scopes → acr → Mappers → acr loa level** que **Add to access token** est activé. Se déconnecter puis se reconnecter une fois pour obtenir un nouveau jeton. Le journal Keycloak `no acr claim on the token` indique précisément ce manque. Ne pas remplacer ce mapper par une valeur constante : Keycloak doit fournir le niveau réel d'authentification.
+
+Un `KEYCLOAK_ACCOUNT_401` peut aussi provenir d'un émetteur incohérent : en mode développement sans `KC_HOSTNAME`, un appel à `127.0.0.1` fait attendre à Keycloak un émetteur différent de celui du jeton obtenu sur `localhost`. Le backend utilise désormais la même URL publique pour cet appel. En local, laisser `KEYCLOAK_ACCOUNT_URL` absent ou égal à `http://localhost:8080`. Si une URL interne distincte est nécessaire en production, fixer `KC_HOSTNAME` sur l'URL publique complète de Keycloak. Voir [la configuration du hostname Keycloak](https://www.keycloak.org/server/hostname).
+
+L'interrupteur du menu interroge l'API de compte de Keycloak avec le jeton de l'utilisateur. Cette API doit donc recevoir le rôle client **`manage-account`** du client intégré **`account`**, ainsi que l'audience `account`. Le backend accepte l'audience métier `suivi-cb-api` ou l'audience `account`, mais vérifie toujours le client autorisé `suivi-cb-web` et le rôle de realm `app-user`. Sans l'audience `account`, Keycloak renvoie `KEYCLOAK_ACCOUNT_401` et l'application ne peut pas distinguer un OTP configuré d'un OTP absent.
+
+Pour corriger le realm déjà créé :
+
+1. Ouvrir **Users → votre utilisateur → Role mapping → Assign role**.
+2. Filtrer par client, choisir **account**, sélectionner **manage-account**, puis cliquer **Assign**.
+3. Ouvrir **Clients → suivi-cb-web → Client scopes → suivi-cb-web-dedicated → Scope**, puis affecter aussi le rôle client **account → manage-account**. Cette étape ajoute réellement le rôle dans le jeton émis pour `suivi-cb-web` ; l'attribution à l'utilisateur seule ne suffit pas lorsque le client limite ses rôles de scope.
+4. Dans ce même scope dédié (ou l'onglet **Mappers** suivant la version), ajouter un mapper de type **Audience** avec `Included Client Audience` = `account` et `Add to access token` activé. L'audience métier `suivi-cb-api` doit rester présente dans le même jeton.
+5. Se déconnecter puis se reconnecter : le jeton existant ne contient pas les nouvelles autorisations.
+
+Pour que chaque nouvel utilisateur en bénéficie, attribuer aussi `account → manage-account` au rôle de realm par défaut `default-roles-suivi-cb`. Le mapper d'audience `account` est déjà présent dans `keycloak/realm-dev.json` pour les nouveaux imports ; un realm déjà importé n'est jamais modifié automatiquement par ce fichier.
+
+Dans la console Keycloak, vérifier dans **Authentication → Required actions** que **Configure OTP** est activée, sans être définie comme action obligatoire par défaut : l'activation reste ainsi un choix de l'utilisateur. Conserver le flux **Browser - Conditional 2FA** montré dans la configuration : condition « user configured », condition « credential », puis **OTP Form** requis. Dès qu'un utilisateur a configuré l'OTP, Keycloak lui demandera son code lors des connexions suivantes ; les autres utilisateurs poursuivent avec identifiant et mot de passe.
+
+Si Keycloak indique que le code est invalide pendant l'enrôlement, annuler le parcours puis le recommencer depuis l'application. Supprimer dans l'application d'authentification toute entrée créée lors des essais précédents et scanner uniquement le QR code de la page actuelle : chaque nouveau parcours utilise une nouvelle clé. Vérifier que l'horloge du téléphone est réglée automatiquement. Dans **Realm settings → Authentication → OTP policy**, conserver les valeurs compatibles avec l'application d'authentification : `TOTP`, `HmacSHA1`, `6` chiffres et période de `30` secondes. Le champ « Nom d'appareil » est facultatif.
+
+Lorsqu'un OTP existe, le menu affiche un interrupteur vert et le libellé **Désactiver l'OTP**. Après confirmation dans l'application, `DELETE /api/auth/otp-credentials` liste puis supprime tous les identifiants de type `otp` du compte courant via l'API Account de Keycloak, avec le jeton de l'utilisateur. Aucun identifiant utilisateur ou identifiant de credential fourni par le navigateur n'est accepté. Les mots de passe et les autres types de credentials ne sont pas supprimés. Une nouvelle lecture confirme l'absence d'OTP avant de fermer la modale et de remettre l'interrupteur au gris. La session reste ouverte, sans redirection. En cas de refus ou de suppression partielle, la modale conserve une erreur et permet de réessayer.
+
+Compatibilité : le DELETE Account est disponible mais déprécié dans [Keycloak 26.6.0](https://github.com/keycloak/keycloak/blob/26.6.0/services/src/main/java/org/keycloak/services/resources/account/AccountCredentialResource.java). Il exige `account → manage-account` et vérifie le niveau d'authentification du jeton (`acr`). L'application ne contourne pas un refus de Keycloak ; vérifier ce parcours lors des mises à jour de Keycloak. Le flux direct n'utilise plus l'action `delete_credential` ni une seconde confirmation Keycloak.
+
+## Perte d'un appareil OTP
+
+Si l'utilisateur a supprimé son compte de son application d'authentification ou perdu son téléphone, la page OTP affiche le lien **Je n'ai plus accès à mon application d'authentification**. Il mène au parcours **Mot de passe oublié** de Keycloak. Après vérification du lien reçu par email, le flux standard **Reset Credentials** réinitialise le mot de passe et l'identifiant OTP : l'utilisateur configure ensuite un nouvel appareil. Ce parcours nécessite que le SMTP du realm soit configuré et que le sous-flux **Reset - Conditional OTP** reste activé dans **Authentication → Flows → Reset Credentials**.
+
+Prévoir aussi des codes de secours pour éviter cette procédure. Avec Keycloak 26.3 ou supérieur :
+
+1. Dans **Authentication → Flows → Browser → Browser - Conditional 2FA**, passer **OTP Form** et **Recovery Authentication Code Form** à **Alternative**.
+2. Dans **Authentication → Required actions**, activer **Recovery Authentication Codes**. Dans la configuration de **Configure OTP**, activer **Add recovery codes** pour les proposer à chaque nouvel enrôlement OTP.
+3. L'utilisateur enregistre les douze codes affichés par Keycloak dans un gestionnaire de mots de passe ou un autre emplacement sûr. Sur l'écran OTP, **Essayer une autre méthode** permet alors de saisir le prochain code de secours.
+
+Chaque code de secours est utilisable une seule fois. Si l'utilisateur n'a ni l'appareil OTP, ni un code de secours, ni accès à son email, un administrateur doit supprimer l'identifiant OTP dans **Users → utilisateur → Credentials**, puis l'utilisateur se reconnecte avec son mot de passe et configure un nouvel OTP.
+
+## Conservation de la session après rechargement
+
+Dans **Authentication → Flows → Browser**, l'exécution **Cookie** doit rester en **Alternative** et le sous-flux **Browser Forms** doit aussi être en **Alternative**. À l'intérieur de ce sous-flux, **Username Password Form** reste en **Required**. Le sous-flux **Browser - Conditional 2FA** reste en **Conditional**, avec ses conditions en **Required** et **OTP Form** en **Required**.
+
+Ne pas mettre **Browser Forms** en **Required** au même niveau que **Cookie** : Keycloak ignore alors le cookie SSO et redemande une connexion complète à chaque rechargement. Keycloak écrit dans ses journaux `REQUIRED and ALTERNATIVE elements at same level` lorsque cette configuration est incorrecte.
+
 ## Production
 
 Déployer Keycloak avec une base persistante adaptée à la production, HTTPS et des sauvegardes. Le fichier `docker-compose.keycloak.yml` utilise `start-dev` et est réservé au poste local.
@@ -59,6 +106,7 @@ Configurer ces variables du backend (le compose principal les transmet) :
 | `KEYCLOAK_CLIENT_ID` | `suivi-cb-web` |
 | `KEYCLOAK_AUDIENCE` | `suivi-cb-api` |
 | `KEYCLOAK_JWKS_URL` | Facultatif, URL interne des clés si l’URL publique ne peut pas être résolue par le backend ; l’émetteur vérifié reste l’URL publique |
+| `KEYCLOAK_ACCOUNT_URL` | Facultatif, URL interne de Keycloak pour lire les identifiants OTP ; utiliser l’URL du réseau Docker ou du NAS si elle diffère de l’URL publique |
 
 Le serveur refuse de démarrer en production si l’URL publique manque ou n’utilise pas HTTPS. L’authentification ne possède aucun mode de contournement.
 

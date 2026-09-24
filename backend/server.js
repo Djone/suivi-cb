@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { authConfig } = require('./config/auth');
 const { createAuthMiddleware } = require('./middlewares/auth.middleware');
+const { createDisableOtpHandler } = require('./routes/otp-disable');
 const db = require('./config/db'); // Import the db instance
 const initializeDatabase = require('./migrations/initializeDatabase');
 const transactionRoutes = require('./routes/transaction.routes');
@@ -38,6 +39,36 @@ const startServer = async () => {
       res.set('Cache-Control', 'no-store').json(auth.public);
     });
     app.use('/api', requireAuth);
+    app.delete('/api/auth/otp-credentials', createDisableOtpHandler(auth));
+    app.get('/api/auth/otp-credentials', async (req, res) => {
+      try {
+        const keycloakResponse = await fetch(
+          `${auth.accountUrl}/realms/${encodeURIComponent(auth.public.realm)}/account/credentials?user-credentials=true`,
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: req.get('Authorization') || '',
+            },
+            signal: AbortSignal.timeout(10000),
+          },
+        );
+        if (!keycloakResponse.ok) {
+          console.warn('[AUTH] Lecture des identifiants OTP refusée par Keycloak', {
+            status: keycloakResponse.status,
+          });
+          return res.status(502).json({ error: `KEYCLOAK_ACCOUNT_${keycloakResponse.status}` });
+        }
+        const contentType = keycloakResponse.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          return res.status(502).json({ error: 'KEYCLOAK_ACCOUNT_INVALID_RESPONSE' });
+        }
+        return res.set('Cache-Control', 'no-store').json(await keycloakResponse.json());
+      } catch (error) {
+        const code = error?.cause?.code || error?.code || error?.name || 'UNKNOWN';
+        console.warn('[AUTH] Impossible de joindre Keycloak pour les identifiants OTP', { code });
+        return res.status(502).json({ error: `KEYCLOAK_ACCOUNT_NETWORK_${code}` });
+      }
+    });
     // 1. Attendre que la base de données soit prête
     await initializeDatabase();
     console.log(`[SERVER_START_DEBUG] DB connection filename after init: "${db.filename}"`);

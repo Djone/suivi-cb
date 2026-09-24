@@ -214,6 +214,14 @@
       <button type="button" class="account-action" (click)="passwordDialogVisible = true">
         <i class="pi pi-lock" aria-hidden="true"></i> Modifier le mot de passe
       </button>
+      <button type="button" class="account-action account-action--otp" (click)="openOtpDialog()"
+        role="switch" [attr.aria-checked]="auth.otpConfigured()">
+        <span class="otp-toggle" [class.otp-toggle--active]="auth.otpConfigured()" aria-hidden="true"><span></span></span>
+        {{ auth.otpConfigured() ? 'Désactiver l’OTP' : 'Configurer l’OTP' }}
+      </button>
+      @if (auth.otpStatusError()) {
+        <small class="otp-status-error">{{ auth.otpStatusError() }}</small>
+      }
       <button type="button" class="account-action account-action--logout" (click)="auth.logout()">
         <i class="pi pi-sign-out" aria-hidden="true"></i> Se déconnecter
       </button>
@@ -237,6 +245,8 @@
 </div>
 
 <app-change-password-dialog [(visible)]="passwordDialogVisible" />
+<app-configure-otp-dialog [(visible)]="otpDialogVisible" />
+<app-disable-otp-dialog [(visible)]="disableOtpDialogVisible" />
 
 <div
   class="layout-sidebar-overlay"

@@ -34,18 +34,31 @@
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost:4200/login"
       },
-      "defaultClientScopes": ["basic", "web-origins", "profile", "email", "roles"],
-      "protocolMappers": [{
-        "name": "suivi-cb-api-audience",
-        "protocol": "openid-connect",
-        "protocolMapper": "oidc-audience-mapper",
-        "consentRequired": false,
-        "config": {
-          "included.custom.audience": "suivi-cb-api",
-          "access.token.claim": "true",
-          "id.token.claim": "false"
+      "defaultClientScopes": ["basic", "web-origins", "profile", "email", "roles", "acr"],
+      "protocolMappers": [
+        {
+          "name": "suivi-cb-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "suivi-cb-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "keycloak-account-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "account",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
         }
-      }]
+      ]
     }
   ]
 }

@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
   previous.addEventListener('click', () => {
     password.value = '';
     password.type = 'password';
-    toggle.textContent = 'Afficher';
+    toggle.setAttribute('aria-label', 'Afficher le mot de passe');
+    toggle.setAttribute('title', 'Afficher le mot de passe');
     toggle.setAttribute('aria-pressed', 'false');
     secret.hidden = true;
     password.disabled = true;
@@ -36,7 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
   toggle.addEventListener('click', () => {
     const visible = password.type === 'password';
     password.type = visible ? 'text' : 'password';
-    toggle.textContent = visible ? 'Masquer' : 'Afficher';
+    const label = visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe';
+    toggle.setAttribute('aria-label', label);
+    toggle.setAttribute('title', label);
     toggle.setAttribute('aria-pressed', String(visible));
   });
   form.addEventListener('submit', (event) => {
