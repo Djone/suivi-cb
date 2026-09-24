@@ -6,7 +6,7 @@ La base de données reste partagée : attribuer ce rôle uniquement aux personne
 
 ## Développement local
 
-Prérequis : Node 20 ou supérieur, Docker démarré. Depuis la racine, dans PowerShell :
+Prérequis : Node 24 ou supérieur, Docker démarré. Depuis la racine, dans PowerShell :
 
 ```powershell
 docker compose -f docker-compose.keycloak.yml up -d
@@ -94,6 +94,9 @@ Dans **Authentication → Flows → Browser**, l'exécution **Cookie** doit rest
 Ne pas mettre **Browser Forms** en **Required** au même niveau que **Cookie** : Keycloak ignore alors le cookie SSO et redemande une connexion complète à chaque rechargement. Keycloak écrit dans ses journaux `REQUIRED and ALTERNATIVE elements at same level` lorsque cette configuration est incorrecte.
 
 ## Production
+
+Pour une installation indépendante sur un NAS Synology avec PostgreSQL et
+reverse proxy, suivre [KEYCLOAK_NAS.md](./KEYCLOAK_NAS.md).
 
 Déployer Keycloak avec une base persistante adaptée à la production, HTTPS et des sauvegardes. Le fichier `docker-compose.keycloak.yml` utilise `start-dev` et est réservé au poste local.
 

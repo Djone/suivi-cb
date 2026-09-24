@@ -60,3 +60,4 @@ backups/
 # Local scripts that might contain sensitive info
 deploy-local.sh
 .env.production.local
+.env.keycloak.production

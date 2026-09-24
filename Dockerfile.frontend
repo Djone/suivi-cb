@@ -14,7 +14,7 @@ RUN npm ci --legacy-peer-deps
 COPY frontend/ ./
 
 # Lancer le build de production. La sortie sera dans /app/dist/suivi-cb/browser
-RUN npm run build -- --configuration production
+RUN npx ng build --configuration production
 
 # ---
 
