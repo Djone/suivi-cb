@@ -33,7 +33,9 @@ COPY --from=builder /app/dist/frontend/browser /usr/share/nginx/html
 
 # Copier le script d’attente
 COPY frontend/wait-for.sh /wait-for.sh
-RUN chmod +x /wait-for.sh
+# Les sources peuvent être extraites sur Windows avec des fins de ligne CRLF.
+# Les retirer garantit que le shebang `/usr/bin/env sh` reste valide sous Alpine.
+RUN sed -i 's/\r$//' /wait-for.sh && chmod +x /wait-for.sh
 
 # Exposer le port 80, qui est le port par défaut de Nginx
 EXPOSE 80

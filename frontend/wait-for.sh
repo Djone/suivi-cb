@@ -10,11 +10,11 @@ shift
 host="${hostport%:*}"
 port="${hostport#*:}"
 
-echo "⏳ Waiting for $host:$port to be ready..."
+echo "Waiting for $host:$port to be ready..."
 
 while ! nc -z "$host" "$port"; do
   sleep 1
 done
 
-echo "✅ $host:$port is up — starting app"
+echo "$host:$port is up - starting app"
 exec "$@"
