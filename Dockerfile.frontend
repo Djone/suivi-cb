@@ -1,5 +1,5 @@
 # Étape 1: Build de l'application Angular en utilisant un "builder"
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY frontend/package*.json ./
 
 # Installer les dépendances. 'npm ci' est plus rapide et plus fiable pour les builds.
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copier tout le code source du frontend
 COPY frontend/ ./
@@ -19,7 +19,7 @@ RUN npm run build -- --configuration production
 # ---
 
 # Étape 2: Servir l'application avec un serveur Nginx léger
-FROM nginx:1.25-alpine
+FROM nginx:1.30.5-alpine
 
 # Supprimer la configuration Nginx par défaut
 RUN rm /etc/nginx/conf.d/default.conf

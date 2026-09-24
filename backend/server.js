@@ -1,5 +1,4 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const { authConfig } = require('./config/auth');
 const { createAuthMiddleware } = require('./middlewares/auth.middleware');
@@ -27,7 +26,7 @@ const PORT_BACK = process.env.PORT_BACK || 3000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Fonction de démarrage asynchrone
 const startServer = async () => {

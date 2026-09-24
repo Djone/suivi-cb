@@ -1,7 +1,7 @@
 # Development only. Run alongside npm start, not as a production identity server.
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:26.6.0
+    image: quay.io/keycloak/keycloak:26.7.4
     command: start-dev --import-realm
     ports:
       - "127.0.0.1:8080:8080"

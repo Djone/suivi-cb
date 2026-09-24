@@ -5,7 +5,7 @@ Cette documentation vous guide pour déployer l'application Suivi CB sur votre N
 ## Vue d'ensemble
 
 L'application Suivi CB est une application web de suivi de comptes bancaires composée de:
-- **Frontend**: Angular 19 avec PrimeNG (interface utilisateur)
+- **Frontend**: Angular 20 avec PrimeNG (interface utilisateur)
 - **Backend**: Node.js/Express avec SQLite (API REST)
 - **Déploiement**: Docker sur Synology NAS via Container Manager
 

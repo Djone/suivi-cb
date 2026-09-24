@@ -21,7 +21,7 @@ Application web full-stack de suivi de transactions bancaires avec catégorisati
 - **Jest** pour les tests
 
 ### Frontend
-- **Angular 19** (standalone components)
+- **Angular 20** (standalone components)
 - **Angular Material** pour l'UI
 - **RxJS** pour la programmation réactive
 - **Chart.js** pour les visualisations

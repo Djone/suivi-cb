@@ -1,5 +1,5 @@
 # Dockerfile pour le backend Node.js
-FROM node:20-alpine
+FROM node:24-alpine
 
 # Définir le répertoire de travail
 WORKDIR /app
@@ -9,7 +9,7 @@ COPY backend/package*.json ./
 
 # Installer les dépendances de production uniquement
 # Cette étape est placée après la copie de package.json pour bénéficier du cache Docker
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copier le reste des fichiers du backend. Cette copie s'assure que toutes les modifications de code sont prises en compte.
 COPY backend/ .
