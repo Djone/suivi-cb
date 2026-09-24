@@ -1,0 +1,10 @@
+services:
+  keycloak:
+    command: start-dev --import-realm
+    environment:
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-http://localhost:8080}
+      KC_SPI_THEME_CACHE_THEMES: "false"
+      KC_SPI_THEME_CACHE_TEMPLATES: "false"
+      KC_SPI_THEME_STATIC_MAX_AGE: "-1"
+    volumes:
+      - ./realms/suivi-cb-dev.json:/opt/keycloak/data/import/suivi-cb.json:ro

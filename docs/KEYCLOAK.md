@@ -9,7 +9,10 @@ La base de données reste partagée : attribuer ce rôle uniquement aux personne
 Prérequis : Node 24 ou supérieur, Docker démarré. Depuis la racine, dans PowerShell :
 
 ```powershell
-docker compose -f docker-compose.keycloak.yml up -d
+cd keycloak-server
+Copy-Item .env.dev.example .env
+docker compose --env-file .env -f compose.yml -f compose.dev.yml up -d
+cd ..
 npm --prefix backend ci
 npm --prefix frontend ci
 npm start
@@ -27,7 +30,7 @@ Keycloak est accessible sur `http://localhost:8080`, l’application sur `http:/
 
 Le client `suivi-cb-web` doit avoir le client scope **basic** affecté en **Default**. Depuis Keycloak 25, ce scope fournit notamment le mapper `Subject (sub)` qui ajoute l'identifiant utilisateur au jeton d'accès. L'API exige cet identifiant.
 
-Le fichier `keycloak/realm-dev.json` inclut ce scope. Pour un realm déjà importé, un redémarrage ne modifie pas le client existant :
+Le fichier `keycloak-server/realms/suivi-cb-dev.json` inclut ce scope. Pour un realm déjà importé, un redémarrage ne modifie pas le client existant :
 
 1. Dans la console Keycloak, sélectionner **suivi-cb → Clients → suivi-cb-web → Client scopes**.
 2. Cliquer **Add client scope**, sélectionner **basic**, puis **Add → Default**. S'il est déjà présent en **Optional**, changer son **Assigned type** en **Default**.
@@ -65,7 +68,7 @@ Pour corriger le realm déjà créé :
 4. Dans ce même scope dédié (ou l'onglet **Mappers** suivant la version), ajouter un mapper de type **Audience** avec `Included Client Audience` = `account` et `Add to access token` activé. L'audience métier `suivi-cb-api` doit rester présente dans le même jeton.
 5. Se déconnecter puis se reconnecter : le jeton existant ne contient pas les nouvelles autorisations.
 
-Pour que chaque nouvel utilisateur en bénéficie, attribuer aussi `account → manage-account` au rôle de realm par défaut `default-roles-suivi-cb`. Le mapper d'audience `account` est déjà présent dans `keycloak/realm-dev.json` pour les nouveaux imports ; un realm déjà importé n'est jamais modifié automatiquement par ce fichier.
+Pour que chaque nouvel utilisateur en bénéficie, attribuer aussi `account → manage-account` au rôle de realm par défaut `default-roles-suivi-cb`. Le mapper d'audience `account` est déjà présent dans `keycloak-server/realms/suivi-cb-dev.json` pour les nouveaux imports ; un realm déjà importé n'est jamais modifié automatiquement par ce fichier.
 
 Dans la console Keycloak, vérifier dans **Authentication → Required actions** que **Configure OTP** est activée, sans être définie comme action obligatoire par défaut : l'activation reste ainsi un choix de l'utilisateur. Conserver le flux **Browser - Conditional 2FA** montré dans la configuration : condition « user configured », condition « credential », puis **OTP Form** requis. Dès qu'un utilisateur a configuré l'OTP, Keycloak lui demandera son code lors des connexions suivantes ; les autres utilisateurs poursuivent avec identifiant et mot de passe.
 
@@ -98,7 +101,7 @@ Ne pas mettre **Browser Forms** en **Required** au même niveau que **Cookie** :
 Pour une installation indépendante sur un NAS Synology avec PostgreSQL et
 reverse proxy, suivre [KEYCLOAK_NAS.md](./KEYCLOAK_NAS.md).
 
-Déployer Keycloak avec une base persistante adaptée à la production, HTTPS et des sauvegardes. Le fichier `docker-compose.keycloak.yml` utilise `start-dev` et est réservé au poste local.
+La pile autonome `keycloak-server/compose.yml` utilise PostgreSQL. L'override `compose.dev.yml` active uniquement les options de développement et l'import initial du realm.
 
 Configurer ces variables du backend (le compose principal les transmet) :
 
@@ -113,7 +116,7 @@ Configurer ces variables du backend (le compose principal les transmet) :
 
 Le serveur refuse de démarrer en production si l’URL publique manque ou n’utilise pas HTTPS. L’authentification ne possède aucun mode de contournement.
 
-Importer le realm de référence en remplaçant **avant import** les URLs localhost par l’origine HTTPS de l’application : URIs de retour exactes `/home` et `/silent-check-sso.html`, origine web exacte, URI de déconnexion exacte `/login`. Conserver le client public, PKCE obligatoire, l’audience, le rôle, la protection contre les tentatives répétées et les flux implicite/direct désactivés. Ne pas utiliser de wildcard d’origine. Copier `keycloak/themes/suivi-cb` dans `/opt/keycloak/themes/suivi-cb`, sélectionner le thème de connexion `suivi-cb` et configurer le SMTP. Les écrans de récupération et de changement de mot de passe héritent des formulaires Keycloak.
+Importer le realm de référence en remplaçant **avant import** les URLs localhost par l’origine HTTPS de l’application : URIs de retour exactes `/home` et `/silent-check-sso.html`, origine web exacte, URI de déconnexion exacte `/login`. Conserver le client public, PKCE obligatoire, l’audience, le rôle, la protection contre les tentatives répétées et les flux implicite/direct désactivés. Ne pas utiliser de wildcard d’origine. Le thème actif se trouve dans `keycloak-server/themes/suivi-cb`, sélectionner le thème de connexion `suivi-cb` et configurer le SMTP. Les écrans de récupération et de changement de mot de passe héritent des formulaires Keycloak.
 
 Au rechargement de la page, une vérification SSO silencieuse restaure la session. Si le navigateur bloque les cookies tiers, le bouton « Se connecter » permet de retrouver la session Keycloak par redirection.
 

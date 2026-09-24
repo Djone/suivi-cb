@@ -1,17 +1,15 @@
 # Keycloak indépendant sur un NAS Synology
 
 Keycloak peut être installé indépendamment de l'application. Le fichier
-`docker-compose.keycloak.production.yml` lance Keycloak et sa base PostgreSQL
+`keycloak-server/compose.yml` lance Keycloak et sa base PostgreSQL
 dans une pile dédiée. L'application ne dépend que de son URL publique HTTPS.
 
 ## 1. Préparer les fichiers sur le NAS
 
 Copier à cet emplacement, par exemple `/volume1/docker/keycloak` :
 
-- `docker-compose.keycloak.production.yml` ;
-- le dossier `keycloak/themes/suivi-cb` ;
-- une copie de `.env.keycloak.production.example` nommée
-  `.env.keycloak.production`.
+- le contenu du dossier `keycloak-server` ;
+- une copie de `.env.example` nommée `.env`.
 
 Remplacer les deux mots de passe d'exemple par deux secrets distincts et
 longs. Le mot de passe PostgreSQL ne doit pas être le mot de passe
@@ -21,8 +19,8 @@ Depuis une session SSH ouverte dans ce dossier :
 
 ```sh
 docker compose \
-  --env-file .env.keycloak.production \
-  -f docker-compose.keycloak.production.yml \
+  --env-file .env \
+  -f compose.yml \
   up -d
 ```
 
@@ -72,7 +70,7 @@ Importer le realm `suivi-cb`, puis régler le client `suivi-cb-web` avec :
 - client public, Authorization Code et PKCE S256 ;
 - flux implicite et mot de passe direct désactivés.
 
-Le fichier `keycloak/realm-dev.json` contient des URL `localhost`. Elles
+Le fichier `realms/suivi-cb-dev.json` contient des URL `localhost`. Elles
 doivent être remplacées dans la console après l'import. Un export du realm
 local existant peut aussi être importé sur le NAS afin de conserver les
 mappers, rôles et flux déjà configurés.
@@ -99,15 +97,12 @@ cohérente, ainsi que le thème et le fichier Compose. Avant une mise à jour,
 faire une sauvegarde puis changer uniquement le tag de l'image Keycloak :
 
 ```sh
-docker compose --env-file .env.keycloak.production \
-  -f docker-compose.keycloak.production.yml pull
-docker compose --env-file .env.keycloak.production \
-  -f docker-compose.keycloak.production.yml up -d
+docker compose --env-file .env -f compose.yml pull
+docker compose --env-file .env -f compose.yml up -d
 ```
 
 Consulter les journaux avec :
 
 ```sh
-docker compose --env-file .env.keycloak.production \
-  -f docker-compose.keycloak.production.yml logs -f keycloak
+docker compose --env-file .env -f compose.yml logs -f keycloak
 ```
