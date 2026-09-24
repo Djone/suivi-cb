@@ -1,0 +1,22 @@
+:root { color-scheme: light; font-family: Inter, Arial, sans-serif; color: #172033; background: #0d0d0d; }
+* { box-sizing: border-box; }
+body { min-width: 320px; margin: 0; }
+.sb-page { min-height: 100dvh; background: #0d0d0d repeating-linear-gradient(153deg, transparent 0 62px, #ffffff0c 63px 64px); }
+.sb-page::before { position: fixed; inset: 0; content: ""; pointer-events: none; background: repeating-linear-gradient(135deg, transparent 0 76px, #ffffff08 77px 78px); }
+.sb-shell { position: relative; display: grid; min-height: 100dvh; place-items: center; padding: 28px 1rem 42px; }.sb-shell::before { position: absolute; top: 7px; color: #637080; content: "SUIVI BANCAIRE"; font-size: 8px; font-weight: 600; letter-spacing: .14em; }.sb-shell::after { position: absolute; bottom: 13px; color: #465362; content: "© 2026 Suivi Bancaire · Version 2.1.0"; font-size: 8px; }
+.sb-card { width: min(100%, 280px); min-height: 240px; padding: 23px; background: #fff; border-radius: 16px; box-shadow: 0 22px 52px #0009; }
+.sb-brand { display: flex; align-items: center; gap: .55rem; color: #051638; font-size: 10px; font-weight: 700; }
+.sb-brand-mark { display: grid; width: 19px; height: 19px; place-items: center; color: #fff; background: #2563eb; border-radius: 5px; font-size: 7px; }
+h1 { margin: 1.55rem 0 1.35rem; color: #051638; font-size: 18px; letter-spacing: -.04em; line-height: 1.2; }
+.sb-form label { display: block; margin: 0 0 .35rem; color: #051638; font-size: 9px; font-weight: 700; }
+.sb-form input { width: 100%; min-height: 31px; padding: .45rem .65rem; border: 1px solid #2563eb; border-radius: 6px; color: #051638; background: #fff; font: inherit; }
+.sb-form input:focus { border-color: #2563eb; outline: 3px solid #bfdbfe; }
+.sb-hint, .sb-intro { color: #667085; font-size: 9px; line-height: 1.4; }
+.sb-password-field { display: flex; gap: .5rem; align-items: center; }.sb-password-field input { min-width: 0; }.sb-toggle { flex: 0 0 auto; }
+.sb-help, .sb-link { display: block; margin-top: .8rem; color: #2563eb; font-size: 9px; }.sb-help p { color: #667085; }
+.sb-actions { display: flex; justify-content: flex-end; margin-top: 1.65rem; }.sb-actions-stack { flex-direction: column; gap: .75rem; }
+button, .sb-primary-link { display: inline-block; min-height: 29px; padding: .55rem 1.1rem; border: 0; border-radius: 999px; color: #fff; background: #2563eb; font: inherit; font-size: 10px; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer; }
+button:hover, .sb-primary-link:hover { background: #1d4ed8; }.sb-toggle { color: #2563eb; background: #eff6ff; }.sb-secondary-button { display: block; padding: .75rem; border: 1px solid #a7b1c2; border-radius: 8px; color: #172033; font-weight: 600; text-align: center; text-decoration: none; }
+.alert { margin: 0 0 1rem; padding: .85rem 1rem; border-radius: 8px; color: #075985; background: #e0f2fe; font-size: .875rem; }.alert-error, .sb-field-error { color: #b91c1c; background: #fef2f2; }.sb-field-error { margin: .5rem 0 0; padding: .5rem; border-radius: 6px; font-size: .8rem; }
+:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+@media (max-width: 480px) { .sb-card { padding: 1.5rem; }.sb-password-field { align-items: stretch; flex-direction: column; }.sb-toggle { border-radius: 8px; } }

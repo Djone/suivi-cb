@@ -280,6 +280,7 @@ export class SalaryTrackerComponent implements OnInit {
     (opt) => opt.value !== 'ALL',
   );
   filteredRows: SalaryEntry[] = [];
+  private hasInitializedYearFilter = false;
 
   get cards() {
     const rows = this.filteredRows;
@@ -353,6 +354,10 @@ export class SalaryTrackerComponent implements OnInit {
     this.salaryService.load().subscribe({
       next: (rows) => {
         this.entries = rows;
+        if (!this.hasInitializedYearFilter) {
+          this.selectedYears = [new Date().getFullYear()];
+          this.hasInitializedYearFilter = true;
+        }
         this.refreshView();
         this.loading = false;
       },
