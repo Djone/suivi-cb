@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import identity from './oci-image-identity.cjs';
 import { Parser } from '../backend/node_modules/tar/dist/esm/index.min.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const hash = b => createHash('sha256').update(b).digest('hex');
@@ -24,6 +25,7 @@ const report = {archive:path.basename(archive), archiveSha256:hash(raw), scope:'
 for (const image of manifest) {
   const config=JSON.parse(outer.get(image.Config));
   const result={tags:image.RepoTags, configDigest:'sha256:'+hash(outer.get(image.Config)), user:config.config.User || 'root (default)', sensitivePaths:[], sourceDifferences:[], packages:{}, nginx:{}};
+  result.dockerImageId = identity.archiveImageId(outer, image.RepoTags || [], result.configDigest);
   for (const layer of image.Layers) {
     const files=await entries(outer.get(layer), name=>name.startsWith('app/') || name.startsWith('./app/') || name.includes('etc/nginx/nginx.conf'));
     for (const [name,content] of files) {

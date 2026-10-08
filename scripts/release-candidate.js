@@ -135,8 +135,8 @@ async function buildPackage(c, execute = run) {
     path.join(c.dir, 'images.tar'), path.join(c.dir, 'inspection.json')], { capture: true, cwd: c.root });
   const inspection = JSON.parse(fs.readFileSync(path.join(c.dir, 'inspection.json'), 'utf8'));
   if (inspection.images?.length !== 2 || inspection.images.some(image =>
-    image.sensitivePaths?.length || image.sourceDifferences?.length || !ids.includes(image.configDigest)) ||
-    !inspection.images.some(image => image.configDigest === ids[1] && image.nginx?.matchesWorkspace && image.nginx?.silentSsoException)) {
+    image.sensitivePaths?.length || image.sourceDifferences?.length || !ids.includes(image.dockerImageId || image.configDigest)) ||
+    !inspection.images.some(image => (image.dockerImageId || image.configDigest) === ids[1] && image.nginx?.matchesWorkspace && image.nginx?.silentSsoException)) {
     throw new Error('Inspection archive refusée : données embarquées, sources différentes ou configuration frontend incorrecte.');
   }
   const manifest = {
