@@ -1,6 +1,7 @@
 // backend/jest.config.js
 module.exports = {
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/tests/setup-env.cjs'],
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'models/**/*.js',
