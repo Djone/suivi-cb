@@ -5,8 +5,9 @@ services:
       dockerfile: Dockerfile.backend
     container_name: suivi-cb-backend
     restart: unless-stopped
-    ports:
-      - "3001:3001"
+    # API accessible uniquement depuis le réseau Docker (Nginx et healthcheck).
+    expose:
+      - "3001"
     environment:
       - NODE_ENV=production
       - PORT_BACK=3001

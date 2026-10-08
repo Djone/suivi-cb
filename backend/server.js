@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors');
+const { configureHttpSecurity, httpErrorHandler } = require('./middlewares/http-security.middleware');
 const { authConfig } = require('./config/auth');
 const { createAuthMiddleware } = require('./middlewares/auth.middleware');
 const { createDisableOtpHandler } = require('./routes/otp-disable');
@@ -25,8 +25,8 @@ const app = express();
 const PORT_BACK = process.env.PORT_BACK || 3000;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+configureHttpSecurity(app);
+app.use(express.json({ limit: '100kb', strict: true }));
 
 // Fonction de démarrage asynchrone
 const startServer = async () => {
@@ -87,6 +87,9 @@ const startServer = async () => {
     app.use('/api/saving-accounts', savingAccountRoutes);
     app.use('/api/vehicles', vehicleRoutes);
     app.use('/api/salaries', require('./routes/salary.routes'));
+
+    app.use((_req, res) => res.status(404).json({ error: 'Ressource introuvable.' }));
+    app.use(httpErrorHandler);
 
     // 3. Démarrer le serveur Express
     app.listen(PORT_BACK, () => {

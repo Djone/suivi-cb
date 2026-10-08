@@ -52,6 +52,9 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public branchPrefix = 'release/';
   public commit = true;
   public rollbackOnFailure = true;
+  public preproductionApproved = false;
+  public candidateVersion = `${this.stableCandidate}-rc.1`;
+  public candidatePlatform = 'linux/amd64';
 
   public isRunning = false;
   public backendMessage = '';
@@ -66,32 +69,46 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
 
   public readonly steps: ReleaseStep[] = [
     {
-      id: 'stabilize',
-      title: 'Stabilisation de la version',
+      id: 'development',
+      title: 'Développement validé',
       description:
-        'Définir la version stable à livrer, puis la prochaine version de développement.',
-      helper: `${this.currentDevVersion} -> ${this.stableCandidate}`,
+        'Terminer les changements, vérifier les fonctionnalités concernées et pousser la branche de développement.',
+      helper: 'Validation fonctionnelle locale + branche synchronisée',
     },
     {
-      id: 'validate',
-      title: 'Validation avant production',
+      id: 'dev-tests',
+      title: 'Tests de développement',
       description:
-        'Vérifier la qualité sans modifier l’état courant du projet.',
-      helper: 'Commande recommandée: dry-run',
+        'Lancer dry-run et vérifier que les contrôles Git et les tests automatisés réussissent.',
+      helper: 'Action automatisée : dry-run',
     },
     {
-      id: 'prepare',
-      title: 'Préparation de release',
+      id: 'candidate',
+      title: 'Candidate préparée',
       description:
-        'Mettre à jour les versions (package + environnements) et options Git si nécessaire.',
-      helper: 'Commande recommandée: prepare',
+        'Lancer prepare, vérifier le commit candidat, puis le pousser avant de construire les images.',
+      helper: 'Action automatisée : prepare ; push du candidat à effectuer',
     },
     {
-      id: 'deploy',
-      title: 'Finalisation Git',
+      id: 'preproduction',
+      title: 'Préproduction validée',
       description:
-        'Valider puis fusionner la branche courante vers master et pousser sur origin/master.',
-      helper: 'Commande recommandée: deploy',
+        'Installer la candidate sur le NAS, tester et consigner les IDs exacts des images backend et frontend.',
+      helper: 'Action NAS manuelle ; ne pas reconstruire après validation',
+    },
+    {
+      id: 'git-publication',
+      title: 'Publication Git',
+      description:
+        'Après le feu vert préproduction, lancer deploy pour fusionner dans master et publier le tag stable.',
+      helper: 'Action automatisée : deploy ; Git uniquement',
+    },
+    {
+      id: 'production',
+      title: 'Mise en production',
+      description:
+        'Promouvoir les mêmes images validées avec les variables et données de production.',
+      helper: 'Action NAS manuelle ; aucune reconstruction ni update.sh',
     },
   ];
 
@@ -128,6 +145,14 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     return `npm run release:deploy -- --branch=${this.branch} --execute`;
   }
 
+  get candidateCommand(): string {
+    if (!/^\d+\.\d+\.\d+-rc\.[1-9]\d*$/.test(this.candidateVersion) ||
+        !['linux/amd64', 'linux/arm64'].includes(this.candidatePlatform)) {
+      return '';
+    }
+    return `npm.cmd run release:candidate -- --candidate=${this.candidateVersion} --platform=${this.candidatePlatform}`;
+  }
+
   runDryRun(): void {
     this.runCommand('dry-run');
   }
@@ -136,10 +161,16 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     if (!this.validatePrepareInputs()) {
       return;
     }
+    this.preproductionApproved = false;
     this.runCommand('prepare');
   }
 
   runDeploy(): void {
+    if (!this.preproductionApproved) {
+      this.errorMessage =
+        'Confirmez la validation de la candidate en préproduction avant de publier dans Git.';
+      return;
+    }
     this.runCommand('deploy');
   }
 
@@ -167,6 +198,9 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.branchPrefix = 'release/';
     this.commit = true;
     this.rollbackOnFailure = true;
+    this.preproductionApproved = false;
+    this.candidateVersion = `${this.stableCandidate}-rc.1`;
+    this.candidatePlatform = 'linux/amd64';
 
     this.errorMessage = '';
     this.backendMessage = '';
@@ -343,10 +377,10 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       rollbackOnFailure: this.rollbackOnFailure,
     };
 
-    if (
-      execute &&
-      !confirm('Confirmer l’exécution réelle (pas en simulation) ?')
-    ) {
+    const confirmationMessage = execute
+      ? 'Confirmez-vous que la candidate a été testée et approuvée en préproduction, et que les IDs exacts des images backend/frontend ont été consignés ? Cette action publie master et le tag Git, mais ne déploie pas sur le NAS.'
+      : 'Confirmer l’exécution réelle (pas en simulation) ?';
+    if (execute && !confirm(confirmationMessage)) {
       return;
     }
 

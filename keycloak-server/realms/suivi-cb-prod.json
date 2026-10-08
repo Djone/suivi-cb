@@ -1,0 +1,86 @@
+{
+  "realm": "suivi-cb",
+  "enabled": true,
+  "displayName": "Suivi Bancaire",
+  "loginTheme": "suivi-cb",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "fr"
+  ],
+  "defaultLocale": "fr",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": false,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "passwordPolicy": "length(12) and digits(1) and lowerCase(1) and upperCase(1)",
+  "roles": {
+    "realm": [
+      {
+        "name": "app-user",
+        "description": "Accès aux données bancaires partagées"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "suivi-cb-web",
+      "name": "Suivi Bancaire",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://finances.jolurie.com/home",
+        "https://finances.jolurie.com/silent-check-sso.html"
+      ],
+      "webOrigins": [
+        "https://finances.jolurie.com"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://finances.jolurie.com/login"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "web-origins",
+        "profile",
+        "email",
+        "roles",
+        "acr"
+      ],
+      "protocolMappers": [
+        {
+          "name": "suivi-cb-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "suivi-cb-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "keycloak-account-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "account",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "sslRequired": "external"
+}

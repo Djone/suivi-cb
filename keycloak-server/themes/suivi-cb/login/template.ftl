@@ -15,7 +15,7 @@
   <main class="sb-shell">
     <p class="sb-site-name">SUIVI BANCAIRE</p>
     <section class="sb-card" aria-labelledby="sb-title">
-      <div class="sb-brand"><span class="sb-brand-mark" aria-hidden="true">▣</span><span>Suivi Bancaire</span></div>
+      <div class="sb-brand"><span class="sb-brand-mark" aria-hidden="true"><#if bodyClass == "sb-password-update"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/></svg><#else>▣</#if></span><span>Suivi Bancaire</span></div>
       <h1 id="sb-title"><#nested "header"></h1>
       <#if displayMessage && message?has_content>
         <div class="alert alert-${message.type!"info"}" role="alert">${kcSanitize(message.summary)?no_esc}</div>

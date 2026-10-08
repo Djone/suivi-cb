@@ -1,0 +1,18 @@
+{
+  "capturedAt": "2026-10-08T09:09:54.083Z",
+  "scope": "Files changed during this audit; not a complete release manifest",
+  "files": {
+    ".dockerignore": "b180b22a05fe0ea9480ca403852d6789ef0e3a31dac9cddd5e0715efe3dda5da",
+    "nginx.conf": "3bc7f26ab986bb123ff15b8a5702443c0051da27f7baa878cb6b481c5b19d656",
+    "frontend/src/index.html": "ac75cfae13cdab6596daedba294281483f12b013c6579b7ba19cc23ed56694ff",
+    "scripts/audit-image-archive.mjs": "3c6a73936b8d435bd319c5dd685ba2aa9ec3ecbfa2e919c10e5a4f73c487718f",
+    "scripts/audit-preprod-http.mjs": "0b5af0c4662ca305e308f93e347f4ec69defbc520e97e827613489ccc5732cf1",
+    "scripts/audit-sqlite-restore.cjs": "26f721980ae5021cb6537eebd99cf62b77eb36c71ee1ae07708677260f9df462",
+    "frontend/src/app/components/home/home.component.ts": "715afbaa86ae48370c3400745f1c7f7a1b73d20399133a65b6537a875bbbcb3f",
+    "frontend/src/app/components/recurring-transaction/recurring-transaction-list.component.ts": "fe77b3f77a026659c61816db1b6732730b3c2201f14d22508d3e89b6430c2de0",
+    "frontend/src/app/components/subcategory/sub-category-list.component.ts": "e1675f390f3a0ea19e73e2e6d28e2218e24ea2727edb938863a1b33fed47a245",
+    "frontend/src/app/components/transaction/transaction-list.component.ts": "cb7c06f0ccc082f7f543abaebe02ca7143b0888cf77f7edf5f25bad5974dbb97",
+    "frontend/src/app/services/sub-category.service.ts": "c41cffc3ff11eaeb1a50dc910586ec9ebc6011ec5f3a49b91251edf0fe5f8a93",
+    "frontend/src/server.ts": "39078a07f5c801aa7efb1a9ef9ab66df9b01bde0963f9b17a4fa50afd8d39467"
+  }
+}

@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-sb-password-toggle]').forEach((toggle) => {
+    const input = document.getElementById(toggle.getAttribute('aria-controls'));
+    if (!input) return;
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+      const visible = input.type === 'password';
+      input.type = visible ? 'text' : 'password';
+      const label = visible ? toggle.dataset.labelHide : toggle.dataset.labelShow;
+      toggle.setAttribute('aria-label', label);
+      toggle.setAttribute('title', label);
+      toggle.setAttribute('aria-pressed', String(visible));
+    });
+  });
   const form = document.getElementById('bank-login');
   if (!form) return; // Other Keycloak screens keep the inherited behaviour.
   const identifier = document.getElementById('identifier-step');

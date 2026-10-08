@@ -1,0 +1,10 @@
+{
+  "scope": "Fictitious isolated local database; not NAS restoration",
+  "checkedAt": "2026-10-08T09:03:41.636Z",
+  "integrity": "ok",
+  "foreignKeys": "ok",
+  "restoration": "ok",
+  "rowCounts": {
+    "accounts": 1
+  }
+}

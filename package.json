@@ -10,7 +10,9 @@
   "version": "2.2.0-dev",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start": "call scripts\\start-dev.bat",
+    "start:app": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:keycloak": "call scripts\\start-keycloak-dev.bat",
     "start:backend": "cd backend && npm run start",
     "start:frontend": "cd frontend && ng serve --proxy-config proxy.conf.json",
     "start:all": "npm start",
@@ -30,7 +32,12 @@
     "release:prepare": "node scripts/release-orchestrator.js prepare",
     "release:deploy": "node scripts/release-orchestrator.js deploy",
     "release:full": "node scripts/release-orchestrator.js full",
-    "release:rollback": "node scripts/release-orchestrator.js rollback"
+    "release:rollback": "node scripts/release-orchestrator.js rollback",
+    "release:candidate": "node scripts/release-candidate.js ship",
+    "release:candidate:package": "node scripts/release-candidate.js package",
+    "release:candidate:transfer": "node scripts/release-candidate.js transfer",
+    "release:candidate:approve": "node scripts/release-candidate.js approve",
+    "test:candidate": "node --test scripts/tests/release-candidate.test.cjs"
   },
   "keywords": [],
   "author": "",

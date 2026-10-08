@@ -1,0 +1,40 @@
+{
+  "archive": "suivi-cb-preprod-2.2.0-rc1.tar",
+  "archiveSha256": "47d365b78bdd7be39d616e8604dda497af8046900f4740f4e33124b9b85d253c",
+  "scope": "All archive layers; names and hashes only, no data values",
+  "images": [
+    {
+      "tags": [
+        "suivi-cb-preprod-backend:2.2.0-rc1"
+      ],
+      "configDigest": "sha256:68f6c360e9a606712237258be3752ed6d2a806a2203516f645e5fad297c19edd",
+      "user": "root (default)",
+      "sensitivePaths": [
+        "app/database.db"
+      ],
+      "sourceDifferences": [],
+      "packages": {
+        "node_modules/express": "4.22.3",
+        "node_modules/joi": "18.2.9",
+        "node_modules/jose": "6.2.12",
+        "node_modules/sqlite3": "6.0.1"
+      },
+      "nginx": {}
+    },
+    {
+      "tags": [
+        "suivi-cb-preprod-frontend:2.2.0-rc1"
+      ],
+      "configDigest": "sha256:55a37eabf6ad34dbe2e945f87f23df5239368f5e0e7a1462669964d90fddf590",
+      "user": "root (default)",
+      "sensitivePaths": [],
+      "sourceDifferences": [],
+      "packages": {},
+      "nginx": {
+        "matchesWorkspace": false,
+        "silentSsoException": false,
+        "globalCspReportOnly": false
+      }
+    }
+  ]
+}

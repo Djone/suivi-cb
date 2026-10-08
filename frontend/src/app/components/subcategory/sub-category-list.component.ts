@@ -66,7 +66,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       this.subCategoryService.subCategories$.subscribe({
         next: (data) => {
           this.subCategories = data;
-          console.log('SUB CATEGORY LIST : Tableau mis à jour', data);
+
         },
         error: (err) => console.error('Erreur lors de la mise à jour des sous-catégories:', err)
       })
@@ -77,7 +77,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
-  
+
   loadSubCategories(): void {
     this.subCategoryService.getSubCategories().subscribe();
   }
@@ -117,7 +117,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       if (result) {
         this.subCategoryService.addSubCategory(result).subscribe({
           next: () => {
-            console.log('SUB CATEGORY LIST : Sous-catégorie créée avec succès');
+
             this.loadSubCategories();
           },
           error: (err) => console.error('SUB CATEGORY LIST : Erreur lors de la création:', err)
@@ -140,7 +140,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       if (result) {
         this.subCategoryService.updateSubCategory(result.id!, result).subscribe({
           next: () => {
-            console.log('SUB CATEGORY LIST : Sous-catégorie mise à jour avec succès');
+
             // Recharger les données pour mettre à jour le BehaviorSubject
             this.loadSubCategories();
           },
@@ -165,7 +165,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       if (confirmed) {
         this.subCategoryService.deleteSubCategory(subCategory.id!).subscribe({
           next: () => {
-            console.log('SUB CATEGORY LIST : Sous-catégorie supprimée avec succès');
+
             this.loadSubCategories();
           },
           error: (err) => {

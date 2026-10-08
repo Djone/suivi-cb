@@ -1,258 +1,116 @@
-# Procédure de montée de version
+# Assistant de release
 
-Ce guide décrit la procédure complète pour publier une version stable. Il est
-prévu pour être suivi dans l'ordre, même après plusieurs mois sans déploiement.
+## Parcours obligatoire
 
-## Le parcours en une minute
+Le processus cible est :
 
-1. Terminer, commiter et pousser la branche de développement.
-2. Dans l'assistant de release : lancer `dry-run`, puis `prepare`.
-3. Construire et tester les conteneurs Docker localement.
-4. Dans l'assistant : lancer `deploy` pour fusionner dans `master`, pousser et
-   créer le tag stable.
-5. Créer la branche de développement de la version suivante.
-6. Plus tard, sur le NAS : lancer `update.sh`, puis contrôler la production.
+**Dev → tests validés en dev → candidate en préproduction → tests validés en
+préproduction → publication Git → MEP**
 
-L'interface n'expose volontairement pas la commande technique `full` : elle
-enchaînerait `prepare` et `deploy` sans laisser le temps de valider les
-conteneurs entre les deux.
+L'assistant automatise les contrôles et opérations Git disponibles localement.
+La construction, l’export et le transfert vérifié sont automatisés par la commande
+du panneau « Package de préproduction », exécutée dans le terminal du PC.
+L’installation, les tests NAS et la promotion restent distincts. Ne pas confondre
+le tag Git avec les images déployées.
 
-## Exemple utilisé dans ce guide
+## 1. Valider le développement
 
-- Branche à livrer : `1.6.0-dev`
-- Version stable : `1.6.0`
-- Prochaine version : `1.7.0-dev`
-- Branche de production : `master`
+- Terminer les changements sur la branche de développement et vérifier
+  manuellement les fonctionnalités concernées.
+- Pousser la branche et s'assurer que le dépôt est propre et synchronisé avec
+  `origin`.
+- Vérifier que les tickets livrés sont `done` et ciblent la version stable.
+- Ne jamais commiter de secret, de fichier `.env` ou de données de production.
+- Dans `/release-process`, lancer `dry-run` et vérifier le rapport : cette
+  commande vérifie Git et exécute les tests automatisés.
 
-Remplacer ces valeurs par celles de la release concernée.
+Ne pas continuer si les tests fonctionnels ou automatisés échouent. Corriger
+sur la branche de développement puis relancer les contrôles.
 
-## 1. Préparer la branche à livrer
+## 2. Préparer le commit candidat
 
-Toutes les modifications applicatives doivent être validées dans Git et poussées avant
-d'utiliser l'assistant.
+Renseigner dans l'assistant la version stable, la prochaine version de
+développement et la branche cible `master`. Garder activés le commit de
+préparation et la restauration automatique en cas d'échec. Les options avancées
+restent désactivées dans le parcours normal.
 
-```bash
-git switch 1.6.0-dev
-git status
-git push origin 1.6.0-dev
-git fetch origin
-```
+Lancer `prepare`, puis vérifier son rapport et l'état Git. Cette commande
+relance les contrôles, archive les notes de version, actualise les numéros et
+crée le commit de préparation. Elle ne pousse pas ce commit.
 
-Points à contrôler :
+Pousser la branche de développement avec le commit candidat. Ne plus modifier
+les sources, Dockerfiles, configuration Nginx ou autres contenus des images
+après cette étape ; une modification oblige à recommencer avec une nouvelle
+candidate.
 
-- `git status` indique un répertoire de travail propre ;
-- la branche locale suit bien `origin/1.6.0-dev` ;
-- tous les tickets livrés ont le statut `done` et `targetVersion: '1.6.0'`
-  dans `dev-todo.data.ts` ;
-- aucun secret, fichier `.env` ou fichier de base de données ne fait partie du
-  commit.
+## 3. Construire et installer en préproduction
 
-## 2. Préparer la release dans l'assistant
+Suivre [AUTOMATISATION_CANDIDATE.md](../../../../../docs/AUTOMATISATION_CANDIDATE.md).
+La commande release:candidate construit les images du commit propre, les exporte,
+inspecte l’archive et transfère le package avec vérification des empreintes.
+Elle refuse d’écraser une candidate existante ; sans --execute, elle simule.
+Après transfert, charger les images dans l'environnement de préproduction.
+Suivre la checklist de candidate adaptée à la version et à
+l'architecture du NAS, par exemple
+[CHECKLIST_RC2_PREPRODUCTION.md](../../../../../docs/CHECKLIST_RC2_PREPRODUCTION.md).
 
-L'assistant fonctionne uniquement depuis l'environnement local, jamais depuis
-l'application de production.
+La préproduction utilise ses propres conteneurs, variables Keycloak et données.
+Ne pas monter ni copier les données de production. L'assistant de release ne
+pilote pas encore cette étape.
 
-Ouvrir `/release-process`, puis renseigner :
+## 4. Valider la préproduction
 
-| Champ                 | Valeur d'exemple |
-| --------------------- | ---------------- |
-| Version stable        | `1.6.0`          |
-| Prochaine version dev | `1.7.0-dev`      |
-| Branche cible         | `master`         |
+Exécuter les contrôles fonctionnels et techniques prévus pour la candidate.
+Avant d'approuver, consigner :
 
-Options recommandées :
+- la version, le commit candidat et la date des essais ;
+- les identifiants exacts (IDs) des images backend et frontend en cours
+  d'exécution ;
+- les résultats des tests et la décision d'approbation.
 
-| Option                 | État   | Raison                               |
-| ---------------------- | ------ | ------------------------------------ |
-| Commit de préparation  | cochée | conserve toutes les mises à jour Git |
-| Restauration sur échec | cochée | restaure les fichiers en cas d'échec |
+Un tag d'image n'est pas une preuve suffisante : il peut être déplacé. En cas
+d'échec, ne pas publier dans Git. Corriger dans une nouvelle candidate et
+recommencer la validation préproduction.
 
-Les autres réglages sont regroupés sous **Options avancées**. Ils sont utiles
-pour le dépannage ou un workflow Git particulier, mais doivent rester
-désactivés pendant une release normale. Une explication est affichée sous
-chaque option et dans une infobulle au survol.
+## 5. Publier la release dans Git
 
-### 2.1 Lancer `dry-run`
+Uniquement après le feu vert préproduction, revenir dans l'assistant et lancer
+`deploy`. Confirmer l'exécution réelle seulement après avoir vérifié que le
+commit et les deux IDs d'image approuvés sont consignés.
 
-Le `dry-run` vérifie Git et exécute les tests sans préparer ni publier la
-release. Ne pas continuer si le rapport se termine en échec.
+`deploy` relance les contrôles, fusionne la branche courante dans `master`,
+pousse `master`, crée et pousse le tag stable et, si l'option est activée, crée
+la branche de développement suivante. Il ne construit ni ne déploie d'image.
 
-### 2.2 Lancer `prepare`
+La commande `full` n'est pas adaptée à ce parcours : elle enchaîne préparation
+et publication Git sans attendre la validation préproduction.
 
-`prepare` :
+## 6. Effectuer la MEP
 
-- exécute à nouveau les contrôles et les tests ;
-- archive dans `release-notes.data.ts` les tickets `done` de la version stable ;
-- les retire de `dev-todo.data.ts` sans créer de doublons ;
-- inscrit `1.6.0` dans l'environnement de production ;
-- inscrit `1.7.0-dev` dans l'environnement de développement et `package.json` ;
-- sauvegarde les fichiers modifiés dans `data/release/backups` ;
-- crée le commit de préparation lorsque `commit` est cochée.
+Suivre [PROMOTION_PREPROD_PRODUCTION.md](../../../../../docs/PROMOTION_PREPROD_PRODUCTION.md).
+Avant l'intervention :
 
-À la fin, vérifier que le rapport est réussi et que `git status` est propre.
+- sauvegarder les données et vérifier le plan de retour arrière ;
+- comparer les IDs backend/frontend de production à ceux consignés en
+  préproduction ;
+- conserver les variables, volumes et données de production ;
+- promouvoir les images préproduction **sans les reconstruire**.
 
-## 3. Construire et tester la version Docker
-
-Cette étape doit être effectuée **après `prepare` et avant `deploy`** afin de
-tester exactement la version qui sera fusionnée dans `master`.
-
-Sous Windows, démarrer Docker Desktop puis lancer depuis la racine :
-
-```bat
-scripts\build-production.bat
-```
-
-Le script compile Angular en mode production et construit les images Docker.
-Il ne démarre pas les conteneurs et ne teste pas l'application à lui seul.
-
-Démarrer ensuite la version construite :
-
-```bash
-docker compose up -d
-docker compose ps
-docker compose logs --tail=100
-```
-
-Contrôles manuels minimaux :
-
-- ouvrir `http://localhost:4200` ;
-- vérifier que la version affichée est `1.6.0` ;
-- vérifier le chargement des comptes et des transactions ;
-- ouvrir les principales fonctionnalités modifiées par la release ;
-- vérifier qu'aucun conteneur n'est `unhealthy` ou en redémarrage permanent.
-
-Arrêter l'environnement de validation lorsque les contrôles sont terminés :
-
-```bash
-docker compose down
-```
-
-En cas d'échec, corriger sur la branche de développement, commiter, puis
-recommencer depuis `dry-run`.
-
-## 4. Publier la release avec `deploy`
-
-Dans l'assistant, lancer `deploy` et confirmer l'exécution réelle.
-
-La version du tag est déduite de la branche source (`1.6.0-dev` donne
-`v1.6.0`). Elle ne dépend pas de la version locale, qui affiche déjà
-`1.7.0-dev` après `prepare`.
-
-`deploy` :
-
-1. relance les tests ;
-2. récupère la dernière version de `origin/master` ;
-3. fusionne la branche courante dans `master` ;
-4. pousse `master` sur GitHub ;
-5. crée et pousse le tag `v1.6.0` ;
-6. laisse le dépôt local positionné sur `master`.
-
-Cette étape finalise Git, mais elle n'installe rien sur le NAS.
-
-Contrôle final Git :
-
-```bash
-git status
-git log -3 --oneline --decorate
-git ls-remote --heads --tags origin
-```
-
-Vérifier que `origin/master` contient la release et que le tag `v1.6.0` existe.
-
-## 5. Créer la branche de développement suivante
-
-Après la publication, repartir du `master` actualisé :
-
-```bash
-git switch master
-git pull --ff-only origin master
-git switch -c 1.7.0-dev
-git push -u origin 1.7.0-dev
-```
-
-Toutes les nouvelles modifications doivent ensuite être réalisées sur
-`1.7.0-dev`, pas sur l'ancienne branche.
-
-## 6. Installer la release sur le NAS
-
-Cette étape peut être réalisée plus tard. Elle suppose que la release est déjà
-présente sur `origin/master`.
-
-Sur le NAS :
-
-```bash
-cd /volume1/docker/suivi-cb
-git status --short --branch
-GIT_BRANCH=master ./scripts/update.sh
-```
-
-`update.sh` refuse de continuer si le dépôt n'est pas sur `master` ou si des
-fichiers suivis contiennent des modifications non validées. Il effectue ensuite :
-
-1. un `git fetch` ;
-2. une sauvegarde horodatée de `data/database.db` ;
-3. l'arrêt des conteneurs ;
-4. le `git pull` de `master` ;
-5. la reconstruction des images Docker ;
-6. le redémarrage des conteneurs ;
-7. un contrôle de santé de l'API ;
-8. le nettoyage des anciennes images.
-
-En cas d'échec après la sauvegarde, le script restaure automatiquement l'ancien
-commit sur `master`, la base sauvegardée et les anciens conteneurs.
-
-### Première utilisation du nouveau `update.sh`
-
-Si la copie présente sur le NAS est ancienne, copier temporairement le nouveau
-script **hors du dépôt**, par exemple dans `/tmp`, puis lancer :
-
-```bash
-APP_DIR=/volume1/docker/suivi-cb \
-GIT_BRANCH=master \
-bash /tmp/update-suivi-cb.sh
-```
-
-Ne pas écraser manuellement `scripts/update.sh` dans le dépôt : cela créerait
-une modification Git locale et le nouveau script refuserait de continuer.
-
-## 7. Vérifier la production
-
-Sur le NAS :
-
-```bash
-cd /volume1/docker/suivi-cb
-sudo docker-compose ps
-sudo docker-compose logs --tail=100
-curl -fsS http://localhost:3001/api/accounts/active
-git describe --tags --always
-```
-
-Dans le navigateur :
-
-- ouvrir l'URL de production ;
-- vérifier la version affichée ;
-- contrôler les fonctionnalités principales ;
-- vérifier une lecture de la base sans créer de donnée inutile.
-
-La release est terminée seulement lorsque Git, les conteneurs, l'API et
-l'interface sont tous validés.
-
-## Que fait chaque bouton ?
-
-| Bouton     | Modifie les fichiers             | Modifie Git distant     | Déploie sur le NAS |
-| ---------- | -------------------------------- | ----------------------- | ------------------ |
-| `dry-run`  | non                              | non                     | non                |
-| `prepare`  | oui                              | non                     | non                |
-| `deploy`   | non hors fusion                  | oui, après confirmation | non                |
-| `rollback` | restaure le dernier backup local | non                     | non                |
-
-## Règles à retenir
-
-- Toujours suivre l'ordre `dry-run` → `prepare` → test Docker → `deploy` →
-  `update.sh`.
-- Laisser toutes les options avancées désactivées pour une release normale.
-- Ne jamais lancer `update.sh` avant la présence de la release sur
-  `origin/master`.
-- Ne jamais modifier directement un fichier suivi dans le dépôt du NAS.
-- Toujours vérifier la sauvegarde de la base et l'état des conteneurs.
-- Le build Docker n'est pas encore automatisé depuis l'assistant de release.
+Ne pas utiliser `scripts/update.sh` pour une MEP : ce script récupère le code
+Git et reconstruit les images. Ne pas reconstruire non plus sur le NAS de
+production.
+
+## Ce que font les actions de l'assistant
+
+| Action | Modifie des fichiers | Modifie Git distant | Déploie sur le NAS |
+| --- | --- | --- | --- |
+| `dry-run` | Non | Non | Non |
+| `prepare` | Oui, versions et notes | Non | Non |
+| `deploy` | Fusion Git uniquement | Oui, `master` et tag | Non |
+| `rollback` | Restaure le dernier backup local de préparation | Non | Non |
+
+La case d'approbation et la confirmation de `deploy` sont des contrôles
+opérateur dans l'interface. Elles ne sont pas une preuve technique : l'assistant
+ne vérifie pas encore les conteneurs ou tests sur le NAS. La commande distincte
+release:candidate:approve enregistre une attestation liée aux IDs du package et
+à l’empreinte du compte rendu ; elle refuse des IDs différents et ne lance pas la MEP.

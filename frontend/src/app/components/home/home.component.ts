@@ -234,7 +234,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   calculateAllBalances(): void {
     // Ne pas calculer si les sous-catégories ne sont pas encore chargées
     if (!this.subCategoriesLoaded) {
-      console.log('Waiting for subcategories to load...');
+
       return;
     }
     if (!this.accounts.length) {
@@ -489,9 +489,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     // L'alerte est déclenchée si le point le plus bas est négatif
     if (lowestBalanceNextMonth < 0) {
-      console.log(
-        `ALERTE Compte ${accountId}: Solde négatif de ${lowestBalanceNextMonth.toFixed(2)}€ prévu début de mois prochain.`,
-      );
+
       return lowestBalanceNextMonth;
     }
 

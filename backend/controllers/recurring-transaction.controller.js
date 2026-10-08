@@ -59,10 +59,6 @@ exports.addRecurringTransaction = async (req, res) => {
         newRecurringTransaction.active_months
       );
     }
-    console.log(
-      "Requête reçue pour ajouter une transaction récurrente:",
-      newRecurringTransaction
-    );
 
     const result = await RecurringTransaction.add(newRecurringTransaction);
 
@@ -94,9 +90,6 @@ exports.updateRecurringTransaction = async (req, res) => {
         fieldsToUpdate.active_months
       );
     }
-
-    console.log("ID reçu:", id);
-    console.log("Données reçues pour mise à jour:", fieldsToUpdate);
 
     if (!id) {
       return res

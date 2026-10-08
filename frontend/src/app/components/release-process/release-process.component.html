@@ -4,8 +4,8 @@
       <p class="eyebrow">Clôture de version</p>
       <h1>Assistant de release</h1>
       <p class="subtitle">
-        Cette page permet de lancer les commandes automatiquement. Les étapes en
-        bas sont des repères visuels facultatifs.
+        Automatise les contrôles et la publication Git. La validation en
+        préproduction et la MEP restent des étapes NAS à confirmer séparément.
       </p>
     </div>
     <button class="reset-btn" type="button" (click)="resetProcess()">
@@ -17,37 +17,52 @@
     <div class="guide-heading">
       <div>
         <p class="eyebrow">README intégré</p>
-        <h2>Mode opératoire d'une montée de version</h2>
+        <h2>Parcours obligatoire : Dev → préproduction → MEP</h2>
       </div>
-      <span class="guide-badge">À suivre dans l'ordre</span>
+      <span class="guide-badge">Ne pas sauter d'étape</span>
     </div>
 
     <ol class="release-checklist">
       <li>
-        <strong>Finaliser</strong> et pousser la branche de développement.
+        <strong>Dev :</strong> terminer les changements et valider les tests
+        fonctionnels.
       </li>
       <li>
-        <strong>dry-run</strong> pour contrôler Git et exécuter les tests.
+        <strong>Contrôles dev :</strong> lancer <code>dry-run</code>, puis
+        <code>prepare</code> pour créer le commit candidat.
       </li>
       <li>
-        <strong>prepare</strong> pour clôturer la version et créer le commit.
+        <strong>Préparer la candidate :</strong> pousser le commit préparé,
+        construire et transférer les images vers la préproduction.
       </li>
-      <li><strong>Construire et tester Docker</strong> sur le poste local.</li>
-      <li><strong>deploy</strong> pour fusionner, pousser et créer le tag.</li>
-      <li>La branche suivante peut être créée automatiquement après la clôture.</li>
+      <li>
+        <strong>Préproduction :</strong> déployer et tester la candidate ; noter
+        le commit et les identifiants des deux images validées.
+      </li>
+      <li>
+        <strong>Publication Git :</strong> après validation préprod, lancer
+        <code>deploy</code> pour fusionner et créer le tag.
+      </li>
+      <li>
+        <strong>MEP :</strong> promouvoir les mêmes images sur la production,
+        sans reconstruire.
+      </li>
     </ol>
 
     <details class="release-guide-details">
       <summary>Afficher le guide complet</summary>
       <div class="release-guide-content">
         <article>
-          <h3>1. Avant de commencer</h3>
+          <h3>1. Développement et validation locale</h3>
           <ul>
             <li>
-              La branche à livrer doit contenir tous les commits et être
-              poussée.
+              Terminer les changements sur la branche de développement et
+              vérifier les fonctionnalités concernées sur l'application locale.
             </li>
-            <li><code>git status</code> doit indiquer un répertoire propre.</li>
+            <li>
+              Exécuter <code>dry-run</code> depuis cette page : il vérifie
+              l'état Git et lance les tests automatisés.
+            </li>
             <li>
               Les tickets livrés doivent être <code>done</code> et cibler la
               version stable.
@@ -60,7 +75,7 @@
         </article>
 
         <article>
-          <h3>2. Réglages recommandés</h3>
+          <h3>2. Préparer le commit candidat</h3>
           <div class="guide-options">
             <div><strong>Version stable</strong><span>Ex. 1.6.0</span></div>
             <div>
@@ -84,67 +99,81 @@
             </li>
           </ul>
           <p>
-            Lancer <strong>dry-run</strong>, contrôler le rapport, puis lancer
-            <strong>prepare</strong>. Cette seconde action archive les notes de
-            version, met à jour les numéros et crée le commit de préparation.
+            Après un <code>dry-run</code> réussi, lancer <code>prepare</code>.
+            Cette action relance les contrôles, archive les notes, met à jour
+            les versions et crée le commit candidat si l'option correspondante
+            est activée. Vérifier le rapport et l'état Git.
+          </p>
+          <p>
+            <code>prepare</code> ne pousse pas le commit. Pousser explicitement
+            la branche candidate avant de la rendre disponible pour la
+            construction préproduction. Ne pas modifier ensuite le code ou la
+            configuration de l'image : toute modification impose une nouvelle
+            candidate et une nouvelle validation.
           </p>
         </article>
 
         <article>
-          <h3>3. Validation Docker locale</h3>
-          <p>Démarrer Docker Desktop puis, depuis la racine du projet :</p>
-          <pre class="guide-command"><code>scripts\build-production.bat
-docker compose up -d
-docker compose ps
-docker compose logs --tail=100</code></pre>
+          <h3>3. Construire et installer la candidate en préproduction</h3>
           <p>
-            Ouvrir <code>http://localhost:4200</code>, vérifier la version, les
-            pages modifiées et l'état des conteneurs. Le script de build ne
-            démarre pas les conteneurs à lui seul. Après validation :
-          </p>
-          <pre class="guide-command"><code>docker compose down</code></pre>
-        </article>
-
-        <article>
-          <h3>4. Publication Git</h3>
-          <p>
-            Lancer <strong>deploy</strong> et confirmer l'exécution réelle.
-            L'assistant actualise <code>master</code>, fusionne la branche
-            courante, pousse <code>master</code> et crée le tag stable. Il
-            n'installe rien sur le NAS.
+            Utiliser la commande du panneau « Package de préproduction » pour
+            construire, exporter et transférer les images du commit candidat.
+            Suivre ensuite la checklist de candidate préproduction du dépôt pour
+            la plateforme Docker du NAS, l'import, la configuration isolée et le
+            démarrage. Ne pas utiliser le Compose de production.
           </p>
           <p>
-            La commande technique <strong>full</strong> n'est volontairement pas
-            affichée : elle ne laisse pas d'étape de validation Docker entre
-            <code>prepare</code> et <code>deploy</code>.
+            La commande s'exécute dans le terminal du PC pour permettre la
+            saisie du mot de passe SSH. Elle vérifie le transfert et s'arrête
+            avant l'installation sur le NAS. Le mode opératoire est dans
+            <code>docs/AUTOMATISATION_CANDIDATE.md</code>.
           </p>
         </article>
 
         <article>
-          <h3>5. Développement suivant</h3>
+          <h3>4. Tester et approuver la préproduction</h3>
           <p>
-            Après la publication Git, repartir du <code>master</code> actualisé
-            :
+            Exécuter les contrôles fonctionnels et techniques définis pour la
+            candidate. Consigner le commit, la date de validation, les
+            identifiants exacts des images backend et frontend et les résultats.
+            Les tags seuls ne suffisent pas : ils peuvent être déplacés.
           </p>
-          <pre class="guide-command"><code>git switch master
-git pull --ff-only origin master
-git switch -c &lt;prochaine-version&gt;-dev
-git push -u origin &lt;prochaine-version&gt;-dev</code></pre>
+          <p>
+            En cas d'échec, ne pas lancer <code>deploy</code>. Corriger sur la
+            branche de développement, puis reprendre le parcours avec une
+            nouvelle candidate.
+          </p>
         </article>
 
         <article>
-          <h3>6. Mise à jour du NAS, immédiate ou différée</h3>
-          <p>La release doit d'abord exister sur <code>origin/master</code>.</p>
-          <pre class="guide-command"><code>cd /volume1/docker/suivi-cb
-git status --short --branch
-GIT_BRANCH=master ./scripts/update.sh
-sudo docker-compose ps
-sudo docker-compose logs --tail=100</code></pre>
+          <h3>5. Publier la release dans Git</h3>
           <p>
-            <code>update.sh</code> sauvegarde la base, récupère
-            <code>master</code>, reconstruit les images, redémarre les
-            conteneurs et teste l'API. En cas d'échec, il restaure le code et la
-            base précédents.
+            Seulement après l'approbation préprod, lancer <code>deploy</code>
+            depuis la branche candidate et confirmer l'exécution réelle.
+            L'assistant relance les tests, fusionne la branche dans
+            <code>master</code>, pousse le tag stable et peut créer la branche
+            du cycle suivant. Cette action publie dans Git ; elle ne déploie
+            rien sur le NAS.
+          </p>
+          <p>
+            La commande <code>full</code> n'est pas adaptée : elle enchaîne
+            préparation et publication sans laisser le temps de valider la
+            candidate en préproduction.
+          </p>
+        </article>
+
+        <article>
+          <h3>6. Effectuer la MEP</h3>
+          <p>
+            Après sauvegardes et vérifications de production, promouvoir les
+            images identiques à celles testées en préproduction, en conservant
+            la configuration et les données de production. Ne pas reconstruire
+            depuis Git ou sur le NAS de production. Suivre
+            <code>docs/PROMOTION_PREPROD_PRODUCTION.md</code>.
+          </p>
+          <p>
+            <code>scripts/update.sh</code> fait un <code>git pull</code> et
+            reconstruit les images : il ne doit pas être utilisé pour cette MEP.
           </p>
         </article>
 
@@ -157,10 +186,59 @@ sudo docker-compose logs --tail=100</code></pre>
   </section>
 
   <section class="automation-panel">
+    <h2>Package de préproduction</h2>
+    <p>
+      Après prepare, utiliser un commit propre et un nouveau numéro de
+      candidate. Exécuter les commandes ci-dessous dans le terminal du PC, à la
+      racine du dépôt.
+    </p>
+    <div class="grid">
+      <label>
+        Candidate
+        <input
+          class="text-input"
+          [(ngModel)]="candidateVersion"
+          (ngModelChange)="preproductionApproved = false"
+          placeholder="2.2.0-rc.3"
+        />
+      </label>
+      <label>
+        Architecture du NAS
+        <select
+          class="text-input"
+          [(ngModel)]="candidatePlatform"
+          (ngModelChange)="preproductionApproved = false"
+        >
+          <option value="linux/amd64">x86_64 : linux/amd64</option>
+          <option value="linux/arm64">aarch64 : linux/arm64</option>
+        </select>
+      </label>
+    </div>
+    <ng-container *ngIf="candidateCommand; else invalidCandidate">
+      <p>Simulation :</p>
+      <pre class="command-block"><code>{{ candidateCommand }}</code></pre>
+      <p>Construire, exporter et transférer au NAS :</p>
+      <pre
+        class="command-block"
+      ><code>{{ candidateCommand }} --execute</code></pre>
+    </ng-container>
+    <ng-template #invalidCandidate>
+      <p>Renseigner une candidate au format 2.2.0-rc.3.</p>
+    </ng-template>
+    <p>
+      La commande conserve les IDs et vérifie les empreintes. Installer et
+      tester ensuite en préproduction, puis enregistrer l'approbation explicite
+      avec
+      <code>release:candidate:approve</code> avant publication Git et MEP.
+      Consulter <code>docs/AUTOMATISATION_CANDIDATE.md</code>.
+    </p>
+  </section>
+
+  <section class="automation-panel">
     <h2>Actions exécutables</h2>
     <div class="grid">
       <label>
-        Version stable (pour <code>prepare</code>)
+        Version stable
         <input
           class="text-input"
           [(ngModel)]="stableVersion"
@@ -269,12 +347,18 @@ sudo docker-compose logs --tail=100</code></pre>
             Facultatif. Ne pas activer si la branche à livrer existe déjà.
           </small>
         </label>
-        <label class="release-option" title="Crée et publie la branche du prochain cycle depuis master après la clôture.">
+        <label
+          class="release-option"
+          title="Crée et publie la branche du prochain cycle depuis master après la clôture."
+        >
           <span class="release-option-control">
             <input type="checkbox" [(ngModel)]="createNextBranch" />
             <strong>Créer automatiquement la branche suivante</strong>
           </span>
-          <small>Exemple : après 2.0.0, création de <code>2.1.0</code> depuis master.</small>
+          <small
+            >Exemple : après 2.0.0, création de <code>2.1.0</code> depuis
+            master.</small
+          >
         </label>
       </div>
     </details>
@@ -298,6 +382,18 @@ sudo docker-compose logs --tail=100</code></pre>
       </label>
     </div>
 
+    <label class="release-option release-option--warning">
+      <span class="release-option-control">
+        <input type="checkbox" [(ngModel)]="preproductionApproved" />
+        <strong>Candidate testée et approuvée en préproduction</strong>
+      </span>
+      <small>
+        Avant de cocher, vérifier et consigner le commit candidat et les IDs
+        exacts des images backend/frontend testées. Cette confirmation est
+        manuelle : l'assistant ne lit pas l'état du NAS.
+      </small>
+    </label>
+
     <div class="button-row">
       <button
         type="button"
@@ -318,10 +414,10 @@ sudo docker-compose logs --tail=100</code></pre>
       <button
         type="button"
         class="primary"
-        [disabled]="isRunning"
+        [disabled]="isRunning || !preproductionApproved"
         (click)="runDeploy()"
       >
-        Lancer deploy
+        Publier Git (après validation préprod)
       </button>
       <button
         type="button"
@@ -400,15 +496,22 @@ sudo docker-compose logs --tail=100</code></pre>
         </ul>
       </div>
       <div class="note-card">
-        <h4>Publier</h4>
+        <h4>Préproduction puis publication</h4>
         <ul>
           <li>
-            <strong>deploy</strong> effectue toujours la publication réelle
-            après confirmation : fusion dans <code>master</code>, push et tag.
+            La validation préproduction et la MEP sont des opérations manuelles
+            sur le NAS ; consigner le commit et les identifiants des images
+            approuvées.
           </li>
           <li>
-            Il ne déploie pas sur le NAS : cette opération reste assurée par
-            <code>update.sh</code>.
+            <strong>deploy</strong> ne doit être lancé qu'après le feu vert
+            préproduction. Il fusionne dans <code>master</code>, pousse le tag,
+            mais ne déploie pas sur le NAS.
+          </li>
+          <li>
+            La production reçoit les images préproduction existantes ;
+            <code>update.sh</code> et toute reconstruction sont exclus de la
+            MEP.
           </li>
         </ul>
       </div>
@@ -430,10 +533,10 @@ sudo docker-compose logs --tail=100</code></pre>
   </section>
 
   <section class="timeline-area">
-    <h3>Repères visuels (facultatif)</h3>
+    <h3>Étapes du parcours</h3>
     <p class="timeline-caption">
-      Ces étapes sont un guide de lecture. Elles n'exécutent aucune action à
-      elles seules.
+      Le lancement des tests et des commandes Git est automatisé ici ; les
+      validations et déploiements NAS restent à effectuer et consigner.
     </p>
 
     <ol class="timeline">

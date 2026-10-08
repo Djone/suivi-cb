@@ -33,7 +33,6 @@ exports.updateAccountConfig = (req, res) => {
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf8");
-    console.log("Configuration du compte mise à jour:", config);
     res
       .status(200)
       .json({ message: "Configuration mise à jour avec succès", config });
@@ -79,7 +78,6 @@ exports.updateAccountsConfig = (req, res) => {
       JSON.stringify(config, null, 2),
       "utf8"
     );
-    console.log("Configuration des comptes mise à jour:", config);
     res
       .status(200)
       .json({ message: "Configuration mise à jour avec succès", config });

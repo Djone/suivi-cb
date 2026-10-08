@@ -923,12 +923,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
   }
 
   toggleActive(transaction: RecurringTransaction, event: any): void {
-    console.log('RECURRING TRANSACTION LIST : toggleActive appelé', {
-      transaction: transaction.label,
-      transactionId: transaction.id,
-      currentStatus: transaction.isActive,
-      eventChecked: event.checked
-    });
+
 
     const newStatus = event.checked ? 1 : 0;
     const action = newStatus ? 'réactiver' : 'désactiver';
@@ -939,7 +934,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
 
     service$.subscribe({
       next: () => {
-        console.log(`RECURRING TRANSACTION LIST : Transaction récurrente ${action}e avec succès`);
+
         // Attendre un peu pour laisser le temps à la DB de se mettre à jour
         setTimeout(() => {
           this.loadRecurringTransactions();

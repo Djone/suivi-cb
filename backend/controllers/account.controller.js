@@ -42,8 +42,6 @@ exports.getAccountById = async (req, res) => {
 
 // Ajouter un nouveau compte
 exports.addAccount = async (req, res) => {
-  console.log('ACCOUNT CONTROLLER : Ajout d\'un compte', req.body);
-
   const { error, value } = accountSchema.validate(req.body, { abortEarly: false });
 
   if (error) {
@@ -68,9 +66,6 @@ exports.updateAccount = async (req, res) => {
   if (isNaN(id)) {
     return res.status(400).json({ error: 'ID invalide.' });
   }
-
-  console.log('ACCOUNT CONTROLLER : Mise à jour du compte', id, req.body);
-
   const { error, value } = accountSchema.validate(req.body, { abortEarly: false });
 
   if (error) {

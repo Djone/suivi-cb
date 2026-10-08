@@ -9,22 +9,92 @@ La base de données reste partagée : attribuer ce rôle uniquement aux personne
 Prérequis : Node 24 ou supérieur, Docker démarré. Depuis la racine, dans PowerShell :
 
 ```powershell
-cd keycloak-server
-Copy-Item .env.dev.example .env
-docker compose --env-file .env -f compose.yml -f compose.dev.yml up -d
-cd ..
 npm --prefix backend ci
 npm --prefix frontend ci
 npm start
 ```
 
-Keycloak est accessible sur `http://localhost:8080`, l’application sur `http://localhost:4200`. Le backend utilise ces paramètres par défaut en développement. Le realm `suivi-cb` et le thème sont importés au premier démarrage. Un realm déjà présent n’est pas écrasé : appliquer les modifications via la console d’administration.
+`npm start` est le lanceur unique : il démarre Keycloak et PostgreSQL, attend que le realm `suivi-cb` réponde sur `http://localhost:8080`, puis lance le backend et Angular sur `http://localhost:4200`. Il force `NODE_ENV=development` et l'URL Keycloak locale, même si le terminal ou l'IDE contient encore des variables de production. Le realm `suivi-cb` et le thème sont importés au premier démarrage. Un realm déjà présent n’est pas écrasé : appliquer les modifications via la console d’administration.
+
+Au premier lancement, `npm start` crée `keycloak-server\.env` à partir du modèle puis s'arrête. Remplacer les deux secrets d'exemple dans ce fichier, puis relancer `npm start`. Pour démarrer uniquement Keycloak : `npm run start:keycloak`.
 
 1. Se connecter à la console Keycloak avec `admin` et le mot de passe choisi.
 2. Sélectionner `suivi-cb`, créer un utilisateur dans **Users**, puis définir son mot de passe dans **Credentials** (au moins 12 caractères, une majuscule, une minuscule et un chiffre).
 3. Lui attribuer le rôle de realm `app-user` dans **Role mapping**. Aucun compte de démonstration ni mot de passe utilisateur n’est livré.
-4. Configurer le SMTP du realm pour rendre le lien de récupération du mot de passe opérationnel.
+4. [Configurer le SMTP du realm](#configuration-smtp-envoi-des-emails) pour rendre le lien de récupération du mot de passe opérationnel.
 5. Ouvrir l’application, cliquer sur « Se connecter », renseigner l’identifiant, puis le mot de passe. La présentation fonctionne aussi sans JavaScript, avec les deux champs affichés.
+
+## Configuration SMTP (envoi des emails)
+
+Le SMTP sert à envoyer les liens de récupération du mot de passe et de vérification d’email. Il se configure **par realm** : sélectionner `suivi-cb`, même si le compte administrateur appartient à `master`. Répéter la configuration pour chaque autre realm qui doit envoyer des emails.
+
+### Préparer le compte d’envoi
+
+Obtenir auprès du fournisseur de messagerie l’hôte SMTP, le port, le mode TLS, l’identifiant et le secret SMTP. Utiliser une adresse expéditrice autorisée par ce fournisseur. Les adresses ci-dessous sont des exemples à remplacer.
+
+Si le fournisseur exige un mot de passe d’application ou une clé SMTP, utiliser ce secret. Si l’authentification SMTP par mot de passe est interdite, suivre sa procédure OAuth compatible avec la version de Keycloak installée.
+
+### Configurer le realm
+
+1. Ouvrir `https://auth.jolurie.com/admin/` en production ou `http://localhost:8080/admin/` en développement.
+2. Sélectionner **suivi-cb → Realm settings → Email**.
+3. Renseigner les champs suivants :
+
+| Champ | Valeur |
+| --- | --- |
+| **From** | Adresse d’envoi autorisée, par exemple `noreply@jolurie.com` si elle est validée par le fournisseur |
+| **From display name** | `Suivi Bancaire` |
+| **Reply to** | Facultatif : adresse consultée pour les réponses |
+| **Envelope from** | Facultatif : laisser vide sauf consigne du fournisseur |
+| **Host** | Hôte SMTP fourni, par exemple `smtp.example.com` |
+| **Port** | Port fourni, généralement `587` ou `465` |
+| **Authentication** | **On** si le fournisseur exige une authentification |
+| **Username** | Identifiant SMTP fourni, souvent l’adresse email complète |
+| **Password** | Secret SMTP ou mot de passe d’application |
+
+Si un champ **Authentication Type** est proposé, choisir **Password** pour une authentification avec identifiant et secret.
+
+Choisir le mode indiqué par le fournisseur :
+
+| Mode | Port habituel | Enable SSL | Enable StartTLS |
+| --- | --- | --- | --- |
+| STARTTLS | `587` | **Off** | **On** |
+| TLS implicite (SMTPS) | `465` | **On** | **Off** |
+
+Ne pas activer les deux modes simultanément. Cliquer sur **Save**. Les paramètres sont conservés dans la base PostgreSQL de Keycloak ; aucun redémarrage ni modification de suivi-cb n’est nécessaire. Conserver le secret dans un coffre et le saisir dans Keycloak, sans l’ajouter aux fichiers JSON de realm ou à la documentation versionnée.
+
+### Tester l’envoi et la récupération du mot de passe
+
+1. Vérifier que l’administrateur connecté possède une adresse email valide dans son realm d’origine (généralement **master → Users → votre administrateur → Details → Email**), puis revenir dans `suivi-cb`.
+2. Dans **Realm settings → Email**, cliquer sur **Test connection**. Vérifier la réception de l’email de test par l’administrateur connecté, y compris dans les indésirables.
+3. Dans **suivi-cb → Users → utilisateur de test → Details**, renseigner une adresse email dont vous contrôlez la boîte.
+4. Vérifier **Realm settings → Login → Forgot password = On** et **Authentication → Bindings → Reset credentials flow** (flux standard `reset credentials`, sauf personnalisation volontaire).
+5. Dans une fenêtre privée, ouvrir suivi-cb, choisir **Se connecter → Mot de passe oublié** et saisir l’identifiant du compte de test.
+6. Vérifier la réception, le lien commençant par `https://auth.jolurie.com/` en production, puis le changement de mot de passe et la reconnexion.
+
+Le message de confirmation du formulaire ne prouve pas à lui seul qu’un email a été envoyé : vérifier la boîte et les journaux. Utiliser un compte de test dédié ; le parcours de récupération OTP décrit plus bas peut également réinitialiser son identifiant OTP.
+
+### Dépannage SMTP sur le NAS
+
+Depuis le dossier Keycloak :
+
+```sh
+sudo docker compose --env-file .env -f compose.yml logs --tail=100 keycloak
+```
+
+| Symptôme | Points à vérifier |
+| --- | --- |
+| Timeout ou connexion refusée | Hôte, port, DNS et accès sortant du conteneur/NAS au serveur SMTP |
+| Erreur d’authentification (`535`, par exemple) | Identifiant, secret, mot de passe d’application et autorisation SMTP chez le fournisseur |
+| Erreur TLS ou certificat | Couple port/mode TLS, horloge du NAS et chaîne de confiance du certificat SMTP |
+| Expéditeur refusé | Adresse From et domaine autorisés |
+| Test reçu, récupération absente | Email du compte de test, option Forgot password, flux Reset Credentials et journaux |
+| Email classé comme spam | Indésirables et SPF/DKIM/DMARC selon les indications du fournisseur |
+| Lien vers localhost ou mauvais domaine | `KC_HOSTNAME=https://auth.jolurie.com` et éventuelle Frontend URL du realm |
+
+Le SMTP utilise une connexion **sortante** depuis Keycloak. Les ports HTTP locaux `8080` ou `18080` et le reverse proxy HTTPS ne sont pas les ports SMTP ; aucun port SMTP entrant n’est nécessaire sur le routeur.
+
+Référence : [configuration email d’un realm — documentation Keycloak](https://www.keycloak.org/docs/latest/server_admin/index.html#_email).
 
 ## Dépannage : API 401 et claim `sub` manquant
 
@@ -123,6 +193,9 @@ Au rechargement de la page, une vérification SSO silencieuse restaure la sessio
 `GET /api/auth/config` expose uniquement l’URL publique, le realm et l’identifiant du client, pour configurer Angular sans reconstruire le frontend. `GET /health` est une sonde sans données métier. Toutes les autres routes `/api` sont protégées, y compris les routes de release, qui gardent aussi leur restriction locale existante.
 
 ## Validation
+
+Pour le durcissement HTTP et les contrôles avant mise en production, voir
+[SECURITE_MEP.md](./SECURITE_MEP.md).
 
 ```powershell
 npm --prefix backend run test:auth
