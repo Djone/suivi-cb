@@ -37,7 +37,7 @@
     "release:candidate:package": "node scripts/release-candidate.js package",
     "release:candidate:transfer": "node scripts/release-candidate.js transfer",
     "release:candidate:approve": "node scripts/release-candidate.js approve",
-    "test:candidate": "node --test scripts/tests/release-candidate.test.cjs"
+    "test:candidate": "node --test scripts/tests/release-candidate.test.cjs scripts/tests/candidate-inventory.test.cjs"
   },
   "keywords": [],
   "author": "",

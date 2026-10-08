@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const { candidateInventory } = require('../services/candidate-inventory');
 
 const ROOT_DIR = path.resolve(__dirname, '..', '..');
 const RELEASE_SCRIPT_PATH = path.join(ROOT_DIR, 'scripts', 'release-orchestrator.js');
@@ -119,6 +120,16 @@ exports.getReleaseStatus = (req, res) => {
     lastRun: toResponseShape(lastRun),
     lastReport: readLastReport(),
   });
+};
+
+exports.getNextCandidate = async (req, res) => {
+  const stable = typeof req.query.stable === 'string' ? req.query.stable.trim() : '';
+  if (!/^\d+\.\d+\.\d+$/.test(stable)) return res.status(400).json({ message: 'Version stable invalide (ex. 2.2.0).' });
+  try {
+    return res.status(200).json(await candidateInventory(ROOT_DIR, stable));
+  } catch {
+    return res.status(500).json({ message: 'Impossible de lire les candidates locales.' });
+  }
 };
 
 exports.runReleaseCommand = (req, res) => {

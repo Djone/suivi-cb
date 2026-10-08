@@ -19,7 +19,17 @@ ni anciennes archives. La commande ne crée pas de commit et ne pousse pas Git.
 Sous PowerShell Windows, employer npm.cmd : le lanceur npm.ps1 installé ici perd
 les arguments après --. Sous Linux/macOS, utiliser npm à la place de npm.cmd.
 
-Choisir une nouvelle candidate au format 2.2.0-rc.3. Le point avant le numéro est
+Dans release-process, le panneau « Package de préproduction » propose automatiquement
+le prochain numéro pour la version stable saisie. Il prend le plus grand numéro
+trouvé dans les dossiers .cache/releases, les fichiers locaux et les tags Docker
+de préproduction, puis ajoute 1. Les anciens noms rc2 et les nouveaux rc.2 sont
+reconnus ; un dossier de construction échouée réserve aussi son numéro. Utiliser
+« Actualiser la prochaine candidate » après une construction lancée dans le terminal.
+Si Docker est indisponible, l’interface le signale. Le NAS distant n’est pas interrogé :
+le refus d’écrasement pendant le transfert protège aussi les candidates présentes
+uniquement sur le NAS. Le numéro affiché est une proposition, pas une réservation.
+
+La candidate proposée utilise le format 2.2.0-rc.3. Le point avant le numéro est
 volontaire (prérelease SemVer) ; les anciens tags 2.2.0-rc2 ne sont pas modifiés.
 Chaque construction utilise un nouveau numéro, même après un échec partiel.
 

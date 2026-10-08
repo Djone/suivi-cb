@@ -194,12 +194,12 @@
     </p>
     <div class="grid">
       <label>
-        Candidate
+        Prochaine candidate (automatique)
         <input
           class="text-input"
-          [(ngModel)]="candidateVersion"
-          (ngModelChange)="preproductionApproved = false"
-          placeholder="2.2.0-rc.3"
+          [value]="candidateVersion"
+          readonly
+          placeholder="Calcul en cours"
         />
       </label>
       <label>
@@ -214,6 +214,10 @@
         </select>
       </label>
     </div>
+    <p>{{ candidateMessage }}</p>
+    <button type="button" class="ghost" (click)="refreshCandidate()" [disabled]="candidateLoading">
+      Actualiser la prochaine candidate
+    </button>
     <ng-container *ngIf="candidateCommand; else invalidCandidate">
       <p>Simulation :</p>
       <pre class="command-block"><code>{{ candidateCommand }}</code></pre>
@@ -223,7 +227,7 @@
       ><code>{{ candidateCommand }} --execute</code></pre>
     </ng-container>
     <ng-template #invalidCandidate>
-      <p>Renseigner une candidate au format 2.2.0-rc.3.</p>
+      <p>Les commandes seront disponibles après le calcul de la prochaine candidate.</p>
     </ng-template>
     <p>
       La commande conserve les IDs et vérifie les empreintes. Installer et
@@ -242,6 +246,7 @@
         <input
           class="text-input"
           [(ngModel)]="stableVersion"
+          (ngModelChange)="refreshCandidate()"
           placeholder="1.3.0"
         />
         <small>

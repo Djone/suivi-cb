@@ -3,6 +3,7 @@ const router = express.Router();
 const releaseController = require('../controllers/release.controller');
 
 router.get('/status', releaseController.getReleaseStatus);
+router.get('/next-candidate', releaseController.getNextCandidate);
 router.post('/run', releaseController.runReleaseCommand);
 
 module.exports = router;

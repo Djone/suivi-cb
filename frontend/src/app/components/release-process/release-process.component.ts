@@ -53,7 +53,10 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public commit = true;
   public rollbackOnFailure = true;
   public preproductionApproved = false;
-  public candidateVersion = `${this.stableCandidate}-rc.1`;
+  public candidateVersion = '';
+  public candidateMessage = '';
+  public candidateLoading = false;
+  private candidateRequest = 0;
   public candidatePlatform = 'linux/amd64';
 
   public isRunning = false;
@@ -115,6 +118,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   constructor(private readonly releaseService: ReleaseProcessService) {}
 
   ngOnInit(): void {
+    this.refreshCandidate();
     this.refreshStatus();
     this.startPolling();
   }
@@ -151,6 +155,35 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       return '';
     }
     return `npm.cmd run release:candidate -- --candidate=${this.candidateVersion} --platform=${this.candidatePlatform}`;
+  }
+
+  refreshCandidate(): void {
+    const request = ++this.candidateRequest;
+    const stable = this.stableVersion.trim();
+    this.candidateVersion = '';
+    this.preproductionApproved = false;
+    if (!/^\d+\.\d+\.\d+$/.test(stable)) {
+      this.candidateLoading = false;
+      this.candidateMessage = 'Renseigner une version stable valide pour calculer la candidate.';
+      return;
+    }
+    this.candidateLoading = true;
+    this.candidateMessage = 'Recherche des candidates existantes…';
+    this.releaseService.getNextCandidate(stable).subscribe({
+      next: (suggestion) => {
+        if (request !== this.candidateRequest) return;
+        this.candidateLoading = false;
+        this.candidateVersion = suggestion.next;
+        this.candidateMessage = suggestion.dockerAvailable
+          ? suggestion.scope
+          : `Docker indisponible : calcul depuis les fichiers locaux uniquement. ${suggestion.scope}`;
+      },
+      error: () => {
+        if (request !== this.candidateRequest) return;
+        this.candidateLoading = false;
+        this.candidateMessage = 'Calcul indisponible. Vérifier le backend puis actualiser.';
+      },
+    });
   }
 
   runDryRun(): void {
@@ -199,7 +232,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.commit = true;
     this.rollbackOnFailure = true;
     this.preproductionApproved = false;
-    this.candidateVersion = `${this.stableCandidate}-rc.1`;
+    this.refreshCandidate();
     this.candidatePlatform = 'linux/amd64';
 
     this.errorMessage = '';
