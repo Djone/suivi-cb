@@ -1,6 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { DocumentationService } from '../../services/documentation.service';
+import { DocumentationEntry } from '../documentation/documentation.model';
+import { ReleaseDocumentReaderComponent } from './release-document-reader.component';
+import { RELEASE_PHASES, ReleasePhase, ReleaseTask } from './release-timeline';
 import { interval, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -10,13 +15,6 @@ import {
   ReleaseRunRequest,
   ReleaseStatusResponse,
 } from '../../services/release-process.service';
-
-interface ReleaseStep {
-  id: string;
-  title: string;
-  description: string;
-  helper: string;
-}
 
 interface ReleaseReport {
   error?: string;
@@ -29,7 +27,7 @@ interface ReleaseReport {
 @Component({
   selector: 'app-release-process',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DialogModule, ReleaseDocumentReaderComponent],
   templateUrl: './release-process.component.html',
   styleUrls: ['./release-process.component.css'],
 })
@@ -52,7 +50,6 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   public branchPrefix = 'release/';
   public commit = true;
   public rollbackOnFailure = true;
-  public preproductionApproved = false;
   public candidateVersion = '';
   public candidateMessage = '';
   public candidateLoading = false;
@@ -70,54 +67,102 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
 
   private pollingSub: Subscription | null = null;
 
-  public readonly steps: ReleaseStep[] = [
-    {
-      id: 'development',
-      title: 'Développement validé',
-      description:
-        'Terminer les changements, vérifier les fonctionnalités concernées et pousser la branche de développement.',
-      helper: 'Validation fonctionnelle locale + branche synchronisée',
-    },
-    {
-      id: 'dev-tests',
-      title: 'Tests de développement',
-      description:
-        'Lancer dry-run et vérifier que les contrôles Git et les tests automatisés réussissent.',
-      helper: 'Action automatisée : dry-run',
-    },
-    {
-      id: 'candidate',
-      title: 'Candidate préparée',
-      description:
-        'Lancer prepare, vérifier le commit candidat, puis le pousser avant de construire les images.',
-      helper: 'Action automatisée : prepare ; push du candidat à effectuer',
-    },
-    {
-      id: 'preproduction',
-      title: 'Préproduction validée',
-      description:
-        'Installer la candidate sur le NAS, tester et consigner les IDs exacts des images backend et frontend.',
-      helper: 'Action NAS manuelle ; ne pas reconstruire après validation',
-    },
-    {
-      id: 'git-publication',
-      title: 'Publication Git',
-      description:
-        'Après le feu vert préproduction, lancer deploy pour fusionner dans master et publier le tag stable.',
-      helper: 'Action automatisée : deploy ; Git uniquement',
-    },
-    {
-      id: 'production',
-      title: 'Mise en production',
-      description:
-        'Promouvoir les mêmes images validées avec les variables et données de production.',
-      helper: 'Action NAS manuelle ; aucune reconstruction ni update.sh',
-    },
-  ];
+  readonly phases = RELEASE_PHASES;
+  completedTasks = new Set<string>();
+  closedAt: Date | null = null;
+  pickerPhase: string | null = null;
+  documentQuery = '';
+  openDocument: DocumentationEntry | null = null;
+  documentationError = '';
+  linkedDocuments: Record<string, string> = {
+    development: 'docs/TESTING.md', controls: 'docs/RELEASE_AUTOMATION.md',
+    candidate: 'docs/AUTOMATISATION_CANDIDATE.md', preproduction: 'docs/CHECKLIST_RC2_PREPRODUCTION.md',
+    'git-publication': 'docs/RELEASE_AUTOMATION.md', production: 'docs/PROMOTION_PREPROD_PRODUCTION.md',
+  };
+  private pendingRunKey: string | null = null;
+  private startingRequest = false;
+  private statusRequest = 0;
+  private latestAppliedStatus = 0;
+  private readonly hiddenRuns = new Set<string>();
 
-  constructor(private readonly releaseService: ReleaseProcessService) {}
+  constructor(private readonly releaseService: ReleaseProcessService, readonly documentation: DocumentationService) { }
+
+  get firstIncompleteIndex(): number { return this.phases.findIndex((phase) => phase.tasks.some((task) => !this.completedTasks.has(task.id))); }
+  get allComplete(): boolean { return this.firstIncompleteIndex === -1; }
+  get activePhase(): ReleasePhase | null { return this.phases[this.firstIncompleteIndex] ?? null; }
+  get totalCount(): number { return this.phases.reduce((count, phase) => count + phase.tasks.length, 0); }
+  get completedCount(): number { return this.phases.reduce((count, phase, index) => count + (this.isUnlocked(index) ? phase.tasks.filter((task) => this.completedTasks.has(task.id)).length : 0), 0); }
+  get progress(): number { return Math.round(100 * this.completedCount / this.totalCount); }
+  get preproductionApproved(): boolean { return this.isUnlocked(3) && this.completedTasks.has('preprod-deploy') && this.completedTasks.has('preprod-approval'); }
+  get displayedRun(): ReleaseRun | null { return this.activeRun ?? this.lastRun; }
+  get filteredDocuments(): DocumentationEntry[] { return this.documentation.documents().filter((entry) => entry.title.toLocaleLowerCase('fr').includes(this.documentQuery.toLocaleLowerCase('fr'))); }
+  isUnlocked(index: number): boolean { return this.phases.slice(0, index).every((phase) => phase.tasks.every((task) => this.completedTasks.has(task.id))); }
+  phaseStatus(index: number): string {
+    if (!this.isUnlocked(index)) return 'Verrouillée';
+    const tasks = this.phases[index].tasks;
+    return tasks.every((task) => this.completedTasks.has(task.id)) ? 'Validée' : tasks.some((task) => this.completedTasks.has(task.id)) ? 'En cours' : 'À démarrer';
+  }
+  taskDisabled(task: ReleaseTask, index: number): boolean { return this.isRunning || !this.isUnlocked(index) || (!!task.command && !this.completedTasks.has(task.id)); }
+  toggleTask(task: ReleaseTask, index: number): void {
+    if (this.taskDisabled(task, index)) return;
+    const wasChecked = this.completedTasks.has(task.id);
+    if (wasChecked) this.completedTasks.delete(task.id); else this.completedTasks.add(task.id);
+    this.closedAt = null;
+    if (wasChecked) this.clearExecution();
+  }
+  resetPhase(index: number): void {
+    if (this.isRunning || !this.isUnlocked(index)) return;
+    this.phases[index].tasks.forEach((task) => this.completedTasks.delete(task.id));
+    this.closedAt = null; this.clearExecution();
+  }
+  resetChecklist(): void {
+    if (this.isRunning) return;
+    this.completedTasks.clear(); this.closedAt = null; this.clearExecution();
+  }
+  parametersChanged(): void { this.invalidateFrom(1); }
+  private invalidateFrom(index: number): void {
+    this.phases.slice(index).forEach((phase) => phase.tasks.forEach((task) => this.completedTasks.delete(task.id)));
+    this.closedAt = null; this.clearExecution();
+  }
+  private runKey(run: ReleaseRun): string { return run.id + ':' + run.startedAt; }
+  private clearExecution(): void {
+    if (this.displayedRun) this.hiddenRuns.add(this.runKey(this.displayedRun));
+    this.lastRun = null; this.lastReport = null; this.backendMessage = ''; this.errorMessage = ''; this.copyErrorFeedback = '';
+  }
+  regenerateCandidate(): void {
+    if (this.isRunning || this.candidateLoading) return;
+    const match = this.candidateVersion.match(/^(.*-rc\.)(\d+)$/);
+    this.candidateVersion = match ? match[1] + (Number(match[2]) + 1) : this.stableVersion + '-rc.1';
+    this.invalidateFrom(2);
+    this.candidateMessage = 'Numéro incrémenté localement ; reconstruire au terminal et refaire toutes les validations aval. Ce numéro ne réserve pas un candidat sur le NAS.';
+    document.getElementById('phase-candidate')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+  closeRelease(): void { if (this.allComplete && !this.isRunning) this.closedAt = new Date(); }
+  linkedDocument(phase: ReleasePhase): DocumentationEntry | undefined { return this.documentation.documents().find((entry) => entry.id === this.linkedDocuments[phase.id]); }
+  pickDocument(phase: ReleasePhase): void { this.pickerPhase = this.pickerPhase === phase.id ? null : phase.id; this.documentQuery = ''; }
+  linkDocument(phase: ReleasePhase, entry: DocumentationEntry): void { this.linkedDocuments[phase.id] = entry.id; this.pickerPhase = null; }
+  unlinkDocument(phase: ReleasePhase): void { delete this.linkedDocuments[phase.id]; this.pickerPhase = null; }
+  async loadDocuments(): Promise<void> {
+    if (environment.production) { this.documentationError = 'Documentation disponible uniquement en développement.'; return; }
+    try { await this.documentation.load(); this.documentationError = ''; }
+    catch { this.documentationError = 'Documentation indisponible. Vérifiez le backend de développement.'; }
+  }
+  commandLabel(command: ReleaseCommand): string { return ({ 'dry-run': 'Dry-run', prepare: 'Prepare', deploy: 'Publication Git', rollback: 'Rollback', full: 'Release complète' })[command]; }
+  commandFor(command: ReleaseCommand): string { return this.formatCommand(command, this.requestFor(command) as unknown as Record<string, unknown>); }
+  get executedCommand(): string { const run = this.displayedRun; return run ? this.formatCommand(run.command, run.options) : ''; }
+  private formatCommand(command: ReleaseCommand, options: Record<string, unknown>): string {
+    const args: string[] = [];
+    for (const [key, flag] of [['stable', 'stable'], ['next', 'next'], ['branch', 'branch'], ['report', 'report'], ['backupFile', 'backup-file'], ['releaseBranch', 'release-branch'], ['branchPrefix', 'branch-prefix']]) {
+      if (typeof options[key] === 'string' && (options[key] as string).trim()) args.push('--' + flag + '=' + (options[key] as string).trim());
+    }
+    for (const [key, flag] of [['allowDirty', 'allow-dirty'], ['skipMasterCheck', 'skip-master-check'], ['skipTests', 'skip-tests'], ['skipBuild', 'skip-build'], ['execute', 'execute'], ['withNasDeploy', 'with-nas-deploy'], ['createReleaseBranch', 'create-release-branch'], ['createNextBranch', 'create-next-branch'], ['commit', 'commit'], ['tag', 'tag'], ['rollbackOnFailure', 'rollback-on-failure']]) {
+      if (options[key] === true) args.push('--' + flag);
+    }
+    return 'npm run release:' + command + ' -- ' + args.join(' ');
+  }
 
   ngOnInit(): void {
+    void this.loadDocuments();
     this.refreshCandidate();
     this.refreshStatus();
     this.startPolling();
@@ -127,41 +172,22 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.stopPolling();
   }
 
-  get dryRunCommand(): string {
-    return `npm run release:dry-run -- --branch=${this.branch}`;
-  }
-
-  get prepareCommand(): string {
-    const next = this.nextDevVersion.trim() || '<next-dev-version>';
-    const branchCmd = this.createReleaseBranch
-      ? ` --create-release-branch --branch-prefix=${this.branchPrefix}`
-      : '';
-    const releaseBranch = this.releaseBranch.trim()
-      ? ` --release-branch=${this.releaseBranch.trim()}`
-      : '';
-    const commitCmd = this.commit ? ' --commit' : '';
-    const rollbackCmd = this.rollbackOnFailure ? ' --rollback-on-failure' : '';
-
-    return `npm run release:prepare -- --stable=${this.stableVersion.trim()} --next=${next} --branch=${this.branch}${branchCmd}${releaseBranch}${commitCmd}${rollbackCmd}`;
-  }
-
-  get deployCommand(): string {
-    return `npm run release:deploy -- --branch=${this.branch} --execute`;
-  }
+  get dryRunCommand(): string { return this.commandFor('dry-run'); }
+  get prepareCommand(): string { return this.commandFor('prepare'); }
+  get deployCommand(): string { return this.commandFor('deploy'); }
 
   get candidateCommand(): string {
     if (!/^\d+\.\d+\.\d+-rc\.[1-9]\d*$/.test(this.candidateVersion) ||
-        !['linux/amd64', 'linux/arm64'].includes(this.candidatePlatform)) {
+      !['linux/amd64', 'linux/arm64'].includes(this.candidatePlatform)) {
       return '';
     }
     return `npm.cmd run release:candidate -- --candidate=${this.candidateVersion} --platform=${this.candidatePlatform}`;
   }
 
   refreshCandidate(): void {
+    if (this.isRunning || this.candidateLoading) return;
     const request = ++this.candidateRequest;
     const stable = this.stableVersion.trim();
-    this.candidateVersion = '';
-    this.preproductionApproved = false;
     if (!/^\d+\.\d+\.\d+$/.test(stable)) {
       this.candidateLoading = false;
       this.candidateMessage = 'Renseigner une version stable valide pour calculer la candidate.';
@@ -173,7 +199,11 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       next: (suggestion) => {
         if (request !== this.candidateRequest) return;
         this.candidateLoading = false;
-        this.candidateVersion = suggestion.next;
+        const currentNumber = Number(this.candidateVersion.split('-rc.')[1]) || 0;
+        const proposedNumber = Number(suggestion.next.split('-rc.')[1]) || 0;
+        if (!this.candidateVersion || proposedNumber > currentNumber) {
+          this.candidateVersion = suggestion.next; this.invalidateFrom(2);
+        }
         this.candidateMessage = suggestion.dockerAvailable
           ? suggestion.scope
           : `Docker indisponible : calcul depuis les fichiers locaux uniquement. ${suggestion.scope}`;
@@ -187,19 +217,19 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   }
 
   runDryRun(): void {
-    this.runCommand('dry-run');
+    if (this.isUnlocked(1) && !this.completedTasks.has('controls-dry-run')) this.runCommand('dry-run');
   }
 
   runPrepare(): void {
-    if (!this.validatePrepareInputs()) {
+    if (!this.isUnlocked(1) || this.completedTasks.has('controls-prepare') || !this.completedTasks.has('controls-dry-run') || !this.validatePrepareInputs()) {
       return;
     }
-    this.preproductionApproved = false;
     this.runCommand('prepare');
   }
 
   runDeploy(): void {
-    if (!this.preproductionApproved) {
+    if (this.completedTasks.has('git-publish')) return;
+    if (!this.isUnlocked(4) || !this.preproductionApproved) {
       this.errorMessage =
         'Confirmez la validation de la candidate en préproduction avant de publier dans Git.';
       return;
@@ -217,6 +247,8 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   }
 
   resetProcess(): void {
+    if (this.isRunning) return;
+    this.resetChecklist();
     this.stableVersion = this.stableCandidate;
     this.nextDevVersion = '';
     this.branch = 'master';
@@ -231,7 +263,6 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.branchPrefix = 'release/';
     this.commit = true;
     this.rollbackOnFailure = true;
-    this.preproductionApproved = false;
     this.refreshCandidate();
     this.candidatePlatform = 'linux/amd64';
 
@@ -377,18 +408,11 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     }, 2500);
   }
 
-  private runCommand(command: ReleaseCommand): void {
-    if (this.isRunning) {
-      return;
-    }
-
-    this.errorMessage = '';
-    this.backendMessage = '';
-
+  private requestFor(command: ReleaseCommand): ReleaseRunRequest {
     const execute = command === 'deploy';
     const stable =
       command === 'deploy' ? undefined : this.stableVersion.trim() || undefined;
-    const payload: ReleaseRunRequest = {
+    return {
       command,
       // During deploy, the orchestrator derives the stable version from the
       // source branch. After prepare, the local UI already displays the next
@@ -410,6 +434,19 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       rollbackOnFailure: this.rollbackOnFailure,
     };
 
+  }
+
+  private runCommand(command: ReleaseCommand): void {
+    if (this.isRunning) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.backendMessage = '';
+
+    const execute = command === 'deploy';
+    const payload = this.requestFor(command);
+
     const confirmationMessage = execute
       ? 'Confirmez-vous que la candidate a été testée et approuvée en préproduction, et que les IDs exacts des images backend/frontend ont été consignés ? Cette action publie master et le tag Git, mais ne déploie pas sur le NAS.'
       : 'Confirmer l’exécution réelle (pas en simulation) ?';
@@ -417,14 +454,22 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.isRunning = true;
+    this.startingRequest = true;
+    // Ignore status requests sent before this new execution started.
+    this.latestAppliedStatus = ++this.statusRequest;
     this.releaseService.run(payload).subscribe({
       next: (response) => {
+        this.startingRequest = false;
         this.backendMessage = response.message;
+        this.pendingRunKey = this.runKey(response.run);
         this.activeRun = response.run;
         this.isRunning = true;
         this.refreshStatus();
       },
       error: (error) => {
+        this.startingRequest = false;
+        this.isRunning = false;
         this.errorMessage =
           error?.error?.message ??
           'Erreur lors du lancement de la commande release.';
@@ -433,9 +478,15 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   }
 
   private refreshStatus(): void {
+    const request = ++this.statusRequest;
     this.releaseService.getStatus().subscribe({
-      next: (status) => this.applyStatus(status),
+      next: (status) => {
+        if (request < this.latestAppliedStatus) return;
+        this.latestAppliedStatus = request;
+        this.applyStatus(status);
+      },
       error: () => {
+        if (request < this.latestAppliedStatus) return;
         this.errorMessage =
           'Impossible de récupérer le statut release. Vérifie que le backend est démarré.';
       },
@@ -443,10 +494,23 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
   }
 
   private applyStatus(status: ReleaseStatusResponse): void {
+    if (this.startingRequest) return;
     this.isRunning = status.running;
     this.activeRun = status.activeRun;
-    this.lastRun = status.lastRun;
-    this.lastReport = status.lastReport;
+    const latest = status.lastRun;
+    this.lastRun = latest && !this.hiddenRuns.has(this.runKey(latest)) ? latest : null;
+    this.lastReport = this.lastRun ? status.lastReport : null;
+    if (latest && this.pendingRunKey === this.runKey(latest) && latest.status !== 'running') {
+      this.pendingRunKey = null;
+      if (latest.status === 'passed' && latest.exitCode === 0) {
+        const task = this.phases.flatMap((phase) => phase.tasks).find((task) => task.command === latest.command);
+        if (task) this.completedTasks.add(task.id);
+        if (latest.command === 'rollback') {
+          this.completedTasks.clear();
+          this.closedAt = null;
+        }
+      }
+    }
   }
 
   private startPolling(): void {

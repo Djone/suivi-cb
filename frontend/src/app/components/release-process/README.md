@@ -29,8 +29,8 @@ sur la branche de développement puis relancer les contrôles.
 
 ## 2. Préparer le commit candidat
 
-Renseigner dans l'assistant la version stable, la prochaine version de
-développement et la branche cible `master`. Garder activés le commit de
+Vérifier la version stable et la branche cible `master`, affichées en lecture
+seule, puis renseigner la prochaine version de développement. Garder activés le commit de
 préparation et la restauration automatique en cas d'échec. Les options avancées
 restent désactivées dans le parcours normal.
 
@@ -114,3 +114,26 @@ opérateur dans l'interface. Elles ne sont pas une preuve technique : l'assistan
 ne vérifie pas encore les conteneurs ou tests sur le NAS. La commande distincte
 release:candidate:approve enregistre une attestation liée aux IDs du package et
 à l’empreinte du compte rendu ; elle refuse des IDs différents et ne lance pas la MEP.
+
+## État de la timeline et lecture documentaire
+
+La checklist démarre sans validation implicite. Les étapes futures sont verrouillées
+tant que leurs prérequis ne sont pas validés. Décocher un contrôle ou réinitialiser
+une étape conserve les cases des autres étapes, mais verrouille celles qui suivent.
+Un contrôle automatique décoché se valide uniquement en relançant son action et
+en recevant un résultat réussi du backend. Un ancien résultat ne valide pas une
+nouvelle checklist. Les journaux et le rapport existants restent consultables.
+
+« Régénérer » incrémente localement le RC et efface les validations du candidat et
+des étapes suivantes ; cette action ne construit aucune image et ne réserve pas
+le numéro sur le NAS. Une actualisation ne diminue pas le numéro choisi localement.
+Modifier la prochaine version ou une option impose de refaire les contrôles dev.
+
+Les documents sont chargés en lecture seule via l’API documentaire de développement.
+Le lecteur latéral réutilise le rendu Markdown de la Documentation, sans quitter
+la timeline. Aucune opération de création, publication ou suppression documentaire
+n’est appelée par cet assistant. Les associations, cases et clôture sont conservées
+uniquement dans l’instance de page : recharger ou quitter la page les réinitialise.
+La clôture est un indicateur local ; l’archivage du rapport reste une action opérateur.
+Une future persistance devrait enregistrer ces données par candidat/commit via une
+API dédiée. Aucun appel fictif n’est utilisé.

@@ -10,6 +10,7 @@ import { StatisticsComponent } from './components/statistics/statistics.componen
 import { ReleaseNotesComponent } from './components/release-notes/release-notes.component';
 import { ReleaseProcessComponent } from './components/release-process/release-process.component';
 import { environment } from '../environments/environment';
+import { documentationRoutes } from './components/documentation/documentation.routes';
 
 const childRoutes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -87,6 +88,7 @@ const childRoutes: Routes = [
 ];
 
 if (!environment.production) {
+  childRoutes.push(...documentationRoutes);
   childRoutes.push({
     path: 'todo-dev',
     loadComponent: () =>

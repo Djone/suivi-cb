@@ -22,7 +22,8 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "public",
+                "ignore": ["documentation/**"]
               }
             ],
             "styles": [
@@ -47,6 +48,10 @@
                 }
               ],
               "fileReplacements": [
+                {
+                  "replace": "src/app/components/documentation/documentation.routes.ts",
+                  "with": "src/app/components/documentation/documentation.routes.prod.ts"
+                },
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"

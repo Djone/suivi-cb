@@ -70,6 +70,21 @@ test('une autre signature est refusée', async () => {
   const other = await jose.generateKeyPair('RS256');
   assert.equal((await request(await token({}, other.privateKey))).status, 401);
 });
+
+test('an account-only token cannot access banking endpoints', async () => {
+  assert.equal((await request(await token({ aud: 'account' }))).status, 401);
+  assert.equal((await request(await token({ aud: ['account', config.audience] }))).status, 200);
+});
+
+test('a token from the preproduction realm cannot access production endpoints', async () => {
+  assert.equal((await request(await token({ iss: `${config.public.url}/realms/suivi-cb-preprod` }))).status, 401);
+});
 test('utilisateur authentifié sans rôle interdit', async () => {
   assert.equal((await request(await token({ realm_access: { roles: [] } }))).status, 403);
+});
+
+test('malformed role claims cannot grant access through substring matching', async () => {
+  for (const roles of ['not-app-user', 'app-user', { includes: 'app-user' }, null]) {
+    assert.equal((await request(await token({ realm_access: { roles } }))).status, 403);
+  }
 });

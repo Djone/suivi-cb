@@ -197,6 +197,14 @@
           </small>
         </div>
       </ng-template>
+      <a *ngIf="isDevBuild" routerLink="/documentation" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item" (click)="onMenuItemClick()">
+        <i class="pi pi-book" aria-hidden="true"></i>
+        <span>Documentation</span>
+      </a>
+      <a *ngIf="isDevBuild" routerLink="/release-process" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item" (click)="onMenuItemClick()">
+        <i class="pi pi-check-square" aria-hidden="true"></i>
+        <span>Clôture de release</span>
+      </a>
     </nav>
   </div>
 

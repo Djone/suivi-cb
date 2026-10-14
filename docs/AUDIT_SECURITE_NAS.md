@@ -1,6 +1,16 @@
+---
+title: Contrôles NAS avant validation du package
+summary: "Suivre d’abord [la checklist rc2 détaillée](./CHECKLIST_RC2_PREPRODUCTION.md)
+  :"
+category: Modes opératoires
+owner: Jo G
+updated: 2026-10-09T09:19:46.443Z
+status: published
+---
 # Contrôles NAS avant validation du package
 
 > Mode opératoire détaillé : [HTTPS, parcours, CSP et scans](./VERIFICATIONS_RC2_GUIDE.md).
+
 > Restaurations : [lectures SQLite et connexion Keycloak isolées](./RESTAURATIONS_APPLICATIVES_ISOLEES.md).
 
 

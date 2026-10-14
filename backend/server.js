@@ -13,6 +13,7 @@ const recurringTransactionRoutes = require('./routes/recurring-transaction.route
 const accountRoutes = require('./routes/account.routes');
 const coupleSplitRoutes = require('./routes/couple-split.routes');
 const releaseRoutes = require('./routes/release.routes');
+const { isDocumentationEnabled, requireLocalDocumentationAccess } = require('./middlewares/documentation-access.middleware');
 const savingsWalletRoutes = require('./routes/savings-wallet.routes');
 const savingAccountRoutes = require('./routes/saving-account.routes');
 const vehicleRoutes = require('./routes/vehicle.routes');
@@ -33,11 +34,15 @@ const startServer = async () => {
   try {
     const auth = authConfig();
     const requireAuth = await createAuthMiddleware(auth);
+    const requireAccountAuth = await createAuthMiddleware({ ...auth, audience: 'account' });
     app.get('/health', (_req, res) => res.json({ status: 'ok' }));
     app.get('/api/auth/config', (_req, res) => {
       res.set('Cache-Control', 'no-store').json(auth.public);
     });
-    app.use('/api', requireAuth);
+    app.use('/api', (req, res, next) => {
+      if (req.path === '/auth/otp-credentials') return requireAccountAuth(req, res, next);
+      return requireAuth(req, res, next);
+    });
     app.delete('/api/auth/otp-credentials', createDisableOtpHandler(auth));
     app.get('/api/auth/otp-credentials', async (req, res) => {
       try {
@@ -80,6 +85,10 @@ const startServer = async () => {
     app.use('/api/recurring-transactions', recurringTransactionRoutes);
     app.use('/api/accounts', accountRoutes);
     app.use('/api/couple-split', coupleSplitRoutes);
+    if (isDocumentationEnabled()) {
+      const { createDocumentationRouter } = require('./routes/documentation.routes');
+      app.use('/api/documentation', requireLocalDocumentationAccess, createDocumentationRouter());
+    }
     if (isReleaseProcessEnabled()) {
       app.use('/api/release', requireLocalReleaseAccess, releaseRoutes);
     }

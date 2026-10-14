@@ -45,6 +45,10 @@ Thumbs.db
 # Documentation
 *.md
 !README.md
+docs/
+frontend/public/documentation/
+backend/routes/documentation.routes.js
+backend/services/documentation-store.js
 
 # Scripts de développement
 scripts/

@@ -4,6 +4,7 @@ backend/node_modules/
 frontend/node_modules/
 
 # Build outputs
+frontend/public/documentation/
 dist/
 frontend/dist/
 backend/dist/

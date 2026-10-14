@@ -23,7 +23,8 @@ async function createAuthMiddleware(config, keySet) {
         throw error;
       }
       // The application uses a shared database: access must be explicitly granted.
-      if (!payload.realm_access?.roles?.includes(config.role)) {
+      const roles = payload.realm_access?.roles;
+      if (!Array.isArray(roles) || !roles.includes(config.role)) {
         return res.status(403).json({ error: 'Accès à cette application non autorisé.' });
       }
       req.auth = payload;

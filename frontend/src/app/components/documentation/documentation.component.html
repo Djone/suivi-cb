@@ -1,0 +1,92 @@
+<section class="documentation-page" aria-labelledby="documentation-title">
+  <header class="documentation-header">
+    <div>
+      <p class="eyebrow">Base de connaissances</p>
+      <h1 id="documentation-title">Documentation Suivi Bancaire</h1>
+    </div>
+    <div class="document-actions"><p-button label="Actualiser" icon="pi pi-refresh" [outlined]="true" (onClick)="reload()" [disabled]="loading || saving" /><p-button label="Nouvelle note" icon="pi pi-plus" (onClick)="create()" [disabled]="loading || saving || !!error" /></div>
+  </header>
+
+  <p class="local-notice"><i class="pi pi-info-circle" aria-hidden="true"></i> Espace réservé au développement. Publier enregistre le fichier dans docs ; supprimer le retire physiquement du dépôt.</p>
+  @if (operationError) { <p class="warning" role="alert">{{ operationError }}</p> }
+  <p class="status-message" role="status" aria-live="polite">{{ notice }}</p>
+  @if (loading) {
+    <p role="status">Chargement de la documentation…</p>
+  } @else if (error) {
+    <div role="alert"><p>{{ error }}</p><p-button label="Réessayer" (onClick)="load()" /></div>
+  } @else {
+    <div class="documentation-layout">
+      <aside class="documentation-navigation">
+        <label for="documentation-search" class="field-label">Rechercher une page</label>
+        <div class="search-field"><i class="pi pi-search" aria-hidden="true"></i><input pInputText id="documentation-search" [(ngModel)]="query" placeholder="Titre de la page" type="search" /></div>
+        <nav aria-label="Pages de documentation">
+          @for (group of groups; track group.category) {
+            <section class="document-group">
+              <h2 class="eyebrow">{{ group.category }}</h2>
+              @for (folder of group.folders; track folder.path) {
+                @if (folder.path) { <p class="folder-path"><i class="pi pi-folder" aria-hidden="true"></i> {{ folder.path }}</p> }
+                @for (entry of folder.entries; track entry.id) {
+                  <button type="button" class="document-link" [disabled]="saving" [class.active]="selectedId === entry.id" [attr.aria-current]="selectedId === entry.id ? 'page' : null" (click)="requestSelection(entry)">
+                    <span>{{ entry.title }}</span>
+                    @if (entry.status === 'draft') { <small>Brouillon</small> }
+                  </button>
+                }
+              }
+            </section>
+          } @empty { <p class="empty-state">Aucune page ne correspond à votre recherche.</p> }
+        </nav>
+      </aside>
+
+      <section class="document-panel" aria-label="Page sélectionnée">
+        @if (selected; as entry) {
+          <header class="document-header">
+            <div class="document-title">
+              <p class="breadcrumb">Documentation / {{ entry.category }} @if (entry.sourcePath) { / {{ entry.sourcePath }} }</p>
+              @if (mode === 'edit') {
+                <label class="field-label" for="document-title-input">Titre de la page</label>
+                <input pInputText id="document-title-input" class="title-input" [(ngModel)]="draftTitle" [disabled]="saving" />
+                <label class="field-label" for="document-summary-input">Résumé</label>
+                <input pInputText id="document-summary-input" [(ngModel)]="draftSummary" [disabled]="saving" />
+                <label class="field-label" for="document-category-input">Espace</label>
+                <select id="document-category-input" [(ngModel)]="draftCategory" [disabled]="saving">@for (category of categories; track category) { <option [value]="category">{{ category }}</option> }</select>
+              } @else {
+                <h2>{{ entry.title }}</h2>
+                <p class="summary">{{ entry.summary }}</p>
+              }
+              <div class="document-meta"><span class="publication-status" [class.draft]="entry.status === 'draft'">{{ entry.status === 'published' ? 'Publié' : 'Brouillon' }}</span><span>Par {{ entry.owner }}</span><span>Mis à jour : {{ formatUpdated(entry.updated) }}</span></div>
+            </div>
+            <div class="document-actions">
+              <p-button label="Supprimer" icon="pi pi-trash" severity="danger" [outlined]="true" (onClick)="confirmDelete()" [disabled]="saving || store.documents().length <= 1" [title]="store.documents().length <= 1 ? 'La dernière page doit être conservée' : 'Supprimer cette page'" />
+              @if (mode === 'read') {
+                <span class="reading-mode">Lecture</span><p-button label="Modifier" [outlined]="true" (onClick)="edit()" [disabled]="saving" />
+              } @else {
+                <p-button label="Annuler" [text]="true" (onClick)="cancel()" [disabled]="saving" /><p-button label="Publier" (onClick)="publish()" [loading]="saving" [disabled]="saving" />
+              }
+            </div>
+          </header>
+          @if (mode === 'edit') {
+            <div class="document-editor">
+              <div class="editor-toolbar" role="group" aria-label="Insérer une syntaxe Markdown">
+                @for (tool of tools; track tool.label) { <button type="button" (click)="insertSyntax(tool.syntax)" [title]="tool.syntax" [disabled]="saving">{{ tool.label }}</button> }
+              </div>
+              <label for="document-body" class="field-label">Contenu Markdown</label>
+              <p id="markdown-help" class="markdown-help">## Titre · ### Sous-titre · - Liste · - [ ] Tâche · - [x] Terminée · &gt; Information · 1. Étape. Liens, tableaux et blocs de code sont également pris en charge.</p>
+              <textarea #bodyEditor id="document-body" [(ngModel)]="draftBody" [disabled]="saving" aria-describedby="markdown-help" spellcheck="false"></textarea>
+            </div>
+          } @else {
+            <div class="document-reading">
+              <article #documentContent class="markdown-content" [innerHTML]="renderedBody" (click)="followLink($event)"></article>
+              <aside class="table-of-contents">
+                <p class="eyebrow">Dans cette page</p>
+                <nav aria-label="Table des matières">
+                  @for (heading of headings; track heading.id) { <a [href]="'#' + heading.id" (click)="$event.preventDefault(); goToHeading(heading.id)">{{ heading.title }}</a> }
+                  @empty { <p>Aucun titre de niveau 2.</p> }
+                </nav>
+              </aside>
+            </div>
+          }
+        } @else { <p class="empty-state">Aucune page disponible. Créez votre première note.</p> }
+      </section>
+    </div>
+  }
+</section>

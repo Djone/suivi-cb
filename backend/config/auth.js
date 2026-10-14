@@ -18,10 +18,9 @@ function authConfig(env = process.env) {
     accountUrl,
     issuer,
     jwksUrl: env.KEYCLOAK_JWKS_URL || `${issuer}/protocol/openid-connect/certs`,
-    // The web client must be accepted for the banking API and for Keycloak's
-    // self-service account API (used only to read the current user's OTP state).
-    // `azp` and `app-user` are still enforced by the middleware below.
-    audience: [env.KEYCLOAK_AUDIENCE || 'suivi-cb-api', 'account'],
+    // Banking endpoints require their own audience. Account-only tokens must
+    // never grant access to banking data, even with the same client and role.
+    audience: env.KEYCLOAK_AUDIENCE || 'suivi-cb-api',
     role: 'app-user',
   };
 }
