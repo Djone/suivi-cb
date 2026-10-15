@@ -32,6 +32,16 @@ export class AuthService {
   private keycloak?: Keycloak;
   private keycloakConfig?: KeycloakRealmConfig;
   readonly authenticated = signal(false);
+  readonly accessDenied = signal(false);
+
+  canAccessApplication(): boolean {
+    return !this.accessDenied() && this.keycloak?.hasRealmRole('app-user') === true;
+  }
+
+  denyAccess(): void {
+    this.accessDenied.set(true);
+    void this.router.navigateByUrl('/access-denied');
+  }
   readonly error = signal('');
   readonly user = signal<ConnectedUser | null>(null);
   readonly otpConfigured = signal(false);
@@ -76,6 +86,7 @@ export class AuthService {
   }
 
   async initialize(): Promise<void> {
+    this.accessDenied.set(false);
     try {
       // The adapter removes the OAuth response from the URL during init().
       // Capture the outcome of an OTP action before it does so.
@@ -100,7 +111,7 @@ export class AuthService {
       }));
       this.syncUser();
       this.applyActionResult(actionResult);
-      if (this.authenticated()) void this.refreshOtpStatus();
+      if (this.authenticated() && this.canAccessApplication()) void this.refreshOtpStatus();
     } catch {
       this.keycloak = undefined;
       this.keycloakConfig = undefined;

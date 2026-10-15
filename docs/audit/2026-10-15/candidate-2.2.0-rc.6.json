@@ -1,0 +1,59 @@
+{
+  "candidate": "2.2.0-rc.6",
+  "commit": "fac0c0d4b199e68ab97d3df1bccf949d3e7348ab",
+  "status": "LOCAL_READY_FOR_PREPRODUCTION",
+  "productionApproved": false,
+  "embeddedVersion": "2.2.0-rc.6",
+  "embeddedVersionFiles": [
+    "/usr/share/nginx/html/chunk-YWQ2EOPU.js"
+  ],
+  "images": {
+    "backend": {
+      "imageId": "sha256:072516ccf71d031add2fb6468e2800cab005e1a5c5660172ba2a440b6857d23a",
+      "configDigest": "sha256:6a00a8878260085139be5f3c369303e8dd4f9e7022c25a5e3745009a3900ffba",
+      "scanner": "0.75.0",
+      "scannedAt": "2026-10-15T08:45:43.720410701Z",
+      "vulnerabilities": 0,
+      "secrets": 0
+    },
+    "frontend": {
+      "imageId": "sha256:4dc44db1b527e9093aef954372351baef447d5891bbadb660bfd2c14cde4869e",
+      "configDigest": "sha256:e322bd140bae2b12f2837394ba9ad2d497cc9940ac27896c4f6cda52b799d8a9",
+      "scanner": "0.75.0",
+      "scannedAt": "2026-10-15T08:45:54.372346745Z",
+      "vulnerabilities": 0,
+      "secrets": 0
+    }
+  },
+  "exercise": {
+    "status": "PASS",
+    "backend": "sha256:072516ccf71d031add2fb6468e2800cab005e1a5c5660172ba2a440b6857d23a",
+    "frontend": "sha256:4dc44db1b527e9093aef954372351baef447d5891bbadb660bfd2c14cde4869e",
+    "previous": "sha256:1485861c5730e0c20dbbe3d64272eb7281d3508ddf1c67cd019cd6339e43b2da",
+    "checks": [
+      "previous database upgrade",
+      "non-root startup with all capabilities dropped",
+      "anonymous API 401",
+      "frontend default command HTTP 200",
+      "frontend API proxy 401",
+      "rollback preserves post-upgrade write",
+      "upgrade after rollback"
+    ],
+    "limitations": [
+      "synthetic data only",
+      "no real Keycloak login",
+      "not a release approval"
+    ]
+  },
+  "acceptedDevelopmentRisk": "GHSA-vfj7-8cjw-p6xm; accepted 2026-10-15; review by 2026-10-22",
+  "nasMemoryAvailableMb": 331,
+  "sshFromAgent": "unreachable; manual NAS session required",
+  "memoryExercise": {
+    "status": "PASS",
+    "limits": {
+      "backend": "192m",
+      "frontend": "64m"
+    }
+  },
+  "archiveSha256": "ccc1cd8aac3f424cfe8ff18670797d54bc5ae93342e5979b35c830da8441aad8"
+}

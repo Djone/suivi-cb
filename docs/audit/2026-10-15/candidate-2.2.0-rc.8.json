@@ -1,0 +1,57 @@
+{
+  "candidate": "2.2.0-rc.8",
+  "commit": "b7d52fe659344dcd47d15cba69c17ad21187ba39",
+  "status": "LOCAL_READY_FOR_PREPRODUCTION",
+  "productionApproved": false,
+  "embeddedVersion": "2.2.0-rc.8",
+  "embeddedVersionFiles": [
+    "/usr/share/nginx/html/chunk-7347RKRQ.js"
+  ],
+  "images": {
+    "backend": {
+      "imageId": "sha256:a0225b8decb837f682cdf24dd9f2f382a03a3b0df601acab543d6f01449b1b7b",
+      "configDigest": "sha256:9ffa3ec3b6b67a22bb4d8a394bc4ced12cca30fbabdac1609574d1e5544a1b27",
+      "scanner": "0.75.0",
+      "scannedAt": "2026-10-15T13:55:51.449529168Z",
+      "vulnerabilities": 0,
+      "secrets": 0
+    },
+    "frontend": {
+      "imageId": "sha256:4a4e5b34288925f4d1477104a673132fdb55a40aeb39c86c6d264ffb84258a0f",
+      "configDigest": "sha256:c6c2dcefc7b3a601378af09d401ffc38a57f137b59deb80ac50533273b8841fe",
+      "scanner": "0.75.0",
+      "scannedAt": "2026-10-15T13:56:04.042610194Z",
+      "vulnerabilities": 0,
+      "secrets": 0
+    }
+  },
+  "exercise": {
+    "status": "PASS",
+    "backend": "sha256:a0225b8decb837f682cdf24dd9f2f382a03a3b0df601acab543d6f01449b1b7b",
+    "frontend": "sha256:4a4e5b34288925f4d1477104a673132fdb55a40aeb39c86c6d264ffb84258a0f",
+    "previous": "sha256:1485861c5730e0c20dbbe3d64272eb7281d3508ddf1c67cd019cd6339e43b2da",
+    "checks": [
+      "previous database upgrade",
+      "non-root startup with all capabilities dropped",
+      "anonymous API 401",
+      "frontend default command HTTP 200",
+      "frontend API proxy 401",
+      "rollback preserves post-upgrade write",
+      "upgrade after rollback"
+    ],
+    "limitations": [
+      "synthetic data only",
+      "no real Keycloak login",
+      "not a release approval"
+    ]
+  },
+  "acceptedDevelopmentRisk": "GHSA-vfj7-8cjw-p6xm; accepted 2026-10-15; review by 2026-10-22",
+  "nasMemoryAvailableMb": 568,
+  "sshFromAgent": "unreachable; manual NAS session required",
+  "nasMemoryExercise": {
+    "status": "PASS",
+    "backendLimitMb": 192,
+    "frontendLimitMb": 64,
+    "privilegedPortThreshold": 1024
+  }
+}

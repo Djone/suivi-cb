@@ -12,7 +12,9 @@ describe('Protection Keycloak', () => {
   let http: HttpClient;
   let controller: HttpTestingController;
   beforeEach(() => {
-    auth = jasmine.createSpyObj('AuthService', ['authenticated', 'accessToken', 'sessionEnded']);
+    auth = jasmine.createSpyObj('AuthService', ['authenticated', 'accessToken', 'sessionEnded', 'canAccessApplication', 'accessDenied', 'denyAccess']);
+    auth.canAccessApplication.and.returnValue(true);
+    auth.accessDenied.and.returnValue(false);
     auth.accessToken.and.resolveTo('access-token');
     TestBed.configureTestingModule({ providers: [
       provideRouter([]), provideHttpClient(withInterceptors([authInterceptor])),
@@ -22,6 +24,30 @@ describe('Protection Keycloak', () => {
     controller = TestBed.inject(HttpTestingController);
   });
   afterEach(() => controller.verify());
+
+  it('blocks the layout for an authenticated user without the application role', () => {
+    auth.authenticated.and.returnValue(true);
+    auth.canAccessApplication.and.returnValue(false);
+    const result = TestBed.runInInjectionContext(() => authGuard({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot));
+    expect(result).toEqual(TestBed.inject(Router).createUrlTree(['/access-denied']));
+  });
+
+  it('redirects an API 403 without terminating the authenticated session', async () => {
+    http.get(`${environment.apiUrl}/api/accounts`).subscribe({ error: () => undefined });
+    await Promise.resolve();
+    controller.expectOne(`${environment.apiUrl}/api/accounts`).flush({}, { status: 403, statusText: 'Forbidden' });
+    expect(auth.denyAccess).toHaveBeenCalled();
+    expect(auth.sessionEnded).not.toHaveBeenCalled();
+  });
+
+  it('does not send further API requests after access is denied', () => {
+    auth.accessDenied.and.returnValue(true);
+    const failure = jasmine.createSpy('failure');
+    http.get(`${environment.apiUrl}/api/accounts`).subscribe({ error: failure });
+    controller.expectNone(`${environment.apiUrl}/api/accounts`);
+    expect(auth.accessToken).not.toHaveBeenCalled();
+    expect(failure).toHaveBeenCalled();
+  });
 
   it('redirige un visiteur vers la connexion', () => {
     auth.authenticated.and.returnValue(false);

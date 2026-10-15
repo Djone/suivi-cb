@@ -6,16 +6,24 @@ on:
       - "v*.*.*"
 
 permissions:
-  contents: write
+  contents: read
+
+# All stable releases update the shared major-version tag and release.
+concurrency:
+  group: publish-github-release-${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
   publish:
     name: Publish release
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
 
     steps:
       - name: Create or update the major release
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
             const tag = context.ref.replace('refs/tags/', '');

@@ -38,6 +38,9 @@ test('build creates checksummed package pinned to exact IDs, without publishing 
   assert.equal(m.images.backend.id, ids[0]);
   assert.match(fs.readFileSync(path.join(c.dir, 'docker-compose.yml'), 'utf8'), /image: sha256:a{64}/);
   assert.equal(calls.filter(([p, a]) => p === 'docker' && a[0] === 'build').length, 2);
+  const frontendBuild = calls.find(([p, a]) => p === 'docker' && a[0] === 'build' && a.includes('Dockerfile.frontend'))[1];
+  assert.ok(frontendBuild.includes('APP_VERSION=2.2.0-rc.3'));
+  assert.ok(frontendBuild.includes(`APP_BUILD_TIME=${m.applicationBuildTime}`));
   assert.ok(!calls.some(([p, a]) => p === 'ssh' || (p === 'git' && a[0] === 'push')));
   await assert.rejects(buildPackage(c, execute), /EEXIST/);
 });
