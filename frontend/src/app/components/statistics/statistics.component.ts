@@ -13,10 +13,10 @@ import { Subscription } from 'rxjs';
 
 // PrimeNG
 import { CardModule } from 'primeng/card';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { CheckboxModule } from 'primeng/checkbox';
 
 interface CategoryStat {
@@ -53,10 +53,10 @@ interface MonthlyCategoryRow {
     FormsModule,
     BaseChartDirective,
     CardModule,
-    DropdownModule,
+    SelectModule,
     ButtonModule,
     TableModule,
-    TabViewModule,
+    TabsModule,
     CheckboxModule
   ],
   templateUrl: './statistics.component.html',

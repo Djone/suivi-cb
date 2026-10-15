@@ -19,7 +19,7 @@
         [showClear]="true"
         appendTo="body"
       ></p-multiSelect>
-      <p-dropdown
+      <p-select
         [options]="historyFilterOptions"
         [(ngModel)]="historyFilterValue"
         (ngModelChange)="onFilterChange()"
@@ -27,7 +27,7 @@
         optionValue="value"
         placeholder="Filtrer par ETS"
         appendTo="body"
-      ></p-dropdown>
+      ></p-select>
       <button
         pButton
         type="button"
@@ -239,12 +239,12 @@
           "
           (click)="changeYear(1)"
         ></button>
-        <p-dropdown
+        <p-select
           [options]="detailYears"
           [(ngModel)]="detailYear"
           ariaLabel="Choisir l’année des feuilles de paie"
           appendTo="body"
-        ></p-dropdown>
+        ></p-select>
         <span>{{ detailRows.length }} feuille(s)</span>
         <button
           pButton
@@ -403,19 +403,18 @@
     <fieldset class="form-grid" [disabled]="saving">
       <div class="field">
         <label for="salary-month">Mois / Année *</label>
-        <p-calendar
+        <p-datepicker
           inputId="salary-month"
           [required]="true"
           [(ngModel)]="formModel.month"
           view="month"
           dateFormat="mm/yy"
           appendTo="body"
-          [locale]="frLocale"
-        ></p-calendar>
+        ></p-datepicker>
       </div>
       <div class="field">
         <label for="salary-ets">ETS *</label>
-        <p-dropdown
+        <p-select
           [options]="etsOptions"
           inputId="salary-ets"
           [required]="true"
@@ -423,7 +422,7 @@
           optionLabel="label"
           optionValue="value"
           appendTo="body"
-        ></p-dropdown>
+        ></p-select>
       </div>
 
       <div class="field">

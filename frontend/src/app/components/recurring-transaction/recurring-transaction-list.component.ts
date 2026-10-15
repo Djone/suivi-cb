@@ -24,13 +24,13 @@ import { RecurringTransactionHistoryService } from '../../services/recurring-tra
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CardModule } from 'primeng/card';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { AccordionModule } from 'primeng/accordion';
 import { ChartModule } from 'primeng/chart';
 import { DialogModule } from 'primeng/dialog';
@@ -71,13 +71,13 @@ interface RecurringDialogResult {
     TableModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule,
+    SelectModule,
     TagModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     CardModule,
     TooltipModule,
     InputNumberModule,
-    TabViewModule,
+    TabsModule,
     AccordionModule,
     ChartModule,
     DialogModule,
@@ -92,7 +92,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
   subCategories: SubCategory[] = [];
   accounts: Account[] = [];
   transactions: Transaction[] = [];
-  dialogRef: DynamicDialogRef | undefined;
+  dialogRef: DynamicDialogRef | null | undefined;
   private subscriptions = new Subscription(); // Renommé pour éviter conflit avec 'sub' dans le dialog
 
   // Options pour les filtres
@@ -309,7 +309,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    ref.onClose.subscribe((confirmed: boolean) => {
+    ref?.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) {
         return;
       }
@@ -846,7 +846,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
     return (isActive ?? 0) === 1 ? 'Actif' : 'Inactif';
   }
 
-  getSeverity(isActive: number | undefined): string {
+  getSeverity(isActive: number | undefined): 'success' | 'danger' {
     return (isActive ?? 0) === 1 ? 'success' : 'danger';
   }
 
@@ -869,7 +869,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
         width: '600px'
       });
 
-      this.dialogRef.onClose.subscribe((result) => {
+      this.dialogRef?.onClose.subscribe((result) => {
         const normalized = this.normalizeDialogResult(result);
         const payload = normalized?.payload;
         if (!payload) {
@@ -893,7 +893,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
         width: '600px'
       });
 
-      this.dialogRef.onClose.subscribe((result) => {
+      this.dialogRef?.onClose.subscribe((result) => {
         const normalized = this.normalizeDialogResult(result);
         const payload = normalized?.payload;
         if (!payload) {
@@ -923,12 +923,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
   }
 
   toggleActive(transaction: RecurringTransaction, event: any): void {
-    console.log('RECURRING TRANSACTION LIST : toggleActive appelé', {
-      transaction: transaction.label,
-      transactionId: transaction.id,
-      currentStatus: transaction.isActive,
-      eventChecked: event.checked
-    });
+
 
     const newStatus = event.checked ? 1 : 0;
     const action = newStatus ? 'réactiver' : 'désactiver';
@@ -939,7 +934,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
 
     service$.subscribe({
       next: () => {
-        console.log(`RECURRING TRANSACTION LIST : Transaction récurrente ${action}e avec succès`);
+
         // Attendre un peu pour laisser le temps à la DB de se mettre à jour
         setTimeout(() => {
           this.loadRecurringTransactions();
@@ -953,7 +948,7 @@ export class RecurringTransactionListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Ces méthodes ne sont plus utilisées avec le p-inputSwitch
+  // Ces méthodes ne sont plus utilisées avec le p-toggleswitch
   /*
   deactivateRecurringTransaction(recurringTransaction: RecurringTransaction): void {}
   reactivateRecurringTransaction(recurringTransaction: RecurringTransaction): void {}

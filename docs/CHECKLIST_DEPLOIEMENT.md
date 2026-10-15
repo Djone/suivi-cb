@@ -1,5 +1,16 @@
 # Checklist de déploiement sur Synology NAS
 
+## Contrôle obligatoire avant chaque MEP
+
+- [ ] Candidate déployée et testée en préproduction.
+- [ ] Validation datée, commit et identifiants des deux images consignés.
+- [ ] Contrôles de sécurité et décision sur les alertes résiduelles consignés.
+- [ ] Sauvegardes cohérentes et procédure de restauration vérifiées.
+- [ ] Production préparée avec les images validées, sans build, avec ses variables et données.
+- [ ] Identifiants des images et contrôles HTTPS/authentification vérifiés après MEP.
+
+Suivre [PROMOTION_PREPROD_PRODUCTION.md](./PROMOTION_PREPROD_PRODUCTION.md). Les étapes de transfert de code et de build ci-dessous servent à préparer une candidate en préproduction ; les anciennes commandes de rebuild en production et de rollback par rebuild sont remplacées par la promotion et le retour aux images conservées. L’API métier se vérifie via HTTPS et `/api`, le port 3001 reste interne.
+
 Utilisez cette checklist pour vous assurer de ne rien oublier lors du déploiement.
 
 ## Phase 1: Préparation du NAS

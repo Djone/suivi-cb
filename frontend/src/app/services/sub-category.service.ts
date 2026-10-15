@@ -111,7 +111,7 @@ export class SubCategoryService {
   deleteSubCategory(id: number): Observable<void> {
     const url = `${this.apiUrl}/${id}`;
 
-    console.log(`SUB CATEGORY SERVICE : Requête DELETE envoyée à : ${url}`);
+
 
     return this.http.delete<void>(url).pipe(
       tap(() => {

@@ -1,4 +1,7 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './auth/auth.guard';
+import { LoginComponent } from './auth/login.component';
+import { AccessDeniedComponent } from './auth/access-denied.component';
 import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
 import { HomeComponent } from './components/home/home.component';
 import { TransactionListComponent } from './components/transaction/transaction-list.component';
@@ -8,6 +11,7 @@ import { StatisticsComponent } from './components/statistics/statistics.componen
 import { ReleaseNotesComponent } from './components/release-notes/release-notes.component';
 import { ReleaseProcessComponent } from './components/release-process/release-process.component';
 import { environment } from '../environments/environment';
+import { documentationRoutes } from './components/documentation/documentation.routes';
 
 const childRoutes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -85,6 +89,7 @@ const childRoutes: Routes = [
 ];
 
 if (!environment.production) {
+  childRoutes.push(...documentationRoutes);
   childRoutes.push({
     path: 'todo-dev',
     loadComponent: () =>
@@ -96,8 +101,12 @@ if (!environment.production) {
 }
 
 export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
+  { path: 'access-denied', component: AccessDeniedComponent },
   {
     path: '',
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
     component: AppLayoutComponent,
     children: childRoutes,
   },

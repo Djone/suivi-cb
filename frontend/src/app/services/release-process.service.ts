@@ -51,6 +51,14 @@ export interface ReleaseStatusResponse {
   lastReport: unknown;
 }
 
+export interface CandidateSuggestion {
+  stable: string;
+  latestNumber: number;
+  next: string;
+  dockerAvailable: boolean;
+  scope: string;
+}
+
 export interface ReleaseRunResponse {
   message: string;
   run: ReleaseRun;
@@ -70,5 +78,9 @@ export class ReleaseProcessService {
 
   getStatus(): Observable<ReleaseStatusResponse> {
     return this.http.get<ReleaseStatusResponse>(`${this.apiUrl}/status`);
+  }
+
+  getNextCandidate(stable: string): Observable<CandidateSuggestion> {
+    return this.http.get<CandidateSuggestion>(`${this.apiUrl}/next-candidate`, { params: { stable } });
   }
 }

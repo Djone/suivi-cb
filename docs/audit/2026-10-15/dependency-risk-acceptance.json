@@ -1,0 +1,18 @@
+{
+  "advisory": "GHSA-vfj7-8cjw-p6xm",
+  "component": "braces@3.0.3",
+  "accepted": true,
+  "acceptedOn": "2026-10-15",
+  "approvedBy": "Responsable du projet, accord explicite dans la conversation",
+  "scope": "Outils de développement et de test uniquement",
+  "technicallyFixed": false,
+  "reviewBy": "2026-10-22",
+  "reviewOwner": "Responsable du projet",
+  "reviewAutomaticallyScheduled": false,
+  "conditions": [
+    "Serveurs de développement et Karma limités à la boucle locale",
+    "Contributions non fiables dans des runners éphémères sans secrets de production ni administration NAS",
+    "Réévaluation à publication d'un correctif ou changement d'exposition"
+  ],
+  "productionDeploymentApproved": false
+}

@@ -1,6 +1,8 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const { configureHttpSecurity, httpErrorHandler } = require('./middlewares/http-security.middleware');
+const { authConfig } = require('./config/auth');
+const { createAuthMiddleware } = require('./middlewares/auth.middleware');
+const { createDisableOtpHandler } = require('./routes/otp-disable');
 const db = require('./config/db'); // Import the db instance
 const initializeDatabase = require('./migrations/initializeDatabase');
 const transactionRoutes = require('./routes/transaction.routes');
@@ -11,6 +13,7 @@ const recurringTransactionRoutes = require('./routes/recurring-transaction.route
 const accountRoutes = require('./routes/account.routes');
 const coupleSplitRoutes = require('./routes/couple-split.routes');
 const releaseRoutes = require('./routes/release.routes');
+const { isDocumentationEnabled, requireLocalDocumentationAccess } = require('./middlewares/documentation-access.middleware');
 const savingsWalletRoutes = require('./routes/savings-wallet.routes');
 const savingAccountRoutes = require('./routes/saving-account.routes');
 const vehicleRoutes = require('./routes/vehicle.routes');
@@ -23,12 +26,53 @@ const app = express();
 const PORT_BACK = process.env.PORT_BACK || 3000;
 
 // Middleware
-app.use(cors());
-app.use(bodyParser.json());
+configureHttpSecurity(app);
+app.use(express.json({ limit: '100kb', strict: true }));
 
 // Fonction de démarrage asynchrone
 const startServer = async () => {
   try {
+    const auth = authConfig();
+    const requireAuth = await createAuthMiddleware(auth);
+    const requireAccountAuth = await createAuthMiddleware({ ...auth, audience: 'account' });
+    app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+    app.get('/api/auth/config', (_req, res) => {
+      res.set('Cache-Control', 'no-store').json(auth.public);
+    });
+    app.use('/api', (req, res, next) => {
+      if (req.path === '/auth/otp-credentials') return requireAccountAuth(req, res, next);
+      return requireAuth(req, res, next);
+    });
+    app.delete('/api/auth/otp-credentials', createDisableOtpHandler(auth));
+    app.get('/api/auth/otp-credentials', async (req, res) => {
+      try {
+        const keycloakResponse = await fetch(
+          `${auth.accountUrl}/realms/${encodeURIComponent(auth.public.realm)}/account/credentials?user-credentials=true`,
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: req.get('Authorization') || '',
+            },
+            signal: AbortSignal.timeout(10000),
+          },
+        );
+        if (!keycloakResponse.ok) {
+          console.warn('[AUTH] Lecture des identifiants OTP refusée par Keycloak', {
+            status: keycloakResponse.status,
+          });
+          return res.status(502).json({ error: `KEYCLOAK_ACCOUNT_${keycloakResponse.status}` });
+        }
+        const contentType = keycloakResponse.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          return res.status(502).json({ error: 'KEYCLOAK_ACCOUNT_INVALID_RESPONSE' });
+        }
+        return res.set('Cache-Control', 'no-store').json(await keycloakResponse.json());
+      } catch (error) {
+        const code = error?.cause?.code || error?.code || error?.name || 'UNKNOWN';
+        console.warn('[AUTH] Impossible de joindre Keycloak pour les identifiants OTP', { code });
+        return res.status(502).json({ error: `KEYCLOAK_ACCOUNT_NETWORK_${code}` });
+      }
+    });
     // 1. Attendre que la base de données soit prête
     await initializeDatabase();
     console.log(`[SERVER_START_DEBUG] DB connection filename after init: "${db.filename}"`);
@@ -41,6 +85,10 @@ const startServer = async () => {
     app.use('/api/recurring-transactions', recurringTransactionRoutes);
     app.use('/api/accounts', accountRoutes);
     app.use('/api/couple-split', coupleSplitRoutes);
+    if (isDocumentationEnabled()) {
+      const { createDocumentationRouter } = require('./routes/documentation.routes');
+      app.use('/api/documentation', requireLocalDocumentationAccess, createDocumentationRouter());
+    }
     if (isReleaseProcessEnabled()) {
       app.use('/api/release', requireLocalReleaseAccess, releaseRoutes);
     }
@@ -48,6 +96,9 @@ const startServer = async () => {
     app.use('/api/saving-accounts', savingAccountRoutes);
     app.use('/api/vehicles', vehicleRoutes);
     app.use('/api/salaries', require('./routes/salary.routes'));
+
+    app.use((_req, res) => res.status(404).json({ error: 'Ressource introuvable.' }));
+    app.use(httpErrorHandler);
 
     // 3. Démarrer le serveur Express
     app.listen(PORT_BACK, () => {

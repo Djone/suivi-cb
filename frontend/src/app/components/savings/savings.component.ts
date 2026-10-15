@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ChartModule } from 'primeng/chart';
@@ -14,7 +14,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ListboxModule } from 'primeng/listbox';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TransactionService } from '../../services/transaction.service';
 import { AccountService } from '../../services/account.service';
 import { SavingsWalletService } from '../../services/savings-wallet.service';
@@ -74,7 +74,7 @@ type WalletConfirmationAction = 'close' | 'delete';
     RouterLink,
     FormsModule,
     CardModule,
-    DropdownModule,
+    SelectModule,
     TableModule,
     TagModule,
     ChartModule,
@@ -84,7 +84,7 @@ type WalletConfirmationAction = 'close' | 'delete';
     InputTextModule,
     InputNumberModule,
     ListboxModule,
-    CalendarModule,
+    DatePickerModule,
   ],
   templateUrl: './savings.component.html',
   styleUrl: './savings.component.css',
@@ -166,7 +166,7 @@ export class SavingsComponent implements OnInit, OnDestroy {
     { label: 'Retrait', value: 'withdrawal' as ManualMovementType },
   ];
 
-  // Locale français pour PrimeNG p-calendar
+  // Locale français pour PrimeNG p-datepicker
   frLocale = {
     firstDayOfWeek: 1,
     dayNames: [

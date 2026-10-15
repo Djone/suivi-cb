@@ -35,7 +35,6 @@ exports.getAllSubCategoriesByfinancielFlowId = async (req, res) => {
 exports.addSubCategory = async (req, res) => {
   try {
     const newCategory = req.body;
-    console.log("Requête reçue pour ajouter une sous-catégorie :", newCategory);
 
     // Appel au modèle pour insérer la catégorie
     const result = await subCategory.add(newCategory);

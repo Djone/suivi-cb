@@ -36,7 +36,6 @@ exports.getActiveCategories = async (req, res) => {
 exports.addCategory = async (req, res) => {
   try {
     const newCategory = req.body;
-    console.log("Requête reçue pour ajouter une catégorie :", newCategory);
 
     // Appel au modèle pour insérer la catégorie
     const result = await Category.add(newCategory);
@@ -66,9 +65,6 @@ exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params; // ID extrait des paramètres de l'URL
     const fieldsToUpdate = req.body; // Champs de mise à jour
-
-    console.log("ID reçu de la catégorie :", id); // Log de l'ID
-    console.log("Données reçues pour mise à jour de la catégorie :", req.body); // Log des données du corps
 
     if (!id) {
       return res.status(400).json({ error: "ID de la catégorie manquant." });

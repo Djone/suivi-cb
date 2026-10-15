@@ -7,7 +7,7 @@ import { FINANCIAL_FLOW_LIST } from '../../config/financial-flow.config';
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-edit-category-dialog',
@@ -17,7 +17,7 @@ import { DropdownModule } from 'primeng/dropdown';
     FormsModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule
+    SelectModule
   ],
   templateUrl: './edit-category-dialog.component.html',
   styleUrls: ['./edit-category-dialog.component.css']

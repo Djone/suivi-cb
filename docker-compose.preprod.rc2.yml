@@ -1,0 +1,51 @@
+# Candidate rc2 imported with docker load; no build on the NAS.
+name: suivi-cb-preprod
+
+services:
+  backend:
+    image: suivi-cb-preprod-backend:2.2.0-rc2
+    pull_policy: never
+    container_name: suivi-cb-preprod-backend
+    restart: unless-stopped
+    env_file:
+      - .env.preprod
+    environment:
+      NODE_ENV: production
+      PORT_BACK: "3001"
+      DB_PATH: /app/data/database.db
+    expose:
+      - "3001"
+    volumes:
+      - ./data:/app/data
+      - ./logs/backend:/app/logs
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    image: suivi-cb-preprod-frontend:2.2.0-rc2
+    pull_policy: never
+    container_name: suivi-cb-preprod-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4201:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  app:
+    driver: bridge

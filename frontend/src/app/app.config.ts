@@ -1,9 +1,11 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { AuthService } from './auth/auth.service';
+import { authInterceptor } from './auth/auth.interceptor';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 
@@ -13,7 +15,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { LOCALE_ID } from '@angular/core';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
-import aura from '@primeng/themes/aura';
+import aura from '@primeuix/themes/aura';
 
 import { APP_VERSION, APP_BUILD_TIME, APP_ENV } from './version';
 
@@ -31,7 +33,8 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimationsAsync(),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideAppInitializer(() => inject(AuthService).initialize()),
     { provide: LOCALE_ID, useValue: 'fr' },
     providePrimeNG({
       translation: {

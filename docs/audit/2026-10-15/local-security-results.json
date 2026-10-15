@@ -1,0 +1,180 @@
+{
+  "checkedAt": "2026-10-15T07:57:31.108Z",
+  "scope": "local validation only",
+  "releaseApproved": false,
+  "source": {
+    "commit": "3ec2603d4cde4f5a46a403684623001530f6b71c",
+    "dirty": true
+  },
+  "tests": {
+    "backendJest": 86,
+    "backendAuth": 15,
+    "backendSecurity": 18,
+    "frontend": 98,
+    "productionBuild": "PASS"
+  },
+  "images": {
+    "backend": {
+      "configDigest": "sha256:46224ce684f19a12be44484a48d1a8818b9300c14b96505cd1b816111a47d7ee",
+      "scanner": "0.75.0",
+      "scannedAt": "2026-10-15T07:53:47.282639312Z",
+      "vulnerabilities": 0,
+      "secrets": 0,
+      "sbomComponents": 164
+    },
+    "frontend": {
+      "configDigest": "sha256:bdfd2a48e742412964d07ffe7d1b625a468da966d2be3b590ded36f4aab7492e",
+      "scanner": "0.75.0",
+      "scannedAt": "2026-10-15T07:54:00.862962508Z",
+      "vulnerabilities": 0,
+      "secrets": 0,
+      "sbomComponents": 72
+    }
+  },
+  "imageExercise": {
+    "status": "PASS",
+    "backend": "sha256:9324d80f59d0b3aa7f9d73892de0144ec5ae8ffa6b4711e8301e1836443a9d69",
+    "frontend": "sha256:a43cb67c1ae5e45f01bfbcfa4df5106c23d8265bc01be5aa9321ce595a80ef14",
+    "previous": "sha256:1485861c5730e0c20dbbe3d64272eb7281d3508ddf1c67cd019cd6339e43b2da",
+    "checks": [
+      "previous database upgrade",
+      "non-root startup with all capabilities dropped",
+      "anonymous API 401",
+      "frontend default command HTTP 200",
+      "frontend API proxy 401",
+      "rollback preserves post-upgrade write",
+      "upgrade after rollback"
+    ],
+    "limitations": [
+      "synthetic data only",
+      "no real Keycloak login",
+      "not a release approval"
+    ]
+  },
+  "keycloak": {
+    "status": "PASS",
+    "image": "sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c",
+    "recordedFrom": "Successful direct command output: node scripts/test-keycloak-flow.cjs",
+    "checks": [
+      "authorization code with PKCE S256",
+      "OTP enrollment",
+      "real access-token audiences account + suivi-cb-api",
+      "refresh",
+      "logout invalidates refresh token",
+      "OTP required on next login",
+      "invalid OTP refused",
+      "valid OTP accepted"
+    ],
+    "limitations": [
+      "synthetic realm and user",
+      "NAS realm configuration and Angular browser journey still require preproduction acceptance"
+    ]
+  },
+  "sourceSecrets": 0,
+  "audits": {
+    "backend": {
+      "all": {
+        "info": 0,
+        "low": 0,
+        "moderate": 19,
+        "high": 0,
+        "critical": 0,
+        "total": 19
+      },
+      "production": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    },
+    "frontend": {
+      "all": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 13,
+        "critical": 0,
+        "total": 13
+      },
+      "production": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    }
+  },
+  "github": {
+    "checkedAt": "2026-10-15",
+    "visibility": "public",
+    "defaultBranch": "master",
+    "protected": {
+      "master": false,
+      "2.2.0-dev": false
+    },
+    "rulesets": 0
+  },
+  "artifacts": {
+    "backend-patched-trivy.json": {
+      "sha256": "b6d86c5abc130e3d5504124ef90be1617020a9f3d26974b8fbe2ede3df6a3918",
+      "location": ".cache/security-20261015/backend-patched-trivy.json"
+    },
+    "frontend-patched-trivy.json": {
+      "sha256": "ec66a7927efd9c4b4322553a27960a8dc75ab31063a2b28d996743388efc28ba",
+      "location": ".cache/security-20261015/frontend-patched-trivy.json"
+    },
+    "backend.cdx.json": {
+      "sha256": "f5a077ce2854fa3d9b5a0460bcadf855ca5dafa1c6dd5d07f8ba38cea4803354",
+      "location": ".cache/security-20261015/backend.cdx.json"
+    },
+    "frontend.cdx.json": {
+      "sha256": "85be7c10352886a0b809ba56df7127f2d0f0b3ababfce40f23537ea4951fccab",
+      "location": ".cache/security-20261015/frontend.cdx.json"
+    },
+    "source-secrets.json": {
+      "sha256": "7000bc73ce5713f42da3f5ffc7e617de512378259679641beebecd636997bf63",
+      "location": ".cache/security-20261015/source-secrets.json"
+    },
+    "source-inventory.json": {
+      "sha256": "57ca2fe73dbb1e40b51b7e3a5b33fdbfe65dad8da1a23baab2b21461002012d8",
+      "location": ".cache/security-20261015/source-inventory.json"
+    },
+    "image-smoke.json": {
+      "sha256": "1e92737dbb692c880bd5d75a288149f3bc359c8dbbf45e9e99a03ff492157936",
+      "location": ".cache/security-20261015/image-smoke.json"
+    },
+    "keycloak-flow.json": {
+      "sha256": "5ff65de7eb20d01a59a24d0593660115461fa74e747ffe7279f26a6484850bc3",
+      "location": ".cache/security-20261015/keycloak-flow.json"
+    },
+    "backend-audit.json": {
+      "sha256": "e1d45461deac1984a865bc62a8b7373a98cc99b3f4b8fd2d3f0ac2f558205cfe",
+      "location": ".cache/security-20261015/backend-audit.json"
+    },
+    "frontend-audit.json": {
+      "sha256": "9587b0049e8f239cc77fa8173e123b9df333a6b5edef3ce664c82d9aa0c3d1a2",
+      "location": ".cache/security-20261015/frontend-audit.json"
+    },
+    "backend-production-audit.json": {
+      "sha256": "e9f5ac5049f5ecaf719cc364428ffb4f499e98b71db633ea4e136f671ce04046",
+      "location": ".cache/security-20261015/backend-production-audit.json"
+    },
+    "frontend-production-audit.json": {
+      "sha256": "d5fcc0343e3348e906b990eefc49029daf6550e2ee869d8c3293dff22f1a1c98",
+      "location": ".cache/security-20261015/frontend-production-audit.json"
+    },
+    "backend-tests.log": {
+      "sha256": "7f21ace69362e1b2dcbe98c46e9f7405afbc650298dcffabc1085cf38a6a3070",
+      "location": ".cache/security-20261015/backend-tests.log"
+    },
+    "frontend-tests.log": {
+      "sha256": "e48793a41ff1b2354873c5867ff00744c94ab100e88ce72ef3581a8119a69b76",
+      "location": ".cache/security-20261015/frontend-tests.log"
+    }
+  }
+}

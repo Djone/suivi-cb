@@ -1,0 +1,156 @@
+{
+  "checkedAt": "2026-10-15T08:26:05.934Z",
+  "sourceCommit": "65ad1bb58981defe6a03502c954e417375964586",
+  "workingTreeModified": true,
+  "status": "partial remediation; braces remains open",
+  "remainingRiskAccepted": false,
+  "cleanInstall": {
+    "backend": "PASS",
+    "frontend": "PASS",
+    "legacyPeerDeps": false
+  },
+  "tests": {
+    "backend": {
+      "jest": 86,
+      "auth": 15,
+      "security": 19,
+      "status": "PASS"
+    },
+    "frontend": {
+      "chromeHeadless": 98,
+      "status": "PASS",
+      "coverageStatementsPercent": 43.65,
+      "productionBuild": "PASS"
+    }
+  },
+  "audits": {
+    "backend": {
+      "all": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "production": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    },
+    "frontend": {
+      "all": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 5,
+        "critical": 0,
+        "total": 5
+      },
+      "production": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    }
+  },
+  "remaining": [
+    {
+      "name": "@angular/build",
+      "severity": "high",
+      "range": ">=19.2.0-next.0",
+      "via": [
+        "karma"
+      ]
+    },
+    {
+      "name": "braces",
+      "severity": "high",
+      "range": "*",
+      "via": [
+        {
+          "name": "braces",
+          "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+          "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+          "range": "<=3.0.3"
+        }
+      ]
+    },
+    {
+      "name": "chokidar",
+      "severity": "high",
+      "range": "2.0.0 - 3.6.0",
+      "via": [
+        "braces"
+      ]
+    },
+    {
+      "name": "karma",
+      "severity": "high",
+      "range": ">=2.0.3",
+      "via": [
+        "braces",
+        "chokidar"
+      ]
+    },
+    {
+      "name": "karma-jasmine",
+      "severity": "high",
+      "range": ">=5.0.0",
+      "via": [
+        "karma"
+      ]
+    }
+  ],
+  "artifacts": {
+    "backend/package.json": {
+      "sha256": "5fc8418cb55fc62b6eb43b5ca6136ef0804f98ccfe60aeed466282e3c1952a04"
+    },
+    "backend/package-lock.json": {
+      "sha256": "dfb6c805710ab3be81d935ae0b602aab9be84f3bcddf3cb1f178f6f43f0fb3a1"
+    },
+    "frontend/package.json": {
+      "sha256": "d0780fdaa2ea14752d8555d154fe31f6b34cc9de1ba5293a902df33f9021b333"
+    },
+    "frontend/package-lock.json": {
+      "sha256": "66ea9d7299890d249c979790de540148d7b593fc4d3398c8ff45ba9528f89626"
+    },
+    "frontend/angular.json": {
+      "sha256": "15e7b85023ac23328cce99ca9460b28c71ecf57a85f24eb5fae4f86c4b98206a"
+    },
+    "frontend/karma.conf.cjs": {
+      "sha256": "7f61283d56f1484fc4c4ee6f6cb295bb4c1fad48e037e686a0e841b5f6af2880"
+    },
+    "backend/tests/security/tooling-dependencies.test.cjs": {
+      "sha256": "ea217550fb59a81cc3e0e4e708a8dd189608dc00b8994940e084903298203e55"
+    },
+    ".cache/dependency-remediation-20261015/backend-tests.log": {
+      "sha256": "81e1120e8e8316db275455c44ae426c19c210d16753276325f5fa20435071e3b"
+    },
+    ".cache/dependency-remediation-20261015/frontend-tests.log": {
+      "sha256": "acfcd387e533b384f4dd1fc82402fc1939442407d4eee878eb47b8af599c4494"
+    },
+    ".cache/dependency-remediation-20261015/frontend-build.log": {
+      "sha256": "0bfae7bc33df72e74f04222107ccf6157a0152b4d423842b71d9a61eedf82433"
+    },
+    ".cache/dependency-remediation-20261015/backend-audit.json": {
+      "sha256": "56d406bf3ed218984c62109ff147a60b234cb564f808dc90d38a08df501c1aba"
+    },
+    ".cache/dependency-remediation-20261015/frontend-audit.json": {
+      "sha256": "b53dca0dbe926dc828a5ee3a235885142a93d7ffcbb71a40749f6a38466d2fa4"
+    },
+    ".cache/dependency-remediation-20261015/backend-production-audit.json": {
+      "sha256": "56d406bf3ed218984c62109ff147a60b234cb564f808dc90d38a08df501c1aba"
+    },
+    ".cache/dependency-remediation-20261015/frontend-production-audit.json": {
+      "sha256": "e782582b0e260d4d3a6c34a2f9f5dcc578746820eb41e33df5ca2dbe330be02d"
+    }
+  }
+}

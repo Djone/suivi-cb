@@ -45,6 +45,10 @@ Thumbs.db
 # Documentation
 *.md
 !README.md
+docs/
+frontend/public/documentation/
+backend/routes/documentation.routes.js
+backend/services/documentation-store.js
 
 # Scripts de développement
 scripts/
@@ -58,3 +62,24 @@ tmp/
 temp/
 *.tmp
 *.swp
+
+# Secrets et fichiers de travail exclus du contexte de construction
+.env
+.env.*
+**/.env
+**/.env.*
+**/.npm-cache/
+.cache/
+backups/
+backend/migrations/*.csv
+
+# Recursive exclusions: backend/database.db must never enter an image layer.
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/*.sqlite
+**/*.sqlite3
+**/*.csv
+**/coverage/
+**/.npm-cache/
+.npm-cache/

@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-10-08T08:59:14.599Z",
+  "origin": "https://finances-preprod.jolurie.com",
+  "checks": [
+    {
+      "name": "frontend",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "no-referrer",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "name": "unauthenticated-api",
+      "status": 401,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "no-referrer, no-referrer",
+        "www-authenticate": "Bearer",
+        "x-content-type-options": "nosniff, nosniff",
+        "x-frame-options": "DENY, DENY"
+      }
+    },
+    {
+      "name": "invalid-token-api",
+      "status": 401,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "no-referrer, no-referrer",
+        "www-authenticate": "Bearer error=\"invalid_token\"",
+        "x-content-type-options": "nosniff, nosniff",
+        "x-frame-options": "DENY, DENY"
+      }
+    },
+    {
+      "name": "silent-sso",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-security-policy": "frame-ancestors 'self'",
+        "content-type": "text/html",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "no-referrer",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN"
+      }
+    },
+    {
+      "name": "public-auth-config",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "no-referrer, no-referrer",
+        "x-content-type-options": "nosniff, nosniff",
+        "x-frame-options": "DENY, DENY"
+      },
+      "configuration": {
+        "url": "https://auth.jolurie.com",
+        "realm": "suivi-cb-preprod",
+        "clientId": "suivi-cb-web"
+      }
+    },
+    {
+      "name": "oidc",
+      "error": 23
+    },
+    {
+      "name": "http-redirect",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-cache",
+        "content-type": "text/html"
+      }
+    }
+  ]
+}

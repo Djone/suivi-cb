@@ -4,6 +4,7 @@ backend/node_modules/
 frontend/node_modules/
 
 # Build outputs
+frontend/public/documentation/
 dist/
 frontend/dist/
 backend/dist/
@@ -42,6 +43,7 @@ desktop.ini
 *.tmp
 *.temp
 .cache/
+.npm-cache/
 
 # Coverage
 coverage/
@@ -59,3 +61,6 @@ backups/
 # Local scripts that might contain sensitive info
 deploy-local.sh
 .env.production.local
+.env.keycloak.production
+
+.env.preprod

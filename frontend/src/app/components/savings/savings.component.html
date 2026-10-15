@@ -237,48 +237,48 @@
     <div class="filters-grid">
       <div class="filter-item">
         <label>Compte</label>
-        <p-dropdown
+        <p-select
           [options]="accountOptions"
           [(ngModel)]="selectedAccount"
           (onChange)="applyFilters()"
           [style]="{ width: '100%' }"
-        ></p-dropdown>
+        ></p-select>
       </div>
 
       <div class="filter-item">
         <label>Année</label>
-        <p-dropdown
+        <p-select
           [options]="yearOptions"
           [(ngModel)]="selectedYear"
           optionLabel="label"
           optionValue="value"
           (onChange)="applyFilters()"
           [style]="{ width: '100%' }"
-        ></p-dropdown>
+        ></p-select>
       </div>
 
       <div class="filter-item">
         <label>Mois</label>
-        <p-dropdown
+        <p-select
           [options]="monthOptions"
           [(ngModel)]="selectedMonth"
           optionLabel="label"
           optionValue="value"
           (onChange)="applyFilters()"
           [style]="{ width: '100%' }"
-        ></p-dropdown>
+        ></p-select>
       </div>
 
       <div class="filter-item">
         <label>Flux</label>
-        <p-dropdown
+        <p-select
           [options]="flowOptions"
           [(ngModel)]="selectedFlow"
           optionLabel="label"
           optionValue="value"
           (onChange)="applyFilters()"
           [style]="{ width: '100%' }"
-        ></p-dropdown>
+        ></p-select>
       </div>
 
       <div class="filter-item actions">
@@ -480,12 +480,11 @@
 
     <div class="modal-row">
       <label>Date</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="manualMovementDate"
         dateFormat="dd/mm/yy"
         [showIcon]="true"
-        [locale]="frLocale"
-      ></p-calendar>
+      ></p-datepicker>
     </div>
 
     <div class="modal-row">

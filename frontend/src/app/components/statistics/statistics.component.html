@@ -5,37 +5,37 @@
       <div class="filters-grid">
         <div class="filter-item">
           <label>Compte</label>
-          <p-dropdown
+          <p-select
             [options]="accountOptions"
             [(ngModel)]="selectedAccount"
             (onChange)="applyFilters()"
             placeholder="Sélectionnez un compte"
             [style]="{ width: '100%' }"
           >
-          </p-dropdown>
+          </p-select>
         </div>
 
         <div class="filter-item">
           <label>Année</label>
-          <p-dropdown
+          <p-select
             [options]="yearOptions"
             [(ngModel)]="selectedYear"
             (onChange)="applyFilters()"
             [style]="{ width: '100%' }"
           >
-          </p-dropdown>
+          </p-select>
         </div>
 
         <div class="filter-item">
           <label>Mois</label>
-          <p-dropdown
+          <p-select
             [options]="availableMonths"
             [(ngModel)]="selectedMonth"
             (onChange)="applyFilters()"
             placeholder="Sélectionnez un mois"
             [style]="{ width: '100%' }"
           >
-          </p-dropdown>
+          </p-select>
         </div>
 
         <div class="filter-item">
@@ -128,8 +128,10 @@
   <!-- Vue annuelle -->
   <div class="section-wrapper">
     <p-card header="Vue annuelle par catégorie" styleClass="tabs-card">
-      <p-tabView>
-        <p-tabPanel header="Dépenses">
+      <p-tabs [value]="0">
+<p-tablist><p-tab [value]="0">Dépenses</p-tab><p-tab [value]="1">Revenus</p-tab></p-tablist>
+<p-tabpanels>
+        <p-tabpanel [value]="0">
           <div class="table-description">
             Totaux et moyennes mensuels des catégories, avec le détail par
             sous-catégorie.
@@ -231,9 +233,9 @@
           <ng-template #noExpenseData>
             <div class="no-data">Aucune dépense pour cette période.</div>
           </ng-template>
-        </p-tabPanel>
+        </p-tabpanel>
 
-        <p-tabPanel header="Revenus">
+        <p-tabpanel [value]="1">
           <div class="table-description">
             Totaux et moyennes mensuels des catégories, avec le détail par
             sous-catégorie.
@@ -348,8 +350,9 @@
           <ng-template #noIncomeData>
             <div class="no-data">Aucun revenu pour cette période.</div>
           </ng-template>
-        </p-tabPanel>
-      </p-tabView>
+        </p-tabpanel>
+      </p-tabpanels>
+</p-tabs>
     </p-card>
   </div>
 </div>

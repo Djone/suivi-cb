@@ -4,7 +4,7 @@
   <!-- Compte -->
   <div class="p-field mb-3">
     <label for="account" class="block mb-2">Compte *</label>
-    <p-dropdown
+    <p-select
       id="account"
       [options]="accounts"
       [(ngModel)]="data.transaction.accountId"
@@ -17,7 +17,7 @@
       [showClear]="true"
       [style]="{ width: '100%' }"
     >
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Lier à une échéance (seulement en création) -->
@@ -42,7 +42,7 @@
   <!-- Type de transaction (Flux financier) -->
   <div class="p-field mb-3">
     <label for="financialFlow" class="block mb-2">Type de transaction *</label>
-    <p-dropdown
+    <p-select
       id="financialFlow"
       [options]="financialFlowList"
       [(ngModel)]="data.transaction.financialFlowId"
@@ -52,7 +52,7 @@
       placeholder="Sélectionnez un type"
       [style]="{ width: '100%' }"
     >
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Description -->
@@ -82,7 +82,7 @@
   <!-- Date -->
   <div class="p-field mb-3">
     <label for="date" class="block mb-2">Date *</label>
-    <p-calendar
+    <p-datepicker
       id="date"
       [(ngModel)]="transactionDate"
       (ngModelChange)="onFieldChange()"
@@ -91,9 +91,8 @@
       placeholder="Sélectionnez une date"
       styleClass="w-full"
       [appendTo]="'body'"
-      [locale]="frLocale"
     >
-    </p-calendar>
+    </p-datepicker>
   </div>
 
   <!-- Montant -->
@@ -148,7 +147,7 @@
     <label for="savingAccount" class="block mb-2">
       Compte d'épargne
     </label>
-    <p-dropdown
+    <p-select
       id="savingAccount"
       [options]="trackedSavingAccounts"
       [(ngModel)]="selectedSavingAccountId"
@@ -165,13 +164,13 @@
           <small>({{ account.name }})</small>
         </div>
       </ng-template>
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Sous-catégorie -->
   <div class="p-field mb-3">
     <label for="subcategory" class="block mb-2">Sous-catégorie *</label>
-    <p-dropdown
+    <p-select
       id="subcategory"
       [options]="activeSubCategories"
       [(ngModel)]="selectedSubCategoryId"
@@ -202,12 +201,12 @@
           (click)="openCreateSubCategory($event)"
         ></button>
       </ng-template>
-    </p-dropdown>
+    </p-select>
   </div>
 
   <div class="p-field mb-3">
     <label for="vehicle" class="block mb-2">Véhicule concerné</label>
-    <p-dropdown
+    <p-select
       id="vehicle"
       [options]="vehicles"
       [(ngModel)]="data.transaction.vehicleId"
@@ -217,7 +216,7 @@
       [showClear]="true"
       [style]="{ width: '100%' }"
       [appendTo]="'body'"
-    ></p-dropdown>
+    ></p-select>
   </div>
 </div>
 

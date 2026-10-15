@@ -20,8 +20,10 @@
     </div>
   </header>
 
-  <p-tabView class="tab-wrapper" [scrollable]="true">
-    <p-tabPanel header="Dépenses">
+  <p-tabs [value]="0" class="tab-wrapper" [scrollable]="true">
+<p-tablist><p-tab [value]="0">Dépenses</p-tab><p-tab [value]="1">Revenus</p-tab></p-tablist>
+<p-tabpanels>
+    <p-tabpanel [value]="0">
       <div class="category-grid">
         <article
           class="category-card"
@@ -49,13 +51,13 @@
                   pTooltip="Modifier la catégorie"
                   (click)="editCategory(category)"
                 ></button>
-                <p-inputSwitch
+                <p-toggleswitch
                   [ngModel]="category.isActive"
                   [trueValue]="1"
                   [falseValue]="0"
                   (onChange)="toggleActive(category, $event)"
                   pTooltip="Activer / Désactiver"
-                ></p-inputSwitch>
+                ></p-toggleswitch>
                 <button
                   pButton
                   type="button"
@@ -125,9 +127,9 @@
           Aucune catégorie de dépense trouvée.
         </div>
       </div>
-    </p-tabPanel>
+    </p-tabpanel>
 
-    <p-tabPanel header="Revenus">
+    <p-tabpanel [value]="1">
       <div class="category-grid">
         <article
           class="category-card"
@@ -155,13 +157,13 @@
                   pTooltip="Modifier la catégorie"
                   (click)="editCategory(category)"
                 ></button>
-                <p-inputSwitch
+                <p-toggleswitch
                   [ngModel]="category.isActive"
                   [trueValue]="1"
                   [falseValue]="0"
                   (onChange)="toggleActive(category, $event)"
                   pTooltip="Activer / Désactiver"
-                ></p-inputSwitch>
+                ></p-toggleswitch>
                 <button
                   pButton
                   type="button"
@@ -232,6 +234,7 @@
           Aucune catégorie de revenu trouvée.
         </div>
       </div>
-    </p-tabPanel>
-  </p-tabView>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
 </section>

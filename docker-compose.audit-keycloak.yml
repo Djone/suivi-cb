@@ -1,0 +1,35 @@
+# Isolated restoration test ONLY. Never use for production.
+name: suivi-cb-audit-keycloak
+services:
+  database:
+    image: ${PG_AUDIT_IMAGE:?Set PG_AUDIT_IMAGE}
+    pull_policy: never
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_DB: keycloak
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - audit-pg-data:/var/lib/postgresql/data
+    networks: [isolated]
+  keycloak:
+    image: ${KC_AUDIT_IMAGE:?Set KC_AUDIT_IMAGE}
+    pull_policy: never
+    command: start
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://database:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: audit-isolated-only
+      KC_HOSTNAME: http://localhost:8180
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "true"
+    ports:
+      - "127.0.0.1:8180:8080"
+    volumes:
+      - ${KC_AUDIT_THEMES:?Set KC_AUDIT_THEMES}:/opt/keycloak/themes:ro
+    networks: [isolated]
+networks:
+  isolated:
+    internal: true
+volumes:
+  audit-pg-data:

@@ -9,12 +9,12 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 
 import { TransactionService } from '../../services/transaction.service';
@@ -82,12 +82,12 @@ type InternalTransferFilter = 'all' | 'only' | 'exclude';
     ButtonModule,
     TooltipModule,
     PaginatorModule,
-    CalendarModule,
+    DatePickerModule,
     InputTextModule,
     InputNumberModule,
     InputGroupModule,
     InputGroupAddonModule,
-    DropdownModule,
+    SelectModule,
     MultiSelectModule,
   ],
   templateUrl: './transaction-list.component.html',
@@ -233,10 +233,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         this.selectTransactionsForActiveAccount();
 
         if (this.accountId) {
-          console.log(
-            'TRANSACTION LIST : accountId depuis la route:',
-            this.accountId,
-          );
+
           this.loadAccountInfo();
         } else {
           this.recurringTransactions = [];
@@ -263,12 +260,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.transactionService.transactions$.subscribe({
         next: (data) => {
-          console.log(
-            'TRANSACTION LIST : Données reçues - Total:',
-            data.length,
-          );
+
           if (data.length > 0) {
-            console.log('TRANSACTION LIST : Exemple de transaction:', data[0]);
+
           }
 
           this.allTransactions = data || [];
@@ -293,10 +287,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           this.subCategories = data;
           this.refreshSubCategoryIndex(data);
           this.categoryOptions = this.buildCategoryOptions(data);
-          console.log(
-            'TRANSACTION LIST : Sous-catégories chargées - Total:',
-            data.length,
-          );
+
           if (this.transactions.length > 0) {
             this.applyFiltersAndSort();
           }
@@ -888,10 +879,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       normalizedId !== null &&
       this.subCategories.length > 0
     ) {
-      console.log(
-        `TRANSACTION LIST : Sous-categorie ${normalizedId} non trouvee. Sous-categories disponibles:`,
-        this.subCategories.map((sc) => sc.id),
-      );
+
     }
 
     return subCategory
@@ -1135,7 +1123,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     this.accountService.accounts$.subscribe((accounts) => {
       this.account = accounts.find((a) => a.id === this.accountId) || null;
-      console.log('TRANSACTION LIST : Compte chargé:', this.account);
+
       this.loadRecurringTransactions();
     });
   }
@@ -1166,10 +1154,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
                 : rt.accountId;
             return rtAccountId === this.accountId && rt.isActive === 1;
           });
-          console.log(
-            'TRANSACTION LIST : Échéances récurrentes pour le compte:',
-            this.recurringTransactions,
-          );
+
 
           // Trier les échéances : non réalisées en premier, puis par jour du mois
           this.sortRecurringTransactions();
@@ -1232,7 +1217,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       accountId: this.accountId,
       accountName: this.account?.name || '-',
     });
-    console.log(' - Solde initial du compte =', initialBalance);
+
     const todayNoTime = new Date();
     todayNoTime.setHours(0, 0, 0, 0);
     const transactionsSumAll = this.transactions.reduce(
@@ -1250,18 +1235,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     const transactionsSum = transactionsSumAll;
 
     this.currentBalance = initialBalance + transactionsSum;
-    console.log(' - Somme des transactions (toutes) =', transactionsSumAll);
-    console.log(
-      " - Somme des transactions (<= aujourd'hui) =",
-      transactionsSumUntilToday,
-    );
-    console.log(' - Solde actuel (initial + toutes) =', this.currentBalance);
 
-    console.log('TRANSACTION LIST : Somme des transactions:', transactionsSum);
-    console.log(
-      'TRANSACTION LIST : Solde actuel calculé:',
-      this.currentBalance,
-    );
+
+
+
+
+
 
     // Le calcul du prévisionnel est déplacé dans calculateRecurringBreakdown pour s'assurer que currentBalance est déjà à jour.
   }
@@ -1556,7 +1535,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((amount: number | null | undefined) => {
+    dialogRef?.onClose.subscribe((amount: number | null | undefined) => {
       if (amount === null || amount === undefined) return;
       this.saveOccurrenceException(schedule, amount, false);
     });
@@ -1572,7 +1551,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         cancelText: 'Conserver',
       },
     });
-    dialogRef.onClose.subscribe((confirmed: boolean) => {
+    dialogRef?.onClose.subscribe((confirmed: boolean) => {
       if (confirmed) this.saveOccurrenceException(schedule, null, true);
     });
   }
@@ -1687,7 +1666,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed: boolean) => {
+    dialogRef?.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) return;
 
       const transactions = schedules.map((schedule) => {
@@ -1814,7 +1793,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed: boolean) => {
+    dialogRef?.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) return;
       const tx: Transaction = {
         description: recurring.label,
@@ -1854,9 +1833,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
 
     if (isRealized) {
-      console.log(
-        `TRANSACTION LIST : Échéance ${recurringId} réalisée - Transaction trouvée.`,
-      );
+
     }
 
     return isRealized;
@@ -2031,11 +2008,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         this.transactionService.addTransaction(result).subscribe({
           next: () => {
-            console.log('TRANSACTION LIST : Transaction créée avec succès');
+
             this.loadTransactions();
             this.messageService.add({
               severity: 'success',
@@ -2065,7 +2042,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       data: { transaction: { ...transaction } },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         // Convertir la date en format ISO
         const formattedDate = new Date(result.date).toISOString().slice(0, 10);
@@ -2078,9 +2055,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           .updateTransaction(transaction.id!, updatedTransaction)
           .subscribe({
             next: () => {
-              console.log(
-                'TRANSACTION LIST : Transaction mise à jour avec succès',
-              );
+
               this.loadTransactions();
               this.messageService.add({
                 severity: 'success',
@@ -2151,7 +2126,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (!confirmed) return;
 
       const mirroredTransactions = transactions.map(
@@ -2239,7 +2214,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (!confirmed) {
         return;
       }
@@ -2299,11 +2274,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.transactionService.deleteTransaction(transaction.id!).subscribe({
           next: () => {
-            console.log('TRANSACTION LIST : Transaction supprimée avec succès');
+
             this.loadTransactions();
             this.messageService.add({
               severity: 'info',

@@ -1,5 +1,9 @@
 # Guide de mise à jour sur Synology NAS
 
+## Procédure applicable aux prochaines MEP
+
+La validation en préproduction est obligatoire avant toute MEP. Promouvoir les images effectivement testées, avec les données et variables de production, selon [PROMOTION_PREPROD_PRODUCTION.md](./PROMOTION_PREPROD_PRODUCTION.md). Les méthodes ci-dessous sont historiques : leurs étapes de récupération du code, de reconstruction en production et leurs scripts automatiques ne doivent plus être utilisés pour une MEP. Pour les sauvegardes cohérentes et leur restauration, suivre [SECURITE_MEP.md](./SECURITE_MEP.md#vérifier-les-sauvegardes).
+
 Ce guide explique comment mettre à jour l'application Suivi CB déployée sur votre NAS Synology.
 
 ## Prérequis

@@ -90,7 +90,7 @@ Votre application Suivi CB est maintenant prête à être déployée sur votre N
 
 ## Technologies utilisées
 
-- **Frontend**: Angular 19 + PrimeNG + nginx
+- **Frontend**: Angular 20 + PrimeNG + nginx
 - **Backend**: Node.js 20 + Express + SQLite
 - **Conteneurisation**: Docker + Docker Compose
 - **Reverse Proxy**: nginx (DSM)

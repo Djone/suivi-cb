@@ -1,22 +1,8 @@
 const db = require('../config/db');
 
-const runQuery = (query, params = []) =>
-  new Promise((resolve, reject) => {
-    db.run(query, params, function (err) {
-      if (err) return reject(err);
-      resolve(this);
-    });
-  });
-
-async function addColumnSafe(table, columnDef) {
-  try {
-    await runQuery(`ALTER TABLE ${table} ADD COLUMN ${columnDef};`);
-    console.log(` -> Colonne ajoutée: ${table}.${columnDef}`);
-  } catch (e) {
-    // SQLite renvoie une erreur si la colonne existe déjà
-    console.log(` -> Colonne déjà présente ou ignorée: ${table}.${columnDef}`);
-  }
-}
+const { run, addColumn } = require("./runner");
+const runQuery = (query, params = []) => run(db, query, params);
+const addColumnSafe = (table, definition) => addColumn(db, table, definition);
 
 module.exports = async function migrate() {
   console.log('[Migration] Démarrage migration avancée récurrences (V1.1.0)');

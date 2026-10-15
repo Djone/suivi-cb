@@ -7,12 +7,11 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { SliderModule } from 'primeng/slider';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
@@ -41,11 +40,10 @@ interface DropdownOption<T> {
     TableModule,
     InputTextModule,
     InputNumberModule,
-    DropdownModule,
+    SelectModule,
     SliderModule,
     ButtonModule,
     ChartModule,
-    HttpClientModule,
   ],
   templateUrl: './couple-split.component.html',
   styleUrls: ['./couple-split.component.css'],
@@ -340,6 +338,5 @@ export class CoupleSplitComponent implements OnInit, OnDestroy {
     return `${year}-${month}`;
   }
 }
-
 
 

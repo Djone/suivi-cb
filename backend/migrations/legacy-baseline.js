@@ -1,0 +1,469 @@
+const db = require("../config/db");
+const { addColumn } = require("./runner");
+
+// Fonctions utilitaires pour transformer les callbacks en Promises
+const runQuery = (query, params = []) =>
+  new Promise((resolve, reject) => {
+    const alter = query.match(/^\s*ALTER TABLE ([a-z_]+) ADD COLUMN ([\s\S]*?);?\s*$/i);
+    if (alter) { addColumn(db, alter[1], alter[2].replace(/;$/, "")).then(resolve, reject); return; }
+    db.run(query, params, function (err) {
+      if (err) return reject(err);
+      resolve(this);
+    });
+  });
+
+const getQuery = (query, params = []) =>
+  new Promise((resolve, reject) => {
+    db.get(query, params, (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  });
+
+const allQuery = (query, params = []) =>
+  new Promise((resolve, reject) => {
+    db.all(query, params, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
+
+const normalizeLabel = (value) =>
+  (value || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+const ensureSavingsSystemData = async () => {
+  const categories = await allQuery(
+    'SELECT id, label, financial_flow_id, is_active FROM categories',
+  );
+
+  for (const financialFlowId of [1, 2]) {
+    let category = categories.find(
+      (item) =>
+        Number(item.financial_flow_id) === financialFlowId &&
+        normalizeLabel(item.label) === 'epargne',
+    );
+
+    if (!category) {
+      const result = await runQuery(
+        'INSERT INTO categories (label, financial_flow_id, is_active) VALUES (?, ?, 1)',
+        ['Épargne', financialFlowId],
+      );
+      category = {
+        id: result.lastID,
+        label: 'Épargne',
+        financial_flow_id: financialFlowId,
+        is_active: 1,
+      };
+      categories.push(category);
+    } else if (Number(category.is_active) !== 1) {
+      await runQuery('UPDATE categories SET is_active = 1 WHERE id = ?', [
+        category.id,
+      ]);
+    }
+
+    const subCategories = await allQuery(
+      'SELECT id, label FROM subcategories WHERE category_id = ?',
+      [category.id],
+    );
+    const hasInternalTransfer = (subCategories || []).some(
+      (subCategory) => normalizeLabel(subCategory.label) === 'transfert interne',
+    );
+    if (!hasInternalTransfer) {
+      await runQuery(
+        'INSERT INTO subcategories (label, category_id) VALUES (?, ?)',
+        ['Transfert interne', category.id],
+      );
+    }
+  }
+};
+
+// Fonction principale d'initialisation, maintenant asynchrone
+const initializeDatabase = async () => {
+  try {
+    console.log("🚀 Démarrage des migrations de la base de données...");
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date DATE NOT NULL,
+        amount REAL NOT NULL,
+        description TEXT NOT NULL,
+        sub_category_id INTEGER NOT NULL,
+        account_id INTEGER NOT NULL,
+        financial_flow_id INTEGER NOT NULL,
+        recurring_transaction_id INTEGER NULL REFERENCES recurring_transactions(id) ON DELETE SET NULL,
+        recurring_occurrence_date DATE NULL,
+        advance_to_joint_account INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN advance_to_joint_account INTEGER NOT NULL DEFAULT 0;`
+    );
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN is_internal_transfer INTEGER NOT NULL DEFAULT 0;`
+    );
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN saving_account_id INTEGER NULL;`
+    );
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN recurring_occurrence_date DATE NULL;`
+    );
+    await runQuery(
+      `ALTER TABLE transactions ADD COLUMN vehicle_id INTEGER NULL REFERENCES vehicles(id) ON DELETE SET NULL;`
+    );
+    await runQuery(
+      `CREATE INDEX IF NOT EXISTS idx_transactions_recurring_occurrence
+       ON transactions(recurring_transaction_id, recurring_occurrence_date);`,
+    );
+    await runQuery(
+      `CREATE INDEX IF NOT EXISTS idx_transactions_saving_account_id ON transactions(saving_account_id);`,
+    );
+    console.log('✓ Table "transactions" vérifiée/créée.');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        label TEXT NOT NULL, 
+        financial_flow_id INTEGER,
+        is_active INTEGER DEFAULT 1
+      );
+    `);
+    console.log('✓ Table "categories" vérifiée/créée.');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS subcategories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category_id INTEGER NOT NULL,
+          label TEXT NOT NULL
+      );
+    `);
+    await ensureSavingsSystemData();
+    console.log('✓ Table "subcategories" vérifiée/créée.');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS recurring_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        label TEXT NOT NULL,
+        amount REAL NOT NULL,
+        day_of_month INTEGER NOT NULL,
+        sub_category_id INTEGER NOT NULL,
+        account_id INTEGER NOT NULL,
+        financial_flow_id INTEGER NOT NULL,
+        debit_503020 INTEGER,
+        frequency TEXT NOT NULL DEFAULT 'monthly',
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✓ Table "recurring_transactions" vérifiée/créée.');
+    // Ajout non bloquant de colonnes avancées (si non présentes)
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN start_month INTEGER NULL;`
+    );
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN occurrences INTEGER NULL;`
+    );
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN active_months TEXT NULL;`
+    );
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN recurrence_kind TEXT NULL;`
+    );
+    await runQuery(
+      `ALTER TABLE recurring_transactions ADD COLUMN vehicle_id INTEGER NULL REFERENCES vehicles(id) ON DELETE SET NULL;`
+    );
+    console.log(
+      "-> Colonnes avancées sur recurring_transactions vérifiées/ajoutées."
+    );
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS vehicles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        brand TEXT,
+        model TEXT,
+        energy_type TEXT NOT NULL DEFAULT 'gasoline',
+        registration TEXT,
+        acquisition_date DATE,
+        purchase_price REAL,
+        annual_distance REAL,
+        consumption_per_100 REAL,
+        energy_price REAL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(`CREATE INDEX IF NOT EXISTS idx_transactions_vehicle_id ON transactions(vehicle_id);`);
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS vehicle_operations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date DATE NOT NULL,
+        label TEXT NOT NULL,
+        amount REAL NOT NULL,
+        sub_category_id INTEGER NOT NULL REFERENCES subcategories(id),
+        vehicle_id INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(`CREATE INDEX IF NOT EXISTS idx_vehicle_operations_vehicle_date ON vehicle_operations(vehicle_id, date);`);
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS recurring_occurrence_exceptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        recurring_id INTEGER NOT NULL REFERENCES recurring_transactions(id) ON DELETE CASCADE,
+        occurrence_date DATE NOT NULL,
+        amount REAL NULL,
+        is_skipped INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(recurring_id, occurrence_date)
+      );
+    `);
+    await runQuery(`
+      CREATE INDEX IF NOT EXISTS idx_recurring_occurrence_date
+      ON recurring_occurrence_exceptions(recurring_id, occurrence_date);
+    `);
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS accounts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        color TEXT DEFAULT '#1976d2',
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✓ Table "accounts" vérifiée/créée.');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS saving_accounts (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        bank_name TEXT NOT NULL,
+        provider_key TEXT NOT NULL UNIQUE,
+        role TEXT NOT NULL,
+        liquidity_level TEXT NOT NULL DEFAULT 'instant',
+        current_balance REAL NOT NULL DEFAULT 0,
+        target_balance REAL,
+        minimum_balance REAL,
+        include_in_daily_budget INTEGER NOT NULL DEFAULT 0,
+        include_in_wealth INTEGER NOT NULL DEFAULT 1,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (1, 'PLUM', 'Plum', 'plum', 'leisure', 'instant', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (2, 'Fonds d''urgence', 'Revolut', 'revolut', 'emergency', 'instant', 0, 2000, 1500, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (3, 'Paiements en ligne / charges', 'Fortuneo', 'fortuneo', 'online_payment', 'instant', 0, NULL, NULL, 1, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (4, 'Livret A', 'CFCAL', 'cfcal', 'savings', 'day_1', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (5, 'Investissement long terme', 'Goodvest', 'goodvest', 'investment', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `UPDATE saving_accounts
+       SET name = 'Plan epargne retraite', provider_key = 'goodvest_per',
+           role = 'investment', liquidity_level = 'long_term', updated_at = CURRENT_TIMESTAMP
+       WHERE id = 5 AND provider_key = 'goodvest'`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (7, 'Assurance-vie', 'Goodvest', 'goodvest_life_insurance', 'investment', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (8, 'Assurance-vie enfant', 'Goodvest', 'goodvest_child_life_insurance', 'investment', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    await runQuery(
+      `INSERT OR IGNORE INTO saving_accounts
+       (id, name, bank_name, provider_key, role, liquidity_level, current_balance,
+        target_balance, minimum_balance, include_in_daily_budget, include_in_wealth)
+       VALUES (6, 'Epargne salariale', 'CIC', 'cic', 'employee_savings', 'long_term', 0, NULL, NULL, 0, 1)`,
+    );
+    console.log('Table "saving_accounts" verifiee/creee.');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS savings_wallets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        target_amount REAL NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1;`
+    );
+    await runQuery(
+      `UPDATE savings_wallets SET is_active = 1 WHERE is_active IS NULL;`
+    );
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN closed_target_amount REAL;`
+    );
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN closed_allocated_amount REAL;`
+    );
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN closed_remaining_amount REAL;`
+    );
+    await runQuery(
+      `ALTER TABLE savings_wallets ADD COLUMN current_allocated_amount REAL NOT NULL DEFAULT 0;`
+    );
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS savings_wallet_allocations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transaction_id INTEGER NOT NULL,
+        wallet_id INTEGER NOT NULL,
+        amount REAL NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(transaction_id, wallet_id),
+        FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+        FOREIGN KEY (wallet_id) REFERENCES savings_wallets(id) ON DELETE CASCADE
+      );
+    `);
+    console.log('✓ Table "savings_wallet_allocations" vérifiée/créée.');
+    await runQuery(
+      `UPDATE savings_wallets
+       SET current_allocated_amount = COALESCE((
+         SELECT SUM(swa.amount)
+         FROM savings_wallet_allocations swa
+         JOIN transactions t ON t.id = swa.transaction_id
+         WHERE swa.wallet_id = savings_wallets.id
+           AND t.is_internal_transfer = 1
+       ), 0)
+       WHERE current_allocated_amount IS NULL OR current_allocated_amount = 0;`
+    );
+    await runQuery(`
+      UPDATE savings_wallets
+      SET
+        closed_target_amount = target_amount,
+        closed_allocated_amount = COALESCE(current_allocated_amount, 0),
+        closed_remaining_amount = target_amount - COALESCE(current_allocated_amount, 0)
+      WHERE is_active = 0
+        AND (
+          closed_target_amount IS NULL
+          OR closed_allocated_amount IS NULL
+          OR closed_remaining_amount IS NULL
+        );
+    `);
+    console.log('✓ Table "savings_wallets" vérifiée/créée.');
+
+    // Insertion des comptes par défaut si la table est vide
+    const row = await getQuery("SELECT COUNT(*) as count FROM accounts");
+    if (row && row.count === 0) {
+      console.log("-> Aucun compte trouvé, création des comptes par défaut...");
+      await runQuery(
+        `INSERT INTO accounts (id, name, description, color, is_active)
+         VALUES (1, 'Compte courant', 'Compte bancaire principal', '#1976d2', 1)`
+      );
+      console.log("✓ Compte courant créé.");
+
+      await runQuery(
+        `INSERT INTO accounts (id, name, description, color, is_active)
+         VALUES (2, 'Compte joint', 'Compte bancaire joint', '#4caf50', 1)`
+      );
+      console.log("✓ Compte joint créé.");
+    } else {
+      console.log("-> Des comptes existent déjà, aucune insertion nécessaire.");
+    }
+
+    const internalTransferAccount = await getQuery(
+      `SELECT id FROM accounts WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) LIMIT 1`,
+      ['Transfert interne'],
+    );
+    if (!internalTransferAccount) {
+      await runQuery(
+        `INSERT INTO accounts (name, description, color, is_active)
+         VALUES (?, ?, ?, ?)`,
+        [
+          'Transfert interne',
+          'Compte systeme pour les depots et retraits internes d epargne',
+          '#64748b',
+          0,
+        ],
+      );
+      console.log('Compte systeme "Transfert interne" cree.');
+    }
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS couple_split_configs (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        members_json TEXT NOT NULL,
+        lines_json TEXT NOT NULL,
+        custom_prorata_a REAL NOT NULL DEFAULT 50,
+        ignored_recurring_ids TEXT NOT NULL DEFAULT '[]',
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('�o" Table "couple_split_configs" vérifiée/créée.');
+    await runQuery(
+      `ALTER TABLE couple_split_configs ADD COLUMN ignored_recurring_ids TEXT NOT NULL DEFAULT '[]';`,
+    );
+    const coupleSplitRow = await getQuery("SELECT COUNT(*) as count FROM couple_split_configs");
+    if (coupleSplitRow && coupleSplitRow.count === 0) {
+      const defaultMembers = JSON.stringify([
+        { id: "A", name: "A", color: "#6366F1", income: 0 },
+        { id: "B", name: "B", color: "#10B981", income: 0 },
+      ]);
+      const defaultLines = JSON.stringify([]);
+      await runQuery(
+        `INSERT INTO couple_split_configs (id, members_json, lines_json, custom_prorata_a, ignored_recurring_ids)
+         VALUES (1, ?, ?, 50, '[]')`,
+        [defaultMembers, defaultLines]
+      );
+      console.log('�o" Configuration couple_split_configs initialisée.');
+    }
+
+    // Migrations incrémentales V1.1.0
+    const migrateAdvancedRecurring = require("./migrate_2025_advanced_recurring");
+    await migrateAdvancedRecurring();
+    await require('./salary-tracker')(db);
+
+    console.log("✅ Migrations terminées avec succès.");
+  } catch (err) {
+    console.error(
+      "❌ ERREUR FATALE lors de l'initialisation de la base de données:",
+      err.message
+    );
+    // Dans un cas réel, on pourrait vouloir arrêter l'application ici
+    throw err;
+  }
+  // Note: La connexion à la base de données n'est plus fermée ici
+  // pour qu'elle reste disponible pour le reste de l'application.
+};
+
+module.exports = initializeDatabase;

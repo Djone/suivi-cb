@@ -1,0 +1,47 @@
+# Promote the exact validated preproduction image IDs. No build.
+name: suivi-cb
+services:
+  backend:
+    image: ${PROD_BACKEND_IMAGE:?Set validated backend image ID}
+    pull_policy: never
+    container_name: suivi-cb-backend
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT_BACK: "3001"
+      DB_PATH: /app/data/database.db
+      KEYCLOAK_REALM: suivi-cb
+    expose:
+      - "3001"
+    volumes:
+      - ${PROD_DATA_DIR:?Set existing production data directory}:/app/data
+      - ${PROD_LOG_DIR:?Set production log directory}:/app/logs
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+  frontend:
+    image: ${PROD_FRONTEND_IMAGE:?Set validated frontend image ID}
+    pull_policy: never
+    container_name: suivi-cb-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+networks:
+  app:
+    driver: bridge

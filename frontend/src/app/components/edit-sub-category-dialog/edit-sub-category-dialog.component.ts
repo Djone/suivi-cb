@@ -8,7 +8,7 @@ import { Category } from '../../models/category.model';
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-edit-sub-category-dialog',
@@ -18,7 +18,7 @@ import { DropdownModule } from 'primeng/dropdown';
     FormsModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule
+    SelectModule
   ],
   templateUrl: './edit-sub-category-dialog.component.html',
   styleUrls: ['./edit-sub-category-dialog.component.css']

@@ -15,7 +15,7 @@
 
     <div class="field mb-3">
       <label for="categoryId" class="block mb-2">Catégorie parente *</label>
-      <p-dropdown
+      <p-select
         id="categoryId"
         [options]="data.categories"
         [(ngModel)]="data.subCategory.categoryId"
@@ -27,7 +27,7 @@
         [showClear]="true"
         styleClass="w-full"
         [appendTo]="'body'">
-      </p-dropdown>
+      </p-select>
     </div>
   </div>
 

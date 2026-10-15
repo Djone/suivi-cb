@@ -18,7 +18,7 @@
 
   <div class="p-field mb-3">
     <label for="financialFlowId" class="block mb-2">Flux financier *</label>
-    <p-dropdown
+    <p-select
       id="financialFlowId"
       [options]="financialFlowList"
       [(ngModel)]="data.category.financialFlowId"
@@ -27,7 +27,7 @@
       placeholder="Sélectionnez un flux"
       styleClass="w-full"
       [appendTo]="'body'">
-    </p-dropdown>
+    </p-select>
   </div>
 </div>
 

@@ -1,0 +1,62 @@
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-sb-password-toggle]').forEach((toggle) => {
+    const input = document.getElementById(toggle.getAttribute('aria-controls'));
+    if (!input) return;
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+      const visible = input.type === 'password';
+      input.type = visible ? 'text' : 'password';
+      const label = visible ? toggle.dataset.labelHide : toggle.dataset.labelShow;
+      toggle.setAttribute('aria-label', label);
+      toggle.setAttribute('title', label);
+      toggle.setAttribute('aria-pressed', String(visible));
+    });
+  });
+  const form = document.getElementById('bank-login');
+  if (!form) return; // Other Keycloak screens keep the inherited behaviour.
+  const identifier = document.getElementById('identifier-step');
+  const secret = document.getElementById('password-step');
+  const username = document.getElementById('username');
+  const password = document.getElementById('password');
+  const next = document.getElementById('next-step');
+  const previous = document.getElementById('previous-step');
+  const toggle = document.getElementById('toggle-password');
+
+  function showPassword() {
+    if (!username.reportValidity()) return;
+    identifier.hidden = true;
+    secret.hidden = false;
+    password.disabled = false;
+    password.focus();
+  }
+  next.hidden = previous.hidden = toggle.hidden = false;
+  secret.hidden = true;
+  password.disabled = true;
+  next.addEventListener('click', showPassword);
+  username.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); showPassword(); }
+  });
+  previous.addEventListener('click', () => {
+    password.value = '';
+    password.type = 'password';
+    toggle.setAttribute('aria-label', 'Afficher le mot de passe');
+    toggle.setAttribute('title', 'Afficher le mot de passe');
+    toggle.setAttribute('aria-pressed', 'false');
+    secret.hidden = true;
+    password.disabled = true;
+    identifier.hidden = false;
+    username.focus();
+  });
+  toggle.addEventListener('click', () => {
+    const visible = password.type === 'password';
+    password.type = visible ? 'text' : 'password';
+    const label = visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe';
+    toggle.setAttribute('aria-label', label);
+    toggle.setAttribute('title', label);
+    toggle.setAttribute('aria-pressed', String(visible));
+  });
+  form.addEventListener('submit', (event) => {
+    if (secret.hidden) { event.preventDefault(); showPassword(); return; }
+    document.getElementById('connect').disabled = true;
+  });
+});

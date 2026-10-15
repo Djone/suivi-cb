@@ -46,9 +46,18 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Vérifier que docker-compose est installé
-if ! command -v docker-compose &> /dev/null; then
-    error "docker-compose n'est pas installé. Installez docker-compose avant de continuer."
+# Vérifier que Docker Compose v2 est installé
+if ! docker compose version &> /dev/null; then
+    error "Docker Compose v2 n'est pas disponible."
+    exit 1
+fi
+
+if [ ! -f ".env.production" ]; then
+    error ".env.production est introuvable."
+    exit 1
+fi
+if ! grep -q '^KEYCLOAK_URL=https://' .env.production; then
+    error "KEYCLOAK_URL doit être renseignée en HTTPS dans .env.production."
     exit 1
 fi
 
@@ -75,7 +84,7 @@ info "Étape 3/6: Vérification des dépendances frontend..."
 if [ ! -d "frontend/node_modules" ]; then
     warning "node_modules du frontend non trouvé. Installation..."
     cd frontend
-    npm ci
+    npm ci --legacy-peer-deps
     cd ..
 fi
 info "Dépendances frontend OK"
@@ -84,7 +93,7 @@ echo ""
 # Étape 4: Build du frontend Angular
 info "Étape 4/6: Build du frontend Angular en mode production..."
 cd frontend
-npm run build -- --configuration production
+npx ng build --configuration production
 if [ $? -ne 0 ]; then
     error "Erreur lors du build du frontend"
     exit 1
@@ -95,7 +104,7 @@ echo ""
 
 # Étape 5: Build des images Docker
 info "Étape 5/6: Construction des images Docker..."
-docker-compose build --no-cache
+docker compose --env-file .env.production build --no-cache
 if [ $? -ne 0 ]; then
     error "Erreur lors de la construction des images Docker"
     exit 1
@@ -115,14 +124,14 @@ echo -e "${GREEN}Build terminé avec succès!${NC}"
 echo "======================================"
 echo ""
 echo "Prochaines étapes:"
-echo "1. Tester localement: docker-compose up -d"
-echo "2. Vérifier les logs: docker-compose logs -f"
+echo "1. Tester localement: docker compose --env-file .env.production up -d"
+echo "2. Vérifier les logs: docker compose --env-file .env.production logs -f"
 echo "3. Tester l'application: http://localhost:4200"
 echo "4. Déployer sur le NAS (voir INSTALLATION_NAS.md)"
 echo ""
 echo "Commandes utiles:"
-echo "- Démarrer: docker-compose up -d"
-echo "- Arrêter: docker-compose down"
-echo "- Logs: docker-compose logs -f"
-echo "- Status: docker-compose ps"
+echo "- Démarrer: docker compose --env-file .env.production up -d"
+echo "- Arrêter: docker compose --env-file .env.production down"
+echo "- Logs: docker compose --env-file .env.production logs -f"
+echo "- Status: docker compose --env-file .env.production ps"
 echo ""

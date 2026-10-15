@@ -46,6 +46,10 @@ describe('SalaryTrackerComponent', () => {
     );
     component.ngOnInit();
   });
+  it('selects the current year by default', () => {
+    expect(component.selectedYears).toEqual([new Date().getFullYear()]);
+    expect(component.filteredRows.every((row) => row.month.getFullYear() === new Date().getFullYear())).toBeTrue();
+  });
   it('filters years and establishment and recalculates both averages', () => {
     component.selectedYears = [2026];
     component.historyFilterValue = 'CST';

@@ -1,0 +1,23 @@
+{
+  "archive": "audit-backend-2026-10-08.tar",
+  "archiveSha256": "648399653fd41ef7af728699bd93249ca3bbac77e1e1a7d9e28cfb5340f201e5",
+  "scope": "All archive layers; names and hashes only, no data values",
+  "images": [
+    {
+      "tags": [
+        "suivi-cb-audit-backend:2026-10-08"
+      ],
+      "configDigest": "sha256:05a0141fbf5d619bfa3e32373ddf7203899911ba6c80695ef3c2048193c96001",
+      "user": "root (default)",
+      "sensitivePaths": [],
+      "sourceDifferences": [],
+      "packages": {
+        "node_modules/express": "4.22.3",
+        "node_modules/joi": "18.2.9",
+        "node_modules/jose": "6.2.12",
+        "node_modules/sqlite3": "6.0.1"
+      },
+      "nginx": {}
+    }
+  ]
+}

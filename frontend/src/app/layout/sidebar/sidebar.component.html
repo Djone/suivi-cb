@@ -197,8 +197,44 @@
           </small>
         </div>
       </ng-template>
+      <a *ngIf="isDevBuild" routerLink="/documentation" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item" (click)="onMenuItemClick()">
+        <i class="pi pi-book" aria-hidden="true"></i>
+        <span>Documentation</span>
+      </a>
+      <a *ngIf="isDevBuild" routerLink="/release-process" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item" (click)="onMenuItemClick()">
+        <i class="pi pi-check-square" aria-hidden="true"></i>
+        <span>Clôture de release</span>
+      </a>
     </nav>
   </div>
+
+  @if (auth.authenticated()) {
+    <section class="account-footer" aria-label="Mon compte">
+      @if (auth.user(); as user) {
+        <div class="account-identity">
+          <span class="account-avatar" aria-hidden="true">{{ user.initials }}</span>
+          <div class="account-details">
+            <strong>{{ user.name }}</strong>
+            @if (user.email) { <span>{{ user.email }}</span> }
+          </div>
+        </div>
+      }
+      <button type="button" class="account-action" (click)="passwordDialogVisible = true">
+        <i class="pi pi-lock" aria-hidden="true"></i> Modifier le mot de passe
+      </button>
+      <button type="button" class="account-action account-action--otp" (click)="openOtpDialog()"
+        role="switch" [attr.aria-checked]="auth.otpConfigured()">
+        <span class="otp-toggle" [class.otp-toggle--active]="auth.otpConfigured()" aria-hidden="true"><span></span></span>
+        {{ auth.otpConfigured() ? 'Désactiver l’OTP' : 'Configurer l’OTP' }}
+      </button>
+      @if (auth.otpStatusError()) {
+        <small class="otp-status-error">{{ auth.otpStatusError() }}</small>
+      }
+      <button type="button" class="account-action account-action--logout" (click)="auth.logout()">
+        <i class="pi pi-sign-out" aria-hidden="true"></i> Se déconnecter
+      </button>
+    </section>
+  }
 
   <div class="version-footer">
     <div class="version-line">
@@ -215,6 +251,10 @@
     <small>© {{ currentYear }}</small>
   </div>
 </div>
+
+<app-change-password-dialog [(visible)]="passwordDialogVisible" />
+<app-configure-otp-dialog [(visible)]="otpDialogVisible" />
+<app-disable-otp-dialog [(visible)]="disableOtpDialogVisible" />
 
 <div
   class="layout-sidebar-overlay"
