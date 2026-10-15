@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { LoginComponent } from './auth/login.component';
+import { AccessDeniedComponent } from './auth/access-denied.component';
 import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
 import { HomeComponent } from './components/home/home.component';
 import { TransactionListComponent } from './components/transaction/transaction-list.component';
@@ -101,6 +102,7 @@ if (!environment.production) {
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'access-denied', component: AccessDeniedComponent },
   {
     path: '',
     canActivate: [authGuard],

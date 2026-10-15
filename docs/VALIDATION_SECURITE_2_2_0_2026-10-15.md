@@ -170,3 +170,41 @@ avec le compte habilité ; ne pas considérer les droits non lisibles comme vali
 Sur le NAS, les permissions des sources et sauvegardes vues précédemment restent
 des preuves historiques. Vérifier les ACL effectives après installation du
 candidat et limiter chaque compte au besoin documenté.
+
+## Compl?ment de recette NAS RC7 ? 15 octobre 2026
+
+R?sultats communiqu?s par l?utilisateur : deux conteneurs running/healthy sans OOM, frontend HTTP 200, API anonyme HTTP 401, version affich?e 2.2.0-rc.7. Connexion avec utilisateur autoris?, acc?s aux comptes et op?rations, d?connexion et OTP d?clar?s valid?s. Maintien de l?acc?s apr?s plus de dix minutes observ? ; un renouvellement effectif du jeton reste ? attester par une r?ponse de renouvellement r?ussie ou une ?volution de son expiration.
+
+Le compte de recette djonedjone-pp-userappless se connecte ? Keycloak, mais les API comptes, transactions, sous-cat?gories et autres ressources retournent 403 : refus c?t? backend valid?. L?interface affiche n?anmoins un tableau de bord vide avec des erreurs console. Correction ? r?aliser avant MEP : ?cran Acc?s non autoris?, gestion centralis?e du 403, suppression des chargements m?tier inutiles et d?connexion accessible. L?authentification Keycloak ne suffit pas ? autoriser les donn?es.
+
+Restent les audiences effectives du jeton NAS, la preuve du renouvellement, la recette m?tier ?tendue et le rollback sur copie NAS ; r?tention/surveillance, droits GitHub/NAS, puis approbation et MEP supervis?e. Toute correction embarqu?e dans une image impose une nouvelle candidate et une nouvelle qualification ; RC7 n?est pas approuv?e pour la production.
+
+## Correction de l’interface après refus d’accès
+
+Implémentation locale : le garde de navigation vérifie le rôle de realm `app-user` avant de créer le layout métier. Un utilisateur sans rôle est redirigé vers `/access-denied`, hors du layout, avec un message explicite et une déconnexion accessible. Le chargement initial du statut OTP est évité sans ce rôle. Un HTTP 403 reçu via l’intercepteur API déclenche le même écran et bloque les nouveaux appels API ; un 401 conserve son traitement de fin de session. Les requêtes déjà envoyées ne sont pas annulées. Le backend reste responsable de l’autorisation effective.
+
+Validation locale : 102 tests frontend réussis, dont refus du garde, traitement du 403, absence de nouvel appel après refus et bouton de déconnexion. La recette NAS de cette correction reste à faire dans une nouvelle candidate ; RC7 reste inchangée.
+
+## Preuve des audiences et du renouvellement NAS RC7
+
+Le 15 octobre 2026, l’utilisateur confirme : issuer https://auth.jolurie.com/realms/suivi-cb-preprod, client (azp) suivi-cb-web, audiences account et suivi-cb-api. Premier jeton : iat 2026-10-15T11:47:03Z, exp 2026-10-15T11:52:03Z. Deuxième jeton : iat 2026-10-15T11:52:02Z, exp 2026-10-15T11:57:02Z. La requête ayant produit le second jeton porte grant_type=refresh_token et retourne HTTP 200 ; les API comptes/opérations répondent ensuite HTTP 200. Audience et renouvellement technique validés pour la préproduction RC7 ; aucun jeton brut conservé. Ce résultat complète les observations précédentes et lève leur réserve sur ces deux points, sans approbation de MEP.
+
+## Ordre des travaux demandé
+
+L’utilisateur demande de ne pas engager le dernier point « Approbation puis MEP supervisée ». Terminer d’abord la sécurisation : qualification de la nouvelle candidate et recette NAS, contrôles de rétention/surveillance/reprise, protections GitHub et droits NAS. Après cette sécurisation effective, traiter l’automatisation de la clôture de release depuis `/release-process`, en reprenant les preuves et contrôles réalisés. Ce chantier est inscrit dans la todo-list 2.3.0, avec les tests automatisés ; aucune approbation de production ni publication n’en découle.
+
+## Recette métier manuelle NAS RC7
+
+L’utilisateur confirme les sept parcours réussis : création, modification, virement, récurrence, rapprochement, suppression et persistance. Aucune erreur API signalée. Ces résultats déclaratifs valident la recette métier manuelle de RC7 ; les parcours concernés restent à revalider sur la candidate finale contenant la correction de l’accès refusé.
+
+La pile d’appels transmise provenait du journal de l’onglet Réseau et illustrait les requêtes réussies, comme précisé ensuite par l’utilisateur. La capture fournie montre des réponses HTTP 200 sur les requêtes visibles : comptes, transactions, récurrences, exceptions d’occurrence, sous-catégories, comptes d’épargne, configuration, jeton et statut OTP. L’interprétation initiale comme anomalie à investiguer était erronée ; aucun diagnostic supplémentaire ni blocage de livraison n’est retenu au titre de cette trace.
+
+L’automatisation API et navigateur de ces parcours est reportée à la version 2.3.0 sur décision utilisateur et inscrite dans la todo-list : environnement Docker isolé, données dédiées, Playwright, intégration GitHub Actions et rapports sans secrets.
+
+## Rollback applicatif NAS RC7 validé
+
+Résultat communiqué par l’utilisateur le 15 octobre 2026 : ROLLBACK_RC7_NAS_OK. Sur une copie isolée de la sauvegarde run-20261014T180002Z-CYQ6eQ, RC7 démarre et crée une écriture de test ; l’ancienne image démarre ensuite et retrouve cette écriture ; RC7 redémarre et la retrouve à son tour. Aucun remplacement ni restauration de base entre les phases.
+
+Images : RC7 backend sha256:f8d1337610ffb617b0a8e4372c0500f8b46eacd99d6fc2523d086e110e882ef9 ; ancienne image sha256:9930ad2c00ce8223f81dac9e3ae8ba00e3ce9f2772df44e10999bd51139d7276. Conteneur isolé sans réseau, UID 1028:100, limite 192 Mio, capacités retirées. Le script vérifie l’absence de OOM à chaque phase. Données et journaux conservés dans /volume1/suivi-cb-backup-tests/rollback-rc7-20261015.
+
+Portée : compatibilité de démarrage et conservation de cette écriture sur le schéma testé ; ne remplace pas une recette métier complète ni la qualification de la future candidate contenant la correction d’accès refusé. Aucun changement de production.

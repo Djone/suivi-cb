@@ -11,10 +11,16 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
     return next(request);
   }
   const auth = inject(AuthService);
+  if (auth.accessDenied()) {
+    return throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' }));
+  }
   return from(auth.accessToken()).pipe(
-    switchMap((token) => next(request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }))),
+    switchMap((token) => auth.accessDenied()
+      ? throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' }))
+      : next(request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }))),
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse && error.status === 401) auth.sessionEnded();
+      if (error instanceof HttpErrorResponse && error.status === 403) auth.denyAccess();
       return throwError(() => error);
     }),
   );
