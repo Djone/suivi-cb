@@ -14,7 +14,9 @@ RUN npm ci
 COPY frontend/ ./
 
 # Lancer le build de production. La sortie sera dans /app/dist/suivi-cb/browser
-RUN npx ng build --configuration production
+ARG APP_VERSION
+ARG APP_BUILD_TIME
+RUN node tools/write-build-version.cjs && npx ng build --configuration production
 
 # ---
 

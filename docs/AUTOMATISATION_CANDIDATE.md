@@ -10,6 +10,12 @@ restent des actions distinctes ; aucun appel à update.sh n’est effectué.
 
 ## 1. PC, terminal PowerShell : préparer
 
+Le packaging injecte la version de la candidate et sa date de construction dans
+le frontend Docker avec `APP_ENV=production`. Le `version.ts` de développement
+reste inchangé ; le manifeste enregistre `applicationVersion` et
+`applicationBuildTime`. L'étiquette de l'image et la version affichée correspondent
+ainsi, même si la branche prépare déjà la version de développement suivante.
+
 Prérequis : Node, dépendances backend/frontend installées, Chrome pour les tests,
 Docker Desktop en mode Linux, Git et OpenSSH. Utiliser le commit créé par prepare,
 avec un dépôt propre : fichiers modifiés et non suivis sont refusés. Faire relire

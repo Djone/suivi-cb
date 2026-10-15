@@ -10,7 +10,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
       '[x] Migrations suivies et transactionnelles : échec, reprise et conservation des données au rollback isolé',
       '[x] Images locales non privilégiées : correctifs système et scans sans alerte détectée',
       '[x] Chaîne quotidienne NAS vers publication puis USB validée',
-      '[ ] Traiter ou qualifier explicitement les alertes des outils de développement',
+      '[x] Dépendances corrigibles traitées ; risque résiduel braces des outils de test accepté le 15/10/2026, revue au plus tard le 22/10/2026',
       '[ ] Construire le candidat final depuis un commit propre, conserver digests, SBOM et preuves',
       '[ ] Recette sur NAS : vrais realms, parcours Angular/OTP, métier et rollback sur copie des données',
       '[ ] Tester la rétention locale, alerte de copie externe ancienne et exercices de reprise',

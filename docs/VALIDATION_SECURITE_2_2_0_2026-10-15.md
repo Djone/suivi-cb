@@ -1,5 +1,10 @@
 # Validation de sécurité 2.2.0 — 15 octobre 2026
 
+> Suivi ultérieur des dépendances : [correction et risque restant](./DEPENDANCES_OUTILS_2026-10-15.md).
+> Les comptes d'alertes et preuves ci-dessous décrivent la validation initiale.
+> Le risque résiduel `braces` des outils de test a été accepté explicitement
+> le 15 octobre, avec revue prévue au plus tard le 22 octobre ; voir ce suivi.
+
 ## Décision actuelle
 
 **La MEP n'est pas encore approuvée.** Les validations locales ci-dessous sont

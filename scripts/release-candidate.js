@@ -122,8 +122,10 @@ async function buildPackage(c, execute = run) {
   ]) npm(args, (p, a) => execute(p, a, { cwd: c.root }));
   if (cleanCommit(c, execute) !== commit) throw new Error('Le commit a changé pendant les contrôles.');
   const ids = [];
+  const builtAt = new Date().toISOString();
   for (const [i, service] of ['backend', 'frontend'].entries()) {
     execute('docker', ['build', '--platform', c.platform, '--label', `org.opencontainers.image.revision=${commit}`,
+      ...(service === 'frontend' ? ['--build-arg', `APP_VERSION=${c.candidate}`, '--build-arg', `APP_BUILD_TIME=${builtAt}`] : []),
       '-f', `Dockerfile.${service}`, '-t', c.tags[i], '.'], { cwd: c.root });
     const image = JSON.parse(execute('docker', ['image', 'inspect', c.tags[i]], { capture: true, cwd: c.root }))[0];
     if (!IMAGE_ID.test(image.Id) || `${image.Os}/${image.Architecture}` !== c.platform) throw new Error('Identifiant/plateforme image invalide.');
@@ -141,6 +143,7 @@ async function buildPackage(c, execute = run) {
   }
   const manifest = {
     schema: 1, candidate: c.candidate, commit, platform: c.platform, createdAt: new Date().toISOString(),
+    applicationVersion: c.candidate, applicationBuildTime: builtAt,
     devChecks: ['backend-tests', 'frontend-tests', 'frontend-build', 'backend-production-audit', 'frontend-production-audit'],
     archiveSha256: await hash(path.join(c.dir, 'images.tar')),
     images: Object.fromEntries(['backend', 'frontend'].map((service, i) => [service, { tag: c.tags[i], id: ids[i] }])),
