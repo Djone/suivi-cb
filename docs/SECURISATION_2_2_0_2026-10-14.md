@@ -1,5 +1,9 @@
 # Sécurisation applicative 2.2.0 — 14 octobre 2026
 
+> État historique. Les corrections et résultats du 15 octobre (migrations,
+> PrimeNG, images, auth et Keycloak isolé) sont consignés dans
+> [le rapport de validation actuel](./VALIDATION_SECURITE_2_2_0_2026-10-15.md).
+
 ## Périmètre
 
 La branche locale 2.2.0-dev appartient au même dépôt ; le checkout historique sous .cache/release-reference/source-2.1.0 est indépendant et reste inchangé. Les changements préexistants sont conservés. Aucun déploiement, changement NAS ou Keycloak réalisé.

@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { CardModule } from 'primeng/card';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -45,10 +45,10 @@ interface PropertyTaxRow {
   imports: [
     CommonModule,
     FormsModule,
-    TabViewModule,
+    TabsModule,
     CardModule,
     InputNumberModule,
-    DropdownModule,
+    SelectModule,
     TableModule,
     TagModule,
     ButtonModule,

@@ -15,7 +15,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { LOCALE_ID } from '@angular/core';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
-import aura from '@primeng/themes/aura';
+import aura from '@primeuix/themes/aura';
 
 import { APP_VERSION, APP_BUILD_TIME, APP_ENV } from './version';
 

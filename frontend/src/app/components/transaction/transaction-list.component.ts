@@ -9,12 +9,12 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 
 import { TransactionService } from '../../services/transaction.service';
@@ -82,12 +82,12 @@ type InternalTransferFilter = 'all' | 'only' | 'exclude';
     ButtonModule,
     TooltipModule,
     PaginatorModule,
-    CalendarModule,
+    DatePickerModule,
     InputTextModule,
     InputNumberModule,
     InputGroupModule,
     InputGroupAddonModule,
-    DropdownModule,
+    SelectModule,
     MultiSelectModule,
   ],
   templateUrl: './transaction-list.component.html',
@@ -1535,7 +1535,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((amount: number | null | undefined) => {
+    dialogRef?.onClose.subscribe((amount: number | null | undefined) => {
       if (amount === null || amount === undefined) return;
       this.saveOccurrenceException(schedule, amount, false);
     });
@@ -1551,7 +1551,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         cancelText: 'Conserver',
       },
     });
-    dialogRef.onClose.subscribe((confirmed: boolean) => {
+    dialogRef?.onClose.subscribe((confirmed: boolean) => {
       if (confirmed) this.saveOccurrenceException(schedule, null, true);
     });
   }
@@ -1666,7 +1666,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed: boolean) => {
+    dialogRef?.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) return;
 
       const transactions = schedules.map((schedule) => {
@@ -1793,7 +1793,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed: boolean) => {
+    dialogRef?.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) return;
       const tx: Transaction = {
         description: recurring.label,
@@ -2008,7 +2008,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         this.transactionService.addTransaction(result).subscribe({
           next: () => {
@@ -2042,7 +2042,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       data: { transaction: { ...transaction } },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         // Convertir la date en format ISO
         const formattedDate = new Date(result.date).toISOString().slice(0, 10);
@@ -2126,7 +2126,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (!confirmed) return;
 
       const mirroredTransactions = transactions.map(
@@ -2214,7 +2214,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (!confirmed) {
         return;
       }
@@ -2274,7 +2274,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.transactionService.deleteTransaction(transaction.id!).subscribe({
           next: () => {

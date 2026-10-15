@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { DialogModule } from 'primeng/dialog';
@@ -34,7 +34,7 @@ import { VehicleService } from '../../services/vehicle.service';
     FormsModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule,
+    SelectModule,
     InputNumberModule,
     MultiSelectModule,
     DialogModule

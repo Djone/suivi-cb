@@ -46,7 +46,7 @@
   <!-- Fréquence -->
   <div class="field col-12">
     <label for="frequency" class="block mb-2">Fréquence *</label>
-    <p-dropdown
+    <p-select
       id="frequency"
       [options]="frequencies"
       [(ngModel)]="data.transaction.frequency"
@@ -57,7 +57,7 @@
       styleClass="w-full"
       [appendTo]="'body'"
     >
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Type de récurrence -->
@@ -75,7 +75,7 @@
         aria-label="Afficher l'aide sur les types de récurrence"
       ></button>
     </div>
-    <p-dropdown
+    <p-select
       id="recurrenceKind"
       [options]="[
         { id: 'permanent', name: 'Permanente' },
@@ -90,7 +90,7 @@
       styleClass="w-full"
       [appendTo]="'body'"
     >
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Mois actifs -->
@@ -157,7 +157,7 @@
     <label for="installmentStartMonth" class="block mb-2"
       >Mois 1ère échéance</label
     >
-    <p-dropdown
+    <p-select
       id="installmentStartMonth"
       [options]="monthOptions"
       [(ngModel)]="data.transaction.installmentStartMonth" (ngModelChange)="onInstallmentStartMonthChange($event)"
@@ -167,7 +167,7 @@
       styleClass="w-full"
       [appendTo]="'body'"
     >
-    </p-dropdown>
+    </p-select>
     <small
       class="p-error"
       *ngIf="
@@ -184,7 +184,7 @@
     <label for="financialFlowId" class="block mb-2"
       >Type de transaction *</label
     >
-    <p-dropdown
+    <p-select
       id="financialFlowId"
       [options]="financialFlowList"
       [(ngModel)]="data.transaction.financialFlowId"
@@ -195,13 +195,13 @@
       styleClass="w-full"
       [appendTo]="'body'"
     >
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Règle 50/30/20 -->
   <div class="field col-12">
     <label for="debit503020" class="block mb-2">Répartition 50/30/20</label>
-    <p-dropdown
+    <p-select
       id="debit503020"
       [options]="debit503020Options"
       [(ngModel)]="data.transaction['debit503020']"
@@ -211,13 +211,13 @@
       styleClass="w-full"
       [appendTo]="'body'"
     >
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Compte -->
   <div class="field col-12">
     <label for="accountId" class="block mb-2">Compte bancaire *</label>
-    <p-dropdown
+    <p-select
       id="accountId"
       [options]="accounts"
       [(ngModel)]="data.transaction.accountId"
@@ -230,13 +230,13 @@
       styleClass="w-full"
       [appendTo]="'body'"
     >
-    </p-dropdown>
+    </p-select>
   </div>
 
   <!-- Sous-catégorie -->
   <div class="field col-12">
     <label for="subCategoryId" class="block mb-2">Sous-catégorie *</label>
-    <p-dropdown
+    <p-select
       id="subCategoryId"
       [options]="activeSubCategories"
       [(ngModel)]="data.transaction.subCategoryId"
@@ -252,12 +252,12 @@
       <ng-template let-subCategory pTemplate="item">
         <div>{{ subCategory.label }} ({{ subCategory.categoryLabel }})</div>
       </ng-template>
-    </p-dropdown>
+    </p-select>
   </div>
 
   <div class="field col-12">
     <label for="vehicleId" class="block mb-2">Véhicule concerné</label>
-    <p-dropdown
+    <p-select
       id="vehicleId"
       [options]="vehicles"
       [(ngModel)]="data.transaction.vehicleId"
@@ -267,7 +267,7 @@
       [showClear]="true"
       styleClass="w-full"
       [appendTo]="'body'"
-    ></p-dropdown>
+    ></p-select>
   </div>
 </div>
 

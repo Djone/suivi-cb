@@ -13,8 +13,10 @@
     </div>
   </div>
 
-  <p-tabView>
-    <p-tabPanel header="Impôt sur le revenu">
+  <p-tabs [value]="0">
+<p-tablist><p-tab [value]="0">Impôt sur le revenu</p-tab><p-tab [value]="1">Taxe foncière</p-tab><p-tab [value]="2">Paramétrage</p-tab></p-tablist>
+<p-tabpanels>
+    <p-tabpanel [value]="0">
       <div class="income-layout">
         <div class="stack">
         <p-card class="panel">
@@ -106,12 +108,12 @@
           <ng-template pTemplate="header">
             <div class="header-with-select">
               <span>Synthèse</span>
-              <p-dropdown
+              <p-select
                 [options]="incomeYearOptions"
                 [(ngModel)]="selectedIncomeYear"
                 placeholder="Année"
                 styleClass="year-select"
-              ></p-dropdown>
+              ></p-select>
             </div>
           </ng-template>
           <div class="panel-body summary-list">
@@ -148,9 +150,9 @@
         </p-card>
         </div>
       </div>
-    </p-tabPanel>
+    </p-tabpanel>
 
-    <p-tabPanel header="Taxe foncière">
+    <p-tabpanel [value]="1">
       <div class="grid grid-2-1">
         <p-card class="panel">
           <ng-template pTemplate="header">
@@ -229,9 +231,9 @@
           </p-card>
         </div>
       </div>
-    </p-tabPanel>
+    </p-tabpanel>
 
-    <p-tabPanel header="Paramétrage">
+    <p-tabpanel [value]="2">
       <div class="grid grid-2-1">
         <div class="stack">
           <p-card class="panel">
@@ -273,11 +275,11 @@
               <div class="form-grid">
                 <div class="form-field">
                   <label>Mode</label>
-                  <p-dropdown
+                  <p-select
                     [options]="[{label:'Manuel', value:'manuel'}, {label:'Auto (tags compte courant)', value:'auto'}]"
                     [(ngModel)]="reductionMode"
                     styleClass="w-full"
-                  ></p-dropdown>
+                  ></p-select>
                 </div>
                 <div class="form-field">
                   <label>Total</label>
@@ -318,11 +320,11 @@
               <div class="form-grid">
                 <div class="form-field">
                   <label>Mode</label>
-                  <p-dropdown
+                  <p-select
                     [options]="[{label:'Manuel', value:'manuel'}, {label:'Auto (tags compte courant)', value:'auto'}]"
                     [(ngModel)]="creditMode"
                     styleClass="w-full"
-                  ></p-dropdown>
+                  ></p-select>
                 </div>
                 <div class="form-field">
                   <label>Total</label>
@@ -407,6 +409,7 @@
           </p-card>
         </div>
       </div>
-    </p-tabPanel>
-  </p-tabView>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
 </div>

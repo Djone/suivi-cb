@@ -516,7 +516,7 @@
           <div class="filters-primary filters-primary--range">
             <div class="filter-field">
               <label>Date de début <span>(Facultatif)</span></label>
-              <p-calendar #startCalendar [ngModel]="filters.dateRange?.[0]" (ngModelChange)="onStartDateChange($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="false" [showClear]="false" appendTo="body" placeholder="JJ/MM/AAAA" styleClass="w-full">
+              <p-datepicker #startCalendar [ngModel]="filters.dateRange?.[0]" (ngModelChange)="onStartDateChange($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="false" [showClear]="false" appendTo="body" placeholder="JJ/MM/AAAA" styleClass="w-full">
                 <ng-template #footer>
                   <div class="date-filter-actions">
                     <button type="button" (click)="startCalendar.onClearButtonClick($event)">Réinitialiser</button>
@@ -524,11 +524,11 @@
                     <button type="button" (click)="startCalendar.hideOverlay()">Valider</button>
                   </div>
                 </ng-template>
-              </p-calendar>
+              </p-datepicker>
             </div>
             <div class="filter-field">
               <label>Date de fin <span>(Facultatif)</span></label>
-              <p-calendar #endCalendar [ngModel]="filters.dateRange?.[1]" (ngModelChange)="onEndDateChange($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="false" [showClear]="false" appendTo="body" placeholder="JJ/MM/AAAA" styleClass="w-full">
+              <p-datepicker #endCalendar [ngModel]="filters.dateRange?.[1]" (ngModelChange)="onEndDateChange($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="false" [showClear]="false" appendTo="body" placeholder="JJ/MM/AAAA" styleClass="w-full">
                 <ng-template #footer>
                   <div class="date-filter-actions">
                     <button type="button" (click)="endCalendar.onClearButtonClick($event)">Réinitialiser</button>
@@ -536,7 +536,7 @@
                     <button type="button" (click)="endCalendar.hideOverlay()">Valider</button>
                   </div>
                 </ng-template>
-              </p-calendar>
+              </p-datepicker>
             </div>
             <div class="filter-field">
               <label>Montant minimum <span>(Facultatif)</span></label>
@@ -572,22 +572,22 @@
               placeholder="Filtrer par sous-catégorie"
               (onChange)="applyFilter()"
             ></p-multiSelect>
-            <p-dropdown
+            <p-select
               [options]="advanceJointFilterOptions"
               [(ngModel)]="filters.advanceJoint"
               optionLabel="label"
               optionValue="value"
               placeholder="Filtrer avances compte joint"
               (onChange)="applyFilter()"
-            ></p-dropdown>
-            <p-dropdown
+            ></p-select>
+            <p-select
               [options]="internalTransferFilterOptions"
               [(ngModel)]="filters.internalTransfer"
               optionLabel="label"
               optionValue="value"
               placeholder="Filtrer transferts internes"
               (onChange)="applyFilter()"
-            ></p-dropdown>
+            ></p-select>
           </div>
         </div>
 
@@ -596,14 +596,14 @@
         >
           <div class="flex align-items-center gap-2">
             <span class="font-medium">Groupes par page :</span>
-            <p-dropdown
+            <p-select
               [options]="pageSizeOptions"
               [(ngModel)]="pageSize"
               optionLabel="label"
               optionValue="value"
               (onChange)="changePageSize(pageSize)"
               styleClass="w-8rem"
-            ></p-dropdown>
+            ></p-select>
           </div>
           <div class="results-info font-semibold text-color-secondary">
             {{ filteredTransactions.length }} transaction(s)

@@ -18,9 +18,9 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { DialogService } from 'primeng/dynamicdialog';
 import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { BadgeModule } from 'primeng/badge';
 import { TagModule } from 'primeng/tag';
 import { TransactionService } from '../../services/transaction.service';
@@ -41,9 +41,9 @@ interface CategoryRow extends Category {
     FormsModule,
     TableModule,
     ButtonModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     TooltipModule,
-    TabViewModule,
+    TabsModule,
     BadgeModule,
     TagModule,
     RouterModule,
@@ -190,7 +190,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     return category.isActive === 1 || category['is_active'] === 1;
   }
 
-  getSeverity(isActive: number | undefined): string {
+  getSeverity(isActive: number | undefined): 'success' | 'danger' {
     return (isActive ?? 0) === 1 ? 'success' : 'danger';
   }
 
@@ -208,7 +208,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         this.categoryService.addCategory(result).subscribe({
           next: () => this.categoryService.getCategories().subscribe(),
@@ -229,7 +229,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         this.categoryService.updateCategory(result.id!, result).subscribe({
           next: () => this.categoryService.getCategories().subscribe(),
@@ -267,7 +267,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.categoryService.deleteCategory(category.id!).subscribe({
           next: () => this.categoryService.getCategories().subscribe(),
@@ -289,7 +289,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.categoryService.reactivateCategory(category.id!).subscribe({
           next: () => this.categoryService.getCategories().subscribe(),
@@ -310,7 +310,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         this.subCategoryService.addSubCategory(result).subscribe({
           next: () => this.subCategoryService.getSubCategories().subscribe(),
@@ -331,7 +331,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (result) {
         this.subCategoryService
           .updateSubCategory(result.id!, result)
@@ -355,7 +355,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.onClose.subscribe((confirmed) => {
+    dialogRef?.onClose.subscribe((confirmed) => {
       if (confirmed) {
         this.subCategoryService.deleteSubCategory(subCategory.id!).subscribe({
           next: () => this.subCategoryService.getSubCategories().subscribe(),

@@ -9,10 +9,10 @@ import {
   DialogService,
 } from 'primeng/dynamicdialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule, DropdownFilterEvent } from 'primeng/dropdown';
+import { SelectModule, SelectFilterEvent } from 'primeng/select';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { CheckboxModule } from 'primeng/checkbox';
 
@@ -41,10 +41,10 @@ import { VehicleService } from '../../services/vehicle.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextModule,
-    CalendarModule,
+    DatePickerModule,
     InputNumberModule,
     ButtonModule,
-    DropdownModule,
+    SelectModule,
     AutoCompleteModule,
     CheckboxModule,
   ],
@@ -64,7 +64,7 @@ export class EditTransactionDialogComponent implements OnInit {
   dialogTitle = 'Editer la transaction';
   isNew = false;
 
-  // Locale français pour PrimeNG p-calendar
+  // Locale français pour PrimeNG p-datepicker
   frLocale = {
     firstDayOfWeek: 1,
     dayNames: [
@@ -321,7 +321,7 @@ export class EditTransactionDialogComponent implements OnInit {
     this.loadSubcategories(newFinancialFlowId);
   }
 
-  onSubCategoryFilter(event: DropdownFilterEvent): void {
+  onSubCategoryFilter(event: SelectFilterEvent): void {
     this.currentSubCategoryQuery = (event.filter || '').toString();
   }
 
@@ -640,7 +640,7 @@ export class EditTransactionDialogComponent implements OnInit {
       },
     });
 
-    dialogRef.onClose.subscribe((result) => {
+    dialogRef?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }

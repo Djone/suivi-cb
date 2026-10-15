@@ -40,8 +40,8 @@
   <div class="form-grid">
     <div class="field"><label for="bankName">Banque</label><input id="bankName" pInputText [(ngModel)]="form.bankName" /></div>
     <div class="field"><label for="name">Nom du compte</label><input id="name" pInputText [(ngModel)]="form.name" /></div>
-    <div class="field"><label for="role">Rôle</label><p-dropdown inputId="role" [options]="roleOptions" [(ngModel)]="form.role" optionLabel="label" optionValue="value" appendTo="body"></p-dropdown></div>
-    <div class="field"><label for="liquidity">Liquidité</label><p-dropdown inputId="liquidity" [options]="liquidityOptions" [(ngModel)]="form.liquidityLevel" optionLabel="label" optionValue="value" appendTo="body"></p-dropdown></div>
+    <div class="field"><label for="role">Rôle</label><p-select inputId="role" [options]="roleOptions" [(ngModel)]="form.role" optionLabel="label" optionValue="value" appendTo="body"></p-select></div>
+    <div class="field"><label for="liquidity">Liquidité</label><p-select inputId="liquidity" [options]="liquidityOptions" [(ngModel)]="form.liquidityLevel" optionLabel="label" optionValue="value" appendTo="body"></p-select></div>
     <div class="field"><label for="balance">Solde de départ</label><p-inputNumber inputId="balance" [(ngModel)]="form.currentBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber></div>
     <div class="field"><label for="target">Solde cible</label><p-inputNumber inputId="target" [(ngModel)]="form.targetBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber></div>
     <div class="field"><label for="minimum">Seuil minimum</label><p-inputNumber inputId="minimum" [(ngModel)]="form.minimumBalance" mode="currency" currency="EUR" locale="fr-FR" [min]="0"></p-inputNumber></div>

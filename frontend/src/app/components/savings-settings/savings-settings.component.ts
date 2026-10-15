@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -17,7 +17,7 @@ import { SavingAccountService } from '../../services/saving-account.service';
 @Component({
   selector: 'app-savings-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, DialogModule, DropdownModule, InputNumberModule, InputTextModule, MessageModule, TableModule, TagModule],
+  imports: [CommonModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, DialogModule, SelectModule, InputNumberModule, InputTextModule, MessageModule, TableModule, TagModule],
   templateUrl: './savings-settings.component.html',
   styleUrl: './savings-settings.component.css',
 })

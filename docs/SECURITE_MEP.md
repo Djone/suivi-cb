@@ -1,5 +1,9 @@
 # Sécurité : préparation de la MEP 2.2.0
 
+> Suivi actuel : [validation du 15 octobre 2026](./VALIDATION_SECURITE_2_2_0_2026-10-15.md).
+> Les sauvegardes NAS et restaurations isolées ont depuis été testées. Les
+> constats datés ci-dessous restent historiques ; la MEP 2.2.0 reste à approuver.
+
 ## Dernier audit : 8 octobre 2026
 
 **Package rc1 refusé pour la MEP** : base `app/database.db` embarquée et

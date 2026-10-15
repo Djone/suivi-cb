@@ -14,7 +14,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { TooltipModule } from 'primeng/tooltip';
@@ -28,7 +28,7 @@ import { TooltipModule } from 'primeng/tooltip';
     TableModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule,
+    SelectModule,
     TagModule,
     CardModule,
     TooltipModule
@@ -113,7 +113,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.onClose.subscribe(result => {
+    dialogRef?.onClose.subscribe(result => {
       if (result) {
         this.subCategoryService.addSubCategory(result).subscribe({
           next: () => {
@@ -136,7 +136,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.onClose.subscribe(result => {
+    dialogRef?.onClose.subscribe(result => {
       if (result) {
         this.subCategoryService.updateSubCategory(result.id!, result).subscribe({
           next: () => {
@@ -161,7 +161,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.onClose.subscribe(confirmed => {
+    dialogRef?.onClose.subscribe(confirmed => {
       if (confirmed) {
         this.subCategoryService.deleteSubCategory(subCategory.id!).subscribe({
           next: () => {

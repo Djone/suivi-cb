@@ -6,8 +6,8 @@ import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ChartModule } from 'primeng/chart';
@@ -36,8 +36,8 @@ interface HistoryOption {
     DialogModule,
     InputTextModule,
     InputNumberModule,
-    CalendarModule,
-    DropdownModule,
+    DatePickerModule,
+    SelectModule,
     ButtonModule,
     MultiSelectModule,
     ChartModule,
@@ -218,7 +218,7 @@ export class SalaryTrackerComponent implements OnInit {
       .map((year) => ({ label: String(year), value: year }));
   }
 
-  // Locale français pour PrimeNG p-calendar
+  // Locale français pour PrimeNG p-datepicker
   frLocale = {
     firstDayOfWeek: 1,
     dayNames: [

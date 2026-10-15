@@ -143,7 +143,7 @@
         <div class="card-title">Charges</div>
       </div>
       <div class="table-actions">
-        <p-dropdown
+        <p-select
           [options]="availableRecurringOptions"
           placeholder="Choisir une charge fixe existante"
           [showClear]="true"
@@ -151,7 +151,7 @@
           appendTo="body"
           scrollHeight="260px"
           styleClass="w-20rem"
-        ></p-dropdown>
+        ></p-select>
         <button
           pButton
           label="Ajouter cette charge"
@@ -228,7 +228,7 @@
             ></p-inputNumber>
           </td>
           <td>
-            <p-dropdown
+            <p-select
               [options]="modeOptions"
               [(ngModel)]="row.mode"
               (ngModelChange)="onLineChange()"
@@ -237,7 +237,7 @@
               appendTo="body"
               scrollHeight="260px"
               styleClass="w-full"
-            ></p-dropdown>
+            ></p-select>
           </td>
           <td>
             <ng-container [ngSwitch]="row.mode">
@@ -254,7 +254,7 @@
                 </span>
               </div>
               <div *ngSwitchCase="'single'">
-                <p-dropdown
+                <p-select
                   [options]="payerOptionsDynamic"
                   [(ngModel)]="row.payer"
                   (ngModelChange)="onLineChange()"
@@ -263,7 +263,7 @@
                   appendTo="body"
                   scrollHeight="260px"
                   styleClass="w-full"
-                ></p-dropdown>
+                ></p-select>
               </div>
               <div *ngSwitchDefault class="ratio-row muted">Auto</div>
             </ng-container>

@@ -19,14 +19,14 @@
     <div class="filters-grid">
       <div class="filter-field">
         <label>Compte</label>
-        <p-dropdown
+        <p-select
           [options]="accountFilterOptions"
           [(ngModel)]="selectedAccountFilter"
           (onChange)="onAccountFilterChange()"
           [style]="{ width: '100%' }"
           placeholder="Tous les comptes"
         >
-        </p-dropdown>
+        </p-select>
       </div>
       <div class="filter-field">
         <label>Recherche</label>
@@ -43,12 +43,10 @@
       </div>
     </div>
 
-    <p-tabView [(activeIndex)]="activeFlowTabIndex">
-      <p-tabPanel
-        *ngFor="let tab of flowTabs"
-        [header]="tab.label"
-        [leftIcon]="tab.icon"
-      >
+    <p-tabs [(value)]="activeFlowTabIndex">
+      <p-tablist><p-tab *ngFor="let tab of flowTabs; let i = index" [value]="i"><i [class]="tab.icon"></i> {{ tab.label }}</p-tab></p-tablist>
+      <p-tabpanels>
+      <p-tabpanel *ngFor="let tab of flowTabs; let i = index" [value]="i">
         <div class="flow-stats">
           <div class="stat-card">
             <span>Récurrences</span>
@@ -67,14 +65,14 @@
           <ng-container *ngIf="sections.length > 0; else emptyState">
             <p-accordion
               [multiple]="true"
-              [activeIndex]="accordionState[tab.value]"
+              [value]="accordionState[tab.value]"
               (onOpen)="onAccordionOpen(tab.value, $event)"
               (onClose)="onAccordionClose(tab.value, $event)"
               class="account-accordion"
             >
-              <ng-container *ngFor="let section of sections">
-                <p-accordionTab>
-                  <ng-template pTemplate="header">
+              <ng-container *ngFor="let section of sections; let sectionIndex = index">
+                <p-accordion-panel [value]="sectionIndex">
+                  <p-accordion-header>
                     <div class="account-header">
                       <div class="account-title">
                         <span
@@ -111,8 +109,8 @@
                         </p-tag>
                       </div>
                     </div>
-                  </ng-template>
-
+                  </p-accordion-header>
+                  <p-accordion-content>
                   <div class="account-summary">
                     <div class="summary-item">
                       <span>Total mensuel</span>
@@ -245,7 +243,7 @@
                               tooltipPosition="top"
                             >
                             </p-button>
-                            <p-inputSwitch
+                            <p-toggleswitch
                               [ngModel]="transaction.isActive"
                               [trueValue]="1"
                               [falseValue]="0"
@@ -253,13 +251,13 @@
                               pTooltip="Activer/Désactiver"
                               tooltipPosition="top"
                             >
-                            </p-inputSwitch>
+                            </p-toggleswitch>
                           </div>
                         </td>
                       </tr>
                     </ng-template>
                   </p-table>
-                </p-accordionTab>
+                </p-accordion-content></p-accordion-panel>
               </ng-container>
             </p-accordion>
           </ng-container>
@@ -271,8 +269,9 @@
             <p>Aucune récurrence pour cette combinaison de filtres.</p>
           </div>
         </ng-template>
-      </p-tabPanel>
-    </p-tabView>
+      </p-tabpanel>
+    </p-tabpanels>
+</p-tabs>
 
     <p-dialog
       header="{{ historyDialogTitle }}"
@@ -301,12 +300,12 @@
             *ngIf="historyDialogEntries?.length"
           >
             <label>Nombre de lignes</label>
-            <p-dropdown
+            <p-select
               [options]="historyRowsDropdownOptions"
               [(ngModel)]="historyRowsPerPage"
               [style]="{ width: '160px' }"
               appendTo="body"
-            ></p-dropdown>
+            ></p-select>
           </div>
 
           <p-table

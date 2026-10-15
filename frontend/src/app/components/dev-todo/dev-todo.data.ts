@@ -2,6 +2,27 @@ import { DevTodoItem } from './dev-todo.model';
 
 export const DEV_TODO_ITEMS: DevTodoItem[] = [
   {
+    title: 'Validation de sécurité 2.2.0 avant MEP',
+    description: [
+      '[x] Tests locaux API : 401/403/200, serveur réel et JWKS synthétique',
+      '[x] Keycloak local jetable : PKCE, OTP, audiences, refresh et logout',
+      '[x] Angular/PrimeNG 20 : installation propre, tests et build',
+      '[x] Migrations suivies et transactionnelles : échec, reprise et conservation des données au rollback isolé',
+      '[x] Images locales non privilégiées : correctifs système et scans sans alerte détectée',
+      '[x] Chaîne quotidienne NAS vers publication puis USB validée',
+      '[ ] Traiter ou qualifier explicitement les alertes des outils de développement',
+      '[ ] Construire le candidat final depuis un commit propre, conserver digests, SBOM et preuves',
+      '[ ] Recette sur NAS : vrais realms, parcours Angular/OTP, métier et rollback sur copie des données',
+      '[ ] Tester la rétention locale, alerte de copie externe ancienne et exercices de reprise',
+      '[ ] Protéger les branches GitHub et vérifier workflows et ACL NAS actuels',
+      '[ ] Approbation puis MEP supervisée des mêmes images testées',
+    ],
+    status: 'in-progress',
+    targetVersion: '2.2.0',
+    priority: 'high',
+    notes: 'Preuves et limites : docs/VALIDATION_SECURITE_2_2_0_2026-10-15.md. Les validations locales ne valent pas approbation de production.',
+  },
+  {
     title: 'Automatisation des MEP : tests et livraison avec GitHub Actions',
     description: [
       '[ ] Développement local : code et Docker Compose, avec données de test isolées',

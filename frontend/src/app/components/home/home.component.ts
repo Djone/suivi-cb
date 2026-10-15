@@ -908,7 +908,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
     });
 
-    ref.onClose.subscribe((confirmed: boolean) => {
+    ref?.onClose.subscribe((confirmed: boolean) => {
       if (!confirmed) return;
 
       const tx: Transaction = {
