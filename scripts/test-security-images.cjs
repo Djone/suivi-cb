@@ -22,7 +22,7 @@ const start = (image, label, extra=[]) => {
   const name = `${network}-${label}`;
   containers.push(name);
   docker('run','-d','--pull=never','--name',name,'--network',network,'--cap-drop','ALL',
-    '--security-opt','no-new-privileges','--memory','256m', ...extra, image);
+    '--security-opt','no-new-privileges','--sysctl','net.ipv4.ip_unprivileged_port_start=1024','--memory','256m', ...extra, image);
   return name;
 };
 const data = ['--mount',`type=volume,source=${volume},target=/app/data`,'-e','DB_PATH=/app/data/database.db','-e','KEYCLOAK_URL=https://synthetic.invalid'];
@@ -45,11 +45,11 @@ const marker = `rollback-proof-${suffix}`;
   node(current,`const d=require('./config/db');d.run('INSERT INTO accounts(name,is_active) VALUES (?,1)',[${JSON.stringify(marker)}],e=>{if(e)throw e;d.close()});`);
   const web = start(frontend,'web');
   for(let i=0;i<100;i++){
-   try { docker('exec',web,'wget','-q','-O','/dev/null','http://127.0.0.1/'); break; }
+   try { docker('exec',web,'wget','-q','-O','/dev/null','http://127.0.0.1:8080/'); break; }
    catch(e){ if(i===99)throw e;await new Promise(r=>setTimeout(r,100)); }
   }
   assert.match(docker('exec',web,'id'),/uid=101/);
-  assert.equal(node(current,`fetch('http://${web}/api/accounts/active').then(r=>console.log(r.status))`),'401');
+  assert.equal(node(current,`fetch('http://${web}:8080/api/accounts/active').then(r=>console.log(r.status))`),'401');
   docker('stop',web);
   docker('stop',current);
   docker('start',old);

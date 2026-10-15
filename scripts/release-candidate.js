@@ -90,13 +90,13 @@ services:
     pull_policy: never
     container_name: suivi-cb-preprod-frontend
     restart: unless-stopped
-    ports: ["127.0.0.1:4201:80"]
+    ports: ["127.0.0.1:4201:8080"]
     depends_on:
       backend:
         condition: service_healthy
     networks: [app]
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080"]
       interval: 30s
       timeout: 10s
       retries: 3

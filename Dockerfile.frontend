@@ -42,8 +42,8 @@ RUN sed -i 's/\r$//' /wait-for.sh && chmod +x /wait-for.sh \
 
 USER nginx
 
-# Exposer le port 80, qui est le port par défaut de Nginx
-EXPOSE 80
+# Port interne non privil?gi?, compatible avec les restrictions du NAS.
+EXPOSE 8080
 
 # 🕒 Attendre le backend avant de démarrer Nginx
 CMD ["/wait-for.sh", "backend:3001", "--", "nginx", "-g", "daemon off;"]
