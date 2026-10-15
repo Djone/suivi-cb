@@ -1,5 +1,15 @@
 # Validation de sécurité 2.2.0 — 15 octobre 2026
 
+## Clôture des tests de sécurisation
+
+Mise à jour du périmètre de livraison : l’utilisateur demande désormais les tests automatisés métier/navigateur, GitHub Actions et la clôture automatisée dès la 2.2.0. Le plan harmonisé est décrit dans [PLAN_LIVRAISON_AUTOMATISEE_2_2_0.md](./PLAN_LIVRAISON_AUTOMATISEE_2_2_0.md). La rétention et l’alerte USB restent en 2.3.0. Cette extension ne rouvre pas les constats de recette déjà validés ; les nouvelles automatisations et la candidate finale doivent avoir leurs propres preuves. Aucune approbation de production n’est déduite de cette planification.
+
+Le 15 octobre 2026, l’utilisateur confirme la fin des tests de sécurisation. La PR #5 de durcissement du workflow a été relue et fusionnée par le mainteneur ; l’API GitHub confirme merged=true, state=closed, commit de fusion bcd3a417c87c04f25d090814db56e6d62aada42b. Le workflow sur master porte le blob 41c32fc2c023e39221469389a46f49c74834a5c0, identique au fichier durci, avec action figée, droits explicites, timeout et concurrence.
+
+La checklist de tests est clôturée dans le périmètre documenté : preuves locales, recette métier et rollback NAS RC7, correction d’accès refusé et parcours concernés RC8, sauvegarde/intégrité, protections GitHub et droits NAS. Les limites de chaque preuve restent valables ; cette clôture ne signifie ni absence absolue de vulnérabilités ni recette exhaustive identique sur chaque candidate. Le risque résiduel braces des outils reste accepté avec revue au plus tard le 22 octobre ; rétention locale et alerte USB restent reportées en 2.3.0 vers mi-novembre.
+
+L’approbation de livraison et la MEP restent en attente dans une entrée distincte. Aucun tag, publication de release ou déploiement lancé. Le prochain chantier demandé est l’automatisation de la clôture de release depuis /release-process. Les sections suivantes conservent les constats initiaux et les compléments de preuve successifs.
+
 > Suivi ultérieur des dépendances : [correction et risque restant](./DEPENDANCES_OUTILS_2026-10-15.md).
 > Les comptes d'alertes et preuves ci-dessous décrivent la validation initiale.
 > Le risque résiduel `braces` des outils de test a été accepté explicitement
@@ -188,6 +198,20 @@ Validation locale : 102 tests frontend réussis, dont refus du garde, traitement
 ## Preuve des audiences et du renouvellement NAS RC7
 
 Le 15 octobre 2026, l’utilisateur confirme : issuer https://auth.jolurie.com/realms/suivi-cb-preprod, client (azp) suivi-cb-web, audiences account et suivi-cb-api. Premier jeton : iat 2026-10-15T11:47:03Z, exp 2026-10-15T11:52:03Z. Deuxième jeton : iat 2026-10-15T11:52:02Z, exp 2026-10-15T11:57:02Z. La requête ayant produit le second jeton porte grant_type=refresh_token et retourne HTTP 200 ; les API comptes/opérations répondent ensuite HTTP 200. Audience et renouvellement technique validés pour la préproduction RC7 ; aucun jeton brut conservé. Ce résultat complète les observations précédentes et lève leur réserve sur ces deux points, sans approbation de MEP.
+
+## Recette NAS RC8 — accès refusé et opérations
+
+Les conteneurs RC8 sont running/healthy, OOMKilled=false. Les captures montrent la version 2.2.0-rc.8, l’écran Accès non autorisé pour le compte sans rôle et le tableau de bord du compte autorisé avec réponses API 200. L’utilisateur confirme ensuite la déconnexion depuis l’écran de refus et les opérations de création, modification et suppression sous RC8. Ces parcours sont validés. Le journal Réseau vide ne prouve pas à lui seul l’absence d’appels durant toute la connexion. Le refus API direct 403 sur RC8 reste à attester ; il a été prouvé sur RC7, mais le garde RC8 empêche désormais le chargement métier avant tout appel. La qualification locale RC8 et ses digests sont conservés dans docs/audit/2026-10-15/candidate-2.2.0-rc.8.json. Aucune approbation de MEP.
+
+## Vérification d’intégrité Hyper Backup USB
+
+Journal transmis par l’utilisateur : tâche « Suivi-CB — sauvegarde USB », démarrage le 15 octobre 2026 à 16:12:52, contrôle des données terminé à 16:12:55 avec 100 % des données contrôlées, contrôle de sauvegarde terminé à 16:12:57 sans erreur. Le volume affiché 0.0 GB est une valeur arrondie ; il ne signifie pas que la sauvegarde est vide. Cette vérification complète le succès de sauvegarde USB du 14 octobre à 21:05. Elle ne constitue pas une nouvelle exécution de sauvegarde, ni une restauration applicative. La rétention locale et l’alerte d’ancienneté restent à implémenter et tester ; les exercices périodiques restent à planifier.
+
+## Refus API direct RC8 et report des contrôles d’exploitation
+
+La capture fournie par l’utilisateur confirme GET /api/accounts/active sur finances-preprod.jolurie.com avec le jeton du compte sans rôle : réponse HTTP 403 et affichage « Statut API : 403 ». L’appel fetch direct contourne l’intercepteur et le garde Angular ; le refus backend RC8 est donc validé indépendamment de l’écran d’accès refusé. Ce résultat lève la réserve précédente sur le test direct RC8. Aucun jeton brut conservé.
+
+L’utilisateur reporte d’environ un mois la mise en œuvre de la rétention locale et de l’alerte de succès USB datant de plus de 36 heures : cible indicative vers le 15 novembre 2026. Ces mécanismes restent non implémentés et non validés. La todo-list porte cette échéance ; aucun rappel automatique n’est créé. Ce report ne constitue pas une approbation de MEP.
 
 ## Ordre des travaux demandé
 
