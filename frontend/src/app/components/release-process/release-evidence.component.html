@@ -115,6 +115,46 @@
           Enregistrer le périmètre
         </button>
       </fieldset>
+      <fieldset [disabled]="busy">
+        <legend id="release-next-cycle">
+          Version suivante et validation de la MEP
+        </legend>
+        <p>
+          Release livrée :
+          <strong>{{ d.manifest.candidate.split("-rc.")[0] }}</strong
+          >. Les images et leur version restent celles de la candidate testée.
+        </p>
+        <label
+          >Version de développement suivante
+          <input
+            aria-label="Version de développement suivante"
+            [(ngModel)]="nextDevVersion"
+            placeholder="Ex. 2.3.0-dev"
+            maxlength="50"
+          />
+        </label>
+        <p *ngIf="nextDevVersion && !validNextVersion" role="alert">
+          Format attendu : 2.3.0-dev.
+        </p>
+        <button (click)="saveReleasePlan()" [disabled]="!validNextVersion">
+          Enregistrer le cycle suivant
+        </button>
+        <p *ngIf="d.releasePlan">
+          Cycle prévu : {{ d.releasePlan.nextDevVersion }} (enregistré, non
+          appliqué).
+        </p>
+        <p>
+          Ce choix fait partie de l'approbation MEP. Le changement des fichiers
+          de version et l'ouverture de la branche suivante doivent intervenir
+          seulement après la livraison et les contrôles en production, à la
+          clôture. Une modification de ce choix invalide les validations
+          production.
+        </p>
+        <p>
+          La mise à jour automatique des fichiers reste inactive tant que la
+          publication et la clôture sont verrouillées.
+        </p>
+      </fieldset>
       <h3>Réserves suivies</h3>
       <ul>
         <li *ngFor="let item of r.reservations">

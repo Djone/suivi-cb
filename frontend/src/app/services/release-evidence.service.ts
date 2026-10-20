@@ -43,6 +43,12 @@ export interface EvidenceReport {
         kind: string;
       }
     >;
+    releasePlan?: {
+      stableVersion: string;
+      nextDevVersion: string;
+      status: string;
+      identity: string;
+    } | null;
     importedAt: string;
   };
   checks: EvidenceCheck[];

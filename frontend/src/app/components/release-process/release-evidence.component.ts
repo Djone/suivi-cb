@@ -26,6 +26,12 @@ export class ReleaseEvidenceComponent implements OnInit {
   summary = '';
   releaseNotes = '';
   frozen = false;
+  nextDevVersion = '';
+  get validNextVersion(): boolean {
+    return /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-dev$/.test(
+      this.nextDevVersion,
+    );
+  }
   check = 'source-review';
   reference = '';
   readonly manualIds = [
@@ -65,6 +71,7 @@ export class ReleaseEvidenceComponent implements OnInit {
           this.summary = r.dossier.scope.summary;
           this.releaseNotes = r.dossier.scope.releaseNotes;
           this.frozen = r.dossier.scope.frozen;
+          this.nextDevVersion = r.dossier.releasePlan?.nextDevVersion || '';
           this.candidateSelected.emit(r.dossier.manifest);
         }
       },
@@ -76,7 +83,15 @@ export class ReleaseEvidenceComponent implements OnInit {
       },
     });
   }
-  selectValidation(id:string){if(!this.manualIds.includes(id))return;this.check=id;document.getElementById(id === 'source-review' ? 'release-scope' : 'release-human-validation')?.scrollIntoView({behavior:'smooth',block:'start'});}
+  selectValidation(id: string) {
+    if (!this.manualIds.includes(id)) return;
+    this.check = id;
+    document
+      .getElementById(
+        id === 'source-review' ? 'release-scope' : 'release-human-validation',
+      )
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   refresh() {
     this.request(this.service.read());
   }
@@ -86,6 +101,19 @@ export class ReleaseEvidenceComponent implements OnInit {
         this.service.importBundle(this.source, this.runId),
         'Preuves importées ; les blocages sont recalculés.',
       );
+  }
+  saveReleasePlan() {
+    const d = this.report?.dossier;
+    if (!d || !this.validNextVersion) return;
+    this.request(
+      this.service.update({
+        action: 'release-plan',
+        identity: d.identity,
+        revision: d.revision,
+        nextDevVersion: this.nextDevVersion,
+      }),
+      'Cycle suivant enregistré ; approbations production à refaire si la version a changé. Aucun fichier de version modifié.',
+    );
   }
   saveScope() {
     const d = this.report?.dossier;

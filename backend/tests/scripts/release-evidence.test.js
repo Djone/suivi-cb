@@ -401,3 +401,44 @@ it("serializes imports instead of allowing concurrent overwrites", async () => {
   await expect(importIt()).rejects.toThrow("EVIDENCE_BUSY");
   await first;
 });
+
+it("persists the next cycle without changing candidate files or existing preproduction evidence", async () => {
+  let r = await importIt();
+  r = await scope(r);
+  r = await update(r, {
+    action: "validate",
+    check: "source-review",
+    approved: true,
+    reference: "reviewed",
+  });
+  const identity = r.dossier.identity;
+  const before = fs.readFileSync(path.join(dir, "manifest.json"), "utf8");
+  r = await update(r, { action: "release-plan", nextDevVersion: "2.3.0-dev" });
+  expect(r.dossier.releasePlan.nextDevVersion).toBe("2.3.0-dev");
+  expect(r.dossier.releasePlan.status).toBe("planned");
+  expect(r.dossier.identity).toBe(identity);
+  expect(r.dossier.validations["source-review"].approved).toBe(true);
+  expect(fs.readFileSync(path.join(dir, "manifest.json"), "utf8")).toBe(before);
+  expect(service.read().dossier.releasePlan.nextDevVersion).toBe("2.3.0-dev");
+  expect(r.publicationEnabled).toBe(false);
+  expect(r.canClose).toBe(false);
+  const imported = await importIt();
+  expect(imported.dossier.releasePlan.nextDevVersion).toBe("2.3.0-dev");
+});
+it("rejects malformed, identical or older next-cycle versions", async () => {
+  const r = await importIt();
+  for (const nextDevVersion of [
+    "2.3.0",
+    "v2.3.0-dev",
+    "02.3.0-dev",
+    "2.2.0-dev",
+    "2.1.9-dev",
+    "1.99.0-dev",
+    "2.3.0-dev; rm",
+    null,
+  ])
+    await expect(
+      update(r, { action: "release-plan", nextDevVersion }),
+    ).rejects.toThrow();
+  expect(service.read().dossier.releasePlan).toBeNull();
+});
