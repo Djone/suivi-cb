@@ -40,9 +40,11 @@ fs.writeFileSync(path.join(dir,'realm.json'),JSON.stringify({
 }),{mode:0o600});
 (async()=>{
  try {
-  docker('run','-d','--pull=never','--name',name,'--memory','768m','-p','127.0.0.1::8080',
-   '--mount',`type=bind,source=${dir},target=/opt/keycloak/data/import,readonly`,
-   '-e','JAVA_OPTS_KC_HEAP=-Xms128m -Xmx384m',image,'start-dev','--import-realm');
+  docker('create','--entrypoint','sh','--pull=never','--name',name,'--memory','768m','-p','127.0.0.1::8080',
+   '-e','JAVA_OPTS_KC_HEAP=-Xms128m -Xmx384m',image,'-c','mkdir -p /opt/keycloak/data/import && cp /tmp/realm.json /opt/keycloak/data/import/realm.json && exec /opt/keycloak/bin/kc.sh start-dev --import-realm');
+  fs.chmodSync(path.join(dir,'realm.json'),0o644);
+  docker('cp',path.join(dir,'realm.json'),name+':/tmp/realm.json');
+  docker('start',name);
   const mapped=docker('port',name,'8080/tcp');
   const base=`http://${mapped}`, issuer=`${base}/realms/${realm}`;
   let ready=false;
@@ -105,8 +107,8 @@ fs.writeFileSync(path.join(dir,'realm.json'),JSON.stringify({
    checks:['authorization code with PKCE S256','OTP enrollment','real access-token audiences account + suivi-cb-api','refresh','logout invalidates refresh token','OTP required on next login','invalid OTP refused','valid OTP accepted'],
    limitations:['synthetic realm and user','NAS realm configuration and Angular browser journey still require preproduction acceptance']},null,2));
  } finally {
-  try{docker('rm','-f',name)}catch{}
-  if(path.dirname(path.resolve(dir))!==path.resolve(os.tmpdir())) throw new Error('Unexpected temporary directory');
-  fs.rmSync(dir,{recursive:true,force:true});
+  try{docker('rm','-f',name)}catch{process.exitCode=1;console.error('KEYCLOAK_CLEANUP_FAILED')}
+  if(path.dirname(path.resolve(dir))===path.resolve(os.tmpdir()) && path.basename(dir).startsWith('suivi-kc-test-')) fs.rmSync(dir,{recursive:true,force:true});
+  else { process.exitCode=1;console.error('UNEXPECTED_TEMPORARY_DIRECTORY'); }
  }
 })().catch(e=>{console.error(e.message);process.exitCode=1});

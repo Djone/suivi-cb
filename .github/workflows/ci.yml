@@ -1,0 +1,147 @@
+﻿name: CI
+on:
+  push:
+    branches: [master, 2.2.0-dev, "work/**"]
+  pull_request:
+    branches: [master, 2.2.0-dev]
+  workflow_dispatch:
+    inputs:
+      candidate:
+        description: "Unique candidate version (2.2.0-rc.N); never reused"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Clean installations
+        run: |
+          npm ci
+          npm ci --prefix backend
+          npm ci --prefix frontend
+      - name: Lint, TypeScript, policy, unit tests and dependency gates
+        run: npm run ci:quality
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: quality-${{ github.run_id }}
+          path: .cache/ci/quality/*.json
+          if-no-files-found: error
+          retention-days: 30
+  integration:
+    name: Docker and browser qualification
+    needs: quality
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CANDIDATE: ${{ inputs.candidate || format('2.2.0-rc.{0}', github.run_id) }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: quality-${{ github.run_id }}
+          path: .cache/ci/quality
+      - name: Install isolated browser tooling
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          docker pull quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c
+          docker tag quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c quay.io/keycloak/keycloak:26.7.4
+      - name: Build candidate once from clean sources
+        run: |
+          node scripts/ci/candidate.cjs build
+          cp .cache/ci/quality/quality.json .cache/ci/package/quality.json
+          node -e "require('./scripts/ci/candidate.cjs').checksums()"
+      - name: API, Playwright, Keycloak, migrations and rollback
+        run: node scripts/ci/candidate.cjs exercise
+      - name: Secret and image scans with SBOM
+        run: node scripts/ci/scan.cjs
+      - name: Bind qualification to commit, run and image identities
+        run: node scripts/ci/candidate.cjs qualify
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: success()
+        with:
+          name: candidate-${{ github.run_id }}
+          path: .cache/ci/package/
+          include-hidden-files: false
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: qualification-failure-${{ github.run_id }}
+          path: .cache/ci/package/*.json
+          if-no-files-found: warn
+          retention-days: 14
+  required:
+    name: Required CI
+    if: always()
+    needs: [quality, integration]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    env:
+      QUALITY: ${{ needs.quality.result }}
+      INTEGRATION: ${{ needs.integration.result }}
+    steps:
+      - name: All mandatory jobs succeeded
+        run: test "$QUALITY" = success && test "$INTEGRATION" = success
+  publish:
+    name: Publish approved candidate to GHCR
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/2.2.0-dev') && vars.CI_ENABLE_REGISTRY_PUBLISH == 'true'
+    needs: [quality, integration, required]
+    runs-on: ubuntu-24.04
+    environment: candidate-registry
+    timeout-minutes: 20
+    concurrency:
+      group: publish-candidate-${{ inputs.candidate }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: candidate-${{ github.run_id }}
+          path: .cache/ci/package
+      - name: Publish verified archive without rebuilding
+        run: node scripts/ci/publish.cjs
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: published-candidate-${{ github.run_id }}
+          path: .cache/ci/package/
+          if-no-files-found: error
+          retention-days: 30
