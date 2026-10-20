@@ -132,7 +132,7 @@ async function extractZip(file, dir) {
   }
   if (
     !seen.has("manifest.json") ||
-    !seen.has("SHA256SUMS") ||
+    !seen.has("sha256sums") ||
     !seen.has("images.tar")
   )
     throw Error("INCOMPLETE_ARTIFACT");
