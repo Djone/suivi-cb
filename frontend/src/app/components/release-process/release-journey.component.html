@@ -265,6 +265,27 @@ git pull --ff-only</code></pre>
     <button (click)="validate('nas-auth')">
       Consigner la recette d'authentification
     </button>
+    <details>
+      <summary>
+        Vérifier l'audience et les dates du jeton sans les envoyer à un site
+        externe
+      </summary>
+      <p>
+        Dans F12 → Réseau, ouvrir la réponse de la requête token et copier
+        uniquement access_token. Exécuter le code ci-dessous dans F12 → Console
+        du navigateur, puis coller le jeton dans la boîte de dialogue. Ne jamais
+        coller ce jeton dans le dossier de preuves.
+      </p>
+      <pre><code>{{tokenSummary}}</code></pre>
+      <button (click)="copy(tokenSummary)">Copier le décodage local</button>
+      <p class="expected">
+        Issuer : https://auth.jolurie.com/realms/suivi-cb-preprod ; audience
+        contient suivi-cb-api ; client suivi-cb-web. Refaire après le refresh
+        HTTP 200 : les dates d'émission et d'expiration avancent et l'API
+        fonctionne toujours en 200. Conserver uniquement ce résumé dans le
+        compte rendu.
+      </p>
+    </details>
     <h4>Parcours métier sur données fictives</h4>
     <p>
       Créer un compte de recette si la base est vide. Tester création,

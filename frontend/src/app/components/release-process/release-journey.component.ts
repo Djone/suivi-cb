@@ -172,6 +172,8 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
     "free -m\nsudo docker ps --format 'Name={{.Names}} Image={{.Image}} Status={{.Status}}'";
   readonly inspectPreprod =
     "sudo docker inspect --format 'Name={{.Name}} Image={{.Image}} Health={{if .State.Health}}{{.State.Health.Status}}{{end}} OOMKilled={{.State.OOMKilled}}' suivi-cb-ci-preprod-backend suivi-cb-ci-preprod-frontend\ncurl -s -o /dev/null -w 'Frontend HTTP=%{http_code}\\n' http://127.0.0.1:4205/\ncurl -s -o /dev/null -w 'API sans jeton HTTP=%{http_code}\\n' http://127.0.0.1:4205/api/accounts/active";
+  readonly tokenSummary =
+    "(() => { const token = prompt('Jeton access_token : décodage local uniquement'); if (!token) return; try { const raw = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); const bytes = Uint8Array.from(atob(raw), c => c.charCodeAt(0)); const p = JSON.parse(new TextDecoder().decode(bytes)); console.table({issuer:p.iss,audience:JSON.stringify(p.aud),client:p.azp,emission:new Date(p.iat*1000).toISOString(),expiration:new Date(p.exp*1000).toISOString()}); } catch { console.warn('Jeton invalide : utiliser la valeur access_token, sans le préfixe Bearer.'); } })();";
   readonly deniedTest =
     "(async () => { const token = prompt('Jeton du compte sans rôle, traitement local uniquement'); if (!token) return; const response = await fetch('/api/accounts/active', { headers: { Authorization: 'Bearer ' + token } }); console.log('Statut API :', response.status); })();";
   readonly inspectProduction =
