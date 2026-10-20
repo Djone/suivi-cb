@@ -47,12 +47,15 @@ function revision() {
   return exec("git", ["rev-parse", "HEAD"], { capture: true });
 }
 function clean() {
-  if (
-    exec("git", ["status", "--porcelain", "--untracked-files=all"], {
-      capture: true,
-    })
-  )
+  const status = exec(
+    "git",
+    ["status", "--porcelain", "--untracked-files=all"],
+    { capture: true },
+  );
+  if (status) {
+    console.error("Uncommitted paths:\n" + status);
     throw Error("CLEAN_COMMIT_REQUIRED");
+  }
   return revision();
 }
 function candidate(v) {
