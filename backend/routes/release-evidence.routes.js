@@ -27,6 +27,35 @@ function createEvidenceRouter(
         .json({ message: code });
     }
   };
+  const ssh = require("../services/release-nas-ssh").createNasSsh({
+    evidence: service,
+  });
+  router.get(
+    "/nas/ssh",
+    handle(() => ssh.status()),
+  );
+  router.post(
+    "/nas/ssh/key",
+    handle((req) => ssh.create(req.body || {})),
+  );
+  router.post(
+    "/nas/ssh/probe",
+    handle(() => ssh.probe()),
+  );
+  router.post(
+    "/nas/ssh/plan",
+    handle((req) => ssh.plan(req.body || {})),
+  );
+  router.get("/nas/ssh/installer", (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.type("text/plain");
+      res.attachment("install-release-ssh.sh");
+      res.send(ssh.installer());
+    } catch {
+      res.status(422).json({ message: "SSH_KEY_REQUIRED" });
+    }
+  });
   const makeNasKit = require("../services/release-nas-kit").createNasKit({
     evidence: service,
   });

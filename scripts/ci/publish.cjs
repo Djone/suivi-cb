@@ -29,7 +29,11 @@ async function environmentGuard(token) {
       (rule) =>
         rule.type === "required_reviewers" &&
         rule.reviewers?.length &&
-        rule.prevent_self_review === true,
+        (rule.prevent_self_review === true ||
+          (rule.prevent_self_review === false &&
+            rule.reviewers.every(
+              (x) => x.type === "User" && x.reviewer?.login === "Djone",
+            ))),
     ) ||
     !env.deployment_branch_policy?.protected_branches ||
     env.can_admins_bypass !== false

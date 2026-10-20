@@ -7,6 +7,119 @@
       commandes NAS sont à copier dans votre session SSH.
     </p>
   </header>
+  <aside aria-label="Ce qui est requis pour chaque release">
+    <h3>Une installation initiale, puis un parcours répétable</h3>
+    <p>
+      Les cinq lots construisent le dispositif de livraison. Il ne faut pas les
+      redévelopper à chaque version : les tests, le pipeline et ce dossier sont
+      ensuite réutilisés. Les résultats doivent toutefois concerner la candidate
+      effectivement livrée.
+    </p>
+    <details>
+      <summary>
+        Comprendre les contrôles et les actions encore nécessaires
+      </summary>
+      <h4>À mettre en place une fois, puis maintenir</h4>
+      <ul>
+        <li>
+          Pipeline de tests et scans, distribution des images, dossier de
+          preuves et moteur de livraison.
+        </li>
+        <li>
+          Canal de déploiement NAS contrôlé, accès minimaux et approbations
+          GitHub. Aucun code de PR non fiable ne doit accéder au NAS ou aux
+          secrets de livraison.
+        </li>
+        <li>
+          GHCR est le registre retenu pour l'automatisation. Un autre registre
+          ou un transfert TAR/SSH vérifié peut assurer la distribution ; GHCR
+          n'est pas une obligation technique universelle. Un exécuteur permanent
+          sur le NAS n'est pas obligatoire non plus : c'est le canal contrôlé
+          qui l'est.
+        </li>
+      </ul>
+      <h4>À chaque candidate livrée</h4>
+      <ol>
+        <li>
+          <strong>Git et CI :</strong> commit propre, poussé et relu ; tests
+          métier/sécurité, audits de dépendances et scans réussis ; exceptions
+          justifiées et non expirées.
+          <button (click)="active = 0">Voir Git et les contrôles</button>
+        </li>
+        <li>
+          <strong>Distribution :</strong> construire une fois ; conserver les
+          images par version et digest, manifeste, SBOM et preuves. Le parcours
+          GHCR prévu reste à activer ; le ZIP/TAR vérifié sert de secours.
+          <button (click)="active = 1">Voir la candidate</button>
+        </li>
+        <li>
+          <strong>Préproduction :</strong> déployer les images exactes sans
+          reconstruction via le canal NAS contrôlé ; vérifier import,
+          architecture et identité. Les scripts actuels sont lancés
+          explicitement par l'opérateur ; ce n'est pas encore un déploiement
+          GitHub entièrement automatique.
+          <button (click)="active = 2">
+            Voir le transfert et le déploiement NAS
+          </button>
+        </li>
+        <li>
+          <strong>Recette finale :</strong> utiliser ce dossier avec la
+          candidate finale, joindre les résultats NAS et les contrôles concernés
+          du lot de livraison. Une correction produit une nouvelle candidate et
+          impose de refaire les validations concernées.
+          <button (click)="active = 3">Voir la recette</button>
+        </li>
+        <li>
+          <strong>Dossier cohérent :</strong> tests, pipeline et preuves liés au
+          même commit et aux mêmes images ; aucun blocage non résolu, réserves
+          explicitement acceptées et à jour.
+          <button (click)="active = 4">Voir les prérequis d'approbation</button>
+        </li>
+        <li>
+          <strong>Approbation humaine :</strong> confirmer la candidate, les
+          digests, le plan de livraison, la sauvegarde et le retour aux
+          anciennes images compatibles. Prévoir le cycle de version suivant.
+          L'approbation n'est jamais déduite d'une CI verte.
+        </li>
+        <li>
+          <strong>Publication et promotion :</strong> tag et release du commit
+          retenu selon le parcours approuvé ; sauvegarde cohérente juste avant
+          la bascule, puis mêmes images en production. Le moteur et le rollback
+          doivent d'abord être qualifiés en environnement isolé. Aucun retour
+          aux anciennes images ne restaure automatiquement les données.
+          <button (click)="active = 5">
+            Voir le plan production, actuellement verrouillé
+          </button>
+        </li>
+        <li>
+          <strong>Après MEP :</strong> santé, version, accès, parcours critiques
+          et sauvegarde ; archiver le rapport et vérifier l'ouverture du cycle
+          suivant. <button (click)="active = 6">Voir la clôture</button>
+        </li>
+      </ol>
+      <h4>À reprendre selon les changements ou périodiquement</h4>
+      <p>
+        L'audit complet de sécurisation 2.2.0 n'est pas à refaire intégralement
+        pour chaque correction. Refaire l'analyse des zones modifiées, notamment
+        authentification, permissions, migrations, dépendances et
+        infrastructure. Réexaminer les droits et exercices de restauration selon
+        leur calendrier ou après modification ; conserver leur date et leur
+        périmètre. Une preuve ancienne ne valide pas automatiquement une
+        configuration qui a changé.
+      </p>
+      <p>
+        La courte recette humaine NAS concerne le proxy, OTP, les accès et les
+        parcours touchés. Les suites automatisées couvrent les régressions
+        répétitives. Le report de la rétention et de l'alerte USB vers la 2.3.0
+        reste une réserve documentée, pas un test réussi.
+      </p>
+      <p class="warning">
+        Ces instructions rendent les étapes explicites, mais n'activent aucun
+        déploiement. Les publications et la production restent verrouillées
+        jusqu'à la qualification et aux autorisations prévues.
+      </p>
+    </details>
+  </aside>
   <p *ngIf="error" class="warning" role="alert">{{ error }}</p>
   <p *ngIf="feedback" role="status">{{ feedback }}</p>
   <nav aria-label="Étapes de livraison">
@@ -124,6 +237,57 @@ git pull --ff-only</code></pre>
     <p *ngIf="!knownCandidate" class="warning">
       Créez d'abord la candidate à l'étape 2.
     </p>
+    <details>
+      <summary>
+        Installer une connexion SSH par clé dédiée (une seule fois)
+      </summary>
+      <p>
+        Une clé SSH remplace le mot de passe pour l'automatisation. La clé
+        privée est conservée par le backend local sur ce PC et ne passe pas dans
+        le navigateur. L'installation initiale exige votre session SSH
+        administrateur habituelle.
+      </p>
+      <button (click)="createSshKey()" [disabled]="sshBusy">
+        Préparer la clé locale
+      </button>
+      <button (click)="downloadSshInstaller()" [disabled]="sshBusy">
+        Télécharger l'installateur de clé publique
+      </button>
+      <p *ngIf="sshPublicKey">
+        Clé publique : <code>{{ sshPublicKey }}</code>
+      </p>
+      <ol>
+        <li>
+          Relire le script téléchargé puis le transférer via File Station dans
+          votre dossier personnel NAS.
+        </li>
+        <li>
+          Dans votre session SSH NAS habituelle, exécuter
+          <code>sudo sh "$HOME/install-release-ssh.sh"</code>. Adapter
+          uniquement le chemin si le fichier est ailleurs.
+        </li>
+        <li>
+          Attendre <code>SSH_KEY_INSTALLED_PLAN_ONLY</code>, puis tester la
+          connexion avec le bouton ci-dessous.
+        </li>
+      </ol>
+      <button (click)="probeSsh()" [disabled]="sshBusy">
+        Tester SSH sans mot de passe
+      </button>
+      <button
+        (click)="checkSshPlan()"
+        [disabled]="sshBusy || !report?.readyForPreproduction"
+      >
+        Vérifier le plan de la candidate sur NAS
+      </button>
+      <p>
+        Cette première installation autorise uniquement le diagnostic et le plan
+        de préproduction. Elle interdit le shell libre, les tunnels, le
+        transfert de fichiers et la MEP. L'extension aux transferts et aux
+        déploiements devra être qualifiée avant activation. Elle ne remplace pas
+        encore le transfert TAR/SSH existant.
+      </p>
+    </details>
     <details *ngIf="knownCandidate">
       <summary>
         Transfert automatique depuis Windows avec votre mot de passe SSH

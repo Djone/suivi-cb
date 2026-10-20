@@ -28,6 +28,85 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
   downloading = false;
   error = '';
   feedback = '';
+  sshBusy = false;
+  sshPublicKey = '';
+  createSshKey() {
+    if (
+      this.sshBusy ||
+      !confirm(
+        'Créer ou réutiliser une clé SSH locale dédiée ? Sa clé privée restera sur ce PC.',
+      )
+    )
+      return;
+    this.sshBusy = true;
+    this.service.createSshKey().subscribe({
+      next: (r) => {
+        this.sshPublicKey = r.publicKey;
+        this.sshBusy = false;
+        this.feedback =
+          'Clé locale prête. Installer uniquement sa partie publique sur le NAS.';
+      },
+      error: () => {
+        this.sshBusy = false;
+        this.error =
+          'Création impossible : vérifier OpenSSH et les permissions du backend local.';
+      },
+    });
+  }
+  downloadSshInstaller() {
+    if (this.sshBusy) return;
+    this.sshBusy = true;
+    this.service.sshInstaller().subscribe({
+      next: (blob) => {
+        this.sshBusy = false;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'install-release-ssh.sh';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
+      error: () => {
+        this.sshBusy = false;
+        this.error =
+          'Créer la clé locale avant de télécharger son installateur.';
+      },
+    });
+  }
+  checkSshPlan() {
+    const d = this.report?.dossier;
+    if (this.sshBusy || !d || !this.report?.readyForPreproduction) return;
+    this.sshBusy = true;
+    this.service.sshPlan(d.identity, d.revision).subscribe({
+      next: (r) => {
+        this.sshBusy = false;
+        this.feedback =
+          'Plan NAS vérifié pour ' + r.candidate + ' : aucun service modifié.';
+      },
+      error: () => {
+        this.sshBusy = false;
+        this.error =
+          'Plan refusé : vérifier l’installation SSH et préparer sur NAS exactement la candidate de ce dossier.';
+      },
+    });
+  }
+  probeSsh() {
+    if (this.sshBusy) return;
+    this.sshBusy = true;
+    this.service.probeSsh().subscribe({
+      next: () => {
+        this.sshBusy = false;
+        this.feedback =
+          'SSH par clé vérifié : aucun mot de passe demandé. Les droits restent limités au diagnostic et au plan.';
+      },
+      error: () => {
+        this.sshBusy = false;
+        this.error =
+          'Connexion impossible : installer la clé publique et vérifier la clé d’hôte NAS dans le terminal du PC. Ne pas désactiver la vérification SSH.';
+      },
+    });
+  }
+
   active = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private completedTask = '';

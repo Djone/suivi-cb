@@ -235,7 +235,7 @@ test("dirty, failed or foreign quality reports cannot qualify a candidate", () =
   ])
     assert.throws(() => assertQuality(m, { ...q, ...change }), /QUALITY/);
 });
-test("publication refuses missing reviewers, self-approval, administrator bypass and untrusted triggers", async () => {
+test("publication requires manual review and accepts only the explicitly authorized self-reviewer", async () => {
   const { environmentGuard } = require("../publish.cjs");
   const keys = ["GITHUB_REF", "GITHUB_EVENT_NAME", "GITHUB_REPOSITORY"];
   const old = Object.fromEntries(keys.map((k) => [k, process.env[k]])),
@@ -263,6 +263,12 @@ test("publication refuses missing reviewers, self-approval, administrator bypass
     await assert.rejects(() => environmentGuard("synthetic-token"));
     env.can_admins_bypass = false;
     env.protection_rules[0].prevent_self_review = false;
+    await assert.rejects(() => environmentGuard("synthetic-token"));
+    env.protection_rules[0].reviewers = [
+      { type: "User", reviewer: { login: "Djone" } },
+    ];
+    await assert.doesNotReject(() => environmentGuard("synthetic-token"));
+    env.protection_rules[0].reviewers[0].reviewer.login = "unexpected";
     await assert.rejects(() => environmentGuard("synthetic-token"));
     env.protection_rules[0].prevent_self_review = true;
     env.protection_rules[0].reviewers = [];

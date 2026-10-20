@@ -29,6 +29,9 @@ describe('Guided release journey', () => {
       'prepareCandidate',
       'candidateArchive',
       'nasKit',
+      'createSshKey',
+      'probeSsh',
+      'sshInstaller',
     ]);
     service.candidateStatus.and.returnValue(of(status()));
     service.prepareCandidate.and.returnValue(
@@ -128,5 +131,24 @@ describe('Guided release journey', () => {
     ).componentInstance;
     c.kit();
     expect(service.nasKit).not.toHaveBeenCalled();
+  });
+
+  it('requires confirmation before creating a local SSH key and probes only on request', () => {
+    service.createSshKey.and.returnValue(
+      of({ configured: true, publicKey: 'ssh-ed25519 public-test' }),
+    );
+    service.probeSsh.and.returnValue(of({ connected: true }));
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    expect(service.probeSsh).not.toHaveBeenCalled();
+    const confirm = spyOn(window, 'confirm').and.returnValue(false);
+    f.componentInstance.createSshKey();
+    expect(service.createSshKey).not.toHaveBeenCalled();
+    confirm.and.returnValue(true);
+    f.componentInstance.createSshKey();
+    expect(f.componentInstance.sshPublicKey).toBe('ssh-ed25519 public-test');
+    f.componentInstance.probeSsh();
+    expect(service.probeSsh).toHaveBeenCalledTimes(1);
+    f.destroy();
   });
 });

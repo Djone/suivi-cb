@@ -117,6 +117,29 @@ export class ReleaseEvidenceService {
       { responseType: 'blob' },
     );
   }
+  createSshKey() {
+    return this.http.post<{ configured: boolean; publicKey: string }>(
+      this.url + '/nas/ssh/key',
+      { confirm: true },
+    );
+  }
+  probeSsh() {
+    return this.http.post<{ connected: boolean }>(
+      this.url + '/nas/ssh/probe',
+      {},
+    );
+  }
+  sshPlan(identity: string, revision: number) {
+    return this.http.post<{ candidate: string; planOnly: boolean }>(
+      this.url + '/nas/ssh/plan',
+      { identity, revision },
+    );
+  }
+  sshInstaller() {
+    return this.http.get(this.url + '/nas/ssh/installer', {
+      responseType: 'blob',
+    });
+  }
   report() {
     return this.http.post<EvidenceReport>(this.url + '/report', {});
   }
