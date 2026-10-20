@@ -13,9 +13,9 @@ case "$MODE" in plan|apply) ;; *) echo 'Only plan or apply is accepted.' >&2; ex
 [ "$#" -le 1 ] || exit 1
 [ "$(id -u)" = 0 ] || { echo 'Controlled root task required.' >&2; exit 1; }
 [ ! -L "$CONTROL" ] && [ "$(readlink -f "$CONTROL")" = "$CONTROL" ] || exit 1
-[ "$(stat -c %u "$CONTROL")" = 0 ] || exit 1
+[ "$(stat -c %u:%a "$CONTROL")" = 0:700 ] || exit 1
 for target in "$CONTROL/code" "$CONTROL/incoming"; do
-  [ -d "$target" ] && [ ! -L "$target" ] && [ "$(readlink -f "$target")" = "$target" ] || exit 1
+  [ -d "$target" ] && [ ! -L "$target" ] && [ "$(readlink -f "$target")" = "$target" ] && [ "$(stat -c %u:%a "$target")" = 0:700 ] || exit 1
 done
 for target in "$CONTROL/approval.json" "$CONTROL/.env.preprod"; do
   [ -f "$target" ] && [ ! -L "$target" ] && [ "$(stat -c %u:%a "$target")" = 0:600 ] || exit 1

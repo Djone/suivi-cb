@@ -38,6 +38,8 @@ jobs:
           npm ci
           npm ci --prefix backend
           npm ci --prefix frontend
+      - name: Validate controlled NAS shell syntax
+        run: sh -n deploy-controller/nas-preproduction.sh
       - name: Lint, TypeScript, policy, unit tests and dependency gates
         run: npm run ci:quality
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

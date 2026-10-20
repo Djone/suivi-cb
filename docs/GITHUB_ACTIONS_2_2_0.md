@@ -1,8 +1,7 @@
 ﻿# Lot 2 — GitHub Actions (2.2.0)
 
 La recette NAS/préproduction est conservée pour la fin. Aucun déploiement NAS,
-tag Git, publication de release ou changement des protections de branche n'est
-activé par ce chantier.
+tag Git ou publication de release n’est activé. Les protections de branche ont été complétées après le premier cycle vert, comme demandé.
 
 ## Chaîne livrée
 
@@ -37,8 +36,7 @@ La validation de cette dernière reste une vérification NAS distincte.
 Le job `Publish approved candidate to GHCR` ne peut être lancé que par
 `workflow_dispatch` depuis une branche protégée, avec une version nouvelle
 `2.2.0-rc.N`, et la variable `CI_ENABLE_REGISTRY_PUBLISH=true`.
-Avant activation, créer l'environnement `candidate-registry` : approbateur
-obligatoire et branches protégées seulement. Le script interroge cette
+L’environnement `candidate-registry` est créé : approbateur obligatoire, auto-approbation et contournement administrateur interdits, branches protégées seulement. Le script interroge cette
 configuration et refuse la publication si elle est absente ou invérifiable.
 Vérifier que le forfait GitHub permet ces protections sur le dépôt concerné.
 
@@ -109,10 +107,9 @@ Prévoir un dépôt privé de contrôle, avec revue de sa branche `main`, enviro
 Le contrôleur `deploy-controller/nas-preproduction.sh` est préparé, non installé : mode plan par défaut, application sous verrou local explicite. Voir son README.
 Le 20/10, seul le NAS est disponible. Le dépôt privé Djone/suivi-cb-deploy a été créé, avec Actions désactivé. Privilégier une tâche NAS de récupération
 de demandes approuvées, déclenchée ponctuellement, sans runner GitHub permanent.
-Le moteur local, sa vérification de provenance et son installation restent à
-implémenter et à tester ; aucun accès SSH ne doit être exposé pour ce chantier.
+Le mode plan local et le moteur TAR isolé sont préparés ; récupération authentifiée, provenance automatique et installation NAS restent à implémenter et tester. Aucun accès SSH public supplémentaire ne doit être exposé.
 
-L'accès NAS devra utiliser une clé dédiée à commande forcée, sans shell général,
+Si le secours SSH est utilisé, prévoir une clé dédiée à commande forcée, sans shell général,
 avec un wrapper root limitant les chemins, les services et les opérations ;
 aucun accès au socket Docker ni sudo général pour les PR ou le compte de transfert.
 Les secrets NAS et GHCR lecture seule resteront dans ce dépôt privé / sur le NAS.
