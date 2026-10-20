@@ -55,10 +55,9 @@ it("uses fixed batch SSH arguments, strict host checking and the forced probe co
   const script = ssh.installer();
   expect(script).not.toContain("__PUBLIC_KEY__");
   expect(script).toContain("no-port-forwarding");
-  expect(script).toContain(
-    "NOPASSWD: /usr/local/sbin/suivi-cb-release-gateway plan",
-  );
-  expect(script).not.toContain("NOPASSWD: ALL");
+  expect(script).toContain("SSH_KEY_INSTALLED_PROBE_ONLY");
+  expect(script).not.toContain("NOPASSWD:");
+  expect(script).not.toContain("/etc/sudoers.d");
 });
 it("refuses unexpected remote output and masks remote errors", () => {
   const ssh = createNasSsh({ root, run: mockRun });

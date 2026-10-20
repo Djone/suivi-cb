@@ -267,7 +267,7 @@ git pull --ff-only</code></pre>
           uniquement le chemin si le fichier est ailleurs.
         </li>
         <li>
-          Attendre <code>SSH_KEY_INSTALLED_PLAN_ONLY</code>, puis tester la
+          Attendre <code>SSH_KEY_INSTALLED_PROBE_ONLY</code>, puis tester la
           connexion avec le bouton ci-dessous.
         </li>
       </ol>
@@ -276,16 +276,17 @@ git pull --ff-only</code></pre>
       </button>
       <button
         (click)="checkSshPlan()"
-        [disabled]="sshBusy || !report?.readyForPreproduction"
+        [disabled]="true"
+        title="Exécuteur du plan NAS à installer et qualifier"
       >
-        Vérifier le plan de la candidate sur NAS
+        Plan NAS : exécuteur à qualifier
       </button>
       <p>
-        Cette première installation autorise uniquement le diagnostic et le plan
-        de préproduction. Elle interdit le shell libre, les tunnels, le
-        transfert de fichiers et la MEP. L'extension aux transferts et aux
-        déploiements devra être qualifiée avant activation. Elle ne remplace pas
-        encore le transfert TAR/SSH existant.
+        Cette première installation autorise uniquement le diagnostic. Elle
+        interdit le shell libre, les tunnels, le transfert de fichiers et la
+        MEP. L'extension aux transferts et aux déploiements devra être qualifiée
+        avant activation. Elle ne remplace pas encore le transfert TAR/SSH
+        existant.
       </p>
     </details>
     <details *ngIf="knownCandidate">

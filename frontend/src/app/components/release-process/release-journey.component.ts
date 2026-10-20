@@ -97,7 +97,7 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
       next: () => {
         this.sshBusy = false;
         this.feedback =
-          'SSH par clé vérifié : aucun mot de passe demandé. Les droits restent limités au diagnostic et au plan.';
+          'SSH par clé vérifié : aucun mot de passe demandé. Les droits restent limités au diagnostic. Le plan attend son exécuteur qualifié.';
       },
       error: () => {
         this.sshBusy = false;

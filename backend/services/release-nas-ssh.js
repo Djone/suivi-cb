@@ -55,7 +55,7 @@ function createNasSsh({
       host: "192.168.1.113",
       port: 1122,
       account: "GodOfNasAugerie",
-      capabilities: ["probe", "preproduction-plan"],
+      capabilities: ["probe"],
       productionEnabled: false,
     };
   }
