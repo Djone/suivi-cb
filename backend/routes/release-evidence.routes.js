@@ -1,6 +1,10 @@
 const express = require("express");
 const { createReleaseEvidence } = require("../services/release-evidence");
-function createEvidenceRouter(service = createReleaseEvidence()) {
+const { createCandidateFlow } = require("../services/release-candidate-flow");
+function createEvidenceRouter(
+  service = createReleaseEvidence(),
+  flow = createCandidateFlow({ evidence: service }),
+) {
   const router = express.Router();
   const actor = (req) =>
     String(req.auth?.sub || "local-operator").slice(0, 100);
@@ -23,6 +27,35 @@ function createEvidenceRouter(service = createReleaseEvidence()) {
         .json({ message: code });
     }
   };
+  const makeNasKit = require("../services/release-nas-kit").createNasKit({
+    evidence: service,
+  });
+  router.post("/candidate/nas-kit", async (req, res) => {
+    try {
+      const a = await makeNasKit(req.body || {}, actor(req));
+      res.set("Cache-Control", "no-store");
+      res.download(a.file, a.name);
+    } catch {
+      res.status(422).json({ message: "PREPRODUCTION_KIT_BLOCKED" });
+    }
+  });
+  router.get(
+    "/candidate",
+    handle(() => flow.status()),
+  );
+  router.post(
+    "/candidate",
+    handle((req) => flow.prepare(req.body || {}, actor(req))),
+  );
+  router.get("/candidate/archive", async (req, res) => {
+    try {
+      const a = await flow.archive();
+      res.set("Cache-Control", "no-store");
+      res.download(a.file, a.name);
+    } catch {
+      res.status(422).json({ message: "CANDIDATE_NOT_READY" });
+    }
+  });
   router.get(
     "/",
     handle(() => service.read()),

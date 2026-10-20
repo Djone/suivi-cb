@@ -20,8 +20,10 @@ done
 for target in "$CONTROL/approval.json" "$CONTROL/.env.preprod"; do
   [ -f "$target" ] && [ ! -L "$target" ] && [ "$(stat -c %u:%a "$target")" = 0:600 ] || exit 1
 done
+mkdir "$CONTROL/.deployment-lock" || { echo 'Another deployment/preparation is active.' >&2; exit 1; }
+validated=
+trap 'if [ -n "$validated" ]; then rm -f "$validated"; fi; rmdir "$CONTROL/.deployment-lock"' EXIT
 validated=$(mktemp "$CONTROL/.validated.XXXXXX")
-trap 'rm -f "$validated"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' HUP TERM
 docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges \

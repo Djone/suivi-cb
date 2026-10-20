@@ -53,6 +53,28 @@ export interface EvidenceReport {
   publicationEnabled: boolean;
   repository: { commit: string | null; clean: boolean };
 }
+export interface CandidateFlowStatus {
+  branch: string | null;
+  commit: string | null;
+  clean: boolean;
+  pushed: boolean;
+  protected: boolean;
+  ready: boolean;
+  run: {
+    id: string;
+    status: string;
+    conclusion: string | null;
+    url: string;
+  } | null;
+  blockers: string[];
+  task: {
+    id: string;
+    status: string;
+    candidate: string | null;
+    runId: string;
+    error: string | null;
+  } | null;
+}
 @Injectable({ providedIn: 'root' })
 export class ReleaseEvidenceService {
   private readonly url = environment.apiUrl + '/api/release/evidence';
@@ -68,6 +90,26 @@ export class ReleaseEvidenceService {
   }
   update(payload: Record<string, unknown>) {
     return this.http.post<EvidenceReport>(this.url, payload);
+  }
+  candidateStatus() {
+    return this.http.get<CandidateFlowStatus>(this.url + '/candidate');
+  }
+  prepareCandidate(commit: string) {
+    return this.http.post<CandidateFlowStatus>(this.url + '/candidate', {
+      commit,
+    });
+  }
+  candidateArchive() {
+    return this.http.get(this.url + '/candidate/archive', {
+      responseType: 'blob',
+    });
+  }
+  nasKit(identity: string, revision: number) {
+    return this.http.post(
+      this.url + '/candidate/nas-kit',
+      { identity, revision, confirmPreproduction: true },
+      { responseType: 'blob' },
+    );
   }
   report() {
     return this.http.post<EvidenceReport>(this.url + '/report', {});

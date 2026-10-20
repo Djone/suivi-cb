@@ -11,28 +11,37 @@
   </header>
   <p class="error" *ngIf="error" role="alert">{{ error }}</p>
   <p *ngIf="message" role="status">{{ message }}</p>
-  <div class="import">
-    <label
-      >Source<select [(ngModel)]="source" [disabled]="busy">
-        <option value="github">Artefact GitHub extrait</option>
-        <option value="local">Package CI local</option>
-      </select></label
-    ><label *ngIf="source === 'github'"
-      >Exécution GitHub<input
-        [(ngModel)]="runId"
-        inputmode="numeric"
-        placeholder="Identifiant du run"
-        [disabled]="busy" /></label
-    ><button
-      (click)="importBundle()"
-      [disabled]="busy || (source === 'github' && !runId)"
-    >
-      Importer les preuves
-    </button>
-  </div>
-  <p class="hint">
-    Importer ne lance aucun test ou déploiement. Les empreintes sont vérifiées
-    localement ; la provenance GitHub doit être relue et attestée.
+  <details>
+    <summary>Import manuel de secours</summary>
+    <div class="import">
+      <label
+        >Source<select [(ngModel)]="source" [disabled]="busy">
+          <option value="github">Artefact GitHub extrait</option>
+          <option value="local">Package CI local</option>
+        </select></label
+      ><label *ngIf="source === 'github'"
+        >Exécution GitHub<input
+          [(ngModel)]="runId"
+          inputmode="numeric"
+          placeholder="Identifiant du run"
+          [disabled]="busy" /></label
+      ><button
+        (click)="importBundle()"
+        [disabled]="busy || (source === 'github' && !runId)"
+      >
+        Importer les preuves
+      </button>
+    </div>
+    <p class="hint">
+      Importer ne lance aucun test ou déploiement. Les empreintes sont vérifiées
+      localement ; la provenance GitHub doit être relue et attestée.
+    </p>
+  </details>
+  <p
+    *ngIf="report?.dossier?.origin?.authenticatedGithubProvenance"
+    class="readiness"
+  >
+    Origine GitHub et empreinte de l’artefact vérifiées automatiquement.
   </p>
   <ng-container *ngIf="report as r"
     ><p *ngIf="!r.dossier">
@@ -86,7 +95,7 @@
         livraison.
       </p>
       <fieldset [disabled]="busy">
-        <legend>Périmètre de cette candidate</legend>
+        <legend id="release-scope">Périmètre de cette candidate</legend>
         <label
           >Changements retenus<textarea
             [(ngModel)]="summary"
@@ -126,7 +135,7 @@
         </li>
       </ul>
       <fieldset [disabled]="busy">
-        <legend>Validation humaine</legend>
+        <legend id="release-human-validation">Validation humaine</legend>
         <p>
           Une déclaration est distincte d'un résultat automatique. Elle porte
           sur les identités ci-dessus.

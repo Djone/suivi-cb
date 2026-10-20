@@ -292,7 +292,7 @@ function createReleaseEvidence({
       busy = false;
     }
   }
-  async function importBundle(input, actor) {
+  async function importBundle(input, actor, githubProvenance) {
     return mutate(async () => {
       if (!["local", "github"].includes(input.source))
         throw Error("INVALID_IMPORT_SOURCE");
@@ -468,6 +468,15 @@ function createReleaseEvidence({
             sbom.components.length > 0,
         );
       }
+      if (
+        githubProvenance &&
+        (githubProvenance.repository !== "Djone/suivi-cb" ||
+          githubProvenance.runId !== String(manifest.runId) ||
+          githubProvenance.commit !== manifest.commit ||
+          !/^sha256:[a-f0-9]{64}$/.test(githubProvenance.artifactDigest) ||
+          !/^[1-9][0-9]*$/.test(githubProvenance.artifactId))
+      )
+        throw Error("GITHUB_PROVENANCE_MISMATCH");
       const old = load(),
         id = identity(manifest),
         proofFingerprint = digest(inventory);
@@ -513,7 +522,9 @@ function createReleaseEvidence({
           githubUrl: /^[1-9][0-9]*$/.test(String(manifest.runId))
             ? "https://github.com/Djone/suivi-cb/actions/runs/" + manifest.runId
             : null,
-          authenticatedGithubProvenance: false,
+          authenticatedGithubProvenance: Boolean(githubProvenance),
+          artifactId: githubProvenance?.artifactId || null,
+          artifactDigest: githubProvenance?.artifactDigest || null,
         },
         scope: same
           ? old.scope

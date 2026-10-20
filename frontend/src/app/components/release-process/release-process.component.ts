@@ -1,5 +1,6 @@
+import { ReleaseJourneyComponent } from './release-journey.component';
 import { ReleaseEvidenceComponent } from './release-evidence.component';
-import { EvidenceManifest } from '../../services/release-evidence.service';
+import { EvidenceManifest, EvidenceReport } from '../../services/release-evidence.service';
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -29,11 +30,12 @@ interface ReleaseReport {
 @Component({
   selector: 'app-release-process',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogModule, ReleaseDocumentReaderComponent, ReleaseEvidenceComponent],
+  imports: [CommonModule, FormsModule, DialogModule, ReleaseDocumentReaderComponent, ReleaseEvidenceComponent, ReleaseJourneyComponent],
   templateUrl: './release-process.component.html',
   styleUrls: ['./release-process.component.css'],
 })
 export class ReleaseProcessComponent implements OnInit, OnDestroy {
+  public evidenceReport: EvidenceReport | null = null;
   public readonly currentDevVersion = environment.version;
   public readonly stableCandidate = this.currentDevVersion.split('-')[0];
   public readonly reportPath = 'data/release/last-report.json';

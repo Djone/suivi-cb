@@ -24,7 +24,7 @@ describe('Release timeline', () => {
     service.getNextCandidate.and.returnValue(of({ stable: '2.3.0', latestNumber: 1, next: '2.3.0-rc.2', dockerAvailable: true, scope: 'local' }));
     TestBed.configureTestingModule({
       imports: [ReleaseProcessComponent], providers: [provideNoopAnimations(),
-      { provide: ReleaseEvidenceService, useValue: { read: () => of({dossier:null,checks:[],blockers:[],repository:{commit:null,clean:false},readyForPreproduction:false,readyForProduction:false,canClose:false,publicationEnabled:false}) } },
+      { provide: ReleaseEvidenceService, useValue: { candidateStatus: () => of({branch:null,commit:null,clean:false,pushed:false,protected:false,ready:false,run:null,blockers:[],task:null}), read: () => of({dossier:null,checks:[],blockers:[],repository:{commit:null,clean:false},readyForPreproduction:false,readyForProduction:false,canClose:false,publicationEnabled:false}) } },
       { provide: ReleaseProcessService, useValue: service },
       { provide: DocumentationService, useValue: { documents: signal([entry]), load: jasmine.createSpy('load').and.resolveTo(undefined) } },
       ]

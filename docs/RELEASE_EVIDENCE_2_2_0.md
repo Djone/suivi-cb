@@ -13,7 +13,61 @@ plus la release. Dry-run et preparation des fichiers de versions restent des
 commandes explicites distinctes ; toute modification des sources impose une
 nouvelle candidate et une nouvelle qualification.
 
-## Importer les preuves reelles
+## Parcours principal pour le responsable de release
+
+La page presente sept etapes : Git, candidate, transfert NAS, recette, approbation,
+production et cloture. Chaque commande indique ou la lancer et son resultat attendu.
+Le bouton de creation reutilise la candidate deja construite par la CI du commit
+pousse : aucune deuxieme construction. Il exige un depot propre, la branche
+protegee master ou 2.2.0-dev, le meme commit local/distant et les trois jobs reels
+Quality, Docker and browser qualification et Required CI tous reussis.
+
+Le backend utilise en memoire la connexion GitHub deja configuree dans Git
+Credential Manager. Aucun jeton a saisir dans la page ou a sauvegarder dans le
+dossier. Les appels GitHub sont en lecture seule : ni push, ni workflow declenche,
+ni publication. Le telechargement suit seulement une redirection HTTPS de stockage
+autorisee, sans transmettre le credential GitHub a ce stockage. Le ZIP est verifie
+avec le digest de l’API puis extrait avec taille/noms limites, sans liens, doublons
+ou chemins traversants. Cette voie marque authenticatedGithubProvenance=true.
+L’import manuel de secours ci-dessous reste explicitement non authentifie.
+
+La preparation est suivie dans la page et persiste dans .cache/ci/candidate-flow.json.
+Un backend redemarre signale une operation interrompue ; un nouvel essai reverifie
+Git, la CI et les empreintes et ne remplace pas un staging conflictuel.
+
+## Kit NAS de preproduction
+
+Apres perimetre fige et revue humaine des sources, le bouton de kit demande une
+confirmation explicite et fournit nas-kit-CANDIDATE.tar.gz. Il contient le code
+revu du controleur, les empreintes, la configuration preprod sans secret et une
+autorisation locale de deploiement preproduction. Cette autorisation ne remplace
+pas les approbations des environnements GitHub ni la recette apres deploiement.
+Le kit et le ZIP sont a extraire cote NAS dans le meme dossier de release, en
+respectant les deux sous-dossiers nas-kit et candidate-RUN affiches dans la page.
+
+prepare-preproduction.sh verifie les empreintes, prepare un controle prive root,
+archive l’ancien incoming et valide le plan sans changer de service.
+apply-preproduction.sh est une action explicite dans la session SSH NAS : active
+temporairement le seul controleur preproduction, puis retire son drapeau.
+Le controleur et la preparation partagent un verrou. La production et Keycloak
+ne sont pas arretes. Le port de cette pile est 127.0.0.1:4205 ; verifier le proxy
+et le numero de version avant recette. L’ancienne recette RC8 utilisait 4201.
+
+Le kit inclut test-rollback.sh : ancienne image effectivement installee sur le
+NAS, migration vers la candidate, ecriture dans accounts, retour a l’ancienne
+image puis reprise de la candidate. Un volume et un reseau internes etiquetes
+sont crees et nettoyes ; aucun bind de donnees NAS ni port ni socket Docker.
+Seule la lecture de l’identite de l’image de production est effectuee. Ce script
+doit encore etre valide sur NAS ; un resultat CI ne remplace pas cet exercice.
+
+check-backup.sh controle en lecture seule le dernier run (sans revenir a un ancien
+succes si le dernier a echoue), ses empreintes et la copie published du meme run.
+La verification USB reste manuelle dans Hyper Backup. Les commandes de production
+sont decrites pour preparer la MEP supervisee ; aucun lancement de production
+n’est active. La premiere bascule depuis les conteneurs individuels reste a
+qualifier avec le mainteneur.
+
+## Import manuel des preuves reelles (secours)
 
 1. Telecharger l'artefact candidate-RUN depuis une execution GitHub reussie et
    controler son origine et son empreinte d'artefact dans GitHub.
@@ -35,10 +89,11 @@ bruts ni les valeurs de secrets detectes. Les champs inconnus du manifeste
 ne sont pas conserves. Des metadonnees sans images.tar sont consultables,
 mais l'integrite complete et le passage en preproduction restent bloques.
 
-Un checksum local n'authentifie pas GitHub. L'origine est explicitement marquee
-local-checksummed-import et authenticatedGithubProvenance=false. La revue de
-provenance est une attestation humaine, jamais une verification automatique.
-La recuperation authentifiee automatique reste au lot 2. Aucun identifiant
+Pour cet import manuel de secours, un checksum local n'authentifie pas GitHub.
+L'origine conserve authenticatedGithubProvenance=false : sa provenance reste
+une attestation humaine. La voie automatique, elle, authentifie les appels GitHub
+et verifie le digest de l'artefact avant l'extraction et l'import.
+La voie automatique de la page verifie aussi le digest de l’artefact fourni par GitHub. Aucun identifiant
 GitHub ou NAS n'est demande ni stocke par ce dossier.
 
 ## Validations et invalidation
@@ -108,3 +163,8 @@ Validation locale du 20/10 : 14 tests dedies backend, 108 tests frontend,
 lint, TypeScript et build de production reussis. Les tests incluent une panne
 de remplacement atomique et sa reprise, ainsi que deux imports concurrents.
 Le cycle GitHub du commit de cette implementation reste la preuve de candidate.
+
+Validation du parcours guide : 122 tests backend et 114 tests frontend,
+controle de syntaxe de tous les scripts NAS, lecture reelle de l’API GitHub et
+extraction d’un vrai artefact verifies localement. Les scripts NAS sont fournis
+pour execution explicite sur le NAS ; ils ne sont pas installes depuis le PC.

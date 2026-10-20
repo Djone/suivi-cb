@@ -75,6 +75,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     description: [
       '[x] Prérequis : tests de sécurisation 2.2.0 clôturés, preuves RC7/RC8 et droits GitHub/NAS documentés',
       '[x] Faire évoluer /release-process pour piloter les lots 1, 2 et 4 : périmètre, version affichée, notes de release, dépôt propre et commit traçable',
+      '[x] Guider la release en sept étapes : Git validé, récupération automatique de la candidate CI, kit et commandes NAS, recette et approbations ; production toujours verrouillée',
       '[x] Importer les rapports réels de CI, audits, scans, SBOM et empreintes ; distinguer preuve automatique, validation humaine et simple déclaration',
       '[x] Associer chaque preuve au commit, à la candidate, à ses digests et à l’environnement ; invalider les validations concernées après modification',
       '[x] Prévoir les preuves et attestations pour authentification, métier, migrations, rollback, sauvegarde/restauration et droits ; importer les résultats du pipeline',
@@ -86,7 +87,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     status: 'in-progress',
     targetVersion: '2.2.0',
     priority: 'high',
-    notes: 'Dossier persistant implémenté le 20/10 : import local vérifié, identité des preuves, attestations distinctes, invalidation, réserves et rapports archivés. Provenance GitHub encore relue manuellement. Publication et clôture bloquées ; aucun déploiement. Voir docs/RELEASE_EVIDENCE_2_2_0.md.',
+    notes: 'Dossier persistant implémenté le 20/10 : import local vérifié, identité des preuves, attestations distinctes, invalidation, réserves et rapports archivés. Voie automatique GitHub authentifiée ; provenance des imports de secours relue manuellement. Publication et clôture bloquées ; aucun déploiement. Voir docs/RELEASE_EVIDENCE_2_2_0.md.',
   },
   {
     title: '2.2.0 — 4. Approbation, livraison et contrôles de production',

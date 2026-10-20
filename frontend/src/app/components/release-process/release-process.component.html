@@ -2,12 +2,13 @@
   <header class="page-header">
     <div>
       <p class="eyebrow">Clôture de version</p>
-      <h1>Clôturer la release {{ stableVersion }}</h1>
+      <h1>Préparer et clôturer la release</h1>
       <p class="muted">Suivez les contrôles dans l’ordre, puis promouvez les images approuvées.</p>
     </div>
-    <button class="button secondary" (click)="resetChecklist()" [disabled]="isRunning">Réinitialiser la checklist</button>
+    <button class="button secondary" (click)="resetChecklist()" [disabled]="isRunning">Réinitialiser les repères manuels</button>
   </header>
-  <app-release-evidence (candidateSelected)="selectEvidenceCandidate($event)"></app-release-evidence>
+  <app-release-journey [report]="evidenceReport" (candidatePrepared)="evidencePanel.refresh()" (validationRequested)="evidencePanel.selectValidation($event)"></app-release-journey>
+  <app-release-evidence #evidencePanel (reportChanged)="evidenceReport = $event" (candidateSelected)="selectEvidenceCandidate($event)"></app-release-evidence>
   <details class="legacy-release"><summary>Repères manuels et ancien orchestrateur (hors dossier de preuves)</summary>
   <p>Les cases ci-dessous restent des repères de session ; elles ne valident pas la release.</p>
   <section class="panel progress-panel" aria-label="Progression et paramètres">

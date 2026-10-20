@@ -15,7 +15,8 @@ import {
   styleUrls: ['./release-evidence.component.css'],
 })
 export class ReleaseEvidenceComponent implements OnInit {
-  @Output() candidateSelected = new EventEmitter<EvidenceManifest>();
+  @Output() candidateSelected = new EventEmitter<EvidenceManifest>(true);
+  @Output() reportChanged = new EventEmitter<EvidenceReport>(true);
   report: EvidenceReport | null = null;
   busy = false;
   error = '';
@@ -57,6 +58,7 @@ export class ReleaseEvidenceComponent implements OnInit {
     operation.subscribe({
       next: (r) => {
         this.report = r;
+        this.reportChanged.emit(r);
         this.busy = false;
         this.message = message;
         if (r.dossier) {
@@ -74,6 +76,7 @@ export class ReleaseEvidenceComponent implements OnInit {
       },
     });
   }
+  selectValidation(id:string){if(!this.manualIds.includes(id))return;this.check=id;document.getElementById(id === 'source-review' ? 'release-scope' : 'release-human-validation')?.scrollIntoView({behavior:'smooth',block:'start'});}
   refresh() {
     this.request(this.service.read());
   }
