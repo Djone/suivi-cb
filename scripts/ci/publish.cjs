@@ -26,9 +26,13 @@ async function environmentGuard(token) {
   const env = await r.json();
   if (
     !env.protection_rules?.some(
-      (rule) => rule.type === "required_reviewers" && rule.reviewers?.length,
+      (rule) =>
+        rule.type === "required_reviewers" &&
+        rule.reviewers?.length &&
+        rule.prevent_self_review === true,
     ) ||
-    !env.deployment_branch_policy?.protected_branches
+    !env.deployment_branch_policy?.protected_branches ||
+    env.can_admins_bypass !== false
   )
     throw Error("ENVIRONMENT_APPROVAL_AND_PROTECTED_BRANCHES_REQUIRED");
 }

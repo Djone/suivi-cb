@@ -279,13 +279,7 @@ async function qualify() {
       throw Error("MISSING_SCAN_PROOF");
   }
   const quality = JSON.parse(fs.readFileSync(path.join(DIR, "quality.json")));
-  if (
-    quality.status !== "PASS" ||
-    quality.sourceDirty !== false ||
-    quality.commit !== m.commit ||
-    String(quality.runId) !== String(m.runId)
-  )
-    throw Error("QUALITY_SOURCE_MISMATCH");
+  require("./contracts.cjs").assertQuality(m, quality);
   m.status = "QUALIFIED";
   require("./contracts.cjs").validate(m, { qualified: true });
   write(path.join(DIR, "manifest.json"), m);

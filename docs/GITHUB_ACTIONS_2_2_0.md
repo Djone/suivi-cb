@@ -106,9 +106,8 @@ répertoire de package neuf et ne réemploient pas un tag d'image existant.
 Le dépôt applicatif est public : ne pas y attacher d'exécuteur auto-hébergé.
 Prévoir un dépôt privé de contrôle, avec revue de sa branche `main`, environnements
 `preproduction` / `production`, approbations humaines et restrictions de branche.
-Le modèle `deploy-controller/` est volontairement verrouillé : il ne déploie pas.
-Le 20/10, le responsable confirme que seul le NAS est disponible et que le
-dépôt privé n'existe pas encore. Privilégier une tâche NAS de récupération
+Le contrôleur `deploy-controller/nas-preproduction.sh` est préparé, non installé : mode plan par défaut, application sous verrou local explicite. Voir son README.
+Le 20/10, seul le NAS est disponible. Le dépôt privé Djone/suivi-cb-deploy a été créé, avec Actions désactivé. Privilégier une tâche NAS de récupération
 de demandes approuvées, déclenchée ponctuellement, sans runner GitHub permanent.
 Le moteur local, sa vérification de provenance et son installation restent à
 implémenter et à tester ; aucun accès SSH ne doit être exposé pour ce chantier.
@@ -133,3 +132,11 @@ puis recette NAS finale. Vérifier alors `linux/amd64`, les digests de registre
 et les identités de configuration réellement importées sur Synology.
 Conserver le transfert TAR/SSH existant avec `SHA256SUMS` comme secours.
 N'exiger les noms des checks dans les rulesets qu'après une vraie exécution réussie.
+
+## Cycle GitHub attesté et blocages conservés
+
+Le cycle PR 39407567092 a réussi : qualité, qualification Docker/navigateur et Required CI. Preuve : docs/audit/2026-10-20/github-ci-results.json. Le commit de fusion testé est distingué du commit de la branche. Ce résultat historique ne valide pas automatiquement les modifications suivantes.
+
+Required CI est obligatoire, avec branche à jour, sur master et 2.2.0-dev. Les trois environnements candidate-registry, preproduction et production exigent une revue, interdisent auto-approbation et contournement administrateur et limitent les branches. Le seul relecteur configuré est Djone : il ne peut pas approuver son propre déclenchement. Sur demande utilisateur, les publications restent bloquées ; CI_ENABLE_REGISTRY_PUBLISH reste absent. Aucun déploiement ni publication GHCR n’a été déclenché.
+
+Le contrôleur local prépare la voie TAR vérifiée et une sauvegarde SQLite cohérente des seules données isolées. La provenance GitHub reste contrôlée manuellement ; récupération automatique des demandes approuvées, installation NAS et promotion production restent à terminer. La recette NAS est réservée à la fin.

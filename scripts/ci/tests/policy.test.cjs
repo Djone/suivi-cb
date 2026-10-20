@@ -216,3 +216,66 @@ test("an expired or missing exception deadline blocks promotion even after quali
     /EXCEPTION/,
   );
 });
+test("dirty, failed or foreign quality reports cannot qualify a candidate", () => {
+  const { assertQuality } = require("../contracts.cjs");
+  const m = fixture(),
+    q = {
+      status: "PASS",
+      sourceDirty: false,
+      commit: m.commit,
+      runId: m.runId,
+    };
+  assert.doesNotThrow(() => assertQuality(m, q));
+  for (const change of [
+    { status: "FAIL" },
+    { sourceDirty: true },
+    { sourceDirty: undefined },
+    { commit: "f".repeat(40) },
+    { runId: "999" },
+  ])
+    assert.throws(() => assertQuality(m, { ...q, ...change }), /QUALITY/);
+});
+test("publication refuses missing reviewers, self-approval, administrator bypass and untrusted triggers", async () => {
+  const { environmentGuard } = require("../publish.cjs");
+  const keys = ["GITHUB_REF", "GITHUB_EVENT_NAME", "GITHUB_REPOSITORY"];
+  const old = Object.fromEntries(keys.map((k) => [k, process.env[k]])),
+    fetchBefore = global.fetch;
+  try {
+    Object.assign(process.env, {
+      GITHUB_REF: "refs/heads/2.2.0-dev",
+      GITHUB_EVENT_NAME: "workflow_dispatch",
+      GITHUB_REPOSITORY: "Djone/suivi-cb",
+    });
+    let env = {
+      protection_rules: [
+        {
+          type: "required_reviewers",
+          reviewers: [{ id: 1 }],
+          prevent_self_review: true,
+        },
+      ],
+      deployment_branch_policy: { protected_branches: true },
+      can_admins_bypass: false,
+    };
+    global.fetch = async () => ({ ok: true, json: async () => env });
+    await assert.doesNotReject(() => environmentGuard("synthetic-token"));
+    env.can_admins_bypass = true;
+    await assert.rejects(() => environmentGuard("synthetic-token"));
+    env.can_admins_bypass = false;
+    env.protection_rules[0].prevent_self_review = false;
+    await assert.rejects(() => environmentGuard("synthetic-token"));
+    env.protection_rules[0].prevent_self_review = true;
+    env.protection_rules[0].reviewers = [];
+    await assert.rejects(() => environmentGuard("synthetic-token"));
+    process.env.GITHUB_EVENT_NAME = "pull_request";
+    await assert.rejects(
+      () => environmentGuard("synthetic-token"),
+      /UNTRUSTED/,
+    );
+  } finally {
+    global.fetch = fetchBefore;
+    for (const key of keys)
+      if (old[key] === undefined) delete process.env[key];
+      else process.env[key] = old[key];
+  }
+});

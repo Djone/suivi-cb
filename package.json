@@ -42,7 +42,7 @@
     "test:e2e": "node scripts/test-e2e.cjs --build",
     "test:e2e:images": "node scripts/test-e2e.cjs",
     "test:e2e:safety": "node --test tests/e2e/safety.test.cjs",
-    "lint": "node frontend/node_modules/eslint/bin/eslint.js --config eslint.config.cjs backend scripts tests frontend/src frontend/tools eslint.config.cjs",
+    "lint": "node frontend/node_modules/eslint/bin/eslint.js --config eslint.config.cjs backend scripts tests deploy-controller frontend/src frontend/tools eslint.config.cjs",
     "typecheck": "node frontend/node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.app.json && node frontend/node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.spec.json",
     "ci:quality": "node scripts/ci/quality.cjs",
     "ci:audit": "node scripts/ci/dependencies.cjs",

@@ -48,6 +48,15 @@ function validate(
   }
   return m;
 }
+function assertQuality(m, quality) {
+  if (
+    quality?.status !== "PASS" ||
+    quality.sourceDirty !== false ||
+    quality.commit !== m.commit ||
+    String(quality.runId) !== String(m.runId)
+  )
+    throw Error("QUALITY_SOURCE_MISMATCH");
+}
 function deploymentPlan(m, target) {
   validate(m, { qualified: true, registered: true });
   if (!["preproduction", "production"].includes(target))
@@ -112,4 +121,4 @@ function checksumInventory(dir, lines) {
     throw Error("INCOMPLETE_PACKAGE");
   return parsed;
 }
-module.exports = { validate, deploymentPlan, checksumInventory };
+module.exports = { validate, deploymentPlan, checksumInventory, assertQuality };
