@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "status": "CI_PASS_PUBLICATION_BLOCKED",
+  "runId": "39407567092",
+  "url": "https://github.com/Djone/suivi-cb/actions/runs/39407567092",
+  "pullRequest": 9,
+  "sourceHead": "4b702635427759c8547955add7c9c030fffe1722",
+  "testedMergeCommit": "e5b255de2527b229ed1fc3338d0b2809d1fd3dd2",
+  "candidate": "2.2.0-rc.39407567092",
+  "qualificationStatus": "QUALIFIED",
+  "quality": {
+    "schema": 1,
+    "sourceDirty": false,
+    "commit": "e5b255de2527b229ed1fc3338d0b2809d1fd3dd2",
+    "runId": "39407567092",
+    "status": "PASS",
+    "checks": [
+      {
+        "name": "lint",
+        "status": "PASS"
+      },
+      {
+        "name": "typecheck",
+        "status": "PASS"
+      },
+      {
+        "name": "test:ci:policy",
+        "status": "PASS"
+      },
+      {
+        "name": "test:candidate",
+        "status": "PASS"
+      },
+      {
+        "name": "test:e2e:safety",
+        "status": "PASS"
+      },
+      {
+        "name": "backend-unit-coverage",
+        "status": "PASS"
+      },
+      {
+        "name": "backend-test:auth",
+        "status": "PASS"
+      },
+      {
+        "name": "backend-test:security",
+        "status": "PASS"
+      },
+      {
+        "name": "frontend-unit",
+        "status": "PASS"
+      },
+      {
+        "name": "dependency-gates",
+        "status": "PASS"
+      }
+    ]
+  },
+  "images": {
+    "backend": {
+      "localTag": "suivi-cb-ci-backend:2.2.0-rc.39407567092",
+      "localId": "sha256:f2d8254d92d5d4cc74fffbc13f333312377ba839ae38f221bce04d8614a28e53",
+      "user": "1028:100",
+      "architecture": "amd64",
+      "configDigest": "sha256:f2d8254d92d5d4cc74fffbc13f333312377ba839ae38f221bce04d8614a28e53"
+    },
+    "frontend": {
+      "localTag": "suivi-cb-ci-frontend:2.2.0-rc.39407567092",
+      "localId": "sha256:8c4c2f4be276b3c6d2e5f295d89c15df585789a999a9a1b38a01a7143a46e3c2",
+      "user": "nginx",
+      "architecture": "amd64",
+      "configDigest": "sha256:8c4c2f4be276b3c6d2e5f295d89c15df585789a999a9a1b38a01a7143a46e3c2"
+    }
+  },
+  "artifacts": [
+    {
+      "name": "candidate-39407567092",
+      "id": 12258305108,
+      "sha256": "26d1053e16444f35a7ede195487c85ca93ebe685cc8e7c0d45d310be087bc04e"
+    },
+    {
+      "name": "quality-39407567092",
+      "id": 12256814062,
+      "sha256": "d45bed4c16aefdb493d84f87a6afc3881d2946224a5a4dabbbe5be0c057e785f"
+    }
+  ],
+  "controls": {
+    "requiredCheck": "Required CI",
+    "branches": ["master", "2.2.0-dev"],
+    "environments": ["candidate-registry", "preproduction", "production"],
+    "preventSelfReview": true,
+    "adminBypass": false,
+    "privateControlRepository": "Djone/suivi-cb-deploy",
+    "controlRepositoryActionsEnabled": false
+  },
+  "publication": {
+    "enabled": false,
+    "userDecision": "Leave publications blocked",
+    "registryPublished": false
+  },
+  "nasAcceptance": false,
+  "productionApproved": false
+}

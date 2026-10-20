@@ -8,7 +8,8 @@ const Joi = require('joi');
  * @param {string} property - La propriété à valider (par exemple, body, query, params)
  */
 const validate = (schema, property = 'body') => {
-    return (req, res, next) => {        const { error, value } = schema.validate(req[property], { abortEarly: false });
+    return (req, res, next) => {
+        const { error, value } = schema.validate(req[property], { abortEarly: false });
 
         if (error) {
             // Construire un message d'erreur clair

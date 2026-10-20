@@ -1,0 +1,33 @@
+﻿# TEMPLATE: copy to a separate PRIVATE deployment-control repository only.
+# Deliberately plan-only until the NAS executor and environment protections are installed and tested.
+name: Review deployment plan
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        options: [preproduction, production]
+        required: true
+      candidate_run:
+        description: Successful manual publication run in Djone/suivi-cb
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main' && github.event.repository.private
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.target }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+      - name: Deployment executor remains locked pending NAS installation
+        run: |
+          echo 'Prepare controlled NAS access and install the reviewed executor before enabling deployment.'
+          exit 1

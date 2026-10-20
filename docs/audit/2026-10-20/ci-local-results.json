@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-10-20T10:06:07.046Z",
+  "status": "LOCAL_EXERCISES_PASS_NOT_QUALIFIED",
+  "releaseApproved": false,
+  "testedSourceCommit": "dcb688de818ebd637fdd8322df6fa032a7b418dd",
+  "manifest": {
+    "schema": 2,
+    "candidate": "2.2.0-rc.10",
+    "commit": "dcb688de818ebd637fdd8322df6fa032a7b418dd",
+    "platform": "linux/amd64",
+    "status": "BUILT",
+    "createdAt": "2026-10-20T09:59:30.880Z",
+    "runId": "local",
+    "images": {
+      "backend": {
+        "localTag": "suivi-cb-ci-backend:2.2.0-rc.10",
+        "localId": "sha256:593f03e533ec6f6d339692a14aa2cf0018b6e806e4378090495e38a484943c81",
+        "user": "1028:100",
+        "architecture": "amd64",
+        "configDigest": "sha256:b65fea1db503cda96cc3ca5f005d37aa62c9efb51cb4ce45dd60e8d0467e3ccf"
+      },
+      "frontend": {
+        "localTag": "suivi-cb-ci-frontend:2.2.0-rc.10",
+        "localId": "sha256:f72dda162cab6a074a6d48ff342d0243f4b572cab04ce3bad48476974773bbff",
+        "user": "nginx",
+        "architecture": "amd64",
+        "configDigest": "sha256:b48568d7785e212f0e940e0e38c07bae4b6c1d7b001367934667c206f89b02f6"
+      }
+    },
+    "archiveSha256": "514aada4939983ea67a2ea7ab07fe7ed8b9061f7a05153f005d4544418e05fc1"
+  },
+  "e2e": {
+    "schemaVersion": 1,
+    "run": "suivi-e2e-1792490421241-f3163fe9",
+    "status": "PASS",
+    "startedAt": "2026-10-20T10:00:21.243Z",
+    "checks": [
+      "persistence after backend restart"
+    ],
+    "limitations": [
+      "Synthetic data only",
+      "Keycloak HTTP on loopback; backend NODE_ENV=test retains JWT authorization; NAS HTTPS/proxy/OTP remain human acceptance",
+      "No browser trace, screenshot, video, tokens or passwords retained"
+    ],
+    "images": [
+      {
+        "reference": "suivi-cb-ci-backend:2.2.0-rc.10",
+        "id": "sha256:593f03e533ec6f6d339692a14aa2cf0018b6e806e4378090495e38a484943c81",
+        "repoDigests": [
+          "suivi-cb-ci-backend@sha256:593f03e533ec6f6d339692a14aa2cf0018b6e806e4378090495e38a484943c81"
+        ],
+        "user": "1028:100",
+        "sourceLabel": "dcb688de818ebd637fdd8322df6fa032a7b418dd"
+      },
+      {
+        "reference": "suivi-cb-ci-frontend:2.2.0-rc.10",
+        "id": "sha256:f72dda162cab6a074a6d48ff342d0243f4b572cab04ce3bad48476974773bbff",
+        "repoDigests": [
+          "suivi-cb-ci-frontend@sha256:f72dda162cab6a074a6d48ff342d0243f4b572cab04ce3bad48476974773bbff"
+        ],
+        "user": "nginx",
+        "sourceLabel": "dcb688de818ebd637fdd8322df6fa032a7b418dd"
+      },
+      {
+        "reference": "quay.io/keycloak/keycloak:26.7.4",
+        "id": "sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c",
+        "repoDigests": [
+          "quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c"
+        ],
+        "user": "1000",
+        "sourceLabel": "df15afa5a3a8a2b10021f879ffa93b30fb36c73a"
+      }
+    ],
+    "testFiles": {
+      "scripts/test-e2e.cjs": "545c666a677d5b04432d4adeeae8daff480d891cd87c432b73484bdffdc65b82",
+      "tests/e2e/journeys.spec.cjs": "c63db57ecbc030ea399a1c731a1809ddd6d66509b7fdad5887ab5cee3bb75ff3",
+      "tests/e2e/playwright.config.cjs": "82010d9f69f2f3fb9a71a7fa843ef53b00e49f87ab522bd57f6fcb2746463bdf",
+      "tests/e2e/reporter.cjs": "b5acd66f62f3782818d76edacfeaf440a75e9293b2714ef7436b22a8a3234714",
+      "tests/e2e/safety.cjs": "ed9fab3245598067231f88701505318cfcc4ab81a5ad9a571ab28c3b4c8a17f4",
+      "tests/e2e/safety.test.cjs": "a43444334c2a725be96be4a7cff470d8b651b89f71facd13a759fceacbd41871"
+    },
+    "source": {
+      "commit": "dcb688de818ebd637fdd8322df6fa032a7b418dd",
+      "dirty": false,
+      "diffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "cleanup": {
+      "status": "PASS",
+      "failures": []
+    },
+    "finishedAt": "2026-10-20T10:01:30.853Z"
+  },
+  "rollback": {
+    "status": "PASS",
+    "backend": "sha256:593f03e533ec6f6d339692a14aa2cf0018b6e806e4378090495e38a484943c81",
+    "frontend": "sha256:f72dda162cab6a074a6d48ff342d0243f4b572cab04ce3bad48476974773bbff",
+    "previous": "sha256:c13c3285d000d044f3e2c1ef05069f1dbd5357f61693b517045dec3fcdd6ce5e",
+    "checks": [
+      "previous database upgrade",
+      "non-root startup with all capabilities dropped",
+      "anonymous API 401",
+      "frontend default command HTTP 200",
+      "frontend API proxy 401",
+      "rollback preserves post-upgrade write",
+      "upgrade after rollback"
+    ],
+    "limitations": [
+      "synthetic data only",
+      "no real Keycloak login",
+      "not a release approval"
+    ],
+    "reference": {
+      "name": "suivi-legacy-1792490490868",
+      "sourceCommit": "2ca4713d9142bde459b45dae9580059f53f70a3a",
+      "kind": "legacy source compatibility fixture; candidate runtime/dependencies, not the exact NAS image"
+    }
+  },
+  "keycloak": {
+    "status": "PASS",
+    "image": "sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c",
+    "checks": [
+      "authorization code with PKCE S256",
+      "OTP enrollment",
+      "real access-token audiences account + suivi-cb-api",
+      "refresh",
+      "logout invalidates refresh token",
+      "OTP required on next login",
+      "invalid OTP refused",
+      "valid OTP accepted"
+    ],
+    "limitations": [
+      "synthetic realm and user",
+      "NAS realm configuration and Angular browser journey still require preproduction acceptance"
+    ]
+  },
+  "scans": {
+    "source": {
+      "status": "PASS",
+      "scannerVersion": "0.75.0",
+      "vulnerabilities": [],
+      "secrets": [],
+      "commit": "dcb688de818ebd637fdd8322df6fa032a7b418dd",
+      "configDigest": null
+    },
+    "backend": {
+      "status": "PASS",
+      "scannerVersion": "0.75.0",
+      "vulnerabilities": [],
+      "secrets": [],
+      "commit": "dcb688de818ebd637fdd8322df6fa032a7b418dd",
+      "configDigest": "sha256:b65fea1db503cda96cc3ca5f005d37aa62c9efb51cb4ce45dd60e8d0467e3ccf"
+    },
+    "frontend": {
+      "status": "PASS",
+      "scannerVersion": "0.75.0",
+      "vulnerabilities": [],
+      "secrets": [],
+      "commit": "dcb688de818ebd637fdd8322df6fa032a7b418dd",
+      "configDigest": "sha256:b48568d7785e212f0e940e0e38c07bae4b6c1d7b001367934667c206f89b02f6"
+    }
+  },
+  "limitations": [
+    "Historical local candidate; subsequent commits require new qualification",
+    "Backend coverage remains below the existing 70 percent threshold",
+    "Legacy rollback fixture uses old sources with current runtime; exact NAS image validation remains separate",
+    "No GHCR publication or NAS deployment"
+  ]
+}

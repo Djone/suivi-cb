@@ -1,0 +1,116 @@
+{
+  "qualification": {
+    "schemaVersion": 1,
+    "run": "suivi-e2e-1792487583942-5018afb9",
+    "status": "PASS",
+    "startedAt": "2026-10-20T09:13:03.943Z",
+    "checks": [
+      "persistence after backend restart"
+    ],
+    "limitations": [
+      "Synthetic data only",
+      "Keycloak HTTP on loopback; backend NODE_ENV=test retains JWT authorization; NAS HTTPS/proxy/OTP remain human acceptance",
+      "No browser trace, screenshot, video, tokens or passwords retained"
+    ],
+    "images": [
+      {
+        "reference": "suivi-e2e-1792487171946-e22b46e0-backend",
+        "id": "sha256:b3ad40bab13c02004ce49faaa7b5d50c20bbcc94b1c51afa22b2ffcda658ac39",
+        "repoDigests": [
+          "suivi-e2e-1792487171946-e22b46e0-backend@sha256:b3ad40bab13c02004ce49faaa7b5d50c20bbcc94b1c51afa22b2ffcda658ac39"
+        ],
+        "user": "1028:100",
+        "sourceLabel": null
+      },
+      {
+        "reference": "suivi-e2e-1792487171946-e22b46e0-frontend",
+        "id": "sha256:b474119837d24b7eea7fac2cbaec39c3861fe3f89a63f1787ce8bdb383b3d530",
+        "repoDigests": [
+          "suivi-e2e-1792487171946-e22b46e0-frontend@sha256:b474119837d24b7eea7fac2cbaec39c3861fe3f89a63f1787ce8bdb383b3d530"
+        ],
+        "user": "nginx",
+        "sourceLabel": null
+      },
+      {
+        "reference": "quay.io/keycloak/keycloak:26.7.4",
+        "id": "sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c",
+        "repoDigests": [
+          "quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c"
+        ],
+        "user": "1000",
+        "sourceLabel": "df15afa5a3a8a2b10021f879ffa93b30fb36c73a"
+      }
+    ],
+    "testFiles": {
+      "scripts/test-e2e.cjs": "3d9ae3adad3ca1b95759761836df237361dc8eed84197c86ad4b937f2e0820f5",
+      "tests/e2e/journeys.spec.cjs": "c63db57ecbc030ea399a1c731a1809ddd6d66509b7fdad5887ab5cee3bb75ff3",
+      "tests/e2e/playwright.config.cjs": "82010d9f69f2f3fb9a71a7fa843ef53b00e49f87ab522bd57f6fcb2746463bdf",
+      "tests/e2e/reporter.cjs": "b5acd66f62f3782818d76edacfeaf440a75e9293b2714ef7436b22a8a3234714",
+      "tests/e2e/safety.cjs": "ed9fab3245598067231f88701505318cfcc4ab81a5ad9a571ab28c3b4c8a17f4",
+      "tests/e2e/safety.test.cjs": "a43444334c2a725be96be4a7cff470d8b651b89f71facd13a759fceacbd41871"
+    },
+    "source": {
+      "commit": "f851001360f9dfd83c49c830e6826e695c10885e",
+      "dirty": true,
+      "diffSha256": "1317679fad08ab141b9d6225444e15cff59513b6a9b73bf687d2c26bf1ea6425"
+    },
+    "cleanup": {
+      "status": "PASS",
+      "failures": []
+    },
+    "finishedAt": "2026-10-20T09:14:08.920Z"
+  },
+  "journeys": {
+    "status": "passed",
+    "tests": [
+      {
+        "name": " > journeys.spec.cjs > API: anonymous, invalid and roleless tokens expose no banking data",
+        "status": "passed",
+        "durationMs": 465
+      },
+      {
+        "name": " > journeys.spec.cjs > API: create, update, transfer, recurring occurrence, delete and restart persistence",
+        "status": "passed",
+        "durationMs": 255
+      },
+      {
+        "name": " > journeys.spec.cjs > browser: login, navigation, transaction form and logout",
+        "status": "passed",
+        "durationMs": 3628
+      },
+      {
+        "name": " > journeys.spec.cjs > browser: missing role blocks business requests and logout remains available",
+        "status": "passed",
+        "durationMs": 798
+      },
+      {
+        "name": " > journeys.spec.cjs > browser: API 403 after rights removal blocks data and later requests",
+        "status": "passed",
+        "durationMs": 1162
+      },
+      {
+        "name": " > journeys.spec.cjs > browser: refresh succeeds and revoked session returns to login",
+        "status": "passed",
+        "durationMs": 15128
+      },
+      {
+        "name": " > journeys.spec.cjs > API: expired token rejected, refresh obtains a usable token",
+        "status": "passed",
+        "durationMs": 17071
+      },
+      {
+        "name": " > journeys.spec.cjs > browser: a banking API 403 redirects and suppresses subsequent banking loads",
+        "status": "passed",
+        "durationMs": 2453
+      }
+    ]
+  },
+  "safetyUnitTests": {
+    "passed": 3,
+    "failed": 0
+  },
+  "rootToolingAudit": {
+    "total": 0,
+    "note": "Root development tools only; not a new backend/frontend dependency qualification"
+  }
+}
