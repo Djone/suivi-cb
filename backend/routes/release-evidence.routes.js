@@ -27,6 +27,61 @@ function createEvidenceRouter(
         .json({ message: code });
     }
   };
+  const ssh = require("../services/release-nas-ssh").createNasSsh({
+    evidence: service,
+  });
+  router.get(
+    "/nas/ssh",
+    handle(() => ssh.status()),
+  );
+  router.post(
+    "/nas/ssh/key",
+    handle((req) => ssh.create(req.body || {})),
+  );
+  router.post(
+    "/nas/ssh/probe",
+    handle(() => ssh.probe()),
+  );
+  router.post(
+    "/nas/ssh/plan",
+    handle((req) => ssh.plan(req.body || {})),
+  );
+  router.get("/nas/ssh/installer", (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.type("text/plain");
+      res.attachment("install-release-ssh.sh");
+      res.send(ssh.installer());
+    } catch {
+      res.status(422).json({ message: "SSH_KEY_REQUIRED" });
+    }
+  });
+  router.get(
+    "/nas/dsm",
+    handle(() => ({ lastRequest: ssh.latest() })),
+  );
+  router.post(
+    "/nas/dsm/requests",
+    handle((req) => ssh.queue(req.body || {})),
+  );
+  router.get(
+    "/nas/dsm/receipts/:nonce",
+    handle(async (req) => {
+      const r = ssh.receipt(req.params.nonce);
+      if (r.receipt) await service.recordExecution(r.receipt);
+      return r;
+    }),
+  );
+  const makeDsmKit = require("../services/release-dsm-kit").createDsmKit();
+  router.get("/nas/dsm-kit", (req, res) => {
+    try {
+      const a = makeDsmKit();
+      res.set("Cache-Control", "no-store");
+      res.download(a.file, a.name);
+    } catch {
+      res.status(422).json({ message: "DSM_KIT_UNAVAILABLE" });
+    }
+  });
   const makeNasKit = require("../services/release-nas-kit").createNasKit({
     evidence: service,
   });

@@ -40,7 +40,7 @@ jobs:
           npm ci --prefix frontend
       - name: Validate controlled NAS shell syntax
         run: |
-          for script in deploy-controller/nas-preproduction.sh deploy-controller/guide/*.sh; do
+          for script in deploy-controller/*.sh deploy-controller/guide/*.sh scripts/ci/tests/*.sh; do
             sh -n "$script"
           done
       - name: Lint, TypeScript, policy, unit tests and dependency gates
@@ -79,6 +79,8 @@ jobs:
           npx playwright install --with-deps chromium
           docker pull quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c
           docker tag quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c quay.io/keycloak/keycloak:26.7.4
+      - name: Exercise restricted DSM executor in a disposable container
+        run: node scripts/ci/dsm-executor-smoke.cjs
       - name: Build candidate once from clean sources
         run: |
           node scripts/ci/candidate.cjs build

@@ -155,6 +155,19 @@
           publication et la clôture sont verrouillées.
         </p>
       </fieldset>
+      <section *ngIf="d.executions?.length">
+        <h3>Reçus de l'exécuteur NAS</h3>
+        <ul>
+          <li *ngFor="let execution of d.executions">
+            {{ execution.action }} : {{ execution.status }} —
+            {{ execution.recordedAt }} — {{ execution.nonce }}
+          </li>
+        </ul>
+        <p>
+          Résultats techniques liés à cette candidate ; les validations humaines
+          restent obligatoires.
+        </p>
+      </section>
       <h3>Réserves suivies</h3>
       <ul>
         <li *ngFor="let item of r.reservations">

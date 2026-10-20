@@ -442,3 +442,34 @@ it("rejects malformed, identical or older next-cycle versions", async () => {
     ).rejects.toThrow();
   expect(service.read().dossier.releasePlan).toBeNull();
 });
+
+it("archives an exact NAS receipt without granting human approval and refuses foreign evidence", async () => {
+  let r = await importIt();
+  const receipt = {
+    schema: 1,
+    nonce: crypto.randomUUID(),
+    identity: r.dossier.identity,
+    candidate: r.dossier.manifest.candidate,
+    commit: r.dossier.manifest.commit,
+    archiveSha256: r.dossier.manifest.archiveSha256,
+    action: "plan",
+    status: "PLAN_PASS",
+    productionApproved: false,
+    databaseRestored: false,
+  };
+  r = await service.recordExecution(receipt);
+  expect(r.dossier.executions).toHaveLength(1);
+  expect(r.dossier.validations).toEqual({});
+  expect(r.publicationEnabled).toBe(false);
+  expect((await service.recordExecution(receipt)).dossier.revision).toBe(
+    r.dossier.revision,
+  );
+  await expect(
+    service.recordExecution({
+      ...receipt,
+      nonce: crypto.randomUUID(),
+      commit: "f".repeat(40),
+    }),
+  ).rejects.toThrow("DSM_RECEIPT_MISMATCH");
+  expect(service.report().dossier.executions[0].nonce).toBe(receipt.nonce);
+});

@@ -182,3 +182,21 @@ Validation locale : syntaxe PowerShell et génération du kit testées. Le trans
 Le dossier de preuves contient désormais le champ « Version de développement suivante », par exemple `2.3.0-dev`. Le backend impose une version strictement supérieure à la version stable de la candidate. Ce choix persiste avec son identité et figure dans le rapport ; un changement invalide les validations de production. Les preuves de recette restent conservées. La réimportation de la même candidate conserve ce plan, une nouvelle candidate le réinitialise.
 
 L’approbation MEP porte sur ce plan, mais ne modifie pas les versions des images construites. Le passage des sources et de la branche de développement au cycle suivant doit se faire après la MEP et les contrôles de production, à la clôture. L’application automatique de ce changement reste à raccorder au moteur de clôture lorsque les publications seront explicitement activées. Aucune modification de package.json, des environnements ou des notes de release n’est déclenchée par l’enregistrement du plan.
+
+
+### Accès SSH par clé : installation initiale
+
+Le 20/10/2026, le mainteneur a autorisé l’approbation manuelle de ses propres demandes GitHub et la préparation d’une clé SSH dédiée. Les environnements `candidate-registry`, `preproduction` et `production` du dépôt public conservent un reviewer Djone, les branches protégées uniquement et `can_admins_bypass=false`, avec `prevent_self_review=false`. Ce choix permet une approbation manuelle individuelle ; il ne constitue pas une revue indépendante.
+
+La page permet de générer/réutiliser la clé locale, télécharger l’installateur public et tester la connexion. La clé privée reste sous `data/release/ssh`, ignoré par Git, avec des droits locaux restreints. Ne pas la copier dans GitHub, le navigateur ou les rapports.
+
+L’installation initiale a été adaptée au NAS : ni getent ni visudo ne sont disponibles. Le script final utilise awk et /etc/passwd et ne modifie aucun sudoers. Il installe uniquement une commande forcée de diagnostic. Les autres clés sont conservées ; le shell libre, le forwarding, le PTY, le transfert et le déploiement sont interdits pour cette clé. Une installation existante n’est jamais remplacée automatiquement.
+
+Le 20/10/2026, l’opérateur a confirmé `SSH_KEY_INSTALLED_PROBE_ONLY`. Le PC a ensuite vérifié la connexion réelle en BatchMode avec StrictHostKeyChecking=yes, sans mot de passe. Les commandes `id`, `suivi-cb-plan` et `suivi-cb-apply` ont toutes été refusées, comme prévu. Aucun privilège root supplémentaire n’a été accordé.
+
+La vérification du plan a son contrat backend (candidate, commit et run identiques au dossier), mais reste inactive tant que l’exécuteur NAS n’est pas installé et qualifié. Les transferts et l’application préproduction restent sur le kit existant. Aucun nouveau déploiement, push GHCR, tag ou release n’a été effectué. La promotion production et le changement automatique de cycle restent à qualifier.
+
+
+### Raccordement DSM
+
+Le kit, les demandes et les reçus DSM sont disponibles dans le guide de release. Voir [EXECUTEUR_DSM_2_2_0.md](EXECUTEUR_DSM_2_2_0.md) pour la procédure et les limites. Les reçus sont archivés dans le dossier de la candidate sans remplacer les attestations humaines. Le plan vérifie le manifeste sous verrou ; l’application exige encore une activation locale NAS et n’est pas activée par l’installation.

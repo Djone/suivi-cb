@@ -10,7 +10,8 @@ FRONTEND=suivi-cb-ci-preprod-frontend
 NODE_IMAGE=node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 MODE=${1:-plan}
 case "$MODE" in plan|apply) ;; *) echo 'Only plan or apply is accepted.' >&2; exit 1 ;; esac
-[ "$#" -le 1 ] || exit 1
+[ "$#" -le 2 ] || exit 1
+if [ "$#" = 2 ]; then printf '%s\n' "$2" | grep -Eq '^[a-f0-9]{64}$' || exit 1; fi
 [ "$(id -u)" = 0 ] || { echo 'Controlled root task required.' >&2; exit 1; }
 [ ! -L "$CONTROL" ] && [ "$(readlink -f "$CONTROL")" = "$CONTROL" ] || exit 1
 [ "$(stat -c %u:%a "$CONTROL")" = 0:700 ] || exit 1
@@ -23,6 +24,10 @@ done
 mkdir "$CONTROL/.deployment-lock" || { echo 'Another deployment/preparation is active.' >&2; exit 1; }
 validated=
 trap 'if [ -n "$validated" ]; then rm -f "$validated"; fi; rmdir "$CONTROL/.deployment-lock"' EXIT
+# Optional expected manifest fingerprint adds binding under the deployment lock.
+if [ "$#" = 2 ]; then
+  [ "$(sha256sum "$CONTROL/incoming/manifest.json" | cut -d ' ' -f1)" = "$2" ] || { echo 'DSM_MANIFEST_CHANGED' >&2; exit 1; }
+fi
 validated=$(mktemp "$CONTROL/.validated.XXXXXX")
 trap 'exit 130' INT
 trap 'exit 143' HUP TERM

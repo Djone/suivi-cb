@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { ReleaseJourneyComponent } from './release-journey.component';
 import {
   CandidateFlowStatus,
+  EvidenceReport,
   ReleaseEvidenceService,
 } from '../../services/release-evidence.service';
 describe('Guided release journey', () => {
@@ -29,6 +30,13 @@ describe('Guided release journey', () => {
       'prepareCandidate',
       'candidateArchive',
       'nasKit',
+      'createSshKey',
+      'probeSsh',
+      'sshInstaller',
+      'dsmKit',
+      'dsmStatus',
+      'dsmQueue',
+      'dsmReceipt',
     ]);
     service.candidateStatus.and.returnValue(of(status()));
     service.prepareCandidate.and.returnValue(
@@ -128,5 +136,105 @@ describe('Guided release journey', () => {
     ).componentInstance;
     c.kit();
     expect(service.nasKit).not.toHaveBeenCalled();
+  });
+
+  it('requires confirmation before creating a local SSH key and probes only on request', () => {
+    service.createSshKey.and.returnValue(
+      of({ configured: true, publicKey: 'ssh-ed25519 public-test' }),
+    );
+    service.probeSsh.and.returnValue(of({ connected: true }));
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    expect(service.probeSsh).not.toHaveBeenCalled();
+    const confirm = spyOn(window, 'confirm').and.returnValue(false);
+    f.componentInstance.createSshKey();
+    expect(service.createSshKey).not.toHaveBeenCalled();
+    confirm.and.returnValue(true);
+    f.componentInstance.createSshKey();
+    expect(f.componentInstance.sshPublicKey).toBe('ssh-ed25519 public-test');
+    f.componentInstance.probeSsh();
+    expect(service.probeSsh).toHaveBeenCalledTimes(1);
+    f.destroy();
+  });
+
+  it('requires installed DSM, current dossier and explicit confirmation before applying', () => {
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    const c = f.componentInstance;
+    const r: EvidenceReport = {
+      dossier: {
+        identity: 'id',
+        revision: 7,
+        manifest: {
+          candidate: '2.2.0-rc.501',
+          commit: 'a'.repeat(40),
+          archiveSha256: 'b'.repeat(64),
+          exceptionReviewBy: '2099-01-01',
+          images: {},
+        },
+        scope: { frozen: true, summary: 'Scope', releaseNotes: 'Notes' },
+        origin: {
+          kind: 'github',
+          githubUrl: null,
+          authenticatedGithubProvenance: true,
+        },
+        validations: {},
+        importedAt: '2026-10-20',
+      },
+      checks: [],
+      blockers: [],
+      repository: { commit: 'a'.repeat(40), clean: true },
+      readyForPreproduction: true,
+      readyForProduction: false,
+      canClose: false,
+      publicationEnabled: false,
+    };
+    c.report = r;
+    c.queueDsm('plan');
+    expect(service.dsmQueue).not.toHaveBeenCalled();
+    c.dsmInstalled = true;
+    service.dsmQueue.and.returnValue(
+      of({
+        request: {
+          nonce: 'nonce',
+          action: 'plan',
+          candidate: '2.2.0-rc.501',
+          identity: 'id',
+        },
+        status: 'QUEUED',
+      }),
+    );
+    c.queueDsm('plan');
+    expect(service.dsmQueue).toHaveBeenCalledWith('id', 7, 'plan', false);
+    service.dsmQueue.calls.reset();
+    c.queueDsm('apply-preproduction');
+    expect(service.dsmQueue).not.toHaveBeenCalled();
+    service.dsmReceipt.and.returnValue(
+      of({
+        request: {
+          nonce: 'nonce',
+          action: 'plan',
+          candidate: '2.2.0-rc.501',
+          identity: 'id',
+        },
+        status: 'PLAN_PASS',
+        receipt: { nonce: 'nonce', status: 'PLAN_PASS' },
+      }),
+    );
+    const refreshed = spyOn(c.candidatePrepared, 'emit');
+    c.pollDsm();
+    expect(refreshed).toHaveBeenCalled();
+    const confirm = spyOn(window, 'confirm').and.returnValue(false);
+    c.queueDsm('apply-preproduction');
+    expect(service.dsmQueue).not.toHaveBeenCalled();
+    confirm.and.returnValue(true);
+    c.queueDsm('apply-preproduction');
+    expect(service.dsmQueue).toHaveBeenCalledWith(
+      'id',
+      7,
+      'apply-preproduction',
+      true,
+    );
+    f.destroy();
   });
 });

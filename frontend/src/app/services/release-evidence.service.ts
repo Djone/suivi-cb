@@ -1,6 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+export interface DsmRequestState {
+  request: {
+    nonce: string;
+    action: 'plan' | 'apply-preproduction';
+    candidate: string;
+    identity: string;
+  };
+  status: string;
+  pending?: boolean;
+  receipt?: { nonce: string; status: string };
+}
 export interface EvidenceManifest {
   candidate: string;
   commit: string;
@@ -49,6 +60,12 @@ export interface EvidenceReport {
       status: string;
       identity: string;
     } | null;
+    executions?: Array<{
+      nonce: string;
+      action: string;
+      status: string;
+      recordedAt: string;
+    }>;
     importedAt: string;
   };
   checks: EvidenceCheck[];
@@ -115,6 +132,55 @@ export class ReleaseEvidenceService {
       this.url + '/candidate/nas-kit',
       { identity, revision, confirmPreproduction: true },
       { responseType: 'blob' },
+    );
+  }
+  createSshKey() {
+    return this.http.post<{ configured: boolean; publicKey: string }>(
+      this.url + '/nas/ssh/key',
+      { confirm: true },
+    );
+  }
+  probeSsh() {
+    return this.http.post<{ connected: boolean; dsmInstalled?: boolean }>(
+      this.url + '/nas/ssh/probe',
+      {},
+    );
+  }
+  sshPlan(identity: string, revision: number) {
+    return this.http.post<{ candidate: string; planOnly: boolean }>(
+      this.url + '/nas/ssh/plan',
+      { identity, revision },
+    );
+  }
+  sshInstaller() {
+    return this.http.get(this.url + '/nas/ssh/installer', {
+      responseType: 'blob',
+    });
+  }
+  dsmKit() {
+    return this.http.get(this.url + '/nas/dsm-kit', { responseType: 'blob' });
+  }
+  dsmStatus() {
+    return this.http.get<{ lastRequest: DsmRequestState | null }>(
+      this.url + '/nas/dsm',
+    );
+  }
+  dsmQueue(
+    identity: string,
+    revision: number,
+    action: 'plan' | 'apply-preproduction',
+    confirm = false,
+  ) {
+    return this.http.post<DsmRequestState>(this.url + '/nas/dsm/requests', {
+      identity,
+      revision,
+      action,
+      confirm,
+    });
+  }
+  dsmReceipt(nonce: string) {
+    return this.http.get<DsmRequestState>(
+      this.url + '/nas/dsm/receipts/' + encodeURIComponent(nonce),
     );
   }
   report() {

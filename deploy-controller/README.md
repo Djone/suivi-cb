@@ -1,7 +1,6 @@
-# Controlled NAS preproduction task (not installed)
+# Controlled NAS preproduction and DSM executor
 
-Publication remains blocked at the user's request. This code does not install a
-runner, retrieve GitHub requests, create approvals or operate production.
+Manual GitHub self-approval has been authorized for Djone. Publishing and production still require their qualified delivery path. The DSM kit installs reviewed, restricted preproduction code only; it does not install a GitHub runner, retrieve GitHub requests or operate production.
 The private repository Djone/suivi-cb-deploy exists with Actions disabled.
 
 ## Trust boundary
@@ -66,3 +65,6 @@ permissions, Compose compatibility, actual Docker import, memory and recovery
 must still be exercised on the NAS at final acceptance. The production engine,
 automatic approved-request retrieval and a complete isolated promotion/rollback
 exercise remain outstanding. Keep the verified TAR/SSH fallback.
+
+
+DSM installation and validation: docs/EXECUTEUR_DSM_2_2_0.md. The installer leaves application disabled. Requests and technical receipts are bound to the exact candidate and archived by the local release page. Production and registry publication are outside this executor.
