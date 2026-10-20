@@ -133,6 +133,9 @@ exports.getNextCandidate = async (req, res) => {
 };
 
 exports.runReleaseCommand = (req, res) => {
+  // Lot 3 records evidence only. Publication and rollback remain locked server-side.
+  if (['deploy','full','rollback'].includes(req.body?.command) || parseBoolean(req.body?.tag) || parseBoolean(req.body?.withNasDeploy)) return res.status(423).json({message:'PUBLICATION_LOCKED'});
+
   if (activeRun) {
     return res.status(409).json({
       message: 'A release command is already running.',

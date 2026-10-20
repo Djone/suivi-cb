@@ -12,7 +12,6 @@ const configRoutes = require('./routes/config.routes');
 const recurringTransactionRoutes = require('./routes/recurring-transaction.routes');
 const accountRoutes = require('./routes/account.routes');
 const coupleSplitRoutes = require('./routes/couple-split.routes');
-const releaseRoutes = require('./routes/release.routes');
 const { isDocumentationEnabled, requireLocalDocumentationAccess } = require('./middlewares/documentation-access.middleware');
 const savingsWalletRoutes = require('./routes/savings-wallet.routes');
 const savingAccountRoutes = require('./routes/saving-account.routes');
@@ -90,7 +89,7 @@ const startServer = async () => {
       app.use('/api/documentation', requireLocalDocumentationAccess, createDocumentationRouter());
     }
     if (isReleaseProcessEnabled()) {
-      app.use('/api/release', requireLocalReleaseAccess, releaseRoutes);
+      app.use('/api/release', requireLocalReleaseAccess, require('./routes/release.routes'));
     }
     app.use('/api/savings-wallets', savingsWalletRoutes);
     app.use('/api/saving-accounts', savingAccountRoutes);

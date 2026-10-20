@@ -1,3 +1,4 @@
+import { ReleaseEvidenceService } from '../../services/release-evidence.service';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -23,6 +24,7 @@ describe('Release timeline', () => {
     service.getNextCandidate.and.returnValue(of({ stable: '2.3.0', latestNumber: 1, next: '2.3.0-rc.2', dockerAvailable: true, scope: 'local' }));
     TestBed.configureTestingModule({
       imports: [ReleaseProcessComponent], providers: [provideNoopAnimations(),
+      { provide: ReleaseEvidenceService, useValue: { candidateStatus: () => of({branch:null,commit:null,clean:false,pushed:false,protected:false,ready:false,run:null,blockers:[],task:null}), read: () => of({dossier:null,checks:[],blockers:[],repository:{commit:null,clean:false},readyForPreproduction:false,readyForProduction:false,canClose:false,publicationEnabled:false}) } },
       { provide: ReleaseProcessService, useValue: service },
       { provide: DocumentationService, useValue: { documents: signal([entry]), load: jasmine.createSpy('load').and.resolveTo(undefined) } },
       ]
@@ -114,19 +116,9 @@ describe('Release timeline', () => {
     expect(component.completedTasks.has('controls-dry-run')).toBeTrue(); component.ngOnDestroy();
   });
 
-  it('invalidates checklist evidence after a successful rollback and retains its result', () => {
-    spyOn(window, 'confirm').and.returnValue(true); completeThrough(5);
-    service.run.and.returnValue(of({ message: 'Started', run: run('running', 'rollback') }));
-    component.runRollback();
-    statuses.next({ running: false, activeRun: null, lastRun: run('passed', 'rollback'), lastReport: { steps: [] } });
-    expect(component.completedCount).toBe(0); expect(component.displayedRun?.command).toBe('rollback');
-  });
-
-  it('gates Git publication and preserves its existing payload semantics', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    component.runDeploy(); expect(service.run).not.toHaveBeenCalled();
-    completeThrough(3); component.runDeploy();
-    expect(service.run.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ command: 'deploy', stable: undefined, execute: true, createNextBranch: true }));
+  it('keeps publication and rollback blocked even when the session checklist is complete', () => {
+    completeThrough(5); component.runDeploy(); component.runRollback();
+    expect(service.run).not.toHaveBeenCalled(); expect(component.errorMessage).toBe('PUBLICATION_LOCKED');
   });
 
   it('associates, replaces, removes and reads documents without changing checklist state', () => {
@@ -136,7 +128,7 @@ describe('Release timeline', () => {
     expect(component.completedTasks.has('dev-tests')).toBeTrue();
     component.unlinkDocument(phase); expect(component.linkedDocument(phase)).toBeUndefined();
     component.closeRelease(); expect(component.closedAt).toBeNull();
-    completeThrough(5); component.closeRelease(); expect(component.closedAt).not.toBeNull();
+    completeThrough(5); component.closeRelease(); expect(component.closedAt).toBeNull();
   });
 
   it('renders six phases, readonly parameters and distinct controls', () => {

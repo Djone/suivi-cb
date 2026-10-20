@@ -1,0 +1,101 @@
+.journey {
+  background: #fff;
+  border: 1px solid #d9e2f0;
+  border-radius: 16px;
+  padding: 24px;
+  margin: 16px 0;
+  color: #17233b;
+}
+.eyebrow,
+.place {
+  color: #46618c;
+  font-weight: 600;
+}
+nav,
+.actions,
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 18px 0;
+}
+button {
+  font: inherit;
+  background: #f0f5ff;
+  color: #164c9e;
+  border: 1px solid #bdcce4;
+  border-radius: 7px;
+  padding: 10px;
+  cursor: pointer;
+}
+button[aria-current],
+.primary {
+  background: #245af0;
+  color: white;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+article {
+  border-top: 1px solid #e1e8f2;
+  padding-top: 16px;
+}
+li {
+  margin: 12px 0;
+  line-height: 1.65;
+}
+pre {
+  background: #12233e;
+  color: #f3f6fc;
+  padding: 14px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+dd {
+  margin: 3px 0 12px;
+  overflow-wrap: anywhere;
+}
+dt {
+  font-weight: 600;
+}
+.warning,
+.blockers {
+  background: #fff5dd;
+  padding: 14px;
+  border-radius: 8px;
+}
+.blockers {
+  padding-left: 30px;
+}
+.expected,
+.success {
+  border-left: 4px solid #238657;
+  padding: 10px;
+  background: #edf8f2;
+}
+h4 {
+  margin-top: 28px;
+}
+footer {
+  align-items: center;
+  border-top: 1px solid #e1e8f2;
+  padding-top: 16px;
+}
+footer span {
+  font-size: 0.85rem;
+  color: #58667d;
+}
+@media (max-width: 600px) {
+  .journey {
+    padding: 15px;
+  }
+  ol {
+    padding-left: 20px;
+  }
+  nav button {
+    font-size: 0.85rem;
+  }
+}

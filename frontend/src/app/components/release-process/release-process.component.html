@@ -2,11 +2,15 @@
   <header class="page-header">
     <div>
       <p class="eyebrow">Clôture de version</p>
-      <h1>Clôturer la release {{ stableVersion }}</h1>
+      <h1>Préparer et clôturer la release</h1>
       <p class="muted">Suivez les contrôles dans l’ordre, puis promouvez les images approuvées.</p>
     </div>
-    <button class="button secondary" (click)="resetChecklist()" [disabled]="isRunning">Réinitialiser la checklist</button>
+    <button class="button secondary" (click)="resetChecklist()" [disabled]="isRunning">Réinitialiser les repères manuels</button>
   </header>
+  <app-release-journey [report]="evidenceReport" (candidatePrepared)="evidencePanel.refresh()" (validationRequested)="evidencePanel.selectValidation($event)"></app-release-journey>
+  <app-release-evidence #evidencePanel (reportChanged)="evidenceReport = $event" (candidateSelected)="selectEvidenceCandidate($event)"></app-release-evidence>
+  <details class="legacy-release"><summary>Repères manuels et ancien orchestrateur (hors dossier de preuves)</summary>
+  <p>Les cases ci-dessous restent des repères de session ; elles ne valident pas la release.</p>
   <section class="panel progress-panel" aria-label="Progression et paramètres">
     <div class="progress-header">
       <div>
@@ -61,7 +65,7 @@
           <label>
             <input type="checkbox" [(ngModel)]="commit" (ngModelChange)="parametersChanged()"> Créer le commit de préparation</label>
           <label>
-            <input type="checkbox" [(ngModel)]="rollbackOnFailure" (ngModelChange)="parametersChanged()"> Rollback automatique en cas d’échec</label>
+            <input type="checkbox" [(ngModel)]="rollbackOnFailure" (ngModelChange)="parametersChanged()"> Restaurer les fichiers de version si la préparation échoue</label>
           <label>
             <input type="checkbox" [(ngModel)]="createNextBranch" (ngModelChange)="parametersChanged()"> Créer la branche de développement suivante</label>
           <label>
@@ -124,7 +128,7 @@
                 <code>{{ commandFor(task.command) }}</code>
                 <button *ngIf="task.command === 'dry-run'" class="button primary" (click)="runDryRun()" [disabled]="isRunning || !isUnlocked(index) || completedTasks.has(task.id)">Lancer le dry-run</button>
                 <button *ngIf="task.command === 'prepare'" class="button primary" (click)="runPrepare()" [disabled]="isRunning || !isUnlocked(index) || !completedTasks.has('controls-dry-run') || completedTasks.has(task.id) || !nextDevVersion.trim()">Lancer le prepare</button>
-                <button *ngIf="task.command === 'deploy'" class="button primary" (click)="runDeploy()" [disabled]="isRunning || !isUnlocked(index) || completedTasks.has(task.id)">Publier Git</button>
+                <button *ngIf="task.command === 'deploy'" class="button primary" (click)="runDeploy()" [disabled]="true">Publication bloquée</button>
               </div>
             </div>
           </div>
@@ -219,19 +223,20 @@
           <li>Validation préproduction obligatoire.</li>
           <li>Mêmes images en production, sans reconstruction ni update.sh.</li>
           <li>Commit et identifiants des images consignés.</li>
-          <li>Rollback automatique disponible.</li>
+          <li>Rollback applicatif à valider, sans restauration automatique des données.</li>
         </ul>
-        <button class="button secondary compact" (click)="runRollback()" [disabled]="isRunning">Lancer le rollback</button>
+        <button class="button secondary compact" (click)="runRollback()" [disabled]="true">Rollback non activé</button>
         <code>{{ commandFor('rollback') }}</code>
       </section>
       <section class="panel closure" [class.complete]="allComplete">
         <h2>{{ closedAt ? 'Checklist clôturée' : allComplete ? 'Prête à être clôturée' : 'Clôture verrouillée' }}</h2>
         <p class="small muted">{{ allComplete ? 'Vérifiez que le rapport est archivé avant de clôturer la checklist.' : 'Terminez chaque étape pour débloquer la clôture.' }}</p>
-        <button class="button primary" (click)="closeRelease()" [disabled]="!allComplete || isRunning || !!closedAt">Clôturer la release</button>
+        <button class="button primary" (click)="closeRelease()" [disabled]="true">Clôturer la release</button>
         <p *ngIf="closedAt" class="small" role="status">Clôture locale le {{ closedAt | date:'dd/MM/yyyy HH:mm' }}.</p>
       </section>
     </aside>
   </div>
+  </details>
 </main>
 <p-dialog [visible]="!!openDocument" (visibleChange)="!$event && (openDocument = null)" [modal]="true" [blockScroll]="true" position="right" [draggable]="false" [resizable]="false" appendTo="body" [style]="{width: 'min(760px, 100vw)', height: '100dvh', maxHeight: '100dvh', margin: '0'}" [header]="openDocument?.title || 'Documentation'" closeAriaLabel="Fermer le document et revenir à la timeline">
   <ng-container *ngIf="openDocument as entry">
