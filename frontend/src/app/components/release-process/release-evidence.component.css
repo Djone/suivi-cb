@@ -1,0 +1,105 @@
+.evidence {
+  background: white;
+  border: 1px solid #dce4ee;
+  border-radius: 16px;
+  padding: 24px;
+  margin: 20px 0;
+  color: #17233b;
+}
+header,
+.import,
+footer,
+.readiness {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+header {
+  justify-content: space-between;
+}
+h2,
+h3 {
+  margin: 8px 0;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+label:has(input[type="checkbox"]) {
+  flex-direction: row;
+}
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  border: 1px solid #bcc9dc;
+  border-radius: 7px;
+  padding: 9px;
+}
+textarea {
+  min-height: 80px;
+  width: 100%;
+  box-sizing: border-box;
+}
+button {
+  background: #f0f5ff;
+  color: #163f98;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+fieldset {
+  border: 1px solid #dce4ee;
+  margin: 20px 0;
+  border-radius: 10px;
+}
+dt {
+  font-weight: 600;
+}
+dd {
+  margin: 4px 0 12px;
+  overflow-wrap: anywhere;
+}
+code {
+  font-size: 0.85rem;
+}
+.checks {
+  list-style: none;
+  padding: 0;
+}
+.checks li {
+  border-left: 4px solid #b4771d;
+  padding: 9px 12px;
+  margin: 7px 0;
+  background: #fff9ec;
+}
+.checks li.pass {
+  border-color: #218250;
+  background: #effaf4;
+}
+small {
+  display: block;
+  color: #667085;
+}
+.warning {
+  background: #fff4dc;
+  padding: 12px;
+}
+.error {
+  color: #a6192e;
+}
+.hint {
+  color: #59677b;
+}
+footer {
+  margin-top: 20px;
+}
+.readiness {
+  margin-top: 20px;
+}

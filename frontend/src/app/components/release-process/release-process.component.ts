@@ -1,3 +1,5 @@
+import { ReleaseEvidenceComponent } from './release-evidence.component';
+import { EvidenceManifest } from '../../services/release-evidence.service';
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +29,7 @@ interface ReleaseReport {
 @Component({
   selector: 'app-release-process',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogModule, ReleaseDocumentReaderComponent],
+  imports: [CommonModule, FormsModule, DialogModule, ReleaseDocumentReaderComponent, ReleaseEvidenceComponent],
   templateUrl: './release-process.component.html',
   styleUrls: ['./release-process.component.css'],
 })
@@ -137,7 +139,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.candidateMessage = 'Numéro incrémenté localement ; reconstruire au terminal et refaire toutes les validations aval. Ce numéro ne réserve pas un candidat sur le NAS.';
     document.getElementById('phase-candidate')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
-  closeRelease(): void { if (this.allComplete && !this.isRunning) this.closedAt = new Date(); }
+  closeRelease(): void { this.errorMessage = 'La cl\u00f4ture exige le dossier de preuves persistant.'; }
   linkedDocument(phase: ReleasePhase): DocumentationEntry | undefined { return this.documentation.documents().find((entry) => entry.id === this.linkedDocuments[phase.id]); }
   pickDocument(phase: ReleasePhase): void { this.pickerPhase = this.pickerPhase === phase.id ? null : phase.id; this.documentQuery = ''; }
   linkDocument(phase: ReleasePhase, entry: DocumentationEntry): void { this.linkedDocuments[phase.id] = entry.id; this.pickerPhase = null; }
@@ -227,24 +229,15 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
     this.runCommand('prepare');
   }
 
-  runDeploy(): void {
-    if (this.completedTasks.has('git-publish')) return;
-    if (!this.isUnlocked(4) || !this.preproductionApproved) {
-      this.errorMessage =
-        'Confirmez la validation de la candidate en préproduction avant de publier dans Git.';
-      return;
-    }
-    this.runCommand('deploy');
+  selectEvidenceCandidate(m: EvidenceManifest): void {
+    ++this.candidateRequest; this.candidateLoading = false;
+    if (this.candidateVersion !== m.candidate) this.invalidateFrom(2);
+    this.candidateVersion = m.candidate; this.stableVersion = m.candidate.split('-rc.')[0];
   }
 
-  runRollback(): void {
-    if (
-      !confirm('Confirmer le rollback vers le dernier backup de versions ?')
-    ) {
-      return;
-    }
-    this.runCommand('rollback');
-  }
+  runDeploy(): void { this.errorMessage = 'PUBLICATION_LOCKED'; }
+
+  runRollback(): void { this.errorMessage = 'PUBLICATION_LOCKED'; }
 
   resetProcess(): void {
     if (this.isRunning) return;

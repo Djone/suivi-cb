@@ -1,0 +1,172 @@
+<section class="evidence" aria-label="Dossier de preuves">
+  <header>
+    <div>
+      <h2>Dossier de preuves de la release</h2>
+      <p>
+        Les preuves importées et les validations humaines sont conservées par le
+        backend local.
+      </p>
+    </div>
+    <button (click)="refresh()" [disabled]="busy">Actualiser</button>
+  </header>
+  <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+  <p *ngIf="message" role="status">{{ message }}</p>
+  <div class="import">
+    <label
+      >Source<select [(ngModel)]="source" [disabled]="busy">
+        <option value="github">Artefact GitHub extrait</option>
+        <option value="local">Package CI local</option>
+      </select></label
+    ><label *ngIf="source === 'github'"
+      >Exécution GitHub<input
+        [(ngModel)]="runId"
+        inputmode="numeric"
+        placeholder="Identifiant du run"
+        [disabled]="busy" /></label
+    ><button
+      (click)="importBundle()"
+      [disabled]="busy || (source === 'github' && !runId)"
+    >
+      Importer les preuves
+    </button>
+  </div>
+  <p class="hint">
+    Importer ne lance aucun test ou déploiement. Les empreintes sont vérifiées
+    localement ; la provenance GitHub doit être relue et attestée.
+  </p>
+  <ng-container *ngIf="report as r"
+    ><p *ngIf="!r.dossier">
+      Aucune candidate importée. La clôture reste bloquée.
+    </p>
+    <ng-container *ngIf="r.dossier as d">
+      <dl>
+        <dt>Candidate</dt>
+        <dd>{{ d.manifest.candidate }}</dd>
+        <dt>Commit testé</dt>
+        <dd>
+          <code>{{ d.manifest.commit }}</code>
+        </dd>
+        <dt>Archive SHA-256</dt>
+        <dd>
+          <code>{{ d.manifest.archiveSha256 }}</code>
+        </dd>
+        <dt>Backend</dt>
+        <dd>
+          <code>{{ d.manifest.images["backend"].configDigest }}</code>
+        </dd>
+        <dt>Frontend</dt>
+        <dd>
+          <code>{{ d.manifest.images["frontend"].configDigest }}</code>
+        </dd>
+        <dt>Revue des exceptions avant le</dt>
+        <dd>{{ d.manifest.exceptionReviewBy }}</dd>
+      </dl>
+      <a
+        *ngIf="d.origin.githubUrl"
+        [href]="d.origin.githubUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Consulter l'exécution GitHub</a
+      >
+      <div class="readiness" role="status">
+        <strong
+          >Préproduction :
+          {{
+            r.readyForPreproduction
+              ? "prérequis validés"
+              : "prérequis manquants"
+          }}</strong
+        ><strong
+          >Production :
+          {{ r.readyForProduction ? "prérequis validés" : "bloquée" }}</strong
+        >
+      </div>
+      <p class="warning">
+        Les publications restent désactivées. Ce dossier ne déclenche aucune
+        livraison.
+      </p>
+      <fieldset [disabled]="busy">
+        <legend>Périmètre de cette candidate</legend>
+        <label
+          >Changements retenus<textarea
+            [(ngModel)]="summary"
+            maxlength="2000"
+          ></textarea></label
+        ><label
+          >Notes de release<textarea
+            [(ngModel)]="releaseNotes"
+            maxlength="8000"
+          ></textarea></label
+        ><label
+          ><input type="checkbox" [(ngModel)]="frozen" /> Périmètre figé</label
+        ><button
+          (click)="saveScope()"
+          [disabled]="!summary.trim() || !releaseNotes.trim()"
+        >
+          Enregistrer le périmètre
+        </button>
+      </fieldset>
+      <h3>Réserves suivies</h3>
+      <ul>
+        <li *ngFor="let item of r.reservations">
+          {{ item.component }}
+          <span *ngIf="item.reviewBy"
+            >— revue avant le {{ item.reviewBy }} ; {{ item.owner }} ;
+            {{ item.justification }}</span
+          ><span *ngIf="item.targetVersion"
+            >— reporté en {{ item.targetVersion }}, non validé</span
+          >
+        </li>
+      </ul>
+      <h3>Contrôles et blocages</h3>
+      <ul class="checks">
+        <li *ngFor="let c of r.checks" [class.pass]="c.status === 'PASS'">
+          <strong>{{ c.status === "PASS" ? "Validé" : "À compléter" }}</strong>
+          {{ c.label }} <small>{{ c.stage }}</small>
+        </li>
+      </ul>
+      <fieldset [disabled]="busy">
+        <legend>Validation humaine</legend>
+        <p>
+          Une déclaration est distincte d'un résultat automatique. Elle porte
+          sur les identités ci-dessus.
+        </p>
+        <label
+          >Contrôle<select [(ngModel)]="check">
+            <option *ngFor="let c of manualChecks" [value]="c.id">
+              {{ c.label }}
+            </option>
+          </select></label
+        ><label
+          >Référence du compte rendu<input
+            [(ngModel)]="reference"
+            maxlength="500"
+            placeholder="Document ou compte rendu, sans jeton ni secret" /></label
+        ><button (click)="validate(true)" [disabled]="!reference.trim()">
+          Confirmer la validation</button
+        ><button (click)="validate(false)" [disabled]="!reference.trim()">
+          Retirer la validation
+        </button>
+      </fieldset>
+      <details>
+        <summary>Validations enregistrées</summary>
+        <ul>
+          <li *ngFor="let item of d.validations | keyvalue">
+            {{ item.key }} :
+            {{ item.value.approved ? "confirmée" : "retirée" }} par
+            {{ item.value.by }} le
+            {{ item.value.at | date: "dd/MM/yyyy HH:mm" }} —
+            {{ item.value.reference }}
+          </li>
+        </ul>
+      </details>
+    </ng-container>
+    <footer>
+      <button (click)="download()" [disabled]="busy">
+        Exporter et archiver le rapport JSON</button
+      ><button (click)="close()" [disabled]="busy || !r.canClose">
+        Clôturer le dossier
+      </button>
+    </footer></ng-container
+  >
+</section>
