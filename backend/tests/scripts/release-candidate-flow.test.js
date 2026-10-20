@@ -281,6 +281,11 @@ it("prevents concurrent preparations and detects an interrupted backend task", a
 });
 it("rejects ZIP traversal, symlinks and duplicate names", async () => {
   for (const entries of [
+    [{ name: "NUL", data: "blocked device" }],
+    [
+      { name: "case.json", data: "x" },
+      { name: "CASE.json", data: "y" },
+    ],
     [{ name: "../escape", data: "x" }],
     [{ name: "link", data: "target", mode: 0xa000 }],
     [

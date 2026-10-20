@@ -97,11 +97,13 @@ async function extractZip(file, dir) {
       if (
         ++count > 80 ||
         !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(e.fileName) ||
-        seen.has(e.fileName) ||
+        e.fileName.length > 128 ||
+        /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(e.fileName) ||
+        seen.has(e.fileName.toLowerCase()) ||
         (mode !== 0 && mode !== 0x8000)
       )
         throw Error("UNSAFE_ARTIFACT_ARCHIVE");
-      seen.add(e.fileName);
+      seen.add(e.fileName.toLowerCase());
       total += e.uncompressedSize;
       if (
         total > 2 * 1024 ** 3 ||
