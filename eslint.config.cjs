@@ -28,6 +28,7 @@ module.exports = [
       "backend/**/*.js",
       "scripts/**/*.{js,cjs,mjs}",
       "tests/**/*.cjs",
+      "deploy-controller/**/*.cjs",
       "frontend/tools/**/*.cjs",
       "eslint.config.cjs",
     ],
