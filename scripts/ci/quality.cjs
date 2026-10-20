@@ -2,6 +2,11 @@
 const fs = require("node:fs");
 const { ROOT, npm, exec, write, revision } = require("./common.cjs");
 const checks = [];
+const sourceDirtyAtStart = !!exec(
+  "git",
+  ["status", "--porcelain", "--untracked-files=all"],
+  { capture: true },
+);
 function check(name, run) {
   try {
     run();
@@ -63,6 +68,11 @@ try {
       : "FAIL";
   write(path.join(ROOT, ".cache/ci/quality/quality.json"), {
     schema: 1,
+    sourceDirty:
+      sourceDirtyAtStart ||
+      !!exec("git", ["status", "--porcelain", "--untracked-files=all"], {
+        capture: true,
+      }),
     commit: revision(),
     runId: process.env.GITHUB_RUN_ID || "local",
     status,

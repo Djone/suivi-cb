@@ -281,6 +281,7 @@ async function qualify() {
   const quality = JSON.parse(fs.readFileSync(path.join(DIR, "quality.json")));
   if (
     quality.status !== "PASS" ||
+    quality.sourceDirty !== false ||
     quality.commit !== m.commit ||
     String(quality.runId) !== String(m.runId)
   )

@@ -55,7 +55,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     title: '2.2.0 — 2. Pipeline GitHub Actions et distribution des images',
     description: [
       '[x] Socle existant : branches protégées, politique Actions restreinte et workflow de publication durci fusionné ; ce workflow seul ne constitue pas la CI',
-      '[x] Créer les workflows push/PR : npm ci, lint JavaScript/TypeScript/Angular, TypeScript et tests backend/frontend ; validation globale encore bloquée par la couverture backend',
+      '[x] Créer les workflows push/PR : npm ci, lint JavaScript/TypeScript/Angular, TypeScript et tests backend/frontend ; qualité locale validée, cycle GitHub complet à confirmer',
       '[ ] Exécuter les suites API et navigateur du lot 1, puis les tests Docker d’authentification, migrations et rollback ; conserver les rapports',
       '[ ] Automatiser audits de dépendances et scans de secrets ; bloquer les alertes non acceptées et les exceptions expirées',
       '[ ] Construire une seule fois les images du candidat depuis un commit propre ; produire scans système, SBOM, manifeste et preuves',
@@ -68,7 +68,7 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     status: 'todo',
     targetVersion: '2.2.0',
     priority: 'high',
-    notes: 'Responsable de l’exécution CI et de la distribution ; les scénarios appartiennent au lot 1, la décision de clôture au lot 3 et la livraison effective au lot 4. Workflow CI et publication GHCR conditionnelle implémentés le 20/10 ; seuil backend de 70 % conservé (17,9 % des lignes actuellement). Voir docs/GITHUB_ACTIONS_2_2_0.md. Publication désactivée, exécuteur et déploiement NAS non activés ; recette NAS finale après les tests.',
+    notes: 'Responsable de l’exécution CI et de la distribution ; les scénarios appartiennent au lot 1, la décision de clôture au lot 3 et la livraison effective au lot 4. Workflow CI et publication GHCR conditionnelle implémentés le 20/10 ; seuil backend de 70 % conservé et atteint (85,83 % des lignes, 70,88 % des branches ; 97 tests). Voir docs/GITHUB_ACTIONS_2_2_0.md. Publication désactivée, exécuteur et déploiement NAS non activés ; recette NAS finale après les tests.',
   },
   {
     title: '2.2.0 — 3. Preuves et clôture de release dans /release-process',

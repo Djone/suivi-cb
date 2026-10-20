@@ -3,6 +3,10 @@
   os = require("node:os");
 const { ROOT, exec, write } = require("./common.cjs");
 const { DIR, manifest, docker, checksums } = require("./candidate.cjs");
+const runtimeUser =
+  typeof process.getuid === "function"
+    ? ["--user", String(process.getuid()) + ":" + String(process.getgid())]
+    : [];
 const SCANNER =
   "aquasec/trivy@sha256:9db099105405c648166e6b94155eb32f8da12673cf1f455207f7385cc9a77283";
 function summarize(raw) {
@@ -71,6 +75,7 @@ async function main() {
         docker([
           "run",
           "--rm",
+          ...runtimeUser,
           ...mount,
           SCANNER,
           "fs",
@@ -94,6 +99,7 @@ async function main() {
         docker([
           "run",
           "--rm",
+          ...runtimeUser,
           ...mount,
           SCANNER,
           "image",
@@ -125,6 +131,7 @@ async function main() {
         docker([
           "run",
           "--rm",
+          ...runtimeUser,
           "--network",
           "none",
           ...mount,

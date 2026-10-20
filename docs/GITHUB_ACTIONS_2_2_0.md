@@ -51,14 +51,18 @@ candidate. Il n'existe pas de transaction atomique entre deux packages GHCR.
 Les images repullées par digest doivent conserver leur identité, architecture
 et label de commit. Le manifeste publié contient les références immuables.
 
-## Blocage trouvé le 20 octobre
+## Validation du 20 octobre
 
-Les 86 tests Jest backend réussissent, mais leur couverture globale est de
-17,9 % des lignes et 16,21 % des branches. Le seuil existant de 70 % est conservé.
-Le job ne peut donc pas être annoncé validé. Les tests de sécurité, frontend,
-audits et exercices Docker continuent pour produire leurs résultats propres.
-Il faut compléter la couverture avant de qualifier un candidat et d'activer
-`Required CI` comme contrôle obligatoire sur les deux branches.
+Le premier passage a mesuré 17,9 % des lignes et 16,21 % des branches,
+malgré 86 tests backend réussis. Le seuil existant de 70 % a été conservé.
+Les nouveaux scénarios utilisent les vrais routeurs et une base SQLite en mémoire :
+comptes, catégories, récurrences, historique, exceptions, épargne, allocations
+atomiques, véhicules et répartition du couple. Ils couvrent aussi les erreurs SQL
+et la reprise, les entrées invalides et les frontières HTTP/CORS/documentation.
+La suite compte désormais 97 tests backend ; couverture locale : 85,83 % des lignes,
+70,88 % des branches, 92,30 % des fonctions. Les 102 tests frontend passent aussi.
+Un rapport issu de sources non committées reste explicitement non qualifiable.
+La validation finale des mêmes commandes dans GitHub reste distincte.
 
 L'exception `braces@3.0.3` n'autorise que l'avis
 `GHSA-vfj7-8cjw-p6xm`, côté outillage frontend, et ses dépendants transitifs.
@@ -103,7 +107,11 @@ Le dépôt applicatif est public : ne pas y attacher d'exécuteur auto-hébergé
 Prévoir un dépôt privé de contrôle, avec revue de sa branche `main`, environnements
 `preproduction` / `production`, approbations humaines et restrictions de branche.
 Le modèle `deploy-controller/` est volontairement verrouillé : il ne déploie pas.
-Un runner dédié sur une petite machine du LAN évitera de charger le NAS de 1,75 Go.
+Le 20/10, le responsable confirme que seul le NAS est disponible et que le
+dépôt privé n'existe pas encore. Privilégier une tâche NAS de récupération
+de demandes approuvées, déclenchée ponctuellement, sans runner GitHub permanent.
+Le moteur local, sa vérification de provenance et son installation restent à
+implémenter et à tester ; aucun accès SSH ne doit être exposé pour ce chantier.
 
 L'accès NAS devra utiliser une clé dédiée à commande forcée, sans shell général,
 avec un wrapper root limitant les chemins, les services et les opérations ;
