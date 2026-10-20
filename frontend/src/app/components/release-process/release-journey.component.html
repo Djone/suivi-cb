@@ -1,0 +1,481 @@
+<section class="journey" aria-label="Guide de publication de la release">
+  <header>
+    <p class="eyebrow">Du PC au NAS</p>
+    <h2>Créer, tester et livrer la candidate</h2>
+    <p>
+      Suivez ces étapes dans l'ordre. Les actions automatiques se font ici ; les
+      commandes NAS sont à copier dans votre session SSH.
+    </p>
+  </header>
+  <p *ngIf="error" class="warning" role="alert">{{ error }}</p>
+  <p *ngIf="feedback" role="status">{{ feedback }}</p>
+  <nav aria-label="Étapes de livraison">
+    <button
+      *ngFor="
+        let title of [
+          'Git',
+          'Candidate',
+          'NAS',
+          'Recette',
+          'Approbation',
+          'Production',
+          'Clôture',
+        ];
+        let i = index
+      "
+      (click)="active = i"
+      [attr.aria-current]="active === i ? 'step' : null"
+    >
+      {{ i + 1 }}. {{ title }}
+    </button>
+  </nav>
+  <article *ngIf="active === 0">
+    <h3>1. Terminer et synchroniser la version</h3>
+    <p class="place">Sur le PC, dans VS Code et GitHub</p>
+    <ol>
+      <li>
+        Enregistrer les fichiers, terminer les tests et relire les notes de
+        release.
+      </li>
+      <li>
+        Créer une Pull Request et la faire relire avant sa fusion dans
+        <strong>2.2.0-dev</strong>. Un push direct sur cette branche protégée
+        sera refusé.
+      </li>
+      <li>
+        Une fois la PR fusionnée, revenir sur la branche cible et récupérer les
+        changements. Ne pas changer de branche avec des fichiers non commités.
+      </li>
+    </ol>
+    <pre><code>git status
+git switch 2.2.0-dev
+git pull --ff-only</code></pre>
+    <button (click)="refresh()" [disabled]="loading">
+      Vérifier Git et les tests GitHub
+    </button>
+    <ng-container *ngIf="state as s"
+      ><dl>
+        <dt>Branche du PC</dt>
+        <dd>{{ s.branch || "Indisponible" }}</dd>
+        <dt>Commit</dt>
+        <dd>
+          <code>{{ s.commit }}</code>
+        </dd>
+        <dt>Fichiers enregistrés dans Git</dt>
+        <dd>{{ s.clean ? "Oui" : "Des modifications restent à commiter" }}</dd>
+        <dt>PC synchronisé avec GitHub</dt>
+        <dd>{{ s.pushed ? "Oui" : "Pas encore" }}</dd>
+      </dl>
+      <ul class="blockers">
+        <li *ngFor="let code of s.blockers">{{ explain(code) }}</li>
+      </ul>
+      <a
+        *ngIf="s.run"
+        [href]="s.run.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Voir l'avancement des tests sur GitHub</a
+      >
+      <p *ngIf="s.ready" class="success">
+        Git est prêt et tous les contrôles requis sont verts. Passez à l'étape
+        Candidate.
+      </p></ng-container
+    >
+  </article>
+  <article *ngIf="active === 1">
+    <h3>2. Créer le dossier de candidate</h3>
+    <p class="place">Automatique depuis cette page</p>
+    <p>
+      GitHub a construit les images une seule fois pour le commit poussé. Ce
+      bouton récupère cette candidate, vérifie l'empreinte de l'artefact et
+      importe ses preuves. Il ne lance aucune publication ni aucun déploiement.
+    </p>
+    <button
+      class="primary"
+      (click)="prepare()"
+      [disabled]="
+        loading || !state?.ready || state?.task?.status === 'downloading'
+      "
+    >
+      Créer la candidate depuis Git validé</button
+    ><button (click)="refresh()" [disabled]="loading">Actualiser</button>
+    <p *ngIf="state?.task?.status === 'downloading'" role="status">
+      Téléchargement et vérification en cours. Gardez le backend local ouvert ;
+      vous pouvez laisser cette page ouverte.
+    </p>
+    <p *ngIf="state?.task?.status === 'ready'" class="success">
+      Candidate {{ state?.task?.candidate }} prête. Les preuves sont chargées
+      dans le dossier ci-dessous.
+    </p>
+    <p>
+      Si une correction est nécessaire : modifier le code, faire une nouvelle
+      PR, attendre sa CI puis reprendre cette étape. Les anciennes attestations
+      ne valident pas les nouvelles images.
+    </p>
+    <button (click)="active = 2" [disabled]="!knownCandidate">
+      Continuer avec {{ candidate || "la candidate" }}
+    </button>
+  </article>
+  <article *ngIf="active === 2">
+    <h3>3. Préparer le NAS de préproduction</h3>
+    <p class="place">
+      D'abord sur le PC, puis dans File Station et la session SSH NAS
+    </p>
+    <p *ngIf="!knownCandidate" class="warning">
+      Créez d'abord la candidate à l'étape 2.
+    </p>
+    <details *ngIf="knownCandidate">
+      <summary>
+        Transfert automatique depuis Windows avec votre mot de passe SSH
+      </summary>
+      <p>
+        Enregistrer le ZIP et le kit dans le dossier Downloads. Dans PowerShell
+        sur le PC, extraire le kit puis lancer son assistant :
+      </p>
+      <pre><code>cd "$env:USERPROFILE\Downloads"
+tar -xzf .\nas-kit-{{ candidate }}.tar.gz
+powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
+      <p>
+        OpenSSH demande votre mot de passe dans le terminal, parfois plusieurs
+        fois. Aucun mot de passe ne passe par cette page. Le dossier parent
+        releases doit exister et permettre l'écriture au compte NAS. Le dossier
+        de cette candidate doit être absent : l'assistant refuse de le
+        remplacer.
+      </p>
+      <p>
+        Attendre NAS_TRANSFER_OK : les fichiers sont transférés et les
+        empreintes vérifiées. Passer ensuite directement à la préparation du
+        plan NAS ci-dessous, sans recréer le dossier ni refaire le transfert
+        File Station.
+      </p>
+      <p>
+        Si Windows bloque le script ou si la clé d'hôte SSH est inconnue,
+        utiliser File Station ou demander l'aide du mainteneur pour vérifier la
+        clé du NAS. Ne pas désactiver les protections SSH ou Windows. Aucun
+        service ne démarre pendant ce transfert.
+      </p>
+    </details>
+    <ng-container *ngIf="knownCandidate"
+      ><ol>
+        <li>
+          Dans le dossier de preuves, renseigner le périmètre et les notes, les
+          figer puis confirmer leur revue. Aucun test NAS n'est encore à
+          cocher.<button (click)="validate('source-review')">
+            Ouvrir la revue du périmètre
+          </button>
+        </li>
+        <li>
+          Télécharger le package et le kit de préproduction.
+          <div class="actions">
+            <button
+              (click)="package()"
+              [disabled]="downloading || state?.task?.status !== 'ready'"
+            >
+              Télécharger les images qualifiées</button
+            ><button
+              (click)="kit()"
+              [disabled]="downloading || !report?.readyForPreproduction"
+            >
+              Générer le kit NAS de préproduction
+            </button>
+          </div>
+          <p>
+            Le kit contient les scripts revus, les empreintes et la
+            configuration du realm de test. Sa génération ne modifie pas le NAS.
+          </p>
+        </li>
+        <li>
+          Dans votre terminal SSH habituel, vérifier les ressources et les
+          services actuels :
+          <pre><code>{{inspectNas}}</code></pre>
+          <button (click)="copy(inspectNas)">Copier les contrôles NAS</button>
+          <p class="expected">
+            Au moins 512 Mo disponibles avant le déploiement. Ne jamais arrêter
+            les conteneurs de production ou Keycloak pour libérer de la mémoire.
+            Si une ancienne recette doit être arrêtée, vérifier son nom avec le
+            mainteneur.
+          </p>
+        </li>
+        <li>
+          Créer le dossier de transfert. L'UID 1028 correspond ici à
+          GodOfNasAugerie ; ne pas reprendre cette commande sur un autre NAS
+          sans vérifier son compte.
+          <pre><code>{{createNasDirectory}}</code></pre>
+          <button (click)="copy(createNasDirectory)">
+            Copier la création du dossier
+          </button>
+        </li>
+        <li>
+          Dans <strong>File Station</strong>, ouvrir <code>{{ remote }}</code
+          >. Y envoyer les deux fichiers téléchargés. Extraire le ZIP dans
+          <code>candidate-{{ runId }}</code
+          >, et le kit TAR dans ce même dossier de release. Il doit y avoir deux
+          sous-dossiers voisins : <code>candidate-{{ runId }}</code> et
+          <code>nas-kit</code>.
+        </li>
+        <li>
+          Dans le terminal SSH NAS, préparer et vérifier le plan :
+          <pre><code>{{nasPreparation}}</code></pre>
+          <button (click)="copy(nasPreparation)">Copier la préparation</button>
+          <p class="expected">
+            Toutes les empreintes affichent OK, puis PLAN_ONLY et
+            NAS_PREPARATION_PLAN_OK. Aucun service applicatif n'est remplacé. En
+            cas d'erreur, s'arrêter ici.
+          </p>
+        </li>
+        <li>
+          Après ce résultat, démarrer explicitement la préproduction isolée :
+          <pre><code>{{nasApply}}</code></pre>
+          <button (click)="copy(nasApply)">
+            Copier le déploiement préproduction
+          </button>
+          <p>
+            Cette commande utilise les images importées, sans rebuild. Elle ne
+            touche ni aux données de production ni à Keycloak.
+          </p>
+        </li>
+      </ol></ng-container
+    >
+  </article>
+  <article *ngIf="active === 3">
+    <h3>4. Tester la candidate sur le NAS</h3>
+    <p class="place">Terminal SSH NAS, puis navigateur en fenêtre privée</p>
+    <h4>Conteneurs et identité des images</h4>
+    <pre><code>{{inspectPreprod}}</code></pre>
+    <button (click)="copy(inspectPreprod)">
+      Copier les contrôles préproduction
+    </button>
+    <p class="expected">
+      Deux conteneurs healthy, OOMKilled=false, frontend 200 et API sans jeton
+      401. Comparer les identifiants des images avec le manifeste affiché dans
+      le dossier de preuves.
+    </p>
+    <button (click)="validate('nas-identity')">
+      Consigner le contrôle des images
+    </button>
+    <h4>Vérifier le bon site</h4>
+    <p>
+      Dans DSM, le reverse proxy de
+      <strong>finances-preprod.jolurie.com</strong> doit viser
+      <strong>127.0.0.1:4205</strong> pour cette nouvelle pile. L'ancienne RC8
+      utilisait le port 4201. Vérifier le pied de page : la version attendue est
+      <strong>{{ candidate || "celle du dossier" }}</strong
+      >. Ne pas continuer si vous voyez une ancienne version.
+    </p>
+    <h4>Connexion et droits</h4>
+    <ol>
+      <li>
+        Se connecter avec un compte autorisé du realm
+        <strong>suivi-cb-preprod</strong>. Les comptes/opérations doivent se
+        charger, API 200.
+      </li>
+      <li>
+        Tester OTP, déconnexion puis rechargement d'une page protégée : nouvelle
+        connexion demandée.
+      </li>
+      <li>
+        Attendre plus de cinq minutes en utilisant le site. Dans F12 → Réseau,
+        confirmer une requête token avec grant_type=refresh_token et HTTP 200,
+        puis une API métier 200. Vérifier que l'audience contient suivi-cb-api
+        et le realm reste suivi-cb-preprod. Ne pas copier les jetons dans le
+        rapport.
+      </li>
+      <li>
+        Utiliser un compte sans rôle app-user : écran Accès non autorisé, aucun
+        chargement métier et déconnexion accessible. Pour confirmer le refus
+        API, exécuter ce JavaScript dans
+        <strong
+          >F12 → Console du navigateur, jamais dans PowerShell ou SSH</strong
+        >
+        avec le jeton de ce compte :
+        <pre><code>{{deniedTest}}</code></pre>
+        <button (click)="copy(deniedTest)">Copier le test navigateur</button>
+        <p class="expected">Statut API : 403.</p>
+      </li>
+    </ol>
+    <button (click)="validate('nas-auth')">
+      Consigner la recette d'authentification
+    </button>
+    <details>
+      <summary>
+        Vérifier l'audience et les dates du jeton sans les envoyer à un site
+        externe
+      </summary>
+      <p>
+        Dans F12 → Réseau, ouvrir la réponse de la requête token et copier
+        uniquement access_token. Exécuter le code ci-dessous dans F12 → Console
+        du navigateur, puis coller le jeton dans la boîte de dialogue. Ne jamais
+        coller ce jeton dans le dossier de preuves.
+      </p>
+      <pre><code>{{tokenSummary}}</code></pre>
+      <button (click)="copy(tokenSummary)">Copier le décodage local</button>
+      <p class="expected">
+        Issuer : https://auth.jolurie.com/realms/suivi-cb-preprod ; audience
+        contient suivi-cb-api ; client suivi-cb-web. Refaire après le refresh
+        HTTP 200 : les dates d'émission et d'expiration avancent et l'API
+        fonctionne toujours en 200. Conserver uniquement ce résumé dans le
+        compte rendu.
+      </p>
+    </details>
+    <h4>Parcours métier sur données fictives</h4>
+    <p>
+      Créer un compte de recette si la base est vide. Tester création,
+      modification et suppression d'opération, virement et soldes, récurrence et
+      rapprochement. Recharger puis se reconnecter pour vérifier la persistance.
+      Aucune erreur API inattendue ne doit rester dans Réseau.
+    </p>
+    <button (click)="validate('nas-business')">
+      Consigner les tests métier
+    </button>
+    <h4>Rollback sur une base synthétique distincte</h4>
+    <p>
+      La commande suivante teste l'ancienne image actuellement installée en
+      production, puis la candidate, sur un volume jetable. Elle ne monte aucune
+      base de production et ne remplace aucun conteneur de production.
+    </p>
+    <pre><code>{{nasRollback}}</code></pre>
+    <button (click)="copy(nasRollback)">Copier l'exercice de rollback</button>
+    <p class="expected">
+      NAS_ROLLBACK_OK : l'écriture créée par la candidate est conservée après
+      retour à l'ancienne image puis reprise de la candidate. Si l'exercice
+      échoue, la livraison reste bloquée.
+    </p>
+    <button (click)="validate('nas-recovery')">
+      Consigner migrations, reprise et rollback
+    </button>
+  </article>
+  <article *ngIf="active === 4">
+    <h3>5. Approuver la préproduction</h3>
+    <p>
+      Relire le rapport pour cette candidate et ces images exactes. Vérifier les
+      sauvegardes locales, published et USB, le dernier contrôle d'intégrité et
+      les droits GitHub/NAS. La rétention et l'alerte USB de 36 heures restent
+      reportées en 2.3.0, sans être présentées comme validées.
+    </p>
+    <p>
+      Consigner une référence de compte rendu pour chaque contrôle. Les
+      validations RC7/RC8 ne remplacent pas cette recette. L'exception braces
+      doit encore être acceptée et non expirée à la date de livraison.
+    </p>
+    <button (click)="validate('operations-rights')">
+      Consigner sauvegardes et droits</button
+    ><button (click)="validate('preproduction-approval')">
+      Ouvrir l'approbation préproduction
+    </button>
+    <p class="expected">
+      L'approbation n'est acceptée que lorsque les autres contrôles NAS du
+      dossier sont confirmés.
+    </p>
+  </article>
+  <article *ngIf="active === 5">
+    <h3>6. Préparer la production puis effectuer la MEP supervisée</h3>
+    <p class="warning">
+      La publication et la MEP sont actuellement verrouillées à votre demande.
+      Cette page ne lance aucune commande en production. Les conditions
+      d'approbation et le moteur de promotion du lot 2 doivent être terminés
+      avant d'activer cette étape.
+    </p>
+    <ol>
+      <li>
+        Planifier la fenêtre de livraison et faire approuver explicitement la
+        candidate, ses images et le retour arrière. Ne pas reconstruire après la
+        recette NAS.
+      </li>
+      <li>
+        Conserver les anciennes images et leur configuration. Relever les
+        conteneurs actuels en lecture seule :
+        <pre><code>{{inspectProduction}}</code></pre>
+        <button (click)="copy(inspectProduction)">
+          Copier les contrôles production
+        </button>
+      </li>
+      <li>
+        Avant la bascule approuvée, lancer la chaîne de sauvegarde cohérente :
+        <pre><code>{{backup}}</code></pre>
+        <pre><code>{{nasBackupCheck}}</code></pre>
+        <button (click)="copy(nasBackupCheck)">
+          Copier la vérification du run publié
+        </button>
+        <button (click)="copy(backup)">
+          Copier les commandes de sauvegarde
+        </button>
+        <p class="expected">
+          Un nouveau run-... doit avoir status.txt=SUCCESS et sha256sum -c
+          SHA256SUMS sans erreur. Le retrouver dans published et prévoir sa
+          copie USB ; un ancien succès ne prouve pas la sauvegarde de cette MEP.
+          Attendu : BACKUP_AND_PUBLICATION_OK. Dans Hyper Backup, lancer si
+          nécessaire Sauvegarder maintenant, puis retrouver le même run dans
+          l’explorateur USB.
+        </p>
+      </li>
+      <li>
+        Préparer et relire docker-compose.production.yml avec les images
+        testées, pull_policy: never, les volumes de production existants et
+        .env.production avec realm suivi-cb. Ne pas copier la base ou les
+        comptes de recette. Valider sa syntaxe :
+        <pre><code>{{productionPlanCheck}}</code></pre>
+        <p>
+          La première bascule depuis des conteneurs individuels exige un plan
+          validé de reprise des noms, volumes, réseaux et du proxy. Ne pas
+          supprimer ces ressources pour contourner un conflit.
+        </p>
+      </li>
+      <li>
+        Après déblocage et approbation, promouvoir uniquement backend et
+        frontend avec les images exactes, sans rebuild ni redémarrage de
+        Keycloak. Le lancement de cette bascule n'est pas activé ici.
+      </li>
+      <li>
+        Vérifier sur finances.jolurie.com : HTTPS, version attendue, realm
+        suivi-cb, API 401 sans jeton, 403 sans rôle, connexion, OTP, refresh,
+        déconnexion, lecture des comptes/opérations et journaux.
+      </li>
+      <li>
+        En cas d'échec, appliquer le plan de retour aux anciennes images
+        compatibles en conservant la base courante et les nouvelles écritures.
+        <strong>Aucune restauration automatique de base.</strong> Toute
+        restauration de données exige une décision distincte.
+      </li>
+    </ol>
+    <p>
+      Avant l'approbation MEP, renseigner la version suivante dans le dossier de
+      preuves, rubrique « Version suivante et validation de la MEP ». Elle sera
+      appliquée au cycle de développement après les contrôles de production,
+      sans renommer les images testées.
+    </p>
+    <button (click)="validate('production-approval')">
+      Voir les conditions de l'approbation production
+    </button>
+  </article>
+  <article *ngIf="active === 6">
+    <h3>7. Clôturer après livraison</h3>
+    <ol>
+      <li>Confirmer les contrôles après MEP et la sauvegarde.</li>
+      <li>
+        Publier le tag et la release du commit retenu, puis ouvrir/vérifier le
+        cycle suivant, avec les approbations prévues. Ces publications restent
+        actuellement bloquées.
+      </li>
+      <li>
+        Exporter et archiver le rapport du dossier de preuves, conserver le
+        manifeste, les SBOM, les images et le plan de rollback.
+      </li>
+      <li>
+        Clôturer seulement lorsque le dossier ne contient plus de blocage. Une
+        case de l'ancien assistant ne suffit pas.
+      </li>
+    </ol>
+    <button (click)="validate('production-smoke')">
+      Voir les contrôles après livraison</button
+    ><button (click)="validate('git-publication')">
+      Voir la publication Git et le cycle suivant
+    </button>
+  </article>
+  <footer>
+    <button (click)="active = active - 1" [disabled]="active === 0">
+      Précédent</button
+    ><button (click)="active = active + 1" [disabled]="active === 6">
+      Étape suivante</button
+    ><span>Consulter une étape ne la valide pas.</span>
+  </footer>
+</section>
