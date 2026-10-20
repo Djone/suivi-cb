@@ -108,3 +108,144 @@ it("binds the remote plan to the current dossier and rejects stale or foreign st
     "NAS_STAGED_CANDIDATE_MISMATCH",
   );
 });
+
+it("queues only the exact dossier, requires plan before apply and binds returned receipts", () => {
+  const d = {
+    identity: "e".repeat(64),
+    revision: 2,
+    manifest: {
+      candidate: "2.2.0-rc.501",
+      commit: "a".repeat(40),
+      archiveSha256: "b".repeat(64),
+    },
+  };
+  const evidence = {
+    read: () => ({ dossier: d, readyForPreproduction: true }),
+  };
+  let queued,
+    forged = false;
+  const run = (program, args, options) => {
+    if (program !== "ssh") return mockRun(program, args);
+    const cmd = args[args.length - 1];
+    if (cmd === "suivi-cb-queue") {
+      queued = JSON.parse(options.input);
+      return "SUIVI_CB_REQUEST_QUEUED";
+    }
+    if (cmd.endsWith("00000000-0000-4000-8000-000000000000"))
+      return '{"pending":true}';
+    return JSON.stringify({
+      ...queued,
+      status:
+        queued.action === "plan" ? "PLAN_PASS" : "PREPRODUCTION_SMOKE_PASS",
+      commit: forged ? "f".repeat(40) : queued.commit,
+      productionApproved: false,
+      databaseRestored: false,
+    });
+  };
+  const ssh = createNasSsh({ root, run, evidence });
+  ssh.create({ confirm: true });
+  expect(() =>
+    ssh.queue({
+      identity: d.identity,
+      revision: 2,
+      action: "production",
+      confirm: true,
+    }),
+  ).toThrow("DSM_REQUEST_BLOCKED");
+  expect(() =>
+    ssh.queue({
+      identity: d.identity,
+      revision: 2,
+      action: "apply-preproduction",
+      confirm: true,
+    }),
+  ).toThrow("DSM_PLAN_REQUIRED");
+  const first = ssh.queue({
+    identity: d.identity,
+    revision: 2,
+    action: "plan",
+  });
+  expect(first.status).toBe("QUEUED");
+  expect(() =>
+    ssh.queue({ identity: d.identity, revision: 2, action: "plan" }),
+  ).toThrow("DSM_REQUEST_PENDING");
+  forged = true;
+  expect(() => ssh.receipt(first.request.nonce)).toThrow(
+    "DSM_RECEIPT_MISMATCH",
+  );
+  forged = false;
+  expect(ssh.receipt(first.request.nonce).status).toBe("PLAN_PASS");
+  expect(() =>
+    ssh.queue({
+      identity: d.identity,
+      revision: 2,
+      action: "apply-preproduction",
+    }),
+  ).toThrow("DSM_REQUEST_BLOCKED");
+  const apply = ssh.queue({
+    identity: d.identity,
+    revision: 2,
+    action: "apply-preproduction",
+    confirm: true,
+  });
+  expect(ssh.receipt(apply.request.nonce).status).toBe(
+    "PREPRODUCTION_SMOKE_PASS",
+  );
+});
+it("keeps an ambiguous delivery pending rather than automatically reapplying", () => {
+  const d = {
+    identity: "e".repeat(64),
+    revision: 1,
+    manifest: {
+      candidate: "2.2.0-rc.1",
+      commit: "a".repeat(40),
+      archiveSha256: "b".repeat(64),
+    },
+  };
+  const run = (program, args) => {
+    if (program !== "ssh") return mockRun(program, args);
+    if (args[args.length - 1].startsWith("suivi-cb-receipt"))
+      return '{"pending":true}';
+    throw Error("connection lost after write");
+  };
+  const ssh = createNasSsh({
+    root,
+    run,
+    evidence: { read: () => ({ dossier: d, readyForPreproduction: true }) },
+  });
+  ssh.create({ confirm: true });
+  expect(() =>
+    ssh.queue({ identity: d.identity, revision: 1, action: "plan" }),
+  ).toThrow("DSM_QUEUE_DELIVERY_UNKNOWN");
+  expect(ssh.latest().status).toBe("DELIVERY_UNKNOWN");
+  expect(() =>
+    ssh.queue({ identity: d.identity, revision: 1, action: "plan" }),
+  ).toThrow("DSM_REQUEST_PENDING");
+});
+it("generates an inventory-checked DSM kit without an apply enable file", () => {
+  const { createDsmKit } = require("../../services/release-dsm-kit");
+  const kit = createDsmKit({ root: path.resolve(__dirname, "../../..") })();
+  const inventory = fs
+    .readFileSync(path.join(kit.directory, "SHA256SUMS"), "utf8")
+    .trim()
+    .split("\n");
+  const crypto = require("node:crypto");
+  for (const line of inventory) {
+    const [hash, name] = line.split("  ");
+    expect(
+      crypto
+        .createHash("sha256")
+        .update(fs.readFileSync(path.join(kit.directory, name)))
+        .digest("hex"),
+    ).toBe(hash);
+  }
+  expect(
+    fs.readFileSync(
+      path.join(kit.directory, "install-dsm-executor.sh"),
+      "utf8",
+    ),
+  ).not.toContain("__ENTRY_SHA__");
+  expect(
+    fs.existsSync(path.join(kit.directory, "ENABLE_DSM_PREPRODUCTION")),
+  ).toBe(false);
+});

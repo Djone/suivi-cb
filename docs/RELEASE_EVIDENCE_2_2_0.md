@@ -195,3 +195,8 @@ L’installation initiale a été adaptée au NAS : ni getent ni visudo ne sont 
 Le 20/10/2026, l’opérateur a confirmé `SSH_KEY_INSTALLED_PROBE_ONLY`. Le PC a ensuite vérifié la connexion réelle en BatchMode avec StrictHostKeyChecking=yes, sans mot de passe. Les commandes `id`, `suivi-cb-plan` et `suivi-cb-apply` ont toutes été refusées, comme prévu. Aucun privilège root supplémentaire n’a été accordé.
 
 La vérification du plan a son contrat backend (candidate, commit et run identiques au dossier), mais reste inactive tant que l’exécuteur NAS n’est pas installé et qualifié. Les transferts et l’application préproduction restent sur le kit existant. Aucun nouveau déploiement, push GHCR, tag ou release n’a été effectué. La promotion production et le changement automatique de cycle restent à qualifier.
+
+
+### Raccordement DSM
+
+Le kit, les demandes et les reçus DSM sont disponibles dans le guide de release. Voir [EXECUTEUR_DSM_2_2_0.md](EXECUTEUR_DSM_2_2_0.md) pour la procédure et les limites. Les reçus sont archivés dans le dossier de la candidate sans remplacer les attestations humaines. Le plan vérifie le manifeste sous verrou ; l’application exige encore une activation locale NAS et n’est pas activée par l’installation.

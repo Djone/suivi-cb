@@ -274,19 +274,81 @@ git pull --ff-only</code></pre>
       <button (click)="probeSsh()" [disabled]="sshBusy">
         Tester SSH sans mot de passe
       </button>
-      <button
-        (click)="checkSshPlan()"
-        [disabled]="true"
-        title="Exécuteur du plan NAS à installer et qualifier"
-      >
-        Plan NAS : exécuteur à qualifier
-      </button>
       <p>
         Cette première installation autorise uniquement le diagnostic. Elle
         interdit le shell libre, les tunnels, le transfert de fichiers et la
         MEP. L'extension aux transferts et aux déploiements devra être qualifiée
         avant activation. Elle ne remplace pas encore le transfert TAR/SSH
         existant.
+      </p>
+    </details>
+    <details>
+      <summary>Configurer l'exécuteur DSM root (une seule fois)</summary>
+      <p>
+        La tâche ne traite que des demandes JSON de plan ou de préproduction
+        correspondant à la candidate approuvée sur le NAS. Aucun script reçu ni
+        code de PR n'est exécuté.
+      </p>
+      <button (click)="downloadDsmKit()" [disabled]="sshBusy">
+        Télécharger le kit DSM
+      </button>
+      <ol>
+        <li>
+          Transférer et extraire <code>dsm-executor.tar.gz</code> dans votre
+          dossier personnel NAS. Relire le kit puis lancer :
+          <code>sudo sh "$HOME/dsm-executor/install-dsm-executor.sh"</code>.
+          Attendre <code>DSM_EXECUTOR_INSTALLED_PLAN_ONLY</code>.
+        </li>
+        <li>
+          DSM → Planificateur de tâches : créer une tâche de script utilisateur
+          avec le compte <strong>root</strong>, à une fréquence disponible de 1
+          à 5 minutes. Script :
+          <pre><code>sh /volume1/docker/suivi-cb-deployment-control/code/deploy-controller/dsm-worker.sh</code></pre>
+          Conserver les journaux DSM. Aucune action n'est effectuée sans
+          demande.
+        </li>
+        <li>
+          Tester SSH avec le bouton précédent. Puis transférer et préparer le
+          kit de la candidate exacte selon les instructions NAS ci-dessous avant
+          de demander son plan.
+        </li>
+      </ol>
+      <p>
+        Mode plan uniquement par défaut : l'installateur ne crée aucun fichier
+        d'activation. L'application exige une activation locale distincte après
+        qualification. La production reste exclue.
+      </p>
+      <button
+        (click)="queueDsm('plan')"
+        [disabled]="sshBusy || !dsmInstalled || !report?.readyForPreproduction"
+      >
+        Demander le plan DSM
+      </button>
+      <button
+        (click)="queueDsm('apply-preproduction')"
+        [disabled]="
+          sshBusy ||
+          !dsmInstalled ||
+          !report?.readyForPreproduction ||
+          dsmRequest?.status !== 'PLAN_PASS' ||
+          dsmRequest?.request?.identity !== report?.dossier?.identity
+        "
+      >
+        Demander l'application préproduction
+      </button>
+      <button (click)="refreshDsm()" [disabled]="sshBusy">
+        Actualiser le suivi DSM
+      </button>
+      <p *ngIf="dsmRequest as request">
+        Candidate {{ request.request.candidate }} :
+        <strong>{{ request.status }}</strong> — demande
+        {{ request.request.nonce }}.
+      </p>
+      <p>
+        Attendre le reçu : un envoi réussi ne prouve pas un déploiement réussi.
+        Les demandes expirent après 15 minutes. Une demande ambiguë ne doit pas
+        être renvoyée automatiquement. Un reçu technique ne valide ni la recette
+        humaine ni une MEP.
       </p>
     </details>
     <details *ngIf="knownCandidate">

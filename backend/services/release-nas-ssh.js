@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const { execFileSync } = require("node:child_process");
 function createNasSsh({
   root = path.resolve(__dirname, "../.."),
@@ -89,7 +90,13 @@ function createNasSsh({
         },
       );
       if (output.trim() !== "SUIVI_CB_SSH_READY") throw Error();
-      return { ...status(), connected: true };
+      const dsmInstalled = dsmReady();
+      return {
+        ...status(),
+        connected: true,
+        dsmInstalled,
+        capabilities: dsmInstalled ? ["probe", "queue", "receipt"] : ["probe"],
+      };
     } catch {
       throw Error("SSH_CONNECTION_OR_INSTALLATION_REQUIRED");
     }
@@ -154,6 +161,197 @@ function createNasSsh({
       planOnly: true,
     };
   }
+  const history = path.join(root, "data/release/dsm-requests");
+  const lastFile = path.join(history, "last.json");
+  const noncePattern =
+    /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+  function record(value) {
+    fs.mkdirSync(history, { recursive: true, mode: 0o700 });
+    if (
+      fs.realpathSync(history) !==
+      path.join(fs.realpathSync(root), "data/release/dsm-requests")
+    )
+      throw Error("UNSAFE_DSM_HISTORY");
+    const temporary = path.join(history, crypto.randomUUID() + ".tmp");
+    fs.writeFileSync(temporary, JSON.stringify(value), {
+      flag: "wx",
+      mode: 0o600,
+    });
+    fs.renameSync(temporary, lastFile);
+  }
+  function latest() {
+    if (!fs.existsSync(lastFile)) return null;
+    if (
+      fs.lstatSync(lastFile).isSymbolicLink() ||
+      fs.statSync(lastFile).size > 16384
+    )
+      throw Error("UNSAFE_DSM_HISTORY");
+    return JSON.parse(fs.readFileSync(lastFile, "utf8"));
+  }
+  function execute(command, input) {
+    if (!publicKey()) throw Error("SSH_KEY_REQUIRED");
+    return run(
+      "ssh",
+      [
+        "-T",
+        "-i",
+        key,
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "IdentitiesOnly=yes",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "-o",
+        "ConnectTimeout=5",
+        "-p",
+        "1122",
+        "GodOfNasAugerie@192.168.1.113",
+        command,
+      ],
+      {
+        encoding: "utf8",
+        input,
+        timeout: 15000,
+        maxBuffer: 65536,
+        stdio: ["pipe", "pipe", "pipe"],
+      },
+    );
+  }
+  function dsmReady() {
+    try {
+      const r = JSON.parse(
+        execute("suivi-cb-receipt 00000000-0000-4000-8000-000000000000"),
+      );
+      return r.pending === true && Object.keys(r).length === 1;
+    } catch {
+      return false;
+    }
+  }
+  function queue(input) {
+    const report = evidence?.read(),
+      d = report?.dossier;
+    if (
+      !d ||
+      !report.readyForPreproduction ||
+      input?.identity !== d.identity ||
+      input.revision !== d.revision ||
+      !["plan", "apply-preproduction"].includes(input.action) ||
+      (input.action === "apply-preproduction" && input.confirm !== true)
+    )
+      throw Error("DSM_REQUEST_BLOCKED");
+    if (
+      !/^[a-f0-9]{64}$/.test(d.identity) ||
+      !/^2\.2\.0-rc\.[1-9][0-9]*$/.test(d.manifest.candidate) ||
+      !/^[a-f0-9]{40}$/.test(d.manifest.commit) ||
+      !/^[a-f0-9]{64}$/.test(d.manifest.archiveSha256)
+    )
+      throw Error("INVALID_DSM_CANDIDATE");
+    if (!dsmReady()) throw Error("DSM_EXECUTOR_INSTALL_REQUIRED");
+    const previous = latest();
+    if (
+      input.action === "apply-preproduction" &&
+      (!previous ||
+        previous.status !== "PLAN_PASS" ||
+        previous.request.identity !== d.identity ||
+        previous.request.candidate !== d.manifest.candidate ||
+        previous.request.commit !== d.manifest.commit ||
+        previous.request.archiveSha256 !== d.manifest.archiveSha256)
+    )
+      throw Error("DSM_PLAN_REQUIRED");
+    if (previous && ["QUEUED", "DELIVERY_UNKNOWN"].includes(previous.status))
+      throw Error("DSM_REQUEST_PENDING");
+    const request = {
+      schema: 1,
+      nonce: crypto.randomUUID(),
+      action: input.action,
+      identity: d.identity,
+      candidate: d.manifest.candidate,
+      commit: d.manifest.commit,
+      archiveSha256: d.manifest.archiveSha256,
+      requestedAt: new Date().toISOString(),
+    };
+    const value = { request, status: "DELIVERY_UNKNOWN" };
+    record(value);
+    try {
+      if (
+        execute("suivi-cb-queue", JSON.stringify(request)).trim() !==
+        "SUIVI_CB_REQUEST_QUEUED"
+      )
+        throw Error();
+    } catch {
+      throw Error("DSM_QUEUE_DELIVERY_UNKNOWN");
+    }
+    value.status = "QUEUED";
+    record(value);
+    return value;
+  }
+  function receipt(nonce) {
+    const value = latest();
+    if (
+      !noncePattern.test(nonce || "") ||
+      !value ||
+      value.request.nonce !== nonce
+    )
+      throw Error("UNKNOWN_DSM_REQUEST");
+    let result;
+    try {
+      result = JSON.parse(execute("suivi-cb-receipt " + nonce));
+    } catch {
+      throw Error("DSM_RECEIPT_UNAVAILABLE");
+    }
+    if (result.pending === true && Object.keys(result).length === 1)
+      return { ...value, pending: true };
+    const r = value.request;
+    if (
+      result.schema !== 1 ||
+      result.nonce !== nonce ||
+      result.identity !== r.identity ||
+      result.candidate !== r.candidate ||
+      result.commit !== r.commit ||
+      result.action !== r.action ||
+      result.archiveSha256 !== r.archiveSha256 ||
+      result.productionApproved !== false ||
+      result.databaseRestored !== false ||
+      ![
+        "PLAN_PASS",
+        "PREPRODUCTION_SMOKE_PASS",
+        "FAILED",
+        "APPLY_DISABLED",
+        "PLAN_REQUIRED",
+      ].includes(result.status)
+    )
+      throw Error("DSM_RECEIPT_MISMATCH");
+    if (
+      (result.action === "plan" &&
+        !["PLAN_PASS", "FAILED"].includes(result.status)) ||
+      (result.action === "apply-preproduction" &&
+        ![
+          "PREPRODUCTION_SMOKE_PASS",
+          "FAILED",
+          "APPLY_DISABLED",
+          "PLAN_REQUIRED",
+        ].includes(result.status))
+    )
+      throw Error("DSM_RECEIPT_MISMATCH");
+    value.status = result.status;
+    value.receipt = Object.fromEntries(
+      [
+        "schema",
+        "nonce",
+        "identity",
+        "candidate",
+        "commit",
+        "action",
+        "archiveSha256",
+        "status",
+        "productionApproved",
+        "databaseRestored",
+      ].map((k) => [k, result[k]]),
+    );
+    record(value);
+    return value;
+  }
   function installer() {
     const pub = publicKey();
     if (!pub) throw Error("SSH_KEY_REQUIRED");
@@ -164,6 +362,6 @@ function createNasSsh({
       )
       .replaceAll("__PUBLIC_KEY__", pub);
   }
-  return { create, status, probe, plan, installer };
+  return { create, status, probe, plan, installer, queue, receipt, latest };
 }
 module.exports = { createNasSsh };

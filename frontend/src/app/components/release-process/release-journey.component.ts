@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import {
   CandidateFlowStatus,
+  DsmRequestState,
   EvidenceReport,
   ReleaseEvidenceService,
 } from '../../services/release-evidence.service';
@@ -28,7 +29,113 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
   downloading = false;
   error = '';
   feedback = '';
+  dsmInstalled = false;
+  dsmRequest: DsmRequestState | null = null;
   sshBusy = false;
+  downloadDsmKit() {
+    if (this.sshBusy) return;
+    this.sshBusy = true;
+    this.service.dsmKit().subscribe({
+      next: (blob) => {
+        this.sshBusy = false;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dsm-executor.tar.gz';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
+      error: () => {
+        this.sshBusy = false;
+        this.error = 'Kit DSM indisponible : redémarrer le backend local.';
+      },
+    });
+  }
+  queueDsm(action: 'plan' | 'apply-preproduction') {
+    const d = this.report?.dossier;
+    if (
+      this.sshBusy ||
+      !this.dsmInstalled ||
+      !d ||
+      !this.report?.readyForPreproduction
+    )
+      return;
+    if (
+      action === 'apply-preproduction' &&
+      (this.dsmRequest?.status !== 'PLAN_PASS' ||
+        this.dsmRequest.request.identity !== d.identity)
+    )
+      return;
+    if (
+      action === 'apply-preproduction' &&
+      !confirm(
+        'Déployer uniquement en préproduction la candidate ' +
+          d.manifest.candidate +
+          ' ? Une activation locale NAS reste nécessaire.',
+      )
+    )
+      return;
+    this.sshBusy = true;
+    this.error = '';
+    this.service
+      .dsmQueue(
+        d.identity,
+        d.revision,
+        action,
+        action === 'apply-preproduction',
+      )
+      .subscribe({
+        next: (r) => {
+          this.sshBusy = false;
+          this.dsmRequest = r;
+          this.feedback =
+            'Demande transmise. Attendre le reçu DSM ; ne pas renvoyer la demande.';
+        },
+        error: () => {
+          this.sshBusy = false;
+          this.error =
+            'Envoi non confirmé. Actualiser le suivi DSM avant toute nouvelle tentative.';
+        },
+      });
+  }
+  refreshDsm() {
+    if (this.sshBusy) return;
+    this.sshBusy = true;
+    this.service.dsmStatus().subscribe({
+      next: (r) => {
+        this.sshBusy = false;
+        this.dsmRequest = r.lastRequest;
+        if (this.dsmRequest) this.pollDsm();
+      },
+      error: () => {
+        this.sshBusy = false;
+        this.error = 'Suivi DSM indisponible.';
+      },
+    });
+  }
+  pollDsm() {
+    if (this.sshBusy || !this.dsmRequest) return;
+    this.sshBusy = true;
+    this.service.dsmReceipt(this.dsmRequest.request.nonce).subscribe({
+      next: (r) => {
+        this.sshBusy = false;
+        this.dsmRequest = r;
+        if (r.receipt) {
+          this.candidatePrepared.emit();
+          this.feedback =
+            'Reçu NAS archivé : ' +
+            r.status +
+            '. La recette humaine reste distincte.';
+        }
+      },
+      error: () => {
+        this.sshBusy = false;
+        this.error =
+          'Reçu DSM indisponible ou différent du dossier. Ne pas relancer automatiquement une application.';
+      },
+    });
+  }
+
   sshPublicKey = '';
   createSshKey() {
     if (
@@ -94,10 +201,12 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
     if (this.sshBusy) return;
     this.sshBusy = true;
     this.service.probeSsh().subscribe({
-      next: () => {
+      next: (r) => {
         this.sshBusy = false;
-        this.feedback =
-          'SSH par clé vérifié : aucun mot de passe demandé. Les droits restent limités au diagnostic. Le plan attend son exécuteur qualifié.';
+        this.dsmInstalled = r.dsmInstalled === true;
+        this.feedback = this.dsmInstalled
+          ? 'SSH par clé vérifié : file DSM disponible. Un reçu de plan reste nécessaire pour confirmer le fonctionnement de la tâche.'
+          : 'SSH par clé vérifié : diagnostic uniquement. Installer le kit DSM pour transmettre des demandes.';
       },
       error: () => {
         this.sshBusy = false;
@@ -146,6 +255,11 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.refresh();
     this.timer = setInterval(() => {
+      if (
+        this.dsmRequest &&
+        ['QUEUED', 'DELIVERY_UNKNOWN'].includes(this.dsmRequest.status)
+      )
+        this.pollDsm();
       if (
         this.state?.task?.status === 'downloading' ||
         this.state?.run?.status === 'in_progress' ||

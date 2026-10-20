@@ -540,6 +540,7 @@ function createReleaseEvidence({
           ? old.scope
           : { frozen: false, summary: "", releaseNotes: "" },
         releasePlan: same ? old.releasePlan || null : null,
+        executions: same ? old.executions || [] : [],
         validations: same ? old.validations : {},
         importedAt: new Date().toISOString(),
         importedBy: actor,
@@ -661,6 +662,73 @@ function createReleaseEvidence({
       return evaluate(d);
     });
   }
+  async function recordExecution(receipt) {
+    return mutate(async () => {
+      const d = load();
+      if (
+        !d ||
+        receipt?.schema !== 1 ||
+        receipt.identity !== d.identity ||
+        receipt.candidate !== d.manifest.candidate ||
+        receipt.commit !== d.manifest.commit ||
+        receipt.archiveSha256 !== d.manifest.archiveSha256 ||
+        receipt.productionApproved !== false ||
+        receipt.databaseRestored !== false ||
+        !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(
+          receipt.nonce || "",
+        ) ||
+        !["plan", "apply-preproduction"].includes(receipt.action) ||
+        ![
+          "PLAN_PASS",
+          "PREPRODUCTION_SMOKE_PASS",
+          "FAILED",
+          "APPLY_DISABLED",
+          "PLAN_REQUIRED",
+        ].includes(receipt.status)
+      )
+        throw Error("DSM_RECEIPT_MISMATCH");
+      if (
+        (receipt.action === "plan" &&
+          !["PLAN_PASS", "FAILED"].includes(receipt.status)) ||
+        (receipt.action === "apply-preproduction" &&
+          ![
+            "PREPRODUCTION_SMOKE_PASS",
+            "FAILED",
+            "APPLY_DISABLED",
+            "PLAN_REQUIRED",
+          ].includes(receipt.status))
+      )
+        throw Error("DSM_RECEIPT_MISMATCH");
+      if ((d.executions || []).some((x) => x.nonce === receipt.nonce))
+        return evaluate(d);
+      archiveDossier(d);
+      const execution = Object.fromEntries(
+        [
+          "schema",
+          "nonce",
+          "identity",
+          "candidate",
+          "commit",
+          "archiveSha256",
+          "action",
+          "status",
+          "productionApproved",
+          "databaseRestored",
+        ].map((k) => [k, receipt[k]]),
+      );
+      d.executions = [
+        ...(d.executions || []).slice(-19),
+        {
+          ...execution,
+          kind: "nas-dsm-receipt",
+          recordedAt: new Date().toISOString(),
+        },
+      ];
+      d.revision++;
+      save(d);
+      return evaluate(d);
+    });
+  }
   function report() {
     const result = {
       ...evaluate(load()),
@@ -681,6 +749,7 @@ function createReleaseEvidence({
   return {
     read: () => evaluate(load()),
     importBundle,
+    recordExecution,
     update,
     report,
     manual: MANUAL,

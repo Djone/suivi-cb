@@ -56,6 +56,32 @@ function createEvidenceRouter(
       res.status(422).json({ message: "SSH_KEY_REQUIRED" });
     }
   });
+  router.get(
+    "/nas/dsm",
+    handle(() => ({ lastRequest: ssh.latest() })),
+  );
+  router.post(
+    "/nas/dsm/requests",
+    handle((req) => ssh.queue(req.body || {})),
+  );
+  router.get(
+    "/nas/dsm/receipts/:nonce",
+    handle(async (req) => {
+      const r = ssh.receipt(req.params.nonce);
+      if (r.receipt) await service.recordExecution(r.receipt);
+      return r;
+    }),
+  );
+  const makeDsmKit = require("../services/release-dsm-kit").createDsmKit();
+  router.get("/nas/dsm-kit", (req, res) => {
+    try {
+      const a = makeDsmKit();
+      res.set("Cache-Control", "no-store");
+      res.download(a.file, a.name);
+    } catch {
+      res.status(422).json({ message: "DSM_KIT_UNAVAILABLE" });
+    }
+  });
   const makeNasKit = require("../services/release-nas-kit").createNasKit({
     evidence: service,
   });
