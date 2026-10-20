@@ -124,6 +124,37 @@ git pull --ff-only</code></pre>
     <p *ngIf="!knownCandidate" class="warning">
       Créez d'abord la candidate à l'étape 2.
     </p>
+    <details *ngIf="knownCandidate">
+      <summary>
+        Transfert automatique depuis Windows avec votre mot de passe SSH
+      </summary>
+      <p>
+        Enregistrer le ZIP et le kit dans le dossier Downloads. Dans PowerShell
+        sur le PC, extraire le kit puis lancer son assistant :
+      </p>
+      <pre><code>cd "$env:USERPROFILE\Downloads"
+tar -xzf .\nas-kit-{{ candidate }}.tar.gz
+powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
+      <p>
+        OpenSSH demande votre mot de passe dans le terminal, parfois plusieurs
+        fois. Aucun mot de passe ne passe par cette page. Le dossier parent
+        releases doit exister et permettre l'écriture au compte NAS. Le dossier
+        de cette candidate doit être absent : l'assistant refuse de le
+        remplacer.
+      </p>
+      <p>
+        Attendre NAS_TRANSFER_OK : les fichiers sont transférés et les
+        empreintes vérifiées. Passer ensuite directement à la préparation du
+        plan NAS ci-dessous, sans recréer le dossier ni refaire le transfert
+        File Station.
+      </p>
+      <p>
+        Si Windows bloque le script ou si la clé d'hôte SSH est inconnue,
+        utiliser File Station ou demander l'aide du mainteneur pour vérifier la
+        clé du NAS. Ne pas désactiver les protections SSH ou Windows. Aucun
+        service ne démarre pendant ce transfert.
+      </p>
+    </details>
     <ng-container *ngIf="knownCandidate"
       ><ol>
         <li>

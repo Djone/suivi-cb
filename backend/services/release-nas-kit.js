@@ -53,6 +53,7 @@ function createNasKit({
       "check-production.sh",
       "test-rollback.sh",
       "check-backup.sh",
+      "transfer-to-nas.ps1",
     ])
       write(
         name,
@@ -62,7 +63,13 @@ function createNasKit({
             "utf8",
           )
           .replaceAll("__CANDIDATE__", m.candidate)
-          .replaceAll("__RUN__", String(m.runId)),
+          .replaceAll("__RUN__", String(m.runId))
+          .replaceAll(
+            "__ZIP_SHA__",
+            /^sha256:[a-f0-9]{64}$/.test(d.origin?.artifactDigest || "")
+              ? d.origin.artifactDigest.slice(7)
+              : "",
+          ),
       );
     write(
       "env.preprod.example",

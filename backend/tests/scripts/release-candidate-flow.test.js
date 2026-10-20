@@ -310,6 +310,7 @@ it("creates a preproduction-only kit with explicit approval, reviewed code and c
     "guide/check-production.sh",
     "guide/test-rollback.sh",
     "guide/check-backup.sh",
+    "guide/transfer-to-nas.ps1",
   ]) {
     const p = path.join(root, "deploy-controller", n);
     fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -325,6 +326,7 @@ it("creates a preproduction-only kit with explicit approval, reviewed code and c
   const dossier = {
     identity: "id",
     revision: 3,
+    origin: { artifactDigest: "sha256:" + "a".repeat(64) },
     manifest: {
       candidate: "2.2.0-rc.501",
       commit: head,
@@ -347,10 +349,18 @@ it("creates a preproduction-only kit with explicit approval, reviewed code and c
   for (const n of [
     "prepare-preproduction.sh",
     "test-rollback.sh",
+    "transfer-to-nas.ps1",
     "SHA256SUMS",
   ])
     expect(listing).toContain("nas-kit/" + n);
   const dir = path.join(path.dirname(a.file), "nas-kit");
+  const transfer = fs.readFileSync(
+    path.join(dir, "transfer-to-nas.ps1"),
+    "utf8",
+  );
+  expect(transfer).toContain("a".repeat(64));
+  expect(transfer).not.toContain("__ZIP_SHA__");
+  expect(transfer).toContain("StrictHostKeyChecking=yes");
   expect(
     JSON.parse(fs.readFileSync(path.join(dir, "approval.json"))).target,
   ).toBe("preproduction");

@@ -168,3 +168,10 @@ Validation du parcours guide : 122 tests backend et 114 tests frontend,
 controle de syntaxe de tous les scripts NAS, lecture reelle de l’API GitHub et
 extraction d’un vrai artefact verifies localement. Les scripts NAS sont fournis
 pour execution explicite sur le NAS ; ils ne sont pas installes depuis le PC.
+
+
+### Transfert Windows avec SSH par mot de passe
+
+Le kit contient `transfer-to-nas.ps1`, exécuté sur le PC après extraction du kit dans le même dossier que `candidate-RUN.zip`. Le ZIP doit provenir de la récupération GitHub authentifiée : son empreinte est incorporée au script. OpenSSH demande le mot de passe directement dans le terminal, sans stockage dans l’application. Le script vérifie les empreintes, refuse un dossier distant existant, transfère une archive puis vérifie les fichiers sur le NAS. `NAS_TRANSFER_OK` confirme uniquement le transfert. Aucun service ne démarre. Le dossier parent `releases` doit être accessible au compte NAS. Les clés d’hôte doivent déjà être vérifiées ; aucune protection SSH ou politique Windows ne doit être désactivée. File Station reste la solution de secours. Un transfert interrompu laisse le dossier NAS en place pour inspection, sans suppression automatique.
+
+Validation locale : syntaxe PowerShell et génération du kit testées. Le transfert interactif et la recette NAS restent à exécuter sur l’installation cible.
