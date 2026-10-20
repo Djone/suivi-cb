@@ -64,6 +64,13 @@ L'exception `braces@3.0.3` n'autorise que l'avis
 `GHSA-vfj7-8cjw-p6xm`, côté outillage frontend, et ses dépendants transitifs.
 Toute autre alerte bloque ; cette exception expire après le 22/10/2026 UTC.
 Aucun renouvellement automatique ni approbation de production n'est implicite.
+L'échéance accompagne aussi le manifeste : une candidate qualifiée avant
+expiration ne peut pas être promue après sans réévaluation.
+
+Le premier cycle Linux a également révélé des fins de ligne mixtes dans
+`account.controller.js` : elles ont été normalisées en LF, sans modifier la
+logique. Une relance d'exécution ne reconstruit pas la même candidate :
+démarrer une nouvelle exécution pour obtenir un nouvel identifiant.
 
 ## Reproduction locale
 

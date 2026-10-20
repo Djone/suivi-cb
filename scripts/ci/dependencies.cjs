@@ -9,6 +9,13 @@ const POLICY = path.join(
 function gate(report, { module, scope, lock, policy, now = new Date() }) {
   if (report.error || !report.metadata || !report.vulnerabilities)
     throw Error("AUDIT_UNREADABLE");
+  if (
+    typeof report.vulnerabilities !== "object" ||
+    Array.isArray(report.vulnerabilities) ||
+    report.metadata.vulnerabilities?.total !==
+      Object.keys(report.vulnerabilities).length
+  )
+    throw Error("AUDIT_INCONSISTENT");
   const deadline = Date.parse(policy.reviewBy + "T23:59:59.999Z");
   if (
     !policy.accepted ||
@@ -33,6 +40,7 @@ function gate(report, { module, scope, lock, policy, now = new Date() }) {
           ? allowed(a)
           : module === "frontend" &&
             scope === "development" &&
+            a.name === "braces" &&
             a.url === "https://github.com/advisories/" + policy.advisory &&
             policy.component === "braces@3.0.3" &&
             versions.length > 0 &&

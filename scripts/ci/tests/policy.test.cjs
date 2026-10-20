@@ -11,10 +11,15 @@ const policy = {
   reviewBy: "2026-10-22",
 };
 const report = {
-  metadata: { vulnerabilities: { high: 2 } },
+  metadata: { vulnerabilities: { high: 2, total: 2 } },
   vulnerabilities: {
     braces: {
-      via: [{ url: "https://github.com/advisories/" + policy.advisory }],
+      via: [
+        {
+          name: "braces",
+          url: "https://github.com/advisories/" + policy.advisory,
+        },
+      ],
     },
     transitive: { via: ["braces"] },
   },
@@ -97,6 +102,7 @@ const { validate, deploymentPlan } = require("../contracts.cjs");
 function fixture() {
   return {
     schema: 2,
+    exceptionReviewBy: "2099-01-01",
     status: "QUALIFIED",
     candidate: "2.2.0-rc.9",
     commit: "a".repeat(40),
@@ -191,4 +197,22 @@ test("checksum inventory refuses unlisted files and duplicate entries", () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+test("an expired or missing exception deadline blocks promotion even after qualification", () => {
+  assert.throws(
+    () =>
+      validate(
+        { ...fixture(), exceptionReviewBy: "2000-01-01" },
+        { qualified: true },
+      ),
+    /EXCEPTION/,
+  );
+  assert.throws(
+    () =>
+      deploymentPlan(
+        { ...fixture(), exceptionReviewBy: undefined },
+        "production",
+      ),
+    /EXCEPTION/,
+  );
 });

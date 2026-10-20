@@ -35,6 +35,8 @@ async function verify() {
   return m;
 }
 async function build() {
+  if (process.env.GITHUB_RUN_ATTEMPT && process.env.GITHUB_RUN_ATTEMPT !== "1")
+    throw Error("NEW_WORKFLOW_RUN_REQUIRED");
   const version = candidate(process.env.CANDIDATE);
   const commit = clean();
   fs.mkdirSync(path.dirname(DIR), { recursive: true });
@@ -133,6 +135,14 @@ async function build() {
     runId: process.env.GITHUB_RUN_ID || "local",
     images,
     archiveSha256: await hash(path.join(DIR, "images.tar")),
+    exceptionReviewBy: JSON.parse(
+      fs.readFileSync(
+        path.join(
+          ROOT,
+          "docs/audit/2026-10-15/dependency-risk-acceptance.json",
+        ),
+      ),
+    ).reviewBy,
   });
   await checksums();
   console.log("Candidate built exactly once: " + version);
@@ -276,6 +286,7 @@ async function qualify() {
   )
     throw Error("QUALITY_SOURCE_MISMATCH");
   m.status = "QUALIFIED";
+  require("./contracts.cjs").validate(m, { qualified: true });
   write(path.join(DIR, "manifest.json"), m);
   await checksums();
 }

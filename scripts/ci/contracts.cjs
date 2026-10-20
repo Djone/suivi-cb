@@ -22,6 +22,11 @@ function validate(
     (runId && String(m.runId) !== String(runId))
   )
     throw Error("SOURCE_RUN_MISMATCH");
+  if (qualified) {
+    const deadline = Date.parse(m.exceptionReviewBy + "T23:59:59.999Z");
+    if (!Number.isFinite(deadline) || Date.now() > deadline)
+      throw Error("EXCEPTION_EXPIRED_OR_INVALID");
+  }
   if (
     Object.keys(m.images || {})
       .sort()
