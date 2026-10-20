@@ -171,7 +171,7 @@ test("public workflows never expose secrets or NAS runner to PR code", () => {
 });
 test("invalid scan output fails closed", () =>
   assert.throws(() => summarize({}), /INVALID_SCAN/));
-test("checksum inventory refuses unlisted files and symlinks", () => {
+test("checksum inventory refuses unlisted files and duplicate entries", () => {
   const fs = require("node:fs"),
     os = require("node:os"),
     path = require("node:path");

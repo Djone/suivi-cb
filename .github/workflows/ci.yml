@@ -40,7 +40,7 @@ jobs:
           npm ci --prefix frontend
       - name: Lint, TypeScript, policy, unit tests and dependency gates
         run: npm run ci:quality
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: quality-${{ github.run_id }}
@@ -63,13 +63,14 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: quality-${{ github.run_id }}
           path: .cache/ci/quality
       - name: Install isolated browser tooling
         run: |
           npm ci
+          npm ci --prefix backend
           npx playwright install --with-deps chromium
           docker pull quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c
           docker tag quay.io/keycloak/keycloak@sha256:82a77884f3af238beab1e7afd63b5f530e1b5c0590bd7aa60b40a40463e29b2c quay.io/keycloak/keycloak:26.7.4
@@ -84,7 +85,7 @@ jobs:
         run: node scripts/ci/scan.cjs
       - name: Bind qualification to commit, run and image identities
         run: node scripts/ci/candidate.cjs qualify
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success()
         with:
           name: candidate-${{ github.run_id }}
@@ -92,7 +93,7 @@ jobs:
           include-hidden-files: false
           if-no-files-found: error
           retention-days: 14
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: qualification-failure-${{ github.run_id }}
@@ -131,7 +132,7 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: candidate-${{ github.run_id }}
           path: .cache/ci/package
@@ -139,7 +140,7 @@ jobs:
         run: node scripts/ci/publish.cjs
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: published-candidate-${{ github.run_id }}
           path: .cache/ci/package/

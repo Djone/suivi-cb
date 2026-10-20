@@ -1,4 +1,5 @@
 ﻿const path = require("node:path");
+const fs = require("node:fs");
 const { ROOT, npm, exec, write, revision } = require("./common.cjs");
 const checks = [];
 function check(name, run) {
@@ -20,7 +21,18 @@ try {
   ])
     check(name, () => npm(["run", name]));
   check("backend-unit-coverage", () =>
-    npm(["run", "test:ci"], { cwd: path.join(ROOT, "backend") }),
+    exec(
+      process.execPath,
+      [
+        path.join(ROOT, "backend/node_modules/jest/bin/jest.js"),
+        "--ci",
+        "--coverage",
+        "--maxWorkers=2",
+        "--coverageReporters=json-summary",
+        "--coverageReporters=text",
+      ],
+      { cwd: path.join(ROOT, "backend") },
+    ),
   );
   // Execute security checks even if the existing coverage gate fails first.
   for (const name of ["test:auth", "test:security"])
@@ -34,6 +46,17 @@ try {
     exec(process.execPath, ["scripts/ci/dependencies.cjs"]),
   );
 } finally {
+  const coverageFile = path.join(
+    ROOT,
+    "backend/coverage/coverage-summary.json",
+  );
+  if (fs.existsSync(coverageFile))
+    write(path.join(ROOT, ".cache/ci/quality/backend-coverage.json"), {
+      commit: revision(),
+      runId: process.env.GITHUB_RUN_ID || "local",
+      totals: JSON.parse(fs.readFileSync(coverageFile)).total,
+      threshold: 70,
+    });
   const status =
     checks.length === 10 && checks.every((c) => c.status === "PASS")
       ? "PASS"
