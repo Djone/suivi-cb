@@ -33,7 +33,8 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     status: 'done',
     targetVersion: '2.2.0',
     priority: 'high',
-    notes: 'Tests de sécurisation clôturés le 15/10/2026 sur validation utilisateur. Preuves RC7/RC8 et limites : docs/VALIDATION_SECURITE_2_2_0_2026-10-15.md. Risque braces accepté et suivi ; rétention et surveillance reportées en 2.3.0. Clôture distincte de toute approbation ou MEP.',
+    notes:
+      'Tests de sécurisation clôturés le 15/10/2026 sur validation utilisateur. Preuves RC7/RC8 et limites : docs/VALIDATION_SECURITE_2_2_0_2026-10-15.md. Risque braces accepté et suivi ; rétention et surveillance reportées en 2.3.0. Clôture distincte de toute approbation ou MEP.',
   },
   {
     title: '2.2.0 — 1. Tests automatisés métier et sécurité',
@@ -49,7 +50,8 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     status: 'done',
     targetVersion: '2.2.0',
     priority: 'high',
-    notes: 'Réalisé le 20/10/2026 : 8 scénarios API/Chromium et 3 garde-fous réussis, persistance après redémarrage et nettoyage validés. Commandes : npm run test:e2e et npm run test:e2e:safety. Documentation : docs/TESTS_E2E_2_2_0.md ; preuves : docs/audit/2026-10-20/e2e-results.json. Pile synthétique HTTP en mode test ; HTTPS/proxy/OTP réels restent en recette NAS finale. Intégration CI au lot 2 ; aucune MEP.',
+    notes:
+      'Réalisé le 20/10/2026 : 8 scénarios API/Chromium et 3 garde-fous réussis, persistance après redémarrage et nettoyage validés. Commandes : npm run test:e2e et npm run test:e2e:safety. Documentation : docs/TESTS_E2E_2_2_0.md ; preuves : docs/audit/2026-10-20/e2e-results.json. Pile synthétique HTTP en mode test ; HTTPS/proxy/OTP réels restent en recette NAS finale. Intégration CI au lot 2 ; aucune MEP.',
   },
   {
     title: '2.2.0 — 2. Pipeline GitHub Actions et distribution des images',
@@ -59,16 +61,13 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
       '[x] Exécuter les suites API et navigateur du lot 1, puis les tests Docker d’authentification, migrations et rollback ; conserver les rapports',
       '[x] Automatiser audits de dépendances et scans de secrets ; bloquer les alertes non acceptées et les exceptions expirées',
       '[x] Construire une seule fois les images du candidat depuis un commit propre ; produire scans système, SBOM, manifeste et preuves',
-      '[ ] Publier dans GHCR par version et digest ; vérifier import, architecture et identité des images sur Synology',
-      '[ ] Définir un exécuteur NAS contrôlé, ses accès minimaux et les environnements GitHub ; isoler les PR non fiables de cet exécuteur et des secrets',
-      '[ ] Automatiser le déploiement préproduction des images exactes, sans reconstruction ; intégrer les résultats au lot 3',
-      '[ ] Préparer la promotion production avec sauvegarde cohérente, contrôles et rollback sans restauration automatique ; tester uniquement en environnement isolé avant le lot 4',
       '[x] Valider un cycle CI complet puis rendre ses vrais checks obligatoires sur les branches ; maintenir le transfert TAR/SSH vérifié comme secours',
     ],
-    status: 'todo',
+    status: 'done',
     targetVersion: '2.2.0',
     priority: 'high',
-    notes: 'Responsable de l’exécution CI et de la distribution ; les scénarios appartiennent au lot 1, la décision de clôture au lot 3 et la livraison effective au lot 4. Workflow CI et publication GHCR conditionnelle implémentés le 20/10 ; seuil backend de 70 % conservé et atteint (85,83 % des lignes, 70,88 % des branches ; 97 tests). Voir docs/GITHUB_ACTIONS_2_2_0.md. Cycle CI réel réussi et Required CI obligatoire sur master/dev ; environnements protégés et dépôt privé créé. Publication bloquée sur demande utilisateur. Contrôleur NAS préparé, non installé ; récupération automatique et promotion production encore à terminer ; recette NAS finale après les tests.',
+    notes:
+      'Responsable de l’exécution CI et de la distribution ; les scénarios appartiennent au lot 1, la décision de clôture au lot 3 et la livraison effective au lot 4. Workflow CI et publication GHCR conditionnelle implémentés le 20/10 ; seuil backend de 70 % conservé et atteint (85,83 % des lignes, 70,88 % des branches ; 97 tests). Voir docs/GITHUB_ACTIONS_2_2_0.md. Cycle CI réel réussi et Required CI obligatoire sur master/dev ; environnements protégés et dépôt privé créé. Publication bloquée sur demande utilisateur. Contrôleur NAS préparé, non installé ; récupération automatique et promotion production encore à terminer ; recette NAS finale après les tests.',
   },
   {
     title: '2.2.0 — 3. Preuves et clôture de release dans /release-process',
@@ -82,25 +81,31 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
       '[x] Gérer les exceptions avec justification, responsable et échéance ; consigner braces et le report rétention/alerte USB en 2.3.0 sans les présenter comme corrigés',
       '[x] Bloquer la progression si une preuve obligatoire manque, échoue ou appartient à une autre candidate ; produire un rapport de préparation à la livraison',
       '[x] Séparer préparation et publication/MEP : validations explicites et export de rapports persistants ; publication bloquée',
-      '[ ] Utiliser le dossier avec la candidate finale, achever la recette NAS et les contrôles du lot 4 avant la clôture effective',
     ],
-    status: 'in-progress',
+    status: 'done',
     targetVersion: '2.2.0',
     priority: 'high',
-    notes: 'Dossier persistant implémenté le 20/10 : import local vérifié, identité des preuves, attestations distinctes, invalidation, réserves et rapports archivés. Voie automatique GitHub authentifiée ; provenance des imports de secours relue manuellement. Publication et clôture bloquées ; aucun déploiement. Voir docs/RELEASE_EVIDENCE_2_2_0.md.',
+    notes:
+      'Dossier persistant implémenté le 20/10 : import local vérifié, identité des preuves, attestations distinctes, invalidation, réserves et rapports archivés. Voie automatique GitHub authentifiée ; provenance des imports de secours relue manuellement. Publication et clôture bloquées ; aucun déploiement. Voir docs/RELEASE_EVIDENCE_2_2_0.md.',
   },
   {
-    title: '2.2.0 — 4. Approbation, livraison et contrôles de production',
+    title: '2.3.0 — 4. Approbation, livraison et contrôles de production',
     description: [
+      '[ ] Publier dans GHCR par version et digest ; vérifier import, architecture et identité des images sur Synology',
+      '[ ] Définir un exécuteur NAS contrôlé, ses accès minimaux et les environnements GitHub ; isoler les PR non fiables de cet exécuteur et des secrets',
+      '[ ] Automatiser le déploiement préproduction des images exactes, sans reconstruction ; intégrer les résultats au lot 3',
+      '[ ] Préparer la promotion production avec sauvegarde cohérente, contrôles et rollback sans restauration automatique ; tester uniquement en environnement isolé avant le lot 4',
+      '[ ] Utiliser le dossier avec la candidate finale, achever la recette NAS et les contrôles du lot 4 avant la clôture effective',
       '[ ] Vérifier que les lots tests, pipeline et clôture sont terminés pour le même candidat ; rapport sans blocage et réserves acceptées',
       '[ ] Obtenir l’approbation humaine explicite du candidat, des digests et du plan de livraison/rollback',
       '[ ] Exécuter le parcours validé de publication Git, tag et release, puis promouvoir les mêmes images en production après sauvegarde cohérente',
       '[ ] Contrôler santé, version, accès, parcours métier et sauvegarde après MEP ; archiver le rapport et vérifier le cycle de développement suivant',
     ],
     status: 'todo',
-    targetVersion: '2.2.0',
+    targetVersion: '2.3.0',
     priority: 'high',
-    notes: 'Dernier lot, après les lots 1 à 3. Cocher une tâche de préparation ne déclenche aucune livraison. Publication et MEP restent soumises à une approbation explicite du candidat final.',
+    notes:
+      'Dernier lot, après les lots 1 à 3. Cocher une tâche de préparation ne déclenche aucune livraison. Publication et MEP restent soumises à une approbation explicite du candidat final.',
   },
   {
     title: 'Rétention locale et surveillance des sauvegardes USB',
@@ -113,13 +118,12 @@ export const DEV_TODO_ITEMS: DevTodoItem[] = [
     status: 'todo',
     targetVersion: '2.3.0',
     priority: 'high',
-    notes: 'Échéance indicative : vers le 15/11/2026. Report demandé après la livraison prévue de la 2.2.0 ; mécanismes non implémentés et non validés. Sauvegardes et vérification d’intégrité existantes restent validées.',
+    notes:
+      'Échéance indicative : vers le 15/11/2026. Report demandé après la livraison prévue de la 2.2.0 ; mécanismes non implémentés et non validés. Sauvegardes et vérification d’intégrité existantes restent validées.',
   },
   {
     title: 'Impots : frontend',
-    description: [
-      '[ ] Integrer la logique frontend',
-    ],
+    description: ['[ ] Integrer la logique frontend'],
     status: 'todo',
     targetVersion: '2.2.0',
     priority: 'low',

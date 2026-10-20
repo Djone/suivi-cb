@@ -223,6 +223,14 @@ function createReleaseEvidence({
         ),
         stage,
       );
+    add(
+      "release-plan",
+      "Version suivante du cycle de développement enregistrée",
+      Boolean(
+        d.releasePlan?.identity === d.identity && d.releasePlan?.nextDevVersion,
+      ),
+      "production",
+    );
     const development = blockers.filter((x) => x.stage === "development");
     const preprod = blockers.filter((x) => x.stage === "preproduction");
     add(
@@ -278,7 +286,9 @@ function createReleaseEvidence({
       readyForProduction:
         development.length === 0 &&
         preprod.length === 0 &&
-        !blockers.some((x) => ["registry", "publication-lock"].includes(x.id)),
+        !blockers.some((x) =>
+          ["registry", "publication-lock", "release-plan"].includes(x.id),
+        ),
       canClose: blockers.length === 0,
       publicationEnabled: false,
     };
@@ -529,6 +539,7 @@ function createReleaseEvidence({
         scope: same
           ? old.scope
           : { frozen: false, summary: "", releaseNotes: "" },
+        releasePlan: same ? old.releasePlan || null : null,
         validations: same ? old.validations : {},
         importedAt: new Date().toISOString(),
         importedBy: actor,
@@ -567,6 +578,32 @@ function createReleaseEvidence({
           frozen: s.frozen,
         };
         d.validations = {};
+      } else if (input.action === "release-plan") {
+        const next = input.nextDevVersion;
+        const stable = d.manifest.candidate.split("-rc.")[0];
+        const pattern =
+          /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-dev$/;
+        if (typeof next !== "string" || next.length > 50 || !pattern.test(next))
+          throw Error("INVALID_NEXT_VERSION");
+        const a = next.slice(0, -4).split(".").map(BigInt);
+        const b = stable.split(".").map(BigInt);
+        const first = a.findIndex((n, i) => n !== b[i]);
+        if (first < 0 || a[first] < b[first])
+          throw Error("NEXT_VERSION_MUST_INCREASE");
+        if (d.releasePlan?.nextDevVersion !== next) {
+          d.releasePlan = {
+            stableVersion: stable,
+            nextDevVersion: next,
+            status: "planned",
+            identity: d.identity,
+            updatedBy: actor,
+            updatedAt: new Date().toISOString(),
+          };
+          for (const k of Object.keys(MANUAL).filter(
+            (k) => MANUAL[k][0] === "production",
+          ))
+            delete d.validations[k];
+        }
       } else if (input.action === "validate") {
         if (!MANUAL[input.check] || typeof input.approved !== "boolean")
           throw Error("INVALID_VALIDATION");

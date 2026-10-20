@@ -175,3 +175,10 @@ pour execution explicite sur le NAS ; ils ne sont pas installes depuis le PC.
 Le kit contient `transfer-to-nas.ps1`, exécuté sur le PC après extraction du kit dans le même dossier que `candidate-RUN.zip`. Le ZIP doit provenir de la récupération GitHub authentifiée : son empreinte est incorporée au script. OpenSSH demande le mot de passe directement dans le terminal, sans stockage dans l’application. Le script vérifie les empreintes, refuse un dossier distant existant, transfère une archive puis vérifie les fichiers sur le NAS. `NAS_TRANSFER_OK` confirme uniquement le transfert. Aucun service ne démarre. Le dossier parent `releases` doit être accessible au compte NAS. Les clés d’hôte doivent déjà être vérifiées ; aucune protection SSH ou politique Windows ne doit être désactivée. File Station reste la solution de secours. Un transfert interrompu laisse le dossier NAS en place pour inspection, sans suppression automatique.
 
 Validation locale : syntaxe PowerShell et génération du kit testées. Le transfert interactif et la recette NAS restent à exécuter sur l’installation cible.
+
+
+### Cycle de version suivant
+
+Le dossier de preuves contient désormais le champ « Version de développement suivante », par exemple `2.3.0-dev`. Le backend impose une version strictement supérieure à la version stable de la candidate. Ce choix persiste avec son identité et figure dans le rapport ; un changement invalide les validations de production. Les preuves de recette restent conservées. La réimportation de la même candidate conserve ce plan, une nouvelle candidate le réinitialise.
+
+L’approbation MEP porte sur ce plan, mais ne modifie pas les versions des images construites. Le passage des sources et de la branche de développement au cycle suivant doit se faire après la MEP et les contrôles de production, à la clôture. L’application automatique de ce changement reste à raccorder au moteur de clôture lorsque les publications seront explicitement activées. Aucune modification de package.json, des environnements ou des notes de release n’est déclenchée par l’enregistrement du plan.

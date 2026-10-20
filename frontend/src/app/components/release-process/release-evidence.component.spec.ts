@@ -152,4 +152,29 @@ describe('Persistent release evidence', () => {
       jasmine.objectContaining({ candidate: '2.2.0-rc.99' }),
     );
   });
+
+  it('saves the next cycle in the persistent dossier without applying a release command', () => {
+    const f = TestBed.createComponent(ReleaseEvidenceComponent);
+    f.detectChanges();
+    const c = f.componentInstance;
+    c.nextDevVersion = '2.3.0';
+    c.saveReleasePlan();
+    expect(service.update).not.toHaveBeenCalled();
+    c.nextDevVersion = '2.3.0-dev';
+    c.saveReleasePlan();
+    expect(service.update).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        action: 'release-plan',
+        identity: 'identity',
+        revision: 7,
+        nextDevVersion: '2.3.0-dev',
+      }),
+    );
+    expect(
+      f.nativeElement.querySelector(
+        'input[aria-label="Version de développement suivante"]',
+      ),
+    ).toBeTruthy();
+    f.destroy();
+  });
 });
