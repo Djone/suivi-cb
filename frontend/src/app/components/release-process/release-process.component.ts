@@ -1,3 +1,4 @@
+import { releaseVersions } from './release-version';
 import { ReleaseJourneyComponent } from './release-journey.component';
 import { ReleaseEvidenceComponent } from './release-evidence.component';
 import { EvidenceManifest, EvidenceReport } from '../../services/release-evidence.service';
@@ -42,6 +43,7 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
 
   public stableVersion = this.stableCandidate;
   public nextDevVersion = '';
+  get nextVersionExample() { return releaseVersions(this.stableVersion).nextExample; }
   public branch = 'master';
 
   public allowDirty = false;
@@ -522,11 +524,11 @@ export class ReleaseProcessComponent implements OnInit, OnDestroy {
 
   private validatePrepareInputs(): boolean {
     if (!this.stableVersion.trim()) {
-      this.errorMessage = 'Version stable obligatoire (ex: 1.3.0).';
+      this.errorMessage = 'Version stable obligatoire (format majeur.mineur.correctif).';
       return false;
     }
     if (!this.nextDevVersion.trim()) {
-      this.errorMessage = 'Prochaine version dev obligatoire (ex: 1.4.0-dev).';
+      this.errorMessage = 'Prochaine version dev obligatoire (ex: ' + this.nextVersionExample + ').';
       return false;
     }
     return true;
