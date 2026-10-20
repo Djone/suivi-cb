@@ -52,6 +52,8 @@ async function build() {
     docker(
       [
         "build",
+        "--pull",
+        "--no-cache",
         "--platform",
         "linux/amd64",
         "--label",

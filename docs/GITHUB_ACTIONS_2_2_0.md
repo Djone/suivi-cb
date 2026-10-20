@@ -20,6 +20,8 @@ activé par ce chantier.
    publiés ne contiennent ni valeurs de secrets ni extraits de code correspondants.
 4. `Required CI` reste en échec si un contrôle obligatoire manque ou échoue.
    Les rapports de qualité sont conservés 30 jours, le candidat qualifié 14 jours.
+   La construction utilise `--pull --no-cache` pour réexécuter les mises à jour
+   Alpine ; une ancienne couche `apk upgrade` ne vaut pas mise à jour actuelle.
    Les images sont archivées une fois puis réutilisées ; aucune reconstruction
    dans la publication.
 
