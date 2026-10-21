@@ -407,6 +407,9 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
       },
     });
   }
+  get kitBlockers() {
+    return this.report?.blockers.filter((b) => b.stage === 'development') || [];
+  }
   kit() {
     const d = this.report?.dossier;
     if (!d || !this.report?.readyForPreproduction || this.downloading) return;
