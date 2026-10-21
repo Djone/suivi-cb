@@ -99,7 +99,7 @@
       </ol>
       <h4>À reprendre selon les changements ou périodiquement</h4>
       <p>
-        L'audit complet de sécurisation 2.2.0 n'est pas à refaire intégralement
+        L'audit complet de sécurisation initial n'est pas à refaire intégralement
         pour chaque correction. Refaire l'analyse des zones modifiées, notamment
         authentification, permissions, migrations, dépendances et
         infrastructure. Réexaminer les droits et exercices de restauration selon
@@ -110,7 +110,7 @@
       <p>
         La courte recette humaine NAS concerne le proxy, OTP, les accès et les
         parcours touchés. Les suites automatisées couvrent les régressions
-        répétitives. Le report de la rétention et de l'alerte USB vers la 2.3.0
+        répétitives. Tout report de la rétention et de l'alerte USB
         reste une réserve documentée, pas un test réussi.
       </p>
       <p class="warning">
@@ -152,7 +152,7 @@
       </li>
       <li>
         Créer une Pull Request et la faire relire avant sa fusion dans
-        <strong>2.2.0-dev</strong>. Un push direct sur cette branche protégée
+        <strong>{{ versions.developmentBranch }}</strong>. Un push direct sur cette branche protégée
         sera refusé.
       </li>
       <li>
@@ -161,7 +161,7 @@
       </li>
     </ol>
     <pre><code>git status
-git switch 2.2.0-dev
+git switch {{ versions.developmentBranch }}
 git pull --ff-only</code></pre>
     <button (click)="refresh()" [disabled]="loading">
       Vérifier Git et les tests GitHub
@@ -493,8 +493,7 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
     <p>
       Dans DSM, le reverse proxy de
       <strong>finances-preprod.jolurie.com</strong> doit viser
-      <strong>127.0.0.1:4205</strong> pour cette nouvelle pile. L'ancienne RC8
-      utilisait le port 4201. Vérifier le pied de page : la version attendue est
+      <strong>127.0.0.1:4205</strong> pour cette pile de préproduction. Vérifier le pied de page : la version attendue est
       <strong>{{ candidate || "celle du dossier" }}</strong
       >. Ne pas continuer si vous voyez une ancienne version.
     </p>
@@ -586,11 +585,11 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
       Relire le rapport pour cette candidate et ces images exactes. Vérifier les
       sauvegardes locales, published et USB, le dernier contrôle d'intégrité et
       les droits GitHub/NAS. La rétention et l'alerte USB de 36 heures restent
-      reportées en 2.3.0, sans être présentées comme validées.
+      des réserves à suivre dans le dossier, sans être présentées comme validées.
     </p>
     <p>
       Consigner une référence de compte rendu pour chaque contrôle. Les
-      validations RC7/RC8 ne remplacent pas cette recette. L'exception braces
+      validations des candidates antérieures ne remplacent pas cette recette. L'exception braces
       doit encore être acceptée et non expirée à la date de livraison.
     </p>
     <button (click)="validate('operations-rights')">

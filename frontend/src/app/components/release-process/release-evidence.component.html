@@ -129,12 +129,12 @@
           <input
             aria-label="Version de développement suivante"
             [(ngModel)]="nextDevVersion"
-            placeholder="Ex. 2.3.0-dev"
+            [placeholder]="'Ex. ' + nextVersionExample"
             maxlength="50"
           />
         </label>
         <p *ngIf="nextDevVersion && !validNextVersion" role="alert">
-          Format attendu : 2.3.0-dev.
+          Format attendu : majeur.mineur.correctif-dev (ex. {{ nextVersionExample }}).
         </p>
         <button (click)="saveReleasePlan()" [disabled]="!validNextVersion">
           Enregistrer le cycle suivant
