@@ -406,6 +406,15 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
               Générer le kit NAS de préproduction
             </button>
           </div>
+          <div *ngIf="!report?.readyForPreproduction" class="warning" role="status">
+            <p>Le kit NAS sera disponible lorsque les prérequis suivants seront validés dans le dossier de cette candidate :</p>
+            <ul>
+              <li *ngFor="let blocker of kitBlockers">{{ blocker.label }}</li>
+            </ul>
+            <p *ngIf="!report?.dossier">Importer d'abord la candidate et ses preuves à l'étape 2.</p>
+            <button (click)="validate('source-review')">Ouvrir le dossier et consigner la revue des sources</button>
+            <p>Le ZIP seul ne suffit pas. Après enregistrement, revenir ici pour générer le kit.</p>
+          </div>
           <p>
             Le kit contient les scripts revus, les empreintes et la
             configuration du realm de test. Sa génération ne modifie pas le NAS.
