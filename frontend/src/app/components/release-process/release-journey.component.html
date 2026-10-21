@@ -99,19 +99,19 @@
       </ol>
       <h4>À reprendre selon les changements ou périodiquement</h4>
       <p>
-        L'audit complet de sécurisation initial n'est pas à refaire intégralement
-        pour chaque correction. Refaire l'analyse des zones modifiées, notamment
-        authentification, permissions, migrations, dépendances et
-        infrastructure. Réexaminer les droits et exercices de restauration selon
-        leur calendrier ou après modification ; conserver leur date et leur
-        périmètre. Une preuve ancienne ne valide pas automatiquement une
-        configuration qui a changé.
+        L'audit complet de sécurisation initial n'est pas à refaire
+        intégralement pour chaque correction. Refaire l'analyse des zones
+        modifiées, notamment authentification, permissions, migrations,
+        dépendances et infrastructure. Réexaminer les droits et exercices de
+        restauration selon leur calendrier ou après modification ; conserver
+        leur date et leur périmètre. Une preuve ancienne ne valide pas
+        automatiquement une configuration qui a changé.
       </p>
       <p>
         La courte recette humaine NAS concerne le proxy, OTP, les accès et les
         parcours touchés. Les suites automatisées couvrent les régressions
-        répétitives. Tout report de la rétention et de l'alerte USB
-        reste une réserve documentée, pas un test réussi.
+        répétitives. Tout report de la rétention et de l'alerte USB reste une
+        réserve documentée, pas un test réussi.
       </p>
       <p class="warning">
         Ces instructions rendent les étapes explicites, mais n'activent aucun
@@ -152,8 +152,8 @@
       </li>
       <li>
         Créer une Pull Request et la faire relire avant sa fusion dans
-        <strong>{{ versions.developmentBranch }}</strong>. Un push direct sur cette branche protégée
-        sera refusé.
+        <strong>{{ versions.developmentBranch }}</strong
+        >. Un push direct sur cette branche protégée sera refusé.
       </li>
       <li>
         Une fois la PR fusionnée, revenir sur la branche cible et récupérer les
@@ -196,41 +196,24 @@ git pull --ff-only</code></pre>
     >
   </article>
   <article *ngIf="active === 1">
-    <h3>2. Créer le dossier de candidate</h3>
-    <p class="place">Automatique depuis cette page</p>
-    <p>
-      GitHub a construit les images une seule fois pour le commit poussé. Ce
-      bouton récupère cette candidate, vérifie l'empreinte de l'artefact et
-      importe ses preuves. Il ne lance aucune publication ni aucun déploiement.
-    </p>
-    <button
-      class="primary"
-      (click)="prepare()"
-      [disabled]="
-        loading || !state?.ready || state?.task?.status === 'downloading'
-      "
-    >
-      Créer la candidate depuis Git validé</button
-    ><button (click)="refresh()" [disabled]="loading">Actualiser</button>
-    <p *ngIf="state?.task?.status === 'downloading'" role="status">
-      Téléchargement et vérification en cours. Gardez le backend local ouvert ;
-      vous pouvez laisser cette page ouverte.
-    </p>
-    <p *ngIf="state?.task?.status === 'ready'" class="success">
-      Candidate {{ state?.task?.candidate }} prête. Les preuves sont chargées
-      dans le dossier ci-dessous.
+    <h3>2. Publier puis importer la candidate</h3>
+    <p class="place">
+      Dans VS Code pour Git, sur cette page pour le suivi, sur GitHub pour
+      l'approbation
     </p>
     <p>
-      Si une correction est nécessaire : modifier le code, faire une nouvelle
-      PR, attendre sa CI puis reprendre cette étape. Les anciennes attestations
-      ne valident pas les nouvelles images.
+      GHCR conserve et distribue les images testées par leur empreinte SHA-256.
+      Il ne remplace pas les tests, les sauvegardes ou la recette NAS. Il est
+      conseillé pour la distribution automatisée ; notre parcours de production
+      actuel exige ses références. Le transfert TAR reste un secours de
+      préproduction.
     </p>
-    <h4>Publier une candidate dans GHCR</h4>
+    <h4>1. Construire, tester et publier dans GHCR</h4>
     <p>
-      Le cycle de publication crée une nouvelle candidate depuis ce commit, la
-      construit une seule fois, exécute les tests et publie ces mêmes images
-      après approbation GitHub. Il ne publie pas rétroactivement la candidate
-      TAR actuelle. La nouvelle candidate doit repasser la recette NAS.
+      Ce cycle crée une nouvelle candidate depuis le commit validé. Ses images
+      sont construites une seule fois, testées puis publiées après approbation.
+      La candidate TAR actuelle n'est pas publiée rétroactivement et la nouvelle
+      candidate devra repasser la recette NAS.
     </p>
     <button
       (click)="publishRegistry()"
@@ -238,16 +221,100 @@ git pull --ff-only</code></pre>
     >
       Lancer le cycle CI et publication GHCR
     </button>
+    <h4>2. Approuver sur GitHub, puis attendre la publication</h4>
+    <p>
+      Après les tests, approuver candidate-registry sur GitHub. Attendre la
+      réussite du job Publish approved candidate to GHCR. Une CI de push verte
+      avec ce job ignoré ne signifie pas que les images sont publiées.
+    </p>
     <p *ngIf="state?.publication as publication">
       Demande {{ publication.candidate }} : {{ publication.status }}.
       <a [href]="publication.url" target="_blank" rel="noopener noreferrer"
         >Suivre et approuver sur GitHub</a
-      >. Après réussite, actualiser puis créer le dossier depuis les preuves
-      publiées.
+      >. Une demande envoyée n'est pas une publication terminée.
     </p>
-    <button (click)="active = 2" [disabled]="!knownCandidate">
-      Continuer avec {{ candidate || "la candidate" }}
+    <a
+      *ngIf="state?.run as run"
+      [href]="run.url"
+      target="_blank"
+      rel="noopener noreferrer"
+      >Voir l'exécution GitHub détectée</a
+    >
+    <h4>3. Importer la candidate publiée et ses preuves</h4>
+    <p>
+      Actualiser après publication, puis importer. Cet import vérifie le package
+      et charge le dossier ; il ne construit et ne publie rien.
+    </p>
+    <button (click)="refresh()" [disabled]="loading">
+      Actualiser le suivi
     </button>
+    <button
+      (click)="prepare()"
+      [disabled]="
+        loading ||
+        !state?.ready ||
+        !state?.published ||
+        state?.task?.status === 'downloading'
+      "
+    >
+      Importer la candidate publiée
+    </button>
+    <p *ngIf="!state?.published">
+      Aucune publication GHCR réussie n'est actuellement détectée pour ce
+      commit.
+    </p>
+    <p *ngIf="state?.task?.status === 'downloading'" role="status">
+      Téléchargement et vérification en cours.
+    </p>
+    <p *ngIf="state?.task?.status === 'ready'" role="status">
+      Dossier {{ state?.task?.candidate }} déjà importé et conservé. Cela ne
+      vaut pas autorisation de livraison.
+    </p>
+    <div *ngIf="!canUseCandidate" class="warning">
+      <p>
+        La préparation NAS ne peut pas encore continuer. Les images importées
+        restent conservées, mais les prérequis actuels doivent être satisfaits.
+      </p>
+      <ul>
+        <li *ngFor="let code of state?.blockers">{{ explain(code) }}</li>
+        <li *ngFor="let blocker of kitBlockers">{{ blocker.label }}</li>
+      </ul>
+      <p *ngIf="state && !state.clean">
+        Le dépôt contient des modifications non commitées. Les enregistrer sur
+        une branche de travail, passer par une PR puis synchroniser la branche
+        cible. Un nouveau commit nécessite une nouvelle candidate.
+      </p>
+    </div>
+    <button (click)="active = 2" [disabled]="!publishedCandidateImported">
+      Continuer vers le NAS avec la candidate publiée
+    </button>
+    <details>
+      <summary>Secours : candidate CI et transfert TAR sans GHCR</summary>
+      <p>
+        Comme lors des recettes précédentes, récupérer les images qualifiées de
+        la CI de push et les transférer avec vérification des empreintes. Cela
+        ne remplit pas le prérequis GHCR de production.
+      </p>
+      <button
+        (click)="prepare()"
+        [disabled]="
+          loading ||
+          !state?.ready ||
+          !!state?.published ||
+          state?.task?.status === 'downloading'
+        "
+      >
+        Importer la candidate CI sans GHCR
+      </button>
+      <button (click)="active = 2" [disabled]="!canUseCandidate">
+        Continuer en préproduction via TAR
+      </button>
+    </details>
+    <p>
+      Le transfert NAS utilise encore le package et le kit ; le téléchargement
+      direct GHCR sur le NAS n'est pas encore raccordé. La navigation entre les
+      onglets reste libre et ne valide aucun contrôle.
+    </p>
   </article>
   <article *ngIf="active === 2">
     <h3>3. Préparer le NAS de préproduction</h3>
@@ -426,14 +493,28 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
               Générer le kit NAS de préproduction
             </button>
           </div>
-          <div *ngIf="!report?.readyForPreproduction" class="warning" role="status">
-            <p>Le kit NAS sera disponible lorsque les prérequis suivants seront validés dans le dossier de cette candidate :</p>
+          <div
+            *ngIf="!report?.readyForPreproduction"
+            class="warning"
+            role="status"
+          >
+            <p>
+              Le kit NAS sera disponible lorsque les prérequis suivants seront
+              validés dans le dossier de cette candidate :
+            </p>
             <ul>
               <li *ngFor="let blocker of kitBlockers">{{ blocker.label }}</li>
             </ul>
-            <p *ngIf="!report?.dossier">Importer d'abord la candidate et ses preuves à l'étape 2.</p>
-            <button (click)="validate('source-review')">Ouvrir le dossier et consigner la revue des sources</button>
-            <p>Le ZIP seul ne suffit pas. Après enregistrement, revenir ici pour générer le kit.</p>
+            <p *ngIf="!report?.dossier">
+              Importer d'abord la candidate et ses preuves à l'étape 2.
+            </p>
+            <button (click)="validate('source-review')">
+              Ouvrir le dossier et consigner la revue des sources
+            </button>
+            <p>
+              Le ZIP seul ne suffit pas. Après enregistrement, revenir ici pour
+              générer le kit.
+            </p>
           </div>
           <p>
             Le kit contient les scripts revus, les empreintes et la
@@ -513,7 +594,8 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
     <p>
       Dans DSM, le reverse proxy de
       <strong>finances-preprod.jolurie.com</strong> doit viser
-      <strong>127.0.0.1:4205</strong> pour cette pile de préproduction. Vérifier le pied de page : la version attendue est
+      <strong>127.0.0.1:4205</strong> pour cette pile de préproduction. Vérifier
+      le pied de page : la version attendue est
       <strong>{{ candidate || "celle du dossier" }}</strong
       >. Ne pas continuer si vous voyez une ancienne version.
     </p>
@@ -605,12 +687,14 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
       Relire le rapport pour cette candidate et ces images exactes. Vérifier les
       sauvegardes locales, published et USB, le dernier contrôle d'intégrité et
       les droits GitHub/NAS. La rétention et l'alerte USB de 36 heures restent
-      des réserves à suivre dans le dossier, sans être présentées comme validées.
+      des réserves à suivre dans le dossier, sans être présentées comme
+      validées.
     </p>
     <p>
       Consigner une référence de compte rendu pour chaque contrôle. Les
-      validations des candidates antérieures ne remplacent pas cette recette. L'exception braces
-      doit encore être acceptée et non expirée à la date de livraison.
+      validations des candidates antérieures ne remplacent pas cette recette.
+      L'exception braces doit encore être acceptée et non expirée à la date de
+      livraison.
     </p>
     <button (click)="validate('operations-rights')">
       Consigner sauvegardes et droits</button

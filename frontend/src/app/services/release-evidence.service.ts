@@ -13,6 +13,7 @@ export interface DsmRequestState {
   receipt?: { nonce: string; status: string };
 }
 export interface EvidenceManifest {
+  status?: string;
   candidate: string;
   commit: string;
   archiveSha256: string;
@@ -77,6 +78,8 @@ export interface EvidenceReport {
   repository: { commit: string | null; clean: boolean };
 }
 export interface CandidateFlowStatus {
+  published?: boolean;
+  expectedCandidate?: string;
   publication?: { candidate: string; status: string; url: string } | null;
   branch: string | null;
   commit: string | null;
