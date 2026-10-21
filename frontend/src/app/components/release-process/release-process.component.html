@@ -42,7 +42,7 @@
       </div>
       <label class="parameter editable">
         <span>Version suivante</span>
-        <input aria-label="Version suivante" [ngModel]="nextDevVersion" (ngModelChange)="nextDevVersion = $event; parametersChanged()" placeholder="Ex. 1.4.0-dev" [disabled]="isRunning">
+        <input aria-label="Version suivante" [ngModel]="nextDevVersion" (ngModelChange)="nextDevVersion = $event; parametersChanged()" [placeholder]="'Ex. ' + nextVersionExample" [disabled]="isRunning">
       </label>
       <div class="parameter">
         <span>Branche cible</span>

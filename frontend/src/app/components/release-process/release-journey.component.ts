@@ -1,3 +1,4 @@
+import { releaseVersions } from './release-version';
 import { CommonModule } from '@angular/common';
 import {
   Component,
@@ -216,41 +217,49 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
     });
   }
 
+  get versions() {
+    return releaseVersions(this.report?.dossier?.manifest.candidate);
+  }
   active = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private completedTask = '';
-  readonly labels: Record<string, string> = {
-    WORKTREE_DIRTY: 'Enregistrez et commitez vos modifications.',
-    MERGE_PR_FIRST:
-      'Faites relire et fusionner la Pull Request, puis placez le PC sur la branche 2.2.0-dev.',
-    PUSH_OR_PULL_REQUIRED:
-      'Le PC et GitHub ne sont pas sur le même commit. Synchronisez la branche.',
-    BRANCH_NOT_PROTECTED: 'La branche cible doit être protégée.',
-    CI_NOT_FOUND: 'GitHub doit exécuter la CI après le push.',
-    CI_RUNNING:
-      'Les tests GitHub sont en cours. Cette page suivra leur progression.',
-    CI_FAILED:
-      'La CI a échoué. Ouvrez son rapport, corrigez puis poussez un nouveau commit.',
-    CI_CHECKS_MISSING:
-      'Les contrôles obligatoires GitHub ne sont pas tous validés.',
-    ARTIFACT_MISSING:
-      'Le package qualifié est absent ou expiré. Il faut une nouvelle exécution CI.',
-    GITHUB_LOGIN_REQUIRED:
-      'Reconnectez votre compte GitHub dans Git / VS Code sur ce PC, puis réessayez.',
-    GITHUB_UNAVAILABLE:
-      'GitHub est indisponible ou les droits de lecture des Actions manquent.',
-    WRONG_REPOSITORY: 'Ouvrez le dépôt Djone/suivi-cb sur le PC.',
-    GIT_UNAVAILABLE: 'Git doit être installé et accessible au backend local.',
-    CANDIDATE_PREREQUISITES_MISSING:
-      'Terminez les contrôles Git et CI indiqués avant de créer le dossier.',
-    GIT_CHANGED_REFRESH: 'Le commit a changé. Actualisez avant de recommencer.',
-    PREPRODUCTION_KIT_BLOCKED:
-      'Figez le périmètre, relisez les notes et validez la revue des sources dans le dossier de preuves.',
-    ARTIFACT_DIGEST_MISMATCH:
-      'L’empreinte de l’artefact ne correspond pas à GitHub. Le package est refusé.',
-    STAGED_ARTIFACT_CONFLICT:
-      'Un ancien staging de cette exécution contient des fichiers différents. Ne les utilisez pas.',
-  };
+  get labels(): Record<string, string> {
+    return {
+      WORKTREE_DIRTY: 'Enregistrez et commitez vos modifications.',
+      MERGE_PR_FIRST:
+        'Faites relire et fusionner la Pull Request, puis placez le PC sur la branche ' +
+        this.versions.developmentBranch +
+        '.',
+      PUSH_OR_PULL_REQUIRED:
+        'Le PC et GitHub ne sont pas sur le même commit. Synchronisez la branche.',
+      BRANCH_NOT_PROTECTED: 'La branche cible doit être protégée.',
+      CI_NOT_FOUND: 'GitHub doit exécuter la CI après le push.',
+      CI_RUNNING:
+        'Les tests GitHub sont en cours. Cette page suivra leur progression.',
+      CI_FAILED:
+        'La CI a échoué. Ouvrez son rapport, corrigez puis poussez un nouveau commit.',
+      CI_CHECKS_MISSING:
+        'Les contrôles obligatoires GitHub ne sont pas tous validés.',
+      ARTIFACT_MISSING:
+        'Le package qualifié est absent ou expiré. Il faut une nouvelle exécution CI.',
+      GITHUB_LOGIN_REQUIRED:
+        'Reconnectez votre compte GitHub dans Git / VS Code sur ce PC, puis réessayez.',
+      GITHUB_UNAVAILABLE:
+        'GitHub est indisponible ou les droits de lecture des Actions manquent.',
+      WRONG_REPOSITORY: 'Ouvrez le dépôt Djone/suivi-cb sur le PC.',
+      GIT_UNAVAILABLE: 'Git doit être installé et accessible au backend local.',
+      CANDIDATE_PREREQUISITES_MISSING:
+        'Terminez les contrôles Git et CI indiqués avant de créer le dossier.',
+      GIT_CHANGED_REFRESH:
+        'Le commit a changé. Actualisez avant de recommencer.',
+      PREPRODUCTION_KIT_BLOCKED:
+        'Figez le périmètre, relisez les notes et validez la revue des sources dans le dossier de preuves.',
+      ARTIFACT_DIGEST_MISMATCH:
+        'L’empreinte de l’artefact ne correspond pas à GitHub. Le package est refusé.',
+      STAGED_ARTIFACT_CONFLICT:
+        'Un ancien staging de cette exécution contient des fichiers différents. Ne les utilisez pas.',
+    };
+  }
   constructor(private readonly service: ReleaseEvidenceService) {}
   ngOnInit() {
     this.refresh();
@@ -465,6 +474,9 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
           'Package indisponible. Préparez d’abord la candidate depuis Git.';
       },
     });
+  }
+  get kitBlockers() {
+    return this.report?.blockers.filter((b) => b.stage === 'development') || [];
   }
   kit() {
     const d = this.report?.dossier;
