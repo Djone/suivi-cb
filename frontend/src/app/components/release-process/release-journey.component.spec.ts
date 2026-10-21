@@ -128,8 +128,9 @@ describe('Guided release journey', () => {
       f.nativeElement.querySelectorAll('button'),
     ) as HTMLButtonElement[];
     expect(
-      buttons.find((b) => b.textContent?.includes('Créer la candidate'))
-        ?.disabled,
+      buttons.find((b) =>
+        b.textContent?.includes('Importer la candidate CI sans GHCR'),
+      )?.disabled,
     ).toBeTrue();
     f.componentInstance.prepare();
     expect(service.prepareCandidate).not.toHaveBeenCalled();

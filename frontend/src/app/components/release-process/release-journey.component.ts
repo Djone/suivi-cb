@@ -310,6 +310,14 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
       this.error =
         'Le téléchargement a été interrompu. Relancez la préparation.';
   }
+  get publishedCandidateImported() {
+    return (
+      this.report?.dossier?.manifest.status === 'PUBLISHED' &&
+      this.report.dossier.manifest.candidate ===
+        this.state?.expectedCandidate &&
+      this.state?.published === true
+    );
+  }
   publishRegistry() {
     if (
       this.loading ||
