@@ -423,3 +423,95 @@ it("refuses untrusted artifact redirect hosts before any outbound storage reques
     fetchSpy.mockRestore();
   }
 });
+
+it("dispatches only an explicit request for a clean protected commit with registry enabled", async () => {
+  const original = api.getMockImplementation();
+  api.mockImplementation(async (route, options) => {
+    if (route.includes("/variables/")) return { value: "true" };
+    if (route.endsWith("/dispatches")) return null;
+    return original(route, options);
+  });
+  await expect(flow.publish({ commit: head })).rejects.toThrow(
+    "PUBLICATION_CONFIRMATION_REQUIRED",
+  );
+  await expect(
+    flow.publish({ confirm: true, commit: "b".repeat(40) }),
+  ).rejects.toThrow("CANDIDATE_PREREQUISITES_MISSING");
+  const result = await flow.publish({ confirm: true, commit: head });
+  expect(result.status).toBe("REQUESTED");
+  expect(api).toHaveBeenCalledWith(
+    "/actions/workflows/ci.yml/dispatches",
+    expect.objectContaining({
+      method: "POST",
+      body: {
+        ref: "2.2.0-dev",
+        inputs: { candidate: result.candidate, expected_commit: head },
+      },
+    }),
+  );
+  await expect(flow.publish({ confirm: true, commit: head })).rejects.toThrow(
+    "PUBLICATION_ALREADY_REQUESTED",
+  );
+});
+it("does not dispatch when registry publication is disabled", async () => {
+  const original = api.getMockImplementation();
+  api.mockImplementation(async (route, options) =>
+    route.includes("/variables/")
+      ? { value: "false" }
+      : original(route, options),
+  );
+  await expect(flow.publish({ confirm: true, commit: head })).rejects.toThrow(
+    "REGISTRY_PUBLICATION_DISABLED",
+  );
+  expect(api.mock.calls.some(([route]) => route.endsWith("/dispatches"))).toBe(
+    false,
+  );
+});
+it("keeps an ambiguous network dispatch and prevents blind resubmission", async () => {
+  const original = api.getMockImplementation();
+  api.mockImplementation(async (route, options) => {
+    if (route.includes("/variables/")) return { value: "true" };
+    if (route.endsWith("/dispatches")) throw Error("NETWORK");
+    return original(route, options);
+  });
+  await expect(flow.publish({ confirm: true, commit: head })).rejects.toThrow(
+    "NETWORK",
+  );
+  const record = JSON.parse(
+    fs.readFileSync(path.join(root, ".cache/ci/registry-dispatch-" + head + ".json")),
+  );
+  expect(record.status).toBe("DELIVERY_UNKNOWN");
+  await expect(flow.publish({ confirm: true, commit: head })).rejects.toThrow(
+    "PUBLICATION_ALREADY_REQUESTED",
+  );
+});
+it("requires a successful registry job and the published artifact for a manual publication run", async () => {
+  const original = api.getMockImplementation();
+  api.mockImplementation(async (route, options) => {
+    const r = await original(route, options);
+    if (r.workflow_runs)
+      r.workflow_runs[0] = {
+        ...r.workflow_runs[0],
+        event: "workflow_dispatch",
+        display_title: "Candidate 2.2.0-rc.999",
+      };
+    return r;
+  });
+  expect((await flow.inspect()).blockers).toContain("CI_CHECKS_MISSING");
+  api.mockImplementation(async (route, options) => {
+    const r = await original(route, options);
+    if (r.workflow_runs)
+      r.workflow_runs[0] = {
+        ...r.workflow_runs[0],
+        event: "workflow_dispatch",
+        display_title: "Candidate 2.2.0-rc.999",
+      };
+    if (r.jobs)
+      r.jobs.push({
+        name: "Publish approved candidate to GHCR",
+        conclusion: "success",
+      });
+    return r;
+  });
+  expect((await flow.inspect()).blockers).toContain("ARTIFACT_MISSING");
+});

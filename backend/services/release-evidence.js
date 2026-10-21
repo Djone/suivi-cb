@@ -246,7 +246,7 @@ function createReleaseEvidence({
     );
     add(
       "publication-lock",
-      "Publications désactivées à la demande du mainteneur",
+      "Parcours de publication activé et qualifié (actuellement verrouillé)",
       false,
       "production",
     );

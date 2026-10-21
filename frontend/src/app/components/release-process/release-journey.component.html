@@ -225,6 +225,26 @@ git pull --ff-only</code></pre>
       PR, attendre sa CI puis reprendre cette étape. Les anciennes attestations
       ne valident pas les nouvelles images.
     </p>
+    <h4>Publier une candidate dans GHCR</h4>
+    <p>
+      Le cycle de publication crée une nouvelle candidate depuis ce commit, la
+      construit une seule fois, exécute les tests et publie ces mêmes images
+      après approbation GitHub. Il ne publie pas rétroactivement la candidate
+      TAR actuelle. La nouvelle candidate doit repasser la recette NAS.
+    </p>
+    <button
+      (click)="publishRegistry()"
+      [disabled]="loading || !state?.ready || !!state?.publication"
+    >
+      Lancer le cycle CI et publication GHCR
+    </button>
+    <p *ngIf="state?.publication as publication">
+      Demande {{ publication.candidate }} : {{ publication.status }}.
+      <a [href]="publication.url" target="_blank" rel="noopener noreferrer"
+        >Suivre et approuver sur GitHub</a
+      >. Après réussite, actualiser puis créer le dossier depuis les preuves
+      publiées.
+    </p>
     <button (click)="active = 2" [disabled]="!knownCandidate">
       Continuer avec {{ candidate || "la candidate" }}
     </button>
@@ -612,6 +632,12 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
         Conserver les anciennes images et leur configuration. Relever les
         conteneurs actuels en lecture seule :
         <pre><code>{{inspectProduction}}</code></pre>
+        <p>
+          Ces commandes observent la production actuelle sur le port 4200. La
+          configuration d'authentification de la candidate se vérifie en
+          préproduction sur le port 4205 ; une ancienne production peut ne pas
+          exposer cette route.
+        </p>
         <button (click)="copy(inspectProduction)">
           Copier les contrôles production
         </button>
@@ -636,10 +662,60 @@ powershell.exe -NoProfile -File .\nas-kit\transfer-to-nas.ps1</code></pre>
         </p>
       </li>
       <li>
-        Préparer et relire docker-compose.production.yml avec les images
-        testées, pull_policy: never, les volumes de production existants et
-        .env.production avec realm suivi-cb. Ne pas copier la base ou les
-        comptes de recette. Valider sa syntaxe :
+        <h4>Composer le fichier de production sur le PC</h4>
+        <p>
+          Le brouillon ci-dessous utilise les identifiants exacts des images de
+          {{ candidate || "la candidate du dossier" }}. Sa génération ne vaut
+          pas approbation et ne lance aucun déploiement.
+        </p>
+        <ol>
+          <li>Relever les montages et le réseau de la production actuelle :</li>
+        </ol>
+        <pre><code>{{ productionInventory }}</code></pre>
+        <button (click)="copy(productionInventory)">
+          Copier le relevé production
+        </button>
+        <p>
+          Les chemins du brouillon correspondent au NAS relevé : données
+          /volume1/docker/suivi-cb/data, journaux
+          /volume1/docker/suivi-cb/logs/backend et réseau externe
+          suivi-cb_suivi-cb-network. Comparer ces valeurs au relevé ; adapter le
+          fichier si l'installation a changé.
+        </p>
+        <button
+          (click)="downloadProductionCompose()"
+          [disabled]="!productionCompose"
+        >
+          Télécharger le Compose de production à relire
+        </button>
+        <p *ngIf="!productionCompose" class="warning">
+          Importer la candidate et ses identifiants d'images pour préparer le
+          fichier.
+        </p>
+        <details *ngIf="productionCompose">
+          <summary>Voir la composition proposée</summary>
+          <pre><code>{{ productionCompose }}</code></pre>
+        </details>
+        <ol start="2">
+          <li>
+            Relire les images, pull_policy: never, les volumes et le réseau
+            externe. Le port frontend interne est 8080, publié sur
+            127.0.0.1:4200. Conserver le realm de production suivi-cb et
+            vérifier les comptes, le client et les droits Keycloak avant la
+            bascule.
+          </li>
+          <li>
+            Dans File Station, transférer uniquement
+            docker-compose.production.yml dans /volume1/docker/suivi-cb/.
+            Conserver le fichier .env.production existant ; ne copier ni
+            environnement, ni base, ni comptes de préproduction.
+          </li>
+          <li>
+            Dans la session SSH NAS, vérifier que les deux identifiants d'images
+            du fichier sont présents, puis valider la syntaxe ci-dessous. Aucun
+            affichage de configuration contenant des secrets n'est nécessaire.
+          </li>
+        </ol>
         <pre><code>{{productionPlanCheck}}</code></pre>
         <p>
           La première bascule depuis des conteneurs individuels exige un plan
