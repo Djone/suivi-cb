@@ -302,7 +302,6 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
     if (s.task?.status === 'ready' && s.task.id !== this.completedTask) {
       this.completedTask = s.task.id;
       this.candidatePrepared.emit();
-      this.active = 2;
     }
     if (s.task?.status === 'failed')
       this.error = this.explain(s.task.error || 'DOWNLOAD_FAILED');
@@ -310,12 +309,22 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
       this.error =
         'Le téléchargement a été interrompu. Relancez la préparation.';
   }
-  get publishedCandidateImported() {
+  get canUseCandidate(): boolean {
+    const report = this.report;
+    return !!(
+      this.knownCandidate &&
+      this.state?.ready &&
+      report?.readyForPreproduction &&
+      report.repository.clean &&
+      report.repository.commit === report.dossier?.manifest.commit
+    );
+  }
+  get publishedCandidateImported(): boolean {
     return (
+      this.canUseCandidate &&
+      this.state?.published === true &&
       this.report?.dossier?.manifest.status === 'PUBLISHED' &&
-      this.report.dossier.manifest.candidate ===
-        this.state?.expectedCandidate &&
-      this.state?.published === true
+      this.candidate === this.state.expectedCandidate
     );
   }
   publishRegistry() {
@@ -365,7 +374,6 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
       next: (s) => {
         this.state = s;
         this.loading = false;
-        this.active = 1;
         this.applyTask(s);
       },
       error: (e) => {

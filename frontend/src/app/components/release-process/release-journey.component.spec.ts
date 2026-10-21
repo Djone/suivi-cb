@@ -115,6 +115,52 @@ describe('Guided release journey', () => {
     expect(f.nativeElement.textContent).not.toContain('git switch 2.2.0-dev');
     f.destroy();
   });
+  it('retains an imported candidate but blocks continuation when the working tree is dirty', () => {
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    const c = f.componentInstance;
+    c.state = {
+      ...status(),
+      task: {
+        id: 'saved',
+        status: 'ready',
+        candidate: '2.2.0-rc.501',
+        runId: '501',
+        error: null,
+      },
+    };
+    c.report = {
+      readyForPreproduction: true,
+      repository: { clean: true, commit: 'a'.repeat(40) },
+      blockers: [],
+      dossier: {
+        manifest: { candidate: '2.2.0-rc.501', commit: 'a'.repeat(40) },
+      },
+    } as unknown as EvidenceReport;
+    expect(c.canUseCandidate).toBeTrue();
+    c.state = {
+      ...c.state,
+      ready: false,
+      clean: false,
+      blockers: ['WORKTREE_DIRTY'],
+    };
+    c.active = 1;
+    f.detectChanges();
+    expect(c.canUseCandidate).toBeFalse();
+    expect(c.state.task?.status).toBe('ready');
+    const buttons = Array.from(
+      f.nativeElement.querySelectorAll('button'),
+    ) as HTMLButtonElement[];
+    expect(
+      buttons.find((b) =>
+        b.textContent?.includes('Continuer en préproduction via TAR'),
+      )?.disabled,
+    ).toBeTrue();
+    expect(f.nativeElement.textContent).toContain(
+      'Cela ne vaut pas autorisation de livraison',
+    );
+    f.destroy();
+  });
   it('shows the Git prerequisite and disables creation when it is not validated', () => {
     service.candidateStatus.and.returnValue(
       of({ ...status(), ready: false, blockers: ['MERGE_PR_FIRST'] }),
@@ -162,7 +208,52 @@ describe('Guided release journey', () => {
     f.detectChanges();
     f.componentInstance.refresh();
     expect(emitted).toHaveBeenCalledTimes(1);
-    expect(f.componentInstance.active).toBe(2);
+    expect(f.componentInstance.active).toBe(0);
+    f.destroy();
+  });
+  it('keeps the selected step when a ready candidate is refreshed or completes in the background', () => {
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    f.componentInstance.active = 5;
+    service.candidateStatus.and.returnValue(
+      of({
+        ...status(),
+        task: {
+          id: 'background-job',
+          status: 'ready',
+          candidate: '2.2.0-rc.501',
+          runId: '501',
+          error: null,
+        },
+      }),
+    );
+    f.componentInstance.refresh();
+    expect(f.componentInstance.active).toBe(5);
+    f.componentInstance.active = 0;
+    f.componentInstance.refresh();
+    expect(f.componentInstance.active).toBe(0);
+    f.destroy();
+  });
+  it('does not navigate on a delayed candidate import response', () => {
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    f.componentInstance.active = 1;
+    f.componentInstance.prepare();
+    f.componentInstance.active = 0;
+    service.candidateStatus.and.returnValue(
+      of({
+        ...status(),
+        task: {
+          id: 'job',
+          status: 'ready',
+          candidate: '2.2.0-rc.501',
+          runId: '501',
+          error: null,
+        },
+      }),
+    );
+    f.componentInstance.refresh();
+    expect(f.componentInstance.active).toBe(0);
     f.destroy();
   });
   it('explains the NAS locations, expected responses and browser console separately', () => {

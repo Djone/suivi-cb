@@ -197,59 +197,53 @@ git pull --ff-only</code></pre>
   </article>
   <article *ngIf="active === 1">
     <h3>2. Publier puis importer la candidate</h3>
-    <p class="place">Sur cette page, avec une approbation sur GitHub</p>
-    <p>
-      GHCR est le registre d'images Docker de GitHub : il conserve les images
-      testées sous une version et une empreinte SHA-256. Les tests qualifient
-      les images ; GHCR permet ensuite de les retrouver et de les distribuer
-      sans les reconstruire. Il ne déploie rien sur le NAS et ne remplace ni la
-      recette ni la sauvegarde.
+    <p class="place">
+      Dans VS Code pour Git, sur cette page pour le suivi, sur GitHub pour
+      l'approbation
     </p>
     <p>
-      GHCR est fortement conseillé pour la distribution automatisée. Docker peut
-      fonctionner avec un transfert TAR vérifié, mais le parcours de promotion
-      production actuel exige les références GHCR. Le secours TAR ci-dessous
-      reste disponible pour la préproduction.
+      GHCR conserve et distribue les images testées par leur empreinte SHA-256.
+      Il ne remplace pas les tests, les sauvegardes ou la recette NAS. Il est
+      conseillé pour la distribution automatisée ; notre parcours de production
+      actuel exige ses références. Le transfert TAR reste un secours de
+      préproduction.
     </p>
-    <h4>1. Lancer les tests et la publication GHCR</h4>
+    <h4>1. Construire, tester et publier dans GHCR</h4>
     <p>
-      Ce cycle crée une nouvelle candidate depuis le commit validé, construit
-      ses images une seule fois puis les teste. Il ne publie pas rétroactivement
-      la candidate TAR existante. La nouvelle candidate devra repasser la
-      recette NAS.
+      Ce cycle crée une nouvelle candidate depuis le commit validé. Ses images
+      sont construites une seule fois, testées puis publiées après approbation.
+      La candidate TAR actuelle n'est pas publiée rétroactivement et la nouvelle
+      candidate devra repasser la recette NAS.
     </p>
     <button
-      class="primary"
       (click)="publishRegistry()"
       [disabled]="loading || !state?.ready || !!state?.publication"
     >
       Lancer le cycle CI et publication GHCR
     </button>
-    <h4>2. Approuver sur GitHub et attendre la publication</h4>
+    <h4>2. Approuver sur GitHub, puis attendre la publication</h4>
     <p>
-      Ouvrir le suivi GitHub. Après réussite des tests, approuver
-      l'environnement candidate-registry. Attendre que le job Publish approved
-      candidate to GHCR soit réussi ; une CI verte sur un push ne suffit pas si
-      ce job est ignoré.
+      Après les tests, approuver candidate-registry sur GitHub. Attendre la
+      réussite du job Publish approved candidate to GHCR. Une CI de push verte
+      avec ce job ignoré ne signifie pas que les images sont publiées.
     </p>
     <p *ngIf="state?.publication as publication">
       Demande {{ publication.candidate }} : {{ publication.status }}.
       <a [href]="publication.url" target="_blank" rel="noopener noreferrer"
         >Suivre et approuver sur GitHub</a
-      >. Une demande transmise ne signifie pas que la publication est terminée.
+      >. Une demande envoyée n'est pas une publication terminée.
     </p>
     <a
       *ngIf="state?.run as run"
       [href]="run.url"
       target="_blank"
       rel="noopener noreferrer"
-      >Voir l'exécution CI détectée</a
+      >Voir l'exécution GitHub détectée</a
     >
     <h4>3. Importer la candidate publiée et ses preuves</h4>
     <p>
-      Actualiser après la publication, puis importer. Cette action télécharge le
-      package du même cycle et vérifie son empreinte ; elle ne construit et ne
-      publie rien.
+      Actualiser après publication, puis importer. Cet import vérifie le package
+      et charge le dossier ; il ne construit et ne publie rien.
     </p>
     <button (click)="refresh()" [disabled]="loading">
       Actualiser le suivi
@@ -266,26 +260,40 @@ git pull --ff-only</code></pre>
       Importer la candidate publiée
     </button>
     <p *ngIf="!state?.published">
-      L'import GHCR attend une exécution de publication. Une candidate CI sans
-      GHCR peut être récupérée dans le secours TAR ci-dessous.
+      Aucune publication GHCR réussie n'est actuellement détectée pour ce
+      commit.
     </p>
     <p *ngIf="state?.task?.status === 'downloading'" role="status">
-      Téléchargement et vérification en cours. Garder le backend local ouvert.
+      Téléchargement et vérification en cours.
     </p>
-    <p *ngIf="publishedCandidateImported" class="success">
-      Candidate publiée {{ candidate }} importée. Continuer vers la
-      préproduction NAS.
+    <p *ngIf="state?.task?.status === 'ready'" role="status">
+      Dossier {{ state?.task?.candidate }} déjà importé et conservé. Cela ne
+      vaut pas autorisation de livraison.
     </p>
+    <div *ngIf="!canUseCandidate" class="warning">
+      <p>
+        La préparation NAS ne peut pas encore continuer. Les images importées
+        restent conservées, mais les prérequis actuels doivent être satisfaits.
+      </p>
+      <ul>
+        <li *ngFor="let code of state?.blockers">{{ explain(code) }}</li>
+        <li *ngFor="let blocker of kitBlockers">{{ blocker.label }}</li>
+      </ul>
+      <p *ngIf="state && !state.clean">
+        Le dépôt contient des modifications non commitées. Les enregistrer sur
+        une branche de travail, passer par une PR puis synchroniser la branche
+        cible. Un nouveau commit nécessite une nouvelle candidate.
+      </p>
+    </div>
     <button (click)="active = 2" [disabled]="!publishedCandidateImported">
       Continuer vers le NAS avec la candidate publiée
     </button>
     <details>
       <summary>Secours : candidate CI et transfert TAR sans GHCR</summary>
       <p>
-        Ce parcours récupère les images qualifiées d'une CI de push pour les
-        transférer par ZIP/TAR, comme lors des recettes précédentes. Le contrôle
-        des empreintes reste obligatoire. Il ne produit pas de références GHCR
-        et ne satisfait pas le verrou GHCR de production.
+        Comme lors des recettes précédentes, récupérer les images qualifiées de
+        la CI de push et les transférer avec vérification des empreintes. Cela
+        ne remplit pas le prérequis GHCR de production.
       </p>
       <button
         (click)="prepare()"
@@ -298,19 +306,14 @@ git pull --ff-only</code></pre>
       >
         Importer la candidate CI sans GHCR
       </button>
-      <p *ngIf="knownCandidate && !publishedCandidateImported">
-        Dossier actuel : {{ candidate }}. Ce dossier ne confirme pas que la
-        nouvelle publication GHCR est terminée.
-      </p>
-      <button (click)="active = 2" [disabled]="!knownCandidate">
+      <button (click)="active = 2" [disabled]="!canUseCandidate">
         Continuer en préproduction via TAR
       </button>
     </details>
     <p>
-      Après toute correction : nouvelle PR, CI et nouvelle candidate. Les
-      attestations d'une ancienne candidate ne valident pas les nouvelles
-      images. Le transfert NAS utilise encore le package et le kit ; le
-      téléchargement direct depuis GHCR par le NAS n'est pas encore raccordé.
+      Le transfert NAS utilise encore le package et le kit ; le téléchargement
+      direct GHCR sur le NAS n'est pas encore raccordé. La navigation entre les
+      onglets reste libre et ne valide aucun contrôle.
     </p>
   </article>
   <article *ngIf="active === 2">
