@@ -1,4 +1,5 @@
 ﻿name: CI
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Candidate {0}', inputs.candidate) || github.event.head_commit.message || github.event.pull_request.title || 'CI' }}
 on:
   push:
     branches: [master, 2.2.0-dev, "work/**"]
@@ -9,6 +10,10 @@ on:
       candidate:
         description: "Unique candidate version (2.2.0-rc.N); never reused"
         required: true
+        type: string
+      expected_commit:
+        description: "Expected source commit from release-process; blank for manual use"
+        required: false
         type: string
 permissions:
   contents: read
@@ -25,6 +30,14 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Verify requested source commit
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+        run: |
+          if [ -n "$EXPECTED_COMMIT" ]; then
+            printf '%s\n' "$EXPECTED_COMMIT" | grep -Eq '^[a-f0-9]{40}$'
+            test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+          fi
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"

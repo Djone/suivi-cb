@@ -49,13 +49,16 @@ function credential(root) {
   }
 }
 function nativeRequest(root) {
-  return async (route, { raw = false } = {}) => {
+  return async (route, { raw = false, method = "GET", body } = {}) => {
     if (!route.startsWith("/")) throw Error("INVALID_GITHUB_ROUTE");
     const token = credential(root);
     let response;
     try {
       response = await fetch("https://api.github.com/repos/" + REPO + route, {
+        method,
+        body: body ? JSON.stringify(body) : undefined,
         headers: {
+          "Content-Type": "application/json",
           Authorization: "Bearer " + token,
           Accept: "application/vnd.github+json",
           "User-Agent": "suivi-cb-release-process",
@@ -74,7 +77,7 @@ function nativeRequest(root) {
           ? "GITHUB_LOGIN_REQUIRED"
           : "GITHUB_UNAVAILABLE",
       );
-    return response.json();
+    return response.status === 204 ? null : response.json();
   };
 }
 async function shaFile(file) {
@@ -182,6 +185,7 @@ function createCandidateFlow({
       run: null,
       artifact: null,
       blockers: [],
+      publication: null,
       task: task(),
     };
     try {
@@ -193,6 +197,13 @@ function createCandidateFlow({
       )
         throw Error("WRONG_REPOSITORY");
       result.commit = gitRun(["rev-parse", "HEAD"]);
+      if (!SHA.test(result.commit)) throw Error("GIT_UNAVAILABLE");
+      const dispatchFile = path.join(
+        cache,
+        "registry-dispatch-" + result.commit + ".json",
+      );
+      if (fs.existsSync(dispatchFile))
+        result.publication = JSON.parse(fs.readFileSync(dispatchFile));
       result.branch = gitRun(["branch", "--show-current"]);
       result.clean = !gitRun([
         "status",
@@ -214,7 +225,7 @@ function createCandidateFlow({
       if (!result.protected) result.blockers.push("BRANCH_NOT_PROTECTED");
       if (!result.pushed) return result;
       const runs = await api(
-        "/actions/workflows/ci.yml/runs?event=push&branch=" +
+        "/actions/workflows/ci.yml/runs?branch=" +
           encodeURIComponent(result.branch) +
           "&head_sha=" +
           result.commit +
@@ -224,13 +235,22 @@ function createCandidateFlow({
         (r) =>
           r.head_sha === result.commit &&
           r.head_branch === result.branch &&
-          r.event === "push" &&
+          ["push", "workflow_dispatch"].includes(r.event) &&
           r.path === ".github/workflows/ci.yml",
       );
       if (!run || !RUN.test(String(run.id))) {
         result.blockers.push("CI_NOT_FOUND");
         return result;
       }
+      const published = run.event === "workflow_dispatch";
+      const expectedCandidate = published
+        ? /^Candidate (2\.2\.0-rc\.[1-9][0-9]*)$/.exec(
+            run.display_title || "",
+          )?.[1]
+        : "2.2.0-rc." + run.id;
+      if (!expectedCandidate) throw Error("INVALID_PUBLICATION_RUN");
+      result.expectedCandidate = expectedCandidate;
+      result.published = published;
       result.run = {
         id: String(run.id),
         status: run.status,
@@ -245,9 +265,13 @@ function createCandidateFlow({
       }
       const jobs = await api("/actions/runs/" + run.id + "/jobs?per_page=100");
       if (
-        !["Quality", "Docker and browser qualification", "Required CI"].every(
-          (n) =>
-            jobs.jobs?.some((j) => j.name === n && j.conclusion === "success"),
+        ![
+          "Quality",
+          "Docker and browser qualification",
+          "Required CI",
+          ...(published ? ["Publish approved candidate to GHCR"] : []),
+        ].every((n) =>
+          jobs.jobs?.some((j) => j.name === n && j.conclusion === "success"),
         )
       ) {
         result.blockers.push("CI_CHECKS_MISSING");
@@ -257,7 +281,10 @@ function createCandidateFlow({
         "/actions/runs/" + run.id + "/artifacts?per_page=100",
       );
       const a = artifacts.artifacts?.find(
-        (a) => a.name === "candidate-" + run.id && !a.expired,
+        (a) =>
+          a.name ===
+            (published ? "published-candidate-" : "candidate-") + run.id &&
+          !a.expired,
       );
       if (
         !a ||
@@ -339,8 +366,8 @@ function createCandidateFlow({
       if (
         m.commit !== snapshot.commit ||
         String(m.runId) !== runId ||
-        m.candidate !== "2.2.0-rc." + runId ||
-        m.status !== "QUALIFIED"
+        m.candidate !== snapshot.expectedCandidate ||
+        m.status !== (snapshot.published ? "PUBLISHED" : "QUALIFIED")
       )
         throw Error("ARTIFACT_SOURCE_MISMATCH");
       if (fs.existsSync(target)) {
@@ -438,6 +465,36 @@ function createCandidateFlow({
       throw e;
     }
   }
+  async function publish(input) {
+    if (input?.confirm !== true)
+      throw Error("PUBLICATION_CONFIRMATION_REQUIRED");
+    const s = await inspect();
+    if (!s.ready || input.commit !== s.commit)
+      throw Error("CANDIDATE_PREREQUISITES_MISSING");
+    const enabled = await api("/actions/variables/CI_ENABLE_REGISTRY_PUBLISH");
+    if (enabled.value !== "true") throw Error("REGISTRY_PUBLICATION_DISABLED");
+    fs.mkdirSync(cache, { recursive: true, mode: 0o700 });
+    const file = path.join(cache, "registry-dispatch-" + s.commit + ".json");
+    if (fs.existsSync(file)) throw Error("PUBLICATION_ALREADY_REQUESTED");
+    const candidate = "2.2.0-rc." + Date.now();
+    const record = {
+      candidate,
+      commit: s.commit,
+      branch: s.branch,
+      status: "DELIVERY_UNKNOWN",
+      url: "https://github.com/Djone/suivi-cb/actions/workflows/ci.yml",
+      requestedAt: new Date().toISOString(),
+    };
+    fs.writeFileSync(file, JSON.stringify(record), { flag: "wx", mode: 0o600 });
+    // Record before the network write: an ambiguous result must not trigger a duplicate dispatch.
+    await api("/actions/workflows/ci.yml/dispatches", {
+      method: "POST",
+      body: { ref: s.branch, inputs: { candidate, expected_commit: s.commit } },
+    });
+    record.status = "REQUESTED";
+    fs.writeFileSync(file, JSON.stringify(record), { mode: 0o600 });
+    return record;
+  }
   async function archive() {
     const t = task(),
       d = evidence.read().dossier;
@@ -462,6 +519,7 @@ function createCandidateFlow({
   }
   return {
     inspect,
+    publish,
     prepare,
     archive,
     status: () =>

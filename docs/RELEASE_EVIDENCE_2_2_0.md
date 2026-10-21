@@ -200,3 +200,12 @@ La vérification du plan a son contrat backend (candidate, commit et run identiq
 ### Raccordement DSM
 
 Le kit, les demandes et les reçus DSM sont disponibles dans le guide de release. Voir [EXECUTEUR_DSM_2_2_0.md](EXECUTEUR_DSM_2_2_0.md) pour la procédure et les limites. Les reçus sont archivés dans le dossier de la candidate sans remplacer les attestations humaines. Le plan vérifie le manifeste sous verrou ; l’application exige encore une activation locale NAS et n’est pas activée par l’installation.
+
+
+### Publication GHCR depuis la page
+
+Le bouton de l’étape Candidate déclenche ci.yml en workflow_dispatch depuis le commit propre et poussé de la branche protégée. Une nouvelle candidate unique est construite une seule fois, testée, puis publiée après approbation candidate-registry. Ce parcours ne republie pas rétroactivement une candidate TAR existante. Le commit attendu est vérifié après checkout pour refuser une branche ayant changé entre-temps.
+
+La variable GitHub CI_ENABLE_REGISTRY_PUBLISH doit valoir true. La connexion Git locale doit disposer du droit de déclencher Actions ; aucun token ne passe au navigateur. Une demande est conservée par commit avant son envoi. Après un résultat réseau ambigu, consulter GitHub avant toute reprise ; aucune réémission automatique n’a lieu.
+
+Après publication, actualiser puis importer le dossier. Le parcours exige le job GHCR réussi, l’artefact published-candidate du même run, son SHA-256 GitHub et un manifeste PUBLISHED correspondant au nom de candidate du run. Les identités d’images sont ensuite contrôlées par le validateur existant. La nouvelle candidate invalide les attestations antérieures : refaire la recette NAS sur ces images. La promotion production reste verrouillée et n’est pas activée par ce bouton.
