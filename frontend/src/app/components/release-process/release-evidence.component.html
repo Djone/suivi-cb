@@ -9,8 +9,12 @@
     </div>
     <button (click)="refresh()" [disabled]="busy">Actualiser</button>
   </header>
-  <p class="error" *ngIf="error" role="alert">{{ error }}</p>
-  <p *ngIf="message" role="status">{{ message }}</p>
+  <p class="error" *ngIf="error && feedbackTarget === 'general'" role="alert">
+    {{ error }}
+  </p>
+  <p *ngIf="message && feedbackTarget === 'general'" role="status">
+    {{ message }}
+  </p>
   <details>
     <summary>Import manuel de secours</summary>
     <div class="import">
@@ -180,13 +184,30 @@
           >
         </li>
       </ul>
-      <h3>Contrôles et blocages</h3>
-      <ul class="checks">
-        <li *ngFor="let c of r.checks" [class.pass]="c.status === 'PASS'">
-          <strong>{{ c.status === "PASS" ? "Validé" : "À compléter" }}</strong>
-          {{ c.label }} <small>{{ c.stage }}</small>
-        </li>
-      </ul>
+      <section *ngFor="let group of checkGroups">
+        <h3>{{ group.title }}</h3>
+        <p>{{ group.description }}</p>
+        <ul class="checks">
+          <li *ngFor="let c of group.checks" [class.pass]="c.status === 'PASS'">
+            <strong>{{
+              c.status === "PASS" ? "Validé" : "À compléter"
+            }}</strong>
+            {{ c.label }}
+            <small
+              >Environnement :
+              {{
+                c.stage === "development"
+                  ? "Dev"
+                  : c.stage === "preproduction"
+                    ? "Préprod"
+                    : c.stage === "production"
+                      ? "Prod"
+                      : c.stage
+              }}</small
+            >
+          </li>
+        </ul>
+      </section>
       <fieldset [disabled]="busy">
         <legend id="release-human-validation">Validation humaine</legend>
         <p>
@@ -209,6 +230,31 @@
         ><button (click)="validate(false)" [disabled]="!reference.trim()">
           Retirer la validation
         </button>
+        <p
+          class="error"
+          *ngIf="error && feedbackTarget === 'validation'"
+          role="alert"
+        >
+          {{ error }}
+        </p>
+        <p *ngIf="message && feedbackTarget === 'validation'" role="status">
+          {{ message }}
+        </p>
+        <div
+          *ngIf="productionValidationSelected && productionPrerequisites.length"
+          class="warning"
+        >
+          <p>Validation production non disponible. Prérequis restants :</p>
+          <ul>
+            <li *ngFor="let blocker of productionPrerequisites">
+              {{ blocker.label }}
+            </li>
+          </ul>
+          <p>
+            La confirmation seule ne garantit pas l'enregistrement. Attendre le
+            message de validation enregistrée.
+          </p>
+        </div>
       </fieldset>
       <details>
         <summary>Validations enregistrées</summary>

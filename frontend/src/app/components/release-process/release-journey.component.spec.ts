@@ -28,6 +28,7 @@ describe('Guided release journey', () => {
     service = jasmine.createSpyObj('ReleaseEvidenceService', [
       'candidateStatus',
       'prepareCandidate',
+      'publishCandidate',
       'candidateArchive',
       'nasKit',
       'createSshKey',
@@ -55,6 +56,51 @@ describe('Guided release journey', () => {
       imports: [ReleaseJourneyComponent],
       providers: [{ provide: ReleaseEvidenceService, useValue: service }],
     });
+  });
+  it('builds a production draft only from complete candidate image identities', () => {
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    const c = f.componentInstance;
+    expect(c.productionCompose).toBe('');
+    c.report = {
+      dossier: {
+        manifest: {
+          images: {
+            backend: { configDigest: 'sha256:' + 'a'.repeat(64) },
+            frontend: { configDigest: 'sha256:' + 'b'.repeat(64) },
+          },
+        },
+      },
+    } as unknown as EvidenceReport;
+    const draft = c.productionCompose;
+    expect(draft).toContain('image: sha256:' + 'a'.repeat(64));
+    expect(draft).toContain('image: sha256:' + 'b'.repeat(64));
+    expect(draft).toContain('127.0.0.1:4200:8080');
+    expect(draft).toContain('external: true');
+    expect(draft).toContain('/volume1/docker/suivi-cb/data:/app/data');
+    expect(draft).not.toContain('suivi-cb-preprod');
+    expect(draft).not.toContain('build:');
+    expect(draft).not.toContain('$' + '{PROD_');
+    f.destroy();
+  });
+  it('requests the publication cycle only after explicit confirmation and prevents duplicate requests', () => {
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    const prompt = spyOn(window, 'confirm').and.returnValue(false);
+    f.componentInstance.publishRegistry();
+    expect(service.publishCandidate).not.toHaveBeenCalled();
+    prompt.and.returnValue(true);
+    service.publishCandidate.and.returnValue(
+      of({
+        candidate: '2.2.0-rc.999',
+        status: 'REQUESTED',
+        url: 'https://github.com/Djone/suivi-cb/actions/workflows/ci.yml',
+      }),
+    );
+    f.componentInstance.publishRegistry();
+    expect(service.publishCandidate).toHaveBeenCalledOnceWith('a'.repeat(40));
+    f.componentInstance.publishRegistry();
+    expect(service.publishCandidate).toHaveBeenCalledTimes(1);
+    f.destroy();
   });
   it('renders the selected release branch in both instructions and Git commands', () => {
     const f = TestBed.createComponent(ReleaseJourneyComponent);

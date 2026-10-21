@@ -310,6 +310,39 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
       this.error =
         'Le téléchargement a été interrompu. Relancez la préparation.';
   }
+  publishRegistry() {
+    if (
+      this.loading ||
+      !this.state?.ready ||
+      !this.state.commit ||
+      this.state.publication
+    )
+      return;
+    if (
+      !confirm(
+        'Lancer une NOUVELLE candidate avec tests et publication GHCR ? Elle remplacera les images de la candidate actuelle et devra être revalidée sur NAS. Une approbation GitHub sera demandée avant publication.',
+      )
+    )
+      return;
+    this.loading = true;
+    this.error = '';
+    this.service.publishCandidate(this.state.commit).subscribe({
+      next: (p) => {
+        if (this.state) this.state.publication = p;
+        this.loading = false;
+        this.feedback =
+          'Cycle demandé pour ' +
+          p.candidate +
+          '. Suivre les tests et approuver candidate-registry dans GitHub, puis actualiser et importer les preuves publiées.';
+      },
+      error: (e) => {
+        this.loading = false;
+        this.error = this.explain(
+          e?.error?.message || 'PUBLICATION_REQUEST_UNCONFIRMED',
+        );
+      },
+    });
+  }
   prepare() {
     if (
       !this.state?.ready ||
@@ -379,9 +412,44 @@ export class ReleaseJourneyComponent implements OnInit, OnDestroy {
   readonly deniedTest =
     "(async () => { const token = prompt('Jeton du compte sans rôle, traitement local uniquement'); if (!token) return; const response = await fetch('/api/accounts/active', { headers: { Authorization: 'Bearer ' + token } }); console.log('Statut API :', response.status); })();";
   readonly inspectProduction =
-    "sudo docker inspect --format 'Name={{.Name}} Image={{.Image}} Health={{if .State.Health}}{{.State.Health.Status}}{{end}}' suivi-cb-backend suivi-cb-frontend\ncurl -fsS http://127.0.0.1:4200/api/auth/config\ncurl -s -o /dev/null -w 'API sans jeton HTTP=%{http_code}\\n' http://127.0.0.1:4200/api/accounts/active";
+    "sudo docker inspect --format 'Name={{.Name}} Image={{.Image}} Health={{if .State.Health}}{{.State.Health.Status}}{{end}}' suivi-cb-backend suivi-cb-frontend\ncurl -s -o /dev/null -w 'API sans jeton HTTP=%{http_code}\\n' http://127.0.0.1:4200/api/accounts/active";
   readonly backup =
     'sudo /volume1/suivi-cb-backups/backup-daily.sh\nsudo /volume1/suivi-cb-backups/publish-backups.sh';
+  readonly productionInventory =
+    "sudo docker inspect --format 'Name={{.Name}} Mounts={{json .Mounts}} Networks={{json .NetworkSettings.Networks}}' suivi-cb-backend suivi-cb-frontend";
+  get productionCompose(): string {
+    const images = this.report?.dossier?.manifest.images;
+    const backend = images?.['backend']?.configDigest;
+    const frontend = images?.['frontend']?.configDigest;
+    if (
+      !backend ||
+      !frontend ||
+      !/^sha256:[a-f0-9]{64}$/.test(backend) ||
+      !/^sha256:[a-f0-9]{64}$/.test(frontend)
+    )
+      return '';
+    const values: Record<string, string> = {
+      PROD_BACKEND_IMAGE: backend,
+      PROD_FRONTEND_IMAGE: frontend,
+      PROD_DATA_DIR: '/volume1/docker/suivi-cb/data',
+      PROD_LOG_DIR: '/volume1/docker/suivi-cb/logs/backend',
+      PROD_NETWORK: 'suivi-cb_suivi-cb-network',
+    };
+    const template =
+      '# Promote the exact validated preproduction image IDs. No build.\nname: suivi-cb\nservices:\n  backend:\n    image: ${PROD_BACKEND_IMAGE:?Set validated backend image ID}\n    pull_policy: never\n    container_name: suivi-cb-backend\n    restart: unless-stopped\n    env_file:\n      - .env.production\n    environment:\n      NODE_ENV: production\n      PORT_BACK: "3001"\n      DB_PATH: /app/data/database.db\n      KEYCLOAK_URL: https://auth.jolurie.com\n      KEYCLOAK_REALM: suivi-cb\n      KEYCLOAK_CLIENT_ID: suivi-cb-web\n      KEYCLOAK_AUDIENCE: suivi-cb-api\n    expose:\n      - "3001"\n    volumes:\n      - ${PROD_DATA_DIR:?Set existing production data directory}:/app/data\n      - ${PROD_LOG_DIR:?Set production log directory}:/app/logs\n    networks: [app]\n    healthcheck:\n      test: ["CMD", "node", "-e", "fetch(\'http://127.0.0.1:3001/health\').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 60s\n  frontend:\n    image: ${PROD_FRONTEND_IMAGE:?Set validated frontend image ID}\n    pull_policy: never\n    container_name: suivi-cb-frontend\n    restart: unless-stopped\n    ports:\n      - "127.0.0.1:4200:8080"\n    depends_on:\n      backend:\n        condition: service_healthy\n    networks: [app]\n    healthcheck:\n      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 30s\nnetworks:\n  app:\n    external: true\n    name: ${PROD_NETWORK:?Set existing production network}\n';
+    return template.replace(
+      /\$\{(PROD_\w+):\?[^}]+\}/g,
+      (_, key: string) => values[key],
+    );
+  }
+  downloadProductionCompose() {
+    const draft = this.productionCompose;
+    if (!draft) return;
+    this.save(
+      new Blob([draft], { type: 'text/yaml;charset=utf-8' }),
+      'docker-compose.production.yml',
+    );
+  }
   readonly productionPlanCheck =
     'sudo docker compose -p suivi-cb --env-file /volume1/docker/suivi-cb/.env.production -f /volume1/docker/suivi-cb/docker-compose.production.yml config --quiet';
   private save(blob: Blob, name: string) {

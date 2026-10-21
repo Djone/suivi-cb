@@ -77,6 +77,7 @@ export interface EvidenceReport {
   repository: { commit: string | null; clean: boolean };
 }
 export interface CandidateFlowStatus {
+  publication?: { candidate: string; status: string; url: string } | null;
   branch: string | null;
   commit: string | null;
   clean: boolean;
@@ -121,6 +122,12 @@ export class ReleaseEvidenceService {
     return this.http.post<CandidateFlowStatus>(this.url + '/candidate', {
       commit,
     });
+  }
+  publishCandidate(commit: string) {
+    return this.http.post<{ candidate: string; status: string; url: string }>(
+      this.url + '/candidate/publish',
+      { commit, confirm: true },
+    );
   }
   candidateArchive() {
     return this.http.get(this.url + '/candidate/archive', {

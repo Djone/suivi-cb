@@ -111,6 +111,10 @@ function createEvidenceRouter(
       res.status(422).json({ message: "CANDIDATE_NOT_READY" });
     }
   });
+  router.post(
+    "/candidate/publish",
+    handle((req) => flow.publish(req.body || {})),
+  );
   router.get(
     "/",
     handle(() => service.read()),
