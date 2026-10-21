@@ -1,3 +1,4 @@
+import { releaseVersions } from './release-version';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +28,10 @@ export class ReleaseEvidenceComponent implements OnInit {
   releaseNotes = '';
   frozen = false;
   nextDevVersion = '';
+  get nextVersionExample() {
+    return releaseVersions(this.report?.dossier?.manifest.candidate)
+      .nextExample;
+  }
   get validNextVersion(): boolean {
     return /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-dev$/.test(
       this.nextDevVersion,
