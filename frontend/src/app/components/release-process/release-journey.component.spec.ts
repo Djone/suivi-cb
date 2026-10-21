@@ -102,6 +102,19 @@ describe('Guided release journey', () => {
     expect(service.publishCandidate).toHaveBeenCalledTimes(1);
     f.destroy();
   });
+  it('renders the selected release branch in both instructions and Git commands', () => {
+    const f = TestBed.createComponent(ReleaseJourneyComponent);
+    f.detectChanges();
+    const selected = '3.4.0-rc.8';
+    f.componentInstance.report = {
+      dossier: { manifest: { candidate: selected } },
+    } as EvidenceReport;
+    f.detectChanges();
+    expect(f.componentInstance.versions.developmentBranch).toBe('3.4.0-dev');
+    expect(f.nativeElement.textContent).toContain('git switch 3.4.0-dev');
+    expect(f.nativeElement.textContent).not.toContain('git switch 2.2.0-dev');
+    f.destroy();
+  });
   it('shows the Git prerequisite and disables creation when it is not validated', () => {
     service.candidateStatus.and.returnValue(
       of({ ...status(), ready: false, blockers: ['MERGE_PR_FIRST'] }),
